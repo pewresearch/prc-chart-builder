@@ -1,1 +1,0 @@
-window.tableData||(window.tableData={});
