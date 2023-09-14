@@ -1,0 +1,88 @@
+{
+	"types": [
+		{
+			"title": "Area Chart",
+			"slug": "area",
+			"attributes": {
+				"chartType": "area"
+			}
+		},
+		{
+			"title": "Bar Chart",
+			"slug": "bar",
+			"attributes": {
+				"chartType": "bar"
+			}
+		},
+		{
+			"title": "Column Chart",
+			"slug": "column",
+			"attributes": {
+				"chartType": "column"
+			}
+		},
+		{
+			"title": "Dot Plot Chart",
+			"slug": "dot-plot",
+			"attributes": {
+				"chartType": "dot-plot"
+			}
+		},
+		{
+			"title": "Exploded Bar Chart",
+			"slug": "exploded-bar",
+			"attributes": {
+				"chartType": "exploded-bar"
+			}
+		},
+		{
+			"title": "Diverging Bar Chart",
+			"slug": "diverging-bar",
+			"attributes": {
+				"chartType": "diverging-bar"
+			}
+		},
+		{
+			"title": "Line Chart",
+			"slug": "line",
+			"attributes": {
+				"chartType": "line"
+			}
+		},
+		{
+			"title": "Scatter Plot Chart",
+			"slug": "scatter",
+			"attributes": {
+				"chartType": "scatter"
+			}
+		},
+		{
+			"title": "Stacked Bar Chart",
+			"slug": "stacked-bar",
+			"attributes": {
+				"chartType": "stacked-bar"
+			}
+		},
+		{
+			"title": "Stacked Area Chart",
+			"slug": "stacked-area",
+			"attributes": {
+				"chartType": "stacked-area"
+			}
+		},
+		{
+			"title": "Stacked Column Chart",
+			"slug": "stacked-column",
+			"attributes": {
+				"chartType": "stacked-bar"
+			}
+		},
+		{
+			"title": "Pie Chart",
+			"slug": "pie",
+			"attributes": {
+				"chartType": "pie"
+			}
+		}
+	]
+}

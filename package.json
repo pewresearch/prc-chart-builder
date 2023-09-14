@@ -1,0 +1,19 @@
+{
+	"name": "@pewresearch/chart-builder",
+	"version": "0.1.0",
+	"description": "Create interactive D3 charts for your WordPress site.",
+	"author": "Ben Wormald",
+	"license": "GPL-2.0-or-later",
+	"main": "build/index.js",
+	"scripts": {
+		"build": "wp-scripts build",
+		"build:chart": "wp-scripts build blocks/chart/index.js --output-path=build/blocks/chart",
+		"build:chart-builder": "wp-scripts build blocks/chart-builder/index.js --output-path=build/blocks/chart-builder",
+		"build:chart-builder-controller": "wp-scripts build blocks/chart-builder-controller/index.js --output-path=build/blocks/chart-builder-controller",
+		"test": "wp-scripts test"
+	},
+	"devDependencies": {
+		"@wordpress/dependency-extraction-webpack-plugin": "^4.4.0",
+		"@wordpress/scripts": "^24.5.0"
+	}
+}

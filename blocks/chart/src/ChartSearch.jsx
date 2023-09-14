@@ -1,0 +1,27 @@
+/**
+ * External Dependencies
+ */
+import { WPEntitySearch } from '@prc/components';
+
+export default function ChartSearch({ clientId, attributes, setAttributes }) {
+	return (
+		<WPEntitySearch
+			searchLabel="Search for charts"
+			entityType="postType"
+			entitySubType="chart"
+			onSelect={(item) => {
+				console.log('Item? ', item);
+				setAttributes({
+					ref: parseInt(item.id),
+				});
+			}}
+			onKeyEnter={() => {
+				console.log("Enter Key Pressed");
+			}}
+			onKeyESC={() => {
+				console.log("ESC Key Pressed");
+			}}
+			perPage={10}
+		/>
+	);
+}
