@@ -60,6 +60,7 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 		chartOrientation,
 		labelsActive,
 		labelColor,
+		labelFontSize,
 		labelPositionDY,
 		labelPositionDX,
 		labelToFixedDecimal,
@@ -71,6 +72,7 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 		labelAbsoluteValue,
 		labelFormatValue,
 		pieCategoryLabelsActive,
+		showFirstLastPointsOnly,
 	} = attributes;
 	return (
 		<PanelBody title={__('Labels')} initialOpen={false}>
@@ -95,19 +97,72 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 							setAttributes({ labelsActive: !labelsActive })
 						}
 					/>
+					{'line' === chartType && (
+						<ToolsPanelItem
+							hasValue={() => true}
+							label={__('Show First and Last Points Only')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<ToggleControl
+								label={__('Display only first and last labels')}
+								checked={showFirstLastPointsOnly}
+								disabled={!labelsActive}
+								onChange={() =>
+									setAttributes({
+										showFirstLastPointsOnly:
+											!showFirstLastPointsOnly,
+									})
+								}
+							/>
+						</ToolsPanelItem>
+					)}
 					{chartType === 'pie' && (
-						<ToggleControl
+						<ToolsPanelItem
+							hasValue={() => true}
 							label={__('Category Labels Active')}
-							checked={pieCategoryLabelsActive}
-							onChange={() =>
-								setAttributes({
-									pieCategoryLabelsActive:
-										!pieCategoryLabelsActive,
-								})
-							}
-						/>
+							isShownByDefault
+							panelId={clientId}
+						>
+							<ToggleControl
+								label={__('Category Labels Active')}
+								checked={pieCategoryLabelsActive}
+								onChange={() =>
+									setAttributes({
+										pieCategoryLabelsActive:
+											!pieCategoryLabelsActive,
+									})
+								}
+							/>
+						</ToolsPanelItem>
 					)}
 				</ToolsPanelItem>
+				<WidePanelItem
+					hasValue={() => labelFontSize}
+					label={__('Label Font Size')}
+					panelId={clientId}
+				>
+					<NumberControl
+						label={__('Label Font Size')}
+						value={labelFontSize}
+						disabled={!labelsActive}
+						onChange={(value) =>
+							setAttributes({
+								labelFontSize: `${formatNum(
+									value,
+									'integer'
+								)}px`,
+							})
+						}
+					/>
+					<PanelDescription>
+						<Help>
+							{__(
+								'Select the font size of the label. Default is 10px.'
+							)}
+						</Help>
+					</PanelDescription>
+				</WidePanelItem>
 				<WidePanelItem
 					hasValue={() => labelPositionDX}
 					label={__('Label Positioning')}

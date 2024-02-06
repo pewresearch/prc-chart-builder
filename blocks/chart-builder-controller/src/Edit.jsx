@@ -24,7 +24,8 @@ import HideTableHandler from './HideTableHandler';
 import Placeholder from './Placeholder';
 
 export default function Edit({ attributes, setAttributes, clientId }) {
-	const { id, isConvertedChart, tabsActive, align } = attributes;
+	const { id, isConvertedChart, tabsActive, align, isStatic, isTable } =
+		attributes;
 
 	useEffect(() => {
 		if (!id) {
@@ -52,39 +53,41 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		[id]
 	);
 
-	const TEMPLATE = [
-		[
-			'flexible-table-block/table',
-			{
-				className: 'chart-builder-data-table',
-				attributes: {
-					fontSize: 'small',
-					fontFamily: 'sans-serif',
-				},
-				head: [
-					{
-						cells: [
-							{ content: 'x', tag: 'th' },
-							{ content: 'y', tag: 'th' },
-						],
-					},
-				],
-				body: [
-					{
-						cells: [
-							{ content: '', tag: 'td' },
-							{ content: '', tag: 'td' },
-						],
-					},
-					{
-						cells: [
-							{ content: '', tag: 'td' },
-							{ content: '', tag: 'td' },
-						],
-					},
-				],
+	const TABLE = [
+		'flexible-table-block/table',
+		{
+			className: 'chart-builder-data-table',
+			attributes: {
+				fontSize: 'small',
+				fontFamily: 'sans-serif',
 			},
-		],
+			head: [
+				{
+					cells: [
+						{ content: 'x', tag: 'th' },
+						{ content: 'y', tag: 'th' },
+					],
+				},
+			],
+			body: [
+				{
+					cells: [
+						{ content: '', tag: 'td' },
+						{ content: '', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: '', tag: 'td' },
+						{ content: '', tag: 'td' },
+					],
+				},
+			],
+		},
+	];
+
+	const TEMPLATE = [
+		TABLE,
 		[
 			'prc-block/chart-builder',
 			{
@@ -92,6 +95,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			},
 		],
 	];
+
+	const STATIC_TEMPLATE = [TABLE, ['core/image', {}]];
+
+	const TABLE_TEMPLATE = [TABLE];
 
 	const blockElmProps = {};
 	if (hideThisTable) {
@@ -114,6 +121,11 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		return <Placeholder {...{ attributes, setAttributes, clientId }} />;
 	}
 
+	const RENDERED_TEMPLATE = isStatic
+		? STATIC_TEMPLATE
+		: isTable
+		  ? TABLE_TEMPLATE
+		  : TEMPLATE;
 	return (
 		<Fragment>
 			<InspectorControls>
@@ -150,7 +162,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			<HideTableHandler id={id}>
 				{/* for some reason there is an extra div being rendered here, which makes the editor alignment a little screwy. need to figure out */}
 				<figure {...blockProps}>
-					<InnerBlocks template={TEMPLATE} />
+					<InnerBlocks template={RENDERED_TEMPLATE} />
 				</figure>
 			</HideTableHandler>
 		</Fragment>

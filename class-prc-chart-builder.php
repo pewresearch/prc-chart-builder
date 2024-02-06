@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name:       PRC Chart Builder
- * Description:       Create interactive D3 charts for your WordPress site.
+ * Description:       An interactive chart builder for PRC Platform.
  * Requires at least: 6.1
  * Requires PHP:      7.0
  * Version:           0.1.0

@@ -9,6 +9,7 @@ import { useSelect } from '@wordpress/data';
 import {
 	RichText,
 	useBlockProps,
+	useInnerBlocksProps,
 	store as blockEditorStore,
 	Warning,
 } from '@wordpress/block-editor';
@@ -33,7 +34,7 @@ import WaybackHelper from './WaybackHelper'; // This is temporary for the migrat
 import CopyPasteStylesHandler from './CopyPasteStylesHandler';
 
 export default function Edit({
-	attributes: attr,
+	attributes: attrs,
 	setAttributes,
 	toggleSelection,
 	clientId,
@@ -43,6 +44,7 @@ export default function Edit({
 	const {
 		id,
 		isConvertedChart,
+		isStaticChart,
 		chartConverted,
 		height,
 		width,
@@ -52,7 +54,7 @@ export default function Edit({
 		metaNote,
 		metaSource,
 		metaTag,
-	} = attr;
+	} = attrs;
 
 	useEffect(() => {
 		if (!id) {
@@ -117,7 +119,8 @@ export default function Edit({
 					if (legacyMeta.cb_type) {
 						const legacyAttrs = formatLegacyAttrs(
 							legacyMeta,
-							attr,
+							attrs,
+							attrs,
 							siteId
 						);
 						const timestamp = new Date().getTime();
@@ -137,11 +140,11 @@ export default function Edit({
 					toggleConversionState(false);
 				});
 		}
-	}, [isConvertedChart, refId, siteId, attr, converted]);
+	}, [isConvertedChart, refId, siteId, attrs, converted]);
 
 	const config = useMemo(
-		() => getConfig(attr, clientId, 'wp-block-prc-block-chart-builder'),
-		[attr]
+		() => getConfig(attrs, clientId, 'wp-block-prc-block-chart-builder'),
+		[attrs]
 	);
 
 	const headers = useMemo(
@@ -154,8 +157,20 @@ export default function Edit({
 	// and the table data as values
 	const formatCellContent = (content, key) => {
 		const replaceNonNumeric = (str) => {
-			// Replace all non-numeric and non-decimal characters
-			str = str.replace(/[^0-9.]/g, '');
+			// Replace all non-numeric, non-decimal characters, and negative sign
+			str = str.replace(/[^0-9.-]/g, '');
+
+			// if string has no numbers, return empty string
+			if (!str.match(/[0-9]/g)) {
+				return '';
+			}
+			// Replace all non-numeric, non-decimal characters, and negative sign
+			str = str.replace(/[^0-9.-]/g, '');
+
+			// if string has no numbers, return empty string
+			if (!str.match(/[0-9]/g)) {
+				return '';
+			}
 
 			// Ensure only the first decimal place is kept
 			const decimalIndex = str.indexOf('.');
@@ -163,6 +178,14 @@ export default function Edit({
 				str =
 					str.slice(0, decimalIndex + 1) +
 					str.slice(decimalIndex + 1).replace(/\./g, '');
+			}
+
+			// Likewise, ensure only the first negative sign is kept
+			const negativeIndex = str.indexOf('-');
+			if (negativeIndex !== -1) {
+				str =
+					str.slice(0, negativeIndex + 1) +
+					str.slice(negativeIndex + 1).replace(/-/g, '');
 			}
 
 			return str;
@@ -209,18 +232,21 @@ export default function Edit({
 	const blockProps = useBlockProps({
 		className: 'active',
 	});
+
+	const innerBlocksProps = useInnerBlocksProps();
+
 	return (
 		<Fragment>
 			<WaybackHelper postId={refId} />
 			<ChartControls
-				attributes={attr}
+				attributes={attrs}
 				setAttributes={setAttributes}
 				parentBlock={parentBlockId}
 				clientId={clientId}
 			/>
 			<CopyPasteStylesHandler
 				id={id}
-				attributes={attr}
+				attributes={attrs}
 				setAttributes={setAttributes}
 			>
 				<div {...blockProps}>
@@ -302,7 +328,13 @@ export default function Edit({
 										toggleSelection(false);
 									}}
 								>
-									{memoizedChartData && (
+									{isStaticChart && (
+										<div
+											className="cb__chart"
+											{...innerBlocksProps}
+										/>
+									)}
+									{!isStaticChart && memoizedChartData && (
 										<ChartBuilderWrapper
 											className="cb__chart"
 											config={config}

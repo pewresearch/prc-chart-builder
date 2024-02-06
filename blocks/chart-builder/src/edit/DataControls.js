@@ -13,6 +13,7 @@ import {
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
 	SelectControl,
+	ToggleControl,
 } from '@wordpress/components';
 
 import Sorter from './Sorter';
@@ -37,8 +38,10 @@ function DataControls({ attributes, setAttributes, clientId }) {
 		sortOrder,
 		availableCategories,
 		chartType,
+		diffColumnActive,
 		positiveCategories,
 		negativeCategories,
+		diffColumnCategory,
 		neutralCategory,
 		xScale,
 		dateInputFormat,
@@ -180,7 +183,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<PanelDescription>
-							Select the catogories you would like chart builder
+							Select the categories you would like chart builder
 							to use to render your data. A diverging bar chart
 							can have three categories: one for the positive
 							values, one for the negative values, and one for the
@@ -233,6 +236,42 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						/>
 					</WidePanelItem>
 				)}
+
+				<WidePanelItem
+					hasValue={() => true}
+					label={__('Diff Column')}
+					isShownByDefault
+					panelId={clientId}
+				>
+					<PanelDescription>
+						<StyledLabel>Data Column</StyledLabel>
+					</PanelDescription>
+					<ToggleControl
+						label={diffColumnActive ? __('Active') : __('Inactive')}
+						checked={diffColumnActive}
+						onChange={(value) =>
+							setAttributes({ diffColumnActive: value })
+						}
+					/>
+					<PanelDescription>
+						Activate if you'd like to include a column that shows
+						the total/difference/or any other data column to the
+						right of the chart (optional).
+					</PanelDescription>
+					{diffColumnActive && (
+						<SelectControl
+							label={__('Diff Column Category')}
+							value={diffColumnCategory}
+							onChange={(value) =>
+								setAttributes({ diffColumnCategory: value })
+							}
+							options={availableOptions.map((option) => ({
+								label: option.label,
+								value: option.label,
+							}))}
+						/>
+					)}
+				</WidePanelItem>
 			</ToolsPanel>
 		</PanelBody>
 	);

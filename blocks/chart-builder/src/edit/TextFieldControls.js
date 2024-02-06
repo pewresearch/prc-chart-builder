@@ -18,22 +18,28 @@ function TextFieldControls({ attributes, setAttributes }) {
 		metaSource,
 		metaTag,
 		horizontalRules,
+		isStaticChart,
+		staticImageAltText,
 	} = attributes;
 	return (
 		<PanelBody title={__('Text Fields')} initialOpen={false}>
 			<ToggleControl
 				label={__('Text Fields Active')}
 				help={__(
-					'Enables title, subtitle, note, source, and tag fields for chart.',
+					'Enables title, subtitle, note, source, and tag fields for chart.'
 				)}
 				checked={metaTextActive}
-				onChange={() => setAttributes({ metaTextActive: !metaTextActive })}
+				onChange={() =>
+					setAttributes({ metaTextActive: !metaTextActive })
+				}
 			/>
 			<ToggleControl
 				label={__('Show horizontal rules')}
 				help={__('Show horizontal rules above and below chart')}
 				checked={horizontalRules}
-				onChange={() => setAttributes({ horizontalRules: !horizontalRules })}
+				onChange={() =>
+					setAttributes({ horizontalRules: !horizontalRules })
+				}
 			/>
 			<TextControl
 				label={__('Title')}
@@ -45,6 +51,16 @@ function TextFieldControls({ attributes, setAttributes }) {
 				value={metaSubtitle}
 				onChange={(val) => setAttributes({ metaSubtitle: val })}
 			/>
+			{isStaticChart && (
+				<TextareaControl
+					label={__('Static Image Alt Text')}
+					help="Enter some text"
+					value={staticImageAltText}
+					onChange={(val) =>
+						setAttributes({ staticImageAltText: val })
+					}
+				/>
+			)}
 			<TextareaControl
 				label={__('Note')}
 				help="Enter some text"

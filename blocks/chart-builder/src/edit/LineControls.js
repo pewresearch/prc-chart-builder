@@ -10,7 +10,6 @@ import styled from 'styled-components';
 import { __ } from '@wordpress/i18n';
 import {
 	PanelBody,
-	PanelRow,
 	ToggleControl,
 	SelectControl,
 	__experimentalToolsPanel as ToolsPanel,

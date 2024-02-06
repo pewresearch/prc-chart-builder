@@ -4,10 +4,15 @@
  */
 
 import { Fragment } from '@wordpress/element';
+import { InnerBlocks } from '@wordpress/block-editor';
 
 /** Returns a server side block callback */
 const save = () => {
-	return <Fragment />;
+	return (
+		<Fragment>
+			<InnerBlocks.Content />
+		</Fragment>
+	);
 };
 
 export default save;

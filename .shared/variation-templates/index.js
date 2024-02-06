@@ -10,7 +10,7 @@ export { default as stackedColumnTemplate } from './stackedColumn';
 export { default as scatterTemplate } from './scatter';
 export { default as dotPlotTemplate } from './dotPlot';
 export { default as pieTemplate } from './pie';
-
+export { default as imageTemplate } from './image';
 // legacy variations
 export { default as legacyBarTemplate } from './legacyBar';
 export { default as legacyLineTemplate } from './legacyLine';

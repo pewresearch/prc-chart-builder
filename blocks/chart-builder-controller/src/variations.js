@@ -14,6 +14,8 @@ import {
 	stackedColumnIcon,
 	pieIcon,
 } from './icons';
+// import { icons } from '@prc/icons';
+// import { icons } from '@prc/icons';
 
 import {
 	areaTemplate,
@@ -28,6 +30,7 @@ import {
 	pieTemplate,
 	explodedBarTemplate,
 	divergingBarTemplate,
+	imageTemplate,
 } from '../../../.shared/variation-templates';
 
 const variations = [
@@ -150,6 +153,40 @@ const variations = [
 		icon: pieIcon,
 		attributes: { chartType: 'pie' },
 		innerBlocks: pieTemplate,
+	},
+	{
+		name: 'cbstatic',
+		title: __('Chart Image with Data Table'),
+		keywords: [
+			__('chart'),
+			__('image'),
+			__('data table'),
+			__('static'),
+			__('static chart'),
+		],
+		description: __(
+			'Create a static chart image with a data table and share tabs.'
+		),
+		icon: barIcon,
+		attributes: { chartType: 'static' },
+		innerBlocks: imageTemplate,
+	},
+	{
+		name: 'cbstatic',
+		title: __('Chart Image with Data Table'),
+		keywords: [
+			__('chart'),
+			__('image'),
+			__('data table'),
+			__('static'),
+			__('static chart'),
+		],
+		description: __(
+			'Create a static chart image with a data table and share tabs.'
+		),
+		icon: barIcon,
+		attributes: { chartType: 'static' },
+		innerBlocks: imageTemplate,
 	},
 ];
 

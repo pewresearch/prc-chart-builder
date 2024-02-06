@@ -1,3 +1,5 @@
+/* eslint-disable @wordpress/no-unsafe-wp-apis */
+/* eslint-disable max-lines-per-function */
 /**
  * External dependencies
  */
@@ -25,6 +27,7 @@ import {
  */
 import { PanelColorSettings } from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
+import Sorter from './Sorter';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -57,10 +60,24 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 		legendTitle,
 		legendOffsetX,
 		legendOffsetY,
+		legendAlignment,
 		legendMarkerStyle,
 		legendBorderStroke,
 		legendFill,
+		chartType,
+		neutralBarActive,
+		positiveCategories,
+		negativeCategories,
+		neutralCategory,
+		categories,
 	} = attributes;
+
+	const divergingCategories = neutralBarActive
+		? [...negativeCategories, ...positiveCategories, neutralCategory]
+		: [...negativeCategories, ...positiveCategories];
+	const availableLegendCategories =
+		chartType === 'diverging-bar' ? divergingCategories : categories;
+
 	return (
 		<PanelBody title={__('Legend')} initialOpen={false}>
 			<ToolsPanel
@@ -93,6 +110,49 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 					<PanelDescription>
 						<StyledLabel>Legend Positioning</StyledLabel>
 					</PanelDescription>
+					{/* <ToggleGroupControl
+						isBlock
+						label="Legend Width"
+						value={legendWidth}
+						onChange={(type) => {
+							setAttributes({
+								legendWidth: type,
+							});
+						}}
+					>
+						<ToggleGroupControlOption
+							label="Full Width"
+							value="100%"
+						/>
+						<ToggleGroupControlOption
+							label="Fit Content"
+							value="auto"
+						/>
+					</ToggleGroupControl> */}
+					<ToggleGroupControl
+						isBlock
+						label="Legend Alignment"
+						value={legendAlignment}
+						onChange={(type) => {
+							setAttributes({
+								legendAlignment: type,
+							});
+						}}
+					>
+						<ToggleGroupControlOption
+							label="Start"
+							value="flex-start"
+						/>
+						<ToggleGroupControlOption
+							label="Center"
+							value="center"
+						/>
+						<ToggleGroupControlOption
+							label="End"
+							value="flex-end"
+						/>
+						<ToggleGroupControlOption label="None" value="none" />
+					</ToggleGroupControl>
 					<Flex>
 						<FlexItem>
 							<NumberControl
@@ -143,6 +203,31 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 						}
 					/>
 				</WidePanelItem>
+				{
+					// Diverging bar charts are DEEPLY ANNOYING.
+					// Legend orderjust doesn't work for them.
+					// So we are going to set themmanually.
+				}
+				{/* {chartType === 'diverging-bar' && ( */}
+				<WidePanelItem
+					hasValue={() => true}
+					label={__('Legend Order')}
+					panelId={clientId}
+				>
+					<PanelDescription>
+						<StyledLabel>Legend Order</StyledLabel>
+					</PanelDescription>
+					<Sorter
+						options={availableLegendCategories.map((c) => ({
+							label: c,
+							disabled: false,
+						}))}
+						setAttributes={setAttributes}
+						attribute="legendCategories"
+						allowDisabled={false}
+					/>
+				</WidePanelItem>
+				{/* )} */}
 				<WidePanelItem
 					hasValue={() => true}
 					label={__('Orientation')}

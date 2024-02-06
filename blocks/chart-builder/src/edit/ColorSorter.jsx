@@ -28,7 +28,7 @@ function labelFill(hex = '#000000') {
 	// Color brightness = ((Red value X 299) + (Green value X 587) + (Blue value X 114)) / 1000
 	// The range for color brightness difference is 125.
 	const brightness = Math.round(
-		(rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000,
+		(rgb[0] * 299 + rgb[1] * 587 + rgb[2] * 114) / 1000
 	);
 	const fill = 125 < brightness ? 'black' : 'white';
 	return fill;
@@ -63,7 +63,9 @@ const ColorSorter = function ({ colors, setAttributes }) {
 						customColors: newItems,
 					});
 				}}
-				renderList={({ children, props }) => <ul {...props}>{children}</ul>}
+				renderList={({ children, props }) => (
+					<ul {...props}>{children}</ul>
+				)}
 				renderItem={({ value, props, isDragged }) => (
 					<li
 						{...props}

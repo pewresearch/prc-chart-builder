@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 /**
  * External dependencies
  */
@@ -36,6 +37,7 @@ const StyledLabel = styled.div`
 `;
 function DivergingBarControls({ attributes, setAttributes, clientId }) {
 	const {
+		barPadding,
 		neutralBarActive,
 		neutralBarOffsetX,
 		neutralBarSeparator,
@@ -54,6 +56,26 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 			>
 				<WidePanelItem
 					hasValue={() => true}
+					label={__('Bar Padding')}
+					isShownByDefault
+					panelId={clientId}
+				>
+					<NumberControl
+						label={__('Bar Padding')}
+						withInputField
+						min={0}
+						max={10}
+						step={0.05}
+						value={parseFloat(barPadding, 10)}
+						onChange={(value) => {
+							setAttributes({
+								barPadding: formatNum(value, 'float'),
+							});
+						}}
+					/>
+				</WidePanelItem>
+				<WidePanelItem
+					hasValue={() => true}
 					label={__('Neutral Bar')}
 					isShownByDefault
 					panelId={clientId}
@@ -62,20 +84,24 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						label={__('Neutral Bar Active')}
 						checked={neutralBarActive}
 						onChange={() =>
-							setAttributes({ neutralBarActive: !neutralBarActive })
+							setAttributes({
+								neutralBarActive: !neutralBarActive,
+							})
 						}
 						help={__(
-							'If active, a neutral bar will be added to the chart. This bar will be positioned to the right of the main graphic.',
+							'If active, a neutral bar will be added to the chart. This bar will be positioned to the right of the main graphic.'
 						)}
 					/>
 					<ToggleControl
 						label={__('Neutral Bar Separator')}
 						checked={neutralBarSeparator}
 						onChange={() =>
-							setAttributes({ neutralBarSeparator: !neutralBarSeparator })
+							setAttributes({
+								neutralBarSeparator: !neutralBarSeparator,
+							})
 						}
 						help={__(
-							'If active, a separator will be added to the neutral bar.',
+							'If active, a separator will be added to the neutral bar.'
 						)}
 					/>
 				</WidePanelItem>
@@ -112,7 +138,10 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						disabled={!neutralBarSeparator}
 						onChange={(value) =>
 							setAttributes({
-								neutralBarSeparatorOffsetX: formatNum(value, 'integer'),
+								neutralBarSeparatorOffsetX: formatNum(
+									value,
+									'integer'
+								),
 							})
 						}
 					/>
@@ -131,7 +160,10 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						value={divergingBarPercentOfInnerWidth}
 						onChange={(w) =>
 							setAttributes({
-								divergingBarPercentOfInnerWidth: formatNum(w, 'integer'),
+								divergingBarPercentOfInnerWidth: formatNum(
+									w,
+									'integer'
+								),
 							})
 						}
 					/>

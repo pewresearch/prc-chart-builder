@@ -96,6 +96,7 @@ const getConfig = (
 	// label attributes
 	const {
 		labelsActive,
+		showFirstLastPointsOnly,
 		labelPositionDX,
 		labelPositionDY,
 		labelAbsoluteValue,
@@ -114,9 +115,11 @@ const getConfig = (
 	const {
 		legendActive,
 		legendOrientation,
+		legendCategories,
 		legendTitle,
 		legendOffsetX,
 		legendOffsetY,
+		legendAlignment,
 		legendMarkerStyle,
 		legendBorderStroke,
 		legendFill,
@@ -141,6 +144,8 @@ const getConfig = (
 	} = attributes;
 	// pie chart attributes
 	const { pieCategoryLabelsActive } = attributes;
+	// bar chart attributes
+	const { barPadding, barGroupPadding } = attributes;
 	// diverging bar attributes
 	const {
 		positiveCategories,
@@ -170,9 +175,21 @@ const getConfig = (
 		nodeFill,
 		areaFillOpacity,
 	} = attributes;
+	// explded bar attributes
+	const { explodedBarColumnGap } = attributes;
 	// plot band attributes
 	const { plotBandsActive, plotBands } = attributes;
-
+	// diff column attributes
+	const {
+		diffColumnActive,
+		diffColumnCategory,
+		diffColumnHeader,
+		diffColumnMarginLeft,
+		diffColumnBackgroundColor,
+		diffColumnHeightOffset,
+		diffColumnWidth,
+		diffColumnAppearance,
+	} = attributes;
 	// color attributes
 	const { colorValue, customColors, elementHasStroke } = attributes;
 	// data render attributes
@@ -185,7 +202,6 @@ const getConfig = (
 	} = attributes;
 	const xTicks = stringToArrayOfNums(xTickExact);
 	const yTicks = stringToArrayOfNums(yTickExact);
-
 	return {
 		...baseConfig,
 		layout: {
@@ -407,9 +423,11 @@ const getConfig = (
 			...baseConfig.legend,
 			active: legendActive,
 			orientation: legendOrientation,
+			categories: legendCategories || categories,
 			title: legendTitle,
 			offsetX: legendOffsetX,
 			offsetY: legendOffsetY,
+			alignment: legendAlignment,
 			markerStyle: legendMarkerStyle,
 			borderStroke: legendBorderStroke,
 			fill: legendFill,
@@ -417,6 +435,8 @@ const getConfig = (
 		bar: {
 			...baseConfig.bar,
 			hasRectStroke: elementHasStroke,
+			barPadding,
+			barGroupPadding,
 		},
 		line: {
 			...baseConfig.line,
@@ -445,6 +465,10 @@ const getConfig = (
 			pathStrokeWidth: 1,
 			showCategoryLabels: pieCategoryLabelsActive,
 		},
+		explodedBar: {
+			...baseConfig.explodedBar,
+			columnGap: explodedBarColumnGap,
+		},
 		nodes: {
 			...baseConfig.nodes,
 			pointSize: nodeSize,
@@ -456,7 +480,7 @@ const getConfig = (
 		labels: {
 			...baseConfig.labels,
 			active: labelsActive,
-			showFirstLastPointsOnly: false,
+			showFirstLastPointsOnly,
 			color: labelColor,
 			// altColor: 'white',
 			fontWeight: labelFontWeight,
@@ -510,6 +534,32 @@ const getConfig = (
 					0 < neutralCategory.length,
 				separator: neutralBarSeparator,
 				separatorOffsetX: neutralBarSeparatorOffsetX,
+			},
+		},
+		diffColumn: {
+			...baseConfig.diffColumn,
+			active: diffColumnActive,
+			category: diffColumnCategory,
+			columnHeader: diffColumnHeader,
+			style: {
+				...baseConfig.diffColumn.style,
+				rectStrokeWidth: 0,
+				rectStrokeColor: 'white',
+				rectFill: diffColumnBackgroundColor,
+				fontWeight:
+					diffColumnAppearance === 'bold' ||
+					diffColumnAppearance === 'bold-italic'
+						? 'bold'
+						: 'normal',
+				fontStyle:
+					diffColumnAppearance === 'italic' ||
+					diffColumnAppearance === 'bold-italic'
+						? 'italic'
+						: 'normal',
+				headerFontSize: '12px',
+				marginLeft: diffColumnMarginLeft,
+				width: diffColumnWidth,
+				heightOffset: diffColumnHeightOffset,
 			},
 		},
 	};

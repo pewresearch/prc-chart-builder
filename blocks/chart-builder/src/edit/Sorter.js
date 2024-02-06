@@ -8,7 +8,7 @@ import { List, arrayMove } from 'react-movable';
 import { useState } from '@wordpress/element';
 import { Icon } from '@wordpress/components';
 
-function Sorter({ options, setAttributes, attribute }) {
+function Sorter({ options, setAttributes, attribute, allowDisabled = true }) {
 	const [items, setItems] = useState(options);
 	return (
 		<div style={{ width: '100%' }}>
@@ -23,8 +23,16 @@ function Sorter({ options, setAttributes, attribute }) {
 							.map((i) => i.label),
 					});
 				}}
-				renderList={({ children, props }) => <ul {...props}>{children}</ul>}
-				renderItem={({ value, props, index, isDragged, isSelected }) => (
+				renderList={({ children, props }) => (
+					<ul {...props}>{children}</ul>
+				)}
+				renderItem={({
+					value,
+					props,
+					index,
+					isDragged,
+					isSelected,
+				}) => (
 					<li
 						{...props}
 						style={{
@@ -32,8 +40,11 @@ function Sorter({ options, setAttributes, attribute }) {
 							listStyleType: 'none',
 							cursor: isDragged ? 'grabbing' : 'grab',
 							color: value.disabled ? '#888' : '#333',
-							textDecoration: value.disabled ? 'line-through' : 'none',
-							backgroundColor: isDragged || isSelected ? '#EEE' : '#FFF',
+							textDecoration: value.disabled
+								? 'line-through'
+								: 'none',
+							backgroundColor:
+								isDragged || isSelected ? '#EEE' : '#FFF',
 							paddingTop: '5px',
 							paddingBottom: '5px',
 							borderBottom: '1px solid #CCC',
@@ -47,34 +58,41 @@ function Sorter({ options, setAttributes, attribute }) {
 							}}
 						>
 							{value.label}
-							<button
-								type="button"
-								onClick={({ oldIndex, newIndex }) => {
-									items[index].disabled = !items[index].disabled;
-									const newItems = arrayMove(items, oldIndex, newIndex);
-									setItems(newItems);
-									setAttributes({
-										[attribute]: newItems
-											.filter((i) => !i.disabled)
-											.map((i) => i.label),
-									});
-								}}
-								style={{
-									border: 'none',
-									margin: 0,
-									padding: 0,
-									width: 'auto',
-									overflow: 'visible',
-									cursor: 'pointer',
-									background: 'transparent',
-								}}
-							>
-								{!value.disabled ? (
-									<Icon icon="visibility" />
-								) : (
-									<Icon icon="hidden" />
-								)}
-							</button>
+							{allowDisabled && (
+								<button
+									type="button"
+									onClick={({ oldIndex, newIndex }) => {
+										items[index].disabled =
+											!items[index].disabled;
+										const newItems = arrayMove(
+											items,
+											oldIndex,
+											newIndex
+										);
+										setItems(newItems);
+										setAttributes({
+											[attribute]: newItems
+												.filter((i) => !i.disabled)
+												.map((i) => i.label),
+										});
+									}}
+									style={{
+										border: 'none',
+										margin: 0,
+										padding: 0,
+										width: 'auto',
+										overflow: 'visible',
+										cursor: 'pointer',
+										background: 'transparent',
+									}}
+								>
+									{!value.disabled ? (
+										<Icon icon="visibility" />
+									) : (
+										<Icon icon="hidden" />
+									)}
+								</button>
+							)}
 						</div>
 					</li>
 				)}

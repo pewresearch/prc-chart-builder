@@ -64,11 +64,13 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		if ( is_admin() ) {
 			return $content;
 		}
+
 		if ( null === $block || empty( $block->inner_blocks ) ) {
 			return '';
 		}
 		$script_handle = 'prc-block-chart-builder-controller-view-script';
 		$id = $attributes['id'];
+
 		$chart_block = array_filter(
 			$block->parsed_block['innerBlocks'],
 			function( $b ) {
@@ -78,9 +80,28 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 
 		$chart_block = array_pop($chart_block);
 
-		// Add id to chart block, for some reason block context was not working. @TODO Need to investigate.
+
+		// get the image inner block
+		$image_block = array_filter(
+			$chart_block['innerBlocks'],
+				function( $b ) {
+					return array_key_exists('blockName', $b) && 'core/image' === $b['blockName'];
+				}
+		);
+		$image_block = array_pop($image_block);
+
 		$chart_block['attrs']['id'] = $id;
 		$chart_block['attrs']['className'] = 'active';
+
+		if ( $image_block ) {
+			// get attachment image url
+			$static_chart_img = wp_get_attachment_image_src( $image_block['attrs']['id'], 'full' );
+			$static_chart_image_src = $static_chart_img[0];
+			$chart_block['attrs']['staticImageId'] = $image_block['attrs']['id'];
+			$chart_block['attrs']['staticImageUrl'] = $static_chart_image_src;
+		}
+
+
 		$active_share_tabs = array_key_exists('tabsActive', $attributes) ? $attributes['tabsActive'] : false;
 		$table_block = array_filter(
 			$block->parsed_block['innerBlocks'],
@@ -128,6 +149,7 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 				if ( $active_share_tabs && $chart_block && $table_block) {
 					$table_with_meta = $this->render_table_with_meta_text($chart_block, $table_block, $id, $chart_block['attrs']);
 					echo render_block( $chart_block );
+					// parse HTML string
 					echo wp_sprintf('<div class="wp-chart-builder-table" data-chart-hash="%1$s" style="max-width:%2$s;">%3$s</div>', esc_attr($id), esc_attr($maxWidth), wp_kses($table_with_meta, 'post'));
 				} elseif ( $chart_block ) {
 					echo render_block( $chart_block );

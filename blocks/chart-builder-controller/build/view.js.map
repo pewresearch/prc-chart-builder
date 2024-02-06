@@ -1,0 +1,1 @@
+{"version":3,"file":"view.js","mappings":"AAAKA,OAAOC,YACXD,OAAOC,UAAY,CAAC","sources":["webpack://chart-builder-controller/./src/view.js"],"sourcesContent":["if (!window.tableData) {\n\twindow.tableData = {};\n}\n"],"names":["window","tableData"],"sourceRoot":""}

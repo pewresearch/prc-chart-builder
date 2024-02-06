@@ -23,8 +23,6 @@ class Chart_Builder extends PRC_Chart_Builder {
 		return null;
 	}
 
-
-
 	public function render_chart_builder( $attributes, $content = '', $block = null ) {
 		if ( is_admin() || null === $block ) {
 			return $content;
@@ -37,7 +35,9 @@ class Chart_Builder extends PRC_Chart_Builder {
 			new \WP_Error( 'missing_id', __( 'Chart Block is missing ID', 'prc-block-library' ) );
 			return;
 		}
+
 		$post_id 	   = get_the_ID();
+		$root_url 	   = get_bloginfo('url');
 		wp_add_inline_script($script_handle, "if ( !window.chartConfigs ) {window.chartConfigs = {};} chartConfigs['".$id."'] = " . $attrs . ";");
 
 		$block_attrs = get_block_wrapper_attributes(
@@ -46,6 +46,7 @@ class Chart_Builder extends PRC_Chart_Builder {
 				'data-chart-hash' => $id,
 				'data-post-id' => $post_id,
 				'data-post-url' => get_permalink( $post_id ),
+				'data-root-url' => $root_url,
 				'data-iframe-height' => null,
 			)
 		);

@@ -1,3 +1,8 @@
+/* eslint-disable @wordpress/i18n-no-variables */
+/* eslint-disable max-lines */
+/* eslint-disable max-lines-per-function */
+/* eslint-disable @wordpress/no-unsafe-wp-apis */
+
 /**
  * WordPress dependencies
  */
@@ -33,10 +38,12 @@ import { getDate, dateI18n } from '@wordpress/date';
 /**
  * Internal dependencies
  */
+import { formatNum } from '../utils/helpers';
 import presidentPlotBands from '../utils/presidentPlotBands';
 
 function PlotBandControls({ attributes, setAttributes }) {
 	const { plotBandsActive, plotBands, xScale } = attributes;
+
 	const setLabelStyle = (plotBands, index, key, value) => {
 		setAttributes({
 			plotBands: plotBands.map((band, i) =>
@@ -241,7 +248,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 								<FlexItem>
 									<NumberControl
 										label={__('X Offset')}
-										value={plotBand.style.label.dx}
+										value={plotBand.style.label.dy}
 										onChange={(value) => {
 											setAttributes({
 												plotBands: plotBands.map(
@@ -255,7 +262,10 @@ function PlotBandControls({ attributes, setAttributes }) {
 																			...band
 																				.style
 																				.label,
-																			dx: value,
+																			dx: formatNum(
+																				value,
+																				'integer'
+																			),
 																		},
 																	},
 															  }
@@ -282,7 +292,10 @@ function PlotBandControls({ attributes, setAttributes }) {
 																			...band
 																				.style
 																				.label,
-																			dy: value,
+																			dy: formatNum(
+																				value,
+																				'integer'
+																			),
 																		},
 																	},
 															  }

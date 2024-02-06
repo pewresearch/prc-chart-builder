@@ -24,13 +24,24 @@ import getConfig from './utils/getConfig';
 import ShareModal from './view/ShareModal';
 import './styles.scss';
 
+new DOMParser();
+
 const { innerWidth, innerHeight } = window;
 
 const getChartConfig = (el) => {
 	const hash = el.dataset.chartHash;
 	const attributes = window.chartConfigs[hash];
 	const config = getConfig(attributes, hash, 'wp-chart-builder-wrapper');
-	return config;
+	// add static image attributes to config
+	const { isStaticChart, staticImageId, staticImageUrl, staticImageAltText } =
+		attributes;
+	return {
+		...config,
+		staticImageId,
+		staticImageUrl,
+		isStaticChart,
+		staticImageAltText,
+	};
 };
 
 const setViewButtonEvents = (viewButtons, tableEl, renderEl, hash) => {
@@ -102,13 +113,13 @@ const setViewButtonEvents = (viewButtons, tableEl, renderEl, hash) => {
 	}
 };
 
-const initFacebookLinks = (e, postUrl, postId, pngAttrs) => {
+const initFacebookLinks = (e, postUrl, rootUrl, postId, pngAttrs) => {
 	e.preventDefault();
 	const actionUrl = addQueryArgs(
 		'https://www.facebook.com/sharer/sharer.php',
 		{
 			u: pngAttrs.id
-				? `https://www.pewresearch.org/share/${postId}/${pngAttrs.id}`
+				? `${rootUrl}/share/${postId}/${pngAttrs.id}`
 				: postUrl,
 		}
 	);
@@ -122,12 +133,12 @@ const initFacebookLinks = (e, postUrl, postId, pngAttrs) => {
 	e.stopPropagation();
 };
 
-const initTwitterLinks = (e, postUrl, postId, pngAttrs, title) => {
+const initTwitterLinks = (e, postUrl, rootUrl, postId, pngAttrs, title) => {
 	e.preventDefault();
 	const actionUrl = addQueryArgs('https://twitter.com/intent/tweet', {
 		text: title,
 		url: pngAttrs.id
-			? `https://www.pewresearch.org/share/${postId}/${pngAttrs.id}`
+			? `${rootUrl}/share/${postId}/${pngAttrs.id}`
 			: postUrl,
 	});
 	window.open(
@@ -169,11 +180,15 @@ const renderCharts = () => {
 		const viewButtons = chart.querySelector(
 			'.wp-chart-builder-view-buttons'
 		);
-
+		const { isStaticChart, staticImageId, staticImageUrl } = config;
 		const { postId, postUrl } = renderEl.dataset;
 		const pngAttrs = {
-			url: window.chartConfigs[hash].pngUrl,
-			id: window.chartConfigs[hash].pngId,
+			url: !isStaticChart
+				? window.chartConfigs[hash].pngUrl
+				: staticImageUrl,
+			id: !isStaticChart
+				? window.chartConfigs[hash].pngId
+				: staticImageId,
 		};
 		const tableData = window.tableData[hash];
 		// if there is preformatted data, use that, otherwise use the data from the chart config
@@ -211,6 +226,7 @@ const renderCharts = () => {
 			svgDownloadButton.addEventListener('click', (e) => createSvg(hash));
 		}
 		setViewButtonEvents(viewButtons, tableEl, renderEl, hash);
+
 		render(
 			<figure>
 				<ChartBuilderTextWrapper
@@ -223,15 +239,33 @@ const renderCharts = () => {
 					source={config.metadata.source}
 					tag={config.metadata.tag}
 				>
-					<ChartBuilderWrapper config={config} data={formattedData} />
+					{isStaticChart && (
+						<img
+							src={pngAttrs.url}
+							alt={config.staticImageAltText}
+						/>
+					)}
+					{!isStaticChart && (
+						<ChartBuilderWrapper
+							config={config}
+							data={formattedData}
+						/>
+					)}
 					<ShareModal
 						onClickFacebook={(e) =>
-							initFacebookLinks(e, postUrl, postId, pngAttrs)
+							initFacebookLinks(
+								e,
+								postUrl,
+								rootUrl,
+								postId,
+								pngAttrs
+							)
 						}
 						onClickTwitter={(e) =>
 							initTwitterLinks(
 								e,
 								postUrl,
+								rootUrl,
 								postId,
 								pngAttrs,
 								config.metadata.title

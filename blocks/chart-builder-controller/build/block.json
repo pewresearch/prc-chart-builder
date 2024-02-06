@@ -14,6 +14,18 @@
     "id": {
       "type": "string"
     },
+    "isStatic": {
+      "type": "boolean",
+      "default": false
+    },
+    "isTable": {
+      "type": "boolean",
+      "default": false
+    },
+    "isInteractive": {
+      "type": "boolean",
+      "default": true
+    },
     "chartType": {
       "type": "string"
     },

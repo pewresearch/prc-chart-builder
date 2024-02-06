@@ -17,6 +17,16 @@
       "type": "boolean",
       "default": false
     },
+    "isStaticChart": {
+      "type": "boolean",
+      "default": false
+    },
+    "staticImage": {
+      "type": "string"
+    },
+    "staticImageAltText": {
+      "type": "string"
+    },
     "chartConverted": {
       "type": "object",
       "default": {
@@ -41,7 +51,8 @@
         "dot-plot",
         "stacked-bar",
         "grouped-bar",
-        "exploded-bar"
+        "exploded-bar",
+        "static"
       ],
       "default": "bar"
     },
@@ -461,6 +472,14 @@
       "type": "number",
       "default": 5
     },
+    "barPadding": {
+      "type": "number",
+      "default": 0.2
+    },
+    "barGroupPadding": {
+      "type": "number",
+      "default": 0.2
+    },
     "lineInterpolation": {
       "type": "string",
       "enum": [
@@ -613,6 +632,10 @@
       "type": "boolean",
       "default": false
     },
+    "showFirstLastPointsOnly": {
+      "type": "boolean",
+      "default": false
+    },
     "labelPositionDX": {
       "type": "integer",
       "default": 0
@@ -671,6 +694,10 @@
       "type": "boolean",
       "default": false
     },
+    "legendCategories": {
+      "type": "array",
+      "default": []
+    },
     "legendOrientation": {
       "type": "string",
       "enum": [
@@ -684,6 +711,16 @@
     "legendTitle": {
       "type": "string",
       "default": ""
+    },
+    "legendAlignment": {
+      "type": "string",
+      "enum": [
+        "flex-start",
+        "center",
+        "flex-end",
+        "none"
+      ],
+      "default": "center"
     },
     "legendOffsetX": {
       "type": "integer",
@@ -797,11 +834,47 @@
       "type": "string",
       "default": ""
     },
+    "explodedBarColumnGap": {
+      "type": "number",
+      "default": 16
+    },
     "availableCategories": {
       "type": "array",
       "default": [
         "y"
       ]
+    },
+    "diffColumnActive": {
+      "type": "boolean",
+      "default": false
+    },
+    "diffColumnCategory": {
+      "type": "string",
+      "default": ""
+    },
+    "diffColumnHeader": {
+      "type": "string",
+      "default": ""
+    },
+    "diffColumnWidth": {
+      "type": "integer",
+      "default": 30
+    },
+    "diffColumnBackgroundColor": {
+      "type": "string",
+      "default": ""
+    },
+    "diffColumnMarginLeft": {
+      "type": "integer",
+      "default": 10
+    },
+    "diffColumnHeightOffset": {
+      "type": "integer",
+      "default": 0
+    },
+    "diffColumnAppearance": {
+      "type": "string",
+      "default": "default"
     },
     "allowDataDownload": {
       "type": "boolean",
