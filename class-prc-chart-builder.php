@@ -1,21 +1,20 @@
 <?php
+namespace PRC;
+
 /**
  * Plugin Name:       PRC Chart Builder
- * Description:       An interactive chart builder for PRC Platform.
+ * Description:       Chart Builder is a chart building tool for the PRC Platform. It allows you to create rich, highly interactive charts and data visualizations all from the block editor. Support for synced charts via the Synced Chart block is also possible, allowing you to place one chart in many places and have them all update when the original is updated.
  * Requires at least: 6.1
  * Requires PHP:      7.0
  * Version:           0.1.0
- * Author:            Ben Wormald
- * Author URI:        https://benwormald.com
+ * Author:            Ben Wormald and Seth Rubenstein
+ * Author URI:        https://pewresearch.org
  * License:           GPL-2.0-or-later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain:       prc-chart-builder
- * Requires Plugins:  prc-platform-core, prc-scripts, prc-charting-library
- *
- * @package           PRC_Chart_Builder
+ * Requires Plugins:  prc-charting-library, prc-scripts, prc-platform-core
  **/
 
-namespace PRC;
 
 // Exit if accessed directly.
 if ( ! defined( 'ABSPATH' ) ) {
