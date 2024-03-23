@@ -148,10 +148,7 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 						disabled={!labelsActive}
 						onChange={(value) =>
 							setAttributes({
-								labelFontSize: `${formatNum(
-									value,
-									'integer'
-								)}px`,
+								labelFontSize: formatNum(value, 'integer'),
 							})
 						}
 					/>
