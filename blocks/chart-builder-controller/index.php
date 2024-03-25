@@ -32,7 +32,7 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		$metaSource = array_key_exists('metaSource', $chart_attributes) ? $chart_attributes['metaSource'] : '';
 		$metaTag = array_key_exists('metaTag', $chart_attributes) ? $chart_attributes['metaTag'] : 'PEW RESEARCH CENTER';
 		$width = array_key_exists('width', $chart_attributes) ? $chart_attributes['width'] . 'px' : '100%';
-		$height = array_key_exists('height', $chart_attributes) ? $chart_attributes['height'] - 62 . 'px' : 'auto';
+		$height = array_key_exists('height', $chart_attributes) ? $chart_attributes['height'] . 'px' : 'auto';
 
 		ob_start();
 		?>
@@ -41,11 +41,6 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		<div class="cb__subtitle"><?php echo esc_html($metaSubtitle);?></div>
 		<div style="height: <?php echo esc_attr($height);?>; margin-bottom: 15px; overflow: auto;">
 			<?php echo wp_kses(render_block( $table_block ), 'post'); ?>
-		</div>
-		<div class="wp-block-buttons wp-container-2">
-			<div class="wp-block-button has-custom-width has-custom-font-size is-style-fill has-sans-serif-font-family has-small-label-font-size">
-				<a class="wp-block-button__link has-white-color has-link-color-background-color has-text-color has-background wp-element-button wp-chart-builder-download button">Download data as .csv</a>
-			</div>
 		</div>
 		<div class="cb__note"><?php echo apply_filters('the_content', $metaNote);?></div>
 		<div class="cb__note"><?php echo apply_filters('the_content',$metaSource);?></div>
@@ -57,6 +52,13 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 
 		return render_block( array_pop($parsed_block) );
 	}
+
+	// TODO: read to table function when WP_HTML_Tag_Processor is fixed -->
+	// <div class="wp-block-buttons wp-container-2">
+	//  <div class="wp-block-button has-custom-width has-custom-font-size is-style-fill has-sans-serif-font-family has-small-label-font-size">
+	//		<a class="wp-block-button__link has-white-color has-link-color-background-color has-text-color has-background wp-element-button wp-chart-builder-download button">Download data as .csv</a>
+	//	</div>
+	// </div>
 
 
 
@@ -113,13 +115,15 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		$table_block = array_pop( $table_block );
 
 		// if the table was set to be hidden in the editor, we need to reasssign class to unhide it.
-
-		$table_block['attrs']['className'] = 'chart-builder-data-table';
-
 		$preformatted_data = array_key_exists('chartPreformattedData', $attributes) ? $attributes['chartPreformattedData'] : null;
 
-		$table_array = array_key_exists('tableData', $attributes) ? $attributes['tableData'] : false;
-		$table_array = true !== $table_array || empty($attributes['tableData']) ? parse_table_block_into_array( $table_block['innerHTML'] ) : $table_array;
+		$table_array = null;
+		if ($table_block) {
+			$table_block['attrs']['className'] = 'chart-builder-data-table';
+			// TODO: uncomment when WP_HTML_Tag_Processor is fixed
+			// $table_array = array_key_exists('tableData', $attributes) ? $attributes['tableData'] : false;
+			// $table_array = true !== $table_array || empty($attributes['tableData']) ? parse_table_block_into_array( $table_block['innerHTML'] ) : $table_array;
+		}
 
 		// @TODO: I wonder if we can create a wordpress redux registry to manage multiple chart configs on a page...
 		wp_add_inline_script($script_handle, "if ( !window.tableData ) {window.tableData = {};} window.tableData['".$id."'] = " . wp_json_encode( $table_array ) . ";");
