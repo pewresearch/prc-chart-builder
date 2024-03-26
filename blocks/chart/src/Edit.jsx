@@ -9,8 +9,8 @@ import { useEffect } from '@wordpress/element';
 import { useEntityBlockEditor, useEntityRecord } from '@wordpress/core-data';
 import {
 	useInnerBlocksProps,
-	__experimentalRecursionProvider as RecursionProvider,
-	__experimentalUseHasRecursion as useHasRecursion,
+	RecursionProvider,
+	useHasRecursion,
 	InnerBlocks,
 	useBlockProps,
 	Warning,
