@@ -1,0 +1,30 @@
+{
+	"name": "chart-builder",
+	"description": "Inner Chart Block",
+	"version": "0.1.0",
+	"devDependencies": {
+		"@wordpress/block-editor": "^9.8.0",
+		"@wordpress/blocks": "^11.15.0",
+		"@wordpress/components": "^20.0.0",
+		"@wordpress/data": "^7.0.0",
+		"@wordpress/dependency-extraction-webpack-plugin": "^4.4.0",
+		"@wordpress/element": "^4.14.0",
+		"@wordpress/i18n": "^4.16.0",
+		"@wordpress/prettier-config": "^2.11.0",
+		"html2canvas": "^1.4.1",
+		"react": "^18.0.2",
+		"react-dom": "^17.0.0"
+	},
+	"dependencies": {
+		"@wordpress/date": "^4.36.0",
+		"classnames": "^2.5.1",
+		"react-movable": "^3.0.4",
+		"styled-components": "^5.3.6",
+		"@wordpress/scripts": "^26.2.0"
+	},
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"test": "wp-scripts test-unit-js"
+	}
+}

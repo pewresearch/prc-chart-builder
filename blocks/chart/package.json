@@ -1,0 +1,17 @@
+{
+	"name": "chart",
+	"description": "Synced chart block",
+	"version": "0.1.0",
+	"devDependencies": {
+		"@wordpress/scripts": "^26.2.0"
+	},
+	"dependencies": {
+		"@emotion/styled": "^11.10.8",
+		"@wordpress/icons": "^9.22.0"
+	},
+	"scripts": {
+		"build": "wp-scripts build",
+		"start": "wp-scripts start",
+		"test": "wp-scripts test-unit-js"
+	}
+}
