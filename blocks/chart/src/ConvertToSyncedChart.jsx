@@ -4,7 +4,7 @@
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
 import { useState } from '@wordpress/element';
-import { PluginBlockSettingsMenuItem } from '@wordpress/edit-post';
+import { PluginBlockSettingsMenuItem } from '@wordpress/editor';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { symbol as icon } from '@wordpress/icons';
 import { createBlock, serialize } from '@wordpress/blocks';
