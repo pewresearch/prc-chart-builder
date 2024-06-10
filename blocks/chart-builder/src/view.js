@@ -198,30 +198,30 @@ const renderCharts = () => {
 
 		// TODO: readd csv export when WP_HTML_Tag_Processor is fixed
 		// if there are no errors getting table data, and there are rows, create a csv
-		// const csv =
-		// 	tableData && !tableData.errors && tableData.rows.length > 0
-		// 		? arrayToCSV([tableData.header, ...tableData.rows], {
-		// 				title: config.metadata.title,
-		// 				subtitle: config.metadata.subtitle,
-		// 				note: config.metadata.note,
-		// 				source: config.metadata.source,
-		// 				tag: config.metadata.tag,
-		// 			})
-		// 		: false;
-		// // onclick, download the csv
-		// const downloadData = (e) => {
-		// 	e.preventDefault();
-		// 	const blob = new Blob([csv], { type: 'text/csv' });
-		// 	const url = URL.createObjectURL(blob);
-		// 	const link = document.createElement('a');
-		// 	link.setAttribute('href', url);
-		// 	link.setAttribute('download', `chart-export-${hash}.csv`);
-		// 	link.click();
-		// 	e.stopPropagation();
-		// };
-		// if (downloadButton && csv) {
-		// 	downloadButton.addEventListener('click', downloadData);
-		// }
+		const csv =
+			tableData && !tableData.errors && tableData.rows.length > 0
+				? arrayToCSV([tableData.header, ...tableData.rows], {
+						title: config.metadata.title,
+						subtitle: config.metadata.subtitle,
+						note: config.metadata.note,
+						source: config.metadata.source,
+						tag: config.metadata.tag,
+					})
+				: false;
+		// onclick, download the csv
+		const downloadData = (e) => {
+			e.preventDefault();
+			const blob = new Blob([csv], { type: 'text/csv' });
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement('a');
+			link.setAttribute('href', url);
+			link.setAttribute('download', `chart-export-${hash}.csv`);
+			link.click();
+			e.stopPropagation();
+		};
+		if (downloadButton && csv) {
+			downloadButton.addEventListener('click', downloadData);
+		}
 
 		if (svgDownloadButton) {
 			svgDownloadButton.addEventListener('click', (e) => createSvg(hash));

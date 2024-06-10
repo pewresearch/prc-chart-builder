@@ -32,17 +32,22 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		$metaSource = array_key_exists('metaSource', $chart_attributes) ? $chart_attributes['metaSource'] : '';
 		$metaTag = array_key_exists('metaTag', $chart_attributes) ? $chart_attributes['metaTag'] : 'PEW RESEARCH CENTER';
 		$width = array_key_exists('width', $chart_attributes) ? $chart_attributes['width'] . 'px' : '100%';
-		$height = array_key_exists('height', $chart_attributes) ? $chart_attributes['height'] . 'px' : 'auto';
+		$height = array_key_exists('height', $chart_attributes) ? $chart_attributes['height']-50 . 'px' : 'auto';
 
 		ob_start();
 		?>
 		<hr style="margin: 0px 0px 10px; max-width: <?php echo esc_attr($width);?>;">
 		<div class="cb__title"><?php echo esc_html($metaTitle);?></div>
 		<div class="cb__subtitle"><?php echo esc_html($metaSubtitle);?></div>
-		<div style="height: <?php echo esc_attr($height);?>; margin-bottom: 15px; overflow: auto;">
+		<div style="max-width: <?php echo esc_attr($width);?> !important; height: <?php echo esc_attr($height);?> !important; margin-bottom: 20px; overflow: auto;">
 			<?php echo wp_kses(render_block( $table_block ), 'post'); ?>
 		</div>
-		<div class="cb__note"><?php echo apply_filters('the_content', $metaNote);?></div>
+		<div class="wp-block-buttons wp-container-2">
+			<div class="wp-block-button has-custom-width has-custom-font-size is-style-fill has-sans-serif-font-family has-small-label-font-size">
+				<a class="wp-block-button__link has-white-color has-link-color-background-color has-text-color has-background wp-element-button wp-chart-builder-download button">Download data as .csv</a>
+			</div>
+		 </div>
+		<div class="cb__note" ><?php echo apply_filters('the_content', $metaNote);?></div>
 		<div class="cb__note"><?php echo apply_filters('the_content',$metaSource);?></div>
 		<div class="cb__tag"><?php echo esc_html($metaTag);?></div>
 		<hr style="margin: 10px 0px 0px; max-width: <?php echo esc_attr($width);?>;">
@@ -54,11 +59,7 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 	}
 
 	// TODO: read to table function when WP_HTML_Tag_Processor is fixed -->
-	// <div class="wp-block-buttons wp-container-2">
-	//  <div class="wp-block-button has-custom-width has-custom-font-size is-style-fill has-sans-serif-font-family has-small-label-font-size">
-	//		<a class="wp-block-button__link has-white-color has-link-color-background-color has-text-color has-background wp-element-button wp-chart-builder-download button">Download data as .csv</a>
-	//	</div>
-	// </div>
+
 
 
 
@@ -121,8 +122,8 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		if ($table_block) {
 			$table_block['attrs']['className'] = 'chart-builder-data-table';
 			// TODO: uncomment when WP_HTML_Tag_Processor is fixed
-			// $table_array = array_key_exists('tableData', $attributes) ? $attributes['tableData'] : false;
-			// $table_array = true !== $table_array || empty($attributes['tableData']) ? parse_table_block_into_array( $table_block['innerHTML'] ) : $table_array;
+			$table_array = array_key_exists('tableData', $attributes) ? $attributes['tableData'] : false;
+			$table_array = true !== $table_array || empty($attributes['tableData']) ? parse_table_block_into_array( $table_block['innerHTML'] ) : $table_array;
 		}
 
 		// @TODO: I wonder if we can create a wordpress redux registry to manage multiple chart configs on a page...
@@ -134,7 +135,6 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		$offer_svg_download = isset( $_GET['offerSVGDownload'] ) ? $_GET['offerSVGDownload'] : false;
 
 		$maxWidth = array_key_exists('width', $chart_block['attrs']) ? $chart_block['attrs']['width'].'px' : '100%';
-		$height = array_key_exists('height', $chart_block['attrs']) ? $chart_block['attrs']['height'].'px' : 'auto';
 		$align = array_key_exists('align', $attributes) ? $attributes['align'] : 'center';
 		// sometimes the converted charts just don't play nicely. set a hard max width cap
 		if ($attributes['isConvertedChart']) {

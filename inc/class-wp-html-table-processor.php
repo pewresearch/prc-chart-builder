@@ -7,24 +7,27 @@
 /**
  * Pass in a table and get back an array of the header, rows, and footer cells quickly and effeciently.
  *
- * The WP_HTML_Tag_Processor bookmark tree navigation is heavily cribbed from WP_Directive_Processor class https://github.com/WordPress/block-interactivity-experiments/pull/169/files#diff-ad36045951e27010af027ae380350ae4b07b56a659a3127b40b7967b2308d5bc
- * @package
+ * The WP_HTML_Tag_Processor bookmark tree navigation is HEAVILY cribbed from WP_Directive_Processor class https://github.com/WordPress/wordpress-develop/blob/6.5/src/wp-includes/interactivity-api/class-wp-interactivity-api-directives-processor.php#L18
  */
 class WP_HTML_Table_Processor extends WP_HTML_Tag_Processor {
-	/**
-	 *
-	 * Find the matching closing tag for an opening tag.
-	 *
-	 * When called while on an open tag, traverse the HTML until we find
-	 * the matching closing tag, respecting any in-between content, including
-	 * nested tags of the same name. Return false when called on a closing or
-	 * void tag, or if no matching closing tag was found.
-	 *
-	 * @return bool True if a matching closing tag was found.
-	 */
-	public function next_balanced_closer() {
-		$depth = 0;
 
+	/**
+	 * Finds the matching closing tag for an opening tag.
+	 *
+	 * When called while the processor is on an open tag, it traverses the HTML
+	 * until it finds the matching closer tag, respecting any in-between content,
+	 * including nested tags of the same name. Returns false when called on a
+	 * closer tag, a tag that doesn't have a closer tag (void), a tag that
+	 * doesn't visit the closer tag, or if no matching closing tag was found.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @access private
+	 *
+	 * @return bool Whether a matching closing tag was found.
+	 */
+	public function next_balanced_tag_closer_tag(): bool {
+		$depth    = 0;
 		$tag_name = $this->get_tag();
 
 		while ( $this->next_tag(
@@ -34,7 +37,7 @@ class WP_HTML_Table_Processor extends WP_HTML_Tag_Processor {
 			)
 		) ) {
 			if ( ! $this->is_tag_closer() ) {
-				$depth++;
+				++$depth;
 				continue;
 			}
 
@@ -42,60 +45,98 @@ class WP_HTML_Table_Processor extends WP_HTML_Tag_Processor {
 				return true;
 			}
 
-			$depth--;
+			--$depth;
 		}
 
 		return false;
 	}
+/**
+	 * Returns a pair of bookmarks for the current opener tag and the matching
+	 * closer tag.
+	 *
+	 * It positions the cursor in the closer tag of the balanced tag, if it
+	 * exists.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @return array|null A pair of bookmarks, or null if there's no matching closing tag.
+	 */
+	public function get_balanced_tag_bookmarks() {
+		static $i   = 0;
+		$opener_tag = 'opener_tag_of_balanced_tag_' . ++$i;
 
-	public function get_matching_tag_bookmarks() {
-		$i = 0;
-		while ( array_key_exists( 'start-' . $i, $this->bookmarks ) ) {
-			++$i;
+		$this->set_bookmark( $opener_tag );
+		if ( ! $this->next_balanced_tag_closer_tag() ) {
+			$this->release_bookmark( $opener_tag );
+			return null;
 		}
-		$start_name = 'start-' . $i;
 
-		$this->set_bookmark( $start_name );
-		if ( ! $this->next_balanced_closer() ) {
-			$this->release_bookmark( $start_name );
-			return false;
+		$closer_tag = 'closer_tag_of_balanced_tag_' . ++$i;
+		$this->set_bookmark( $closer_tag );
+
+		return array( $opener_tag, $closer_tag );
+	}
+	/**
+	 * Gets the positions right after the opener tag and right before the closer
+	 * tag in a balanced tag.
+	 *
+	 * By default, it positions the cursor in the closer tag of the balanced tag.
+	 * If $rewind is true, it seeks back to the opener tag.
+	 *
+	 * @since 6.5.0
+	 *
+	 * @access private
+	 *
+	 * @param bool $rewind Optional. Whether to seek back to the opener tag after finding the positions. Defaults to false.
+	 * @return array|null Start and end byte position, or null when no balanced tag bookmarks.
+	 */
+	public function get_after_opener_tag_and_before_closer_tag_positions( bool $rewind = false ) {
+		// Flushes any changes.
+		$this->get_updated_html();
+
+		$bookmarks = $this->get_balanced_tag_bookmarks();
+		if ( ! $bookmarks ) {
+			return null;
+		}
+		list( $opener_tag, $closer_tag ) = $bookmarks;
+
+		$after_opener_tag  = $this->bookmarks[ $opener_tag ]->start + $this->bookmarks[ $opener_tag ]->length + 1;
+		$before_closer_tag = $this->bookmarks[ $closer_tag ]->start;
+
+		if ( $rewind ) {
+			$this->seek( $opener_tag );
 		}
 
-		$i = 0;
-		while ( array_key_exists( 'end-' . $i, $this->bookmarks ) ) {
-			++$i;
-		}
-		$end_name = 'end-' . $i;
-		$this->set_bookmark( $end_name );
+		$this->release_bookmark( $opener_tag );
+		$this->release_bookmark( $closer_tag );
 
-		return array( $start_name, $end_name );
+		return array( $after_opener_tag, $before_closer_tag );
 	}
 
 	/**
-	 * Return the content between two matching tags.
+	 * Returns the content between two balanced template tags.
 	 *
-	 * When called on an opening tag, return the HTML content found between
-	 * that opening tag and its matching closing tag.
+	 * It positions the cursor in the closer tag of the balanced template tag,
+	 * if it exists.
 	 *
-	 * @return string The content between the current opening and its matching closing tag.
+	 * @since 6.5.0
+	 *
+	 * @access private
+	 *
+	 * @return string|null The content between the current opener template tag and its matching closer tag or null if it
+	 *                     doesn't find the matching closing tag or the current tag is not a template opener tag.
 	 */
-	public function get_inner_html() {
-		$bookmarks = $this->get_matching_tag_bookmarks();
+	public function get_content_between_balanced_template_tags() {
 
-		if ( ! $bookmarks ) {
-			return false;
+		$positions = $this->get_after_opener_tag_and_before_closer_tag_positions();
+		if ( ! $positions ) {
+			return null;
 		}
-		list( $start_name, $end_name ) = $bookmarks;
+		list( $after_opener_tag, $before_closer_tag ) = $positions;
 
-		$start = $this->bookmarks[ $start_name ]->end + 1;
-		$end   = $this->bookmarks[ $end_name ]->start;
-
-		$this->seek( $start_name ); // Return to original position.
-		$this->release_bookmark( $start_name );
-		$this->release_bookmark( $end_name );
-
-		return substr( $this->html, $start, $end - $start );
+		return substr( $this->html, $after_opener_tag, $before_closer_tag - $after_opener_tag );
 	}
+
 
 	/**
 	 * Returns the data from the table as an array.
@@ -113,7 +154,7 @@ class WP_HTML_Table_Processor extends WP_HTML_Tag_Processor {
 		$this->set_bookmark( 'thead' );
 		$this->next_tag( 'tr' );
 		while ( $this->next_tag( 'th' ) ) {
-			$table_headers[] = $this->get_inner_html();
+			$table_headers[] = $this->get_content_between_balanced_template_tags();
 		}
 		// Cleaning the tree as we go
 		$this->seek( 'thead' );
@@ -129,7 +170,7 @@ class WP_HTML_Table_Processor extends WP_HTML_Tag_Processor {
 			$this->set_bookmark( 'tbody' );
 			while ( $this->next_tag( 'tr' ) ) {
 				while ( $this->next_tag( 'td' ) ) {
-					$table_rows[] = $this->get_inner_html();
+					$table_rows[] = $this->get_content_between_balanced_template_tags();
 				}
 			}
 			// Cleaning the tree as we go
@@ -141,7 +182,7 @@ class WP_HTML_Table_Processor extends WP_HTML_Tag_Processor {
 		if ( $this->next_tag( 'tfoot' ) ) {
 			$this->set_bookmark( 'tfoot' );
 			while ( $this->next_tag( 'tr' ) ) {
-				$table_footer[] = $this->get_inner_html();
+				$table_footer[] = $this->get_content_between_balanced_template_tags();
 			}
 			// Cleaning the tree as we go
 			$this->seek( 'tfoot' );
@@ -166,9 +207,10 @@ class WP_HTML_Table_Processor extends WP_HTML_Tag_Processor {
  * @return array
  */
 function parse_table_block_into_array( $table_content ) {
+
 	// strip $table_content of any <!-- comments -->, which can interfer with the parser below
 	$table_content = preg_replace( '/<!--(.|\s)*?-->/', '', $table_content );
 	$processor = new WP_HTML_Table_Processor( $table_content );
+
 	return $processor->get_data();
 }
-
