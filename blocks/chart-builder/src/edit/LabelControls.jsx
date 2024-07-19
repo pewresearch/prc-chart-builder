@@ -63,6 +63,7 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 		labelFontSize,
 		labelPositionDY,
 		labelPositionDX,
+		labelTruncateDecimal,
 		labelToFixedDecimal,
 		labelUnit,
 		labelUnitPosition,
@@ -142,16 +143,23 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					label={__('Label Font Size')}
 					panelId={clientId}
 				>
-					<NumberControl
-						label={__('Label Font Size')}
+					<ToggleGroupControl
+						__nextHasNoMarginBottom
+						isBlock
 						value={labelFontSize}
+						label={__('Label Font Size')}
 						disabled={!labelsActive}
-						onChange={(value) =>
+						onChange={(value) => {
 							setAttributes({
 								labelFontSize: formatNum(value, 'integer'),
-							})
-						}
-					/>
+							});
+						}}
+					>
+						<ToggleGroupControlOption label="10px" value={10} />
+						<ToggleGroupControlOption label="12px" value={12} />
+						<ToggleGroupControlOption label="14px" value={14} />
+						<ToggleGroupControlOption label="16px" value={16} />
+					</ToggleGroupControl>
 					<PanelDescription>
 						<Help>
 							{__(
@@ -256,6 +264,31 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 						</Help>
 					</PanelDescription>
 				</WidePanelItem>
+				{/* HERE */}
+				<WidePanelItem
+					hasValue={() => labelTruncateDecimal}
+					label={__('Truncate Trailing Decimals')}
+					panelId={clientId}
+					isShownByDefault
+				>
+					<ToggleControl
+						label={__('Truncate Trailing Decimals')}
+						checked={labelTruncateDecimal}
+						disabled={!labelsActive}
+						onChange={() =>
+							setAttributes({
+								labelTruncateDecimal: !labelTruncateDecimal,
+							})
+						}
+					/>
+					<PanelDescription>
+						<Help>
+							{__(
+								'If checked and number has fewer decimal places than the configuration requests, will remove all extraneous decimals from numbers. Eg. 1.6000 -> 1.6.'
+							)}
+						</Help>
+					</PanelDescription>
+				</WidePanelItem>
 				<WidePanelItem
 					hasValue={() => labelToFixedDecimal}
 					label={__('Decimal Places')}
@@ -265,6 +298,8 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 						label={__('Decimal Places')}
 						value={labelToFixedDecimal}
 						disabled={!labelsActive}
+						min={0}
+						max={100}
 						onChange={(value) =>
 							setAttributes({
 								labelToFixedDecimal: formatNum(

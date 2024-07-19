@@ -44,7 +44,7 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		</div>
 		<div class="wp-block-buttons wp-container-2">
 			<div class="wp-block-button has-custom-width has-custom-font-size is-style-fill has-sans-serif-font-family has-small-label-font-size">
-				<a class="wp-block-button__link has-white-color has-link-color-background-color has-text-color has-background wp-element-button wp-chart-builder-download button">Download data as .csv</a>
+				<a download class="wp-block-button__link has-white-color has-link-color-background-color has-text-color has-background wp-element-button wp-chart-builder-download button">Download data as .csv</a>
 			</div>
 		 </div>
 		<div class="cb__note" ><?php echo apply_filters('the_content', $metaNote);?></div>

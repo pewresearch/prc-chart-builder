@@ -29,6 +29,8 @@ function YAxisControls({ attributes, setAttributes }) {
 	const {
 		yAxisActive,
 		yLabel,
+		yLabelFontSize,
+		yLabelTextFill,
 		yLabelPadding,
 		yLabelMaxWidth,
 		yMinDomain,
@@ -171,7 +173,7 @@ function YAxisControls({ attributes, setAttributes }) {
 					yAbbreviateTicks
 						? __(
 								'Tick values will be abbreviated when possible (eg. 100,000 -> 100K)'
-						  )
+							)
 						: __('Tick values will be displayed as-is')
 				}
 				checked={yAbbreviateTicks}
@@ -201,7 +203,7 @@ function YAxisControls({ attributes, setAttributes }) {
 					yTicksToLocaleString
 						? __(
 								'Tick values will be formatted to locale string (eg. 100000 -> 100,000)'
-						  )
+							)
 						: __('Tick values will be displayed as-is')
 				}
 				checked={yTicksToLocaleString}
@@ -235,6 +237,25 @@ function YAxisControls({ attributes, setAttributes }) {
 					});
 				}}
 			/>
+			<PanelRow className="components-base-control__label">
+				Label Size and Positioning
+			</PanelRow>
+			<ToggleGroupControl
+				__nextHasNoMarginBottom
+				isBlock
+				value={yLabelFontSize}
+				label={__('Label Font Size')}
+				onChange={(value) => {
+					setAttributes({
+						yLabelFontSize: formatNum(value, 'integer'),
+					});
+				}}
+			>
+				<ToggleGroupControlOption label="10px" value={10} />
+				<ToggleGroupControlOption label="12px" value={12} />
+				<ToggleGroupControlOption label="14px" value={14} />
+				<ToggleGroupControlOption label="16px" value={16} />
+			</ToggleGroupControl>
 			<Flex>
 				<FlexItem>
 					<NumberControl
@@ -331,6 +352,12 @@ function YAxisControls({ attributes, setAttributes }) {
 						onChange: (value) =>
 							setAttributes({ yGridStroke: value }),
 						label: __('Grid Stroke'),
+					},
+					{
+						value: yLabelTextFill,
+						onChange: (value) =>
+							setAttributes({ yLabelTextFill: value }),
+						label: __('Text Fill'),
 					},
 				]}
 			/>

@@ -1,1 +1,1 @@
-<?php return array('dependencies' => array('prc-charting-library', 'prc-functions', 'react', 'wp-api-fetch', 'wp-dom-ready', 'wp-element', 'wp-polyfill', 'wp-url'), 'version' => 'cb3d741a457d108f29dc');
+<?php return array('dependencies' => array('prc-charting-library', 'prc-functions', 'react', 'wp-api-fetch', 'wp-dom-ready', 'wp-element', 'wp-polyfill', 'wp-url'), 'version' => '34bf3a10b8e980b02994');

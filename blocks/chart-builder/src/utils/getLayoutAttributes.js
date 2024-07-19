@@ -1,3 +1,4 @@
+/* eslint-disable max-lines-per-function */
 const getLayoutAttributes = (attributes) => {
 	const {
 		chartOrientation,
@@ -19,6 +20,7 @@ const getLayoutAttributes = (attributes) => {
 		xGridStrokeDasharray,
 		xLabel,
 		xLabelFontSize,
+		xLabelTextFill,
 		xLabelPadding,
 		xLabelMaxWidth,
 		xMaxDomain,
@@ -46,6 +48,7 @@ const getLayoutAttributes = (attributes) => {
 		yScaleFormat,
 		yLabel,
 		yLabelFontSize,
+		yLabelTextFill,
 		yLabelPadding,
 		yLabelMaxWidth,
 		yMinDomain,
@@ -113,6 +116,8 @@ const getLayoutAttributes = (attributes) => {
 		deemphasizeSiblings,
 		deemphasizeOpacity,
 	} = attributes;
+	// bar attributes
+	const { barPadding, barGroupPadding } = attributes;
 	// diverging bar attributes
 	const {
 		divergingBarPercentOfInnerWidth,
@@ -167,6 +172,7 @@ const getLayoutAttributes = (attributes) => {
 		xGridStrokeDasharray,
 		xLabel,
 		xLabelFontSize,
+		xLabelTextFill,
 		xLabelPadding,
 		xLabelMaxWidth,
 		xMaxDomain,
@@ -191,6 +197,7 @@ const getLayoutAttributes = (attributes) => {
 		yScaleFormat,
 		yLabel,
 		yLabelFontSize,
+		yLabelTextFill,
 		yLabelPadding,
 		yLabelMaxWidth,
 		yMinDomain,
@@ -247,6 +254,8 @@ const getLayoutAttributes = (attributes) => {
 		tooltipAbsoluteValue,
 		deemphasizeSiblings,
 		deemphasizeOpacity,
+		barPadding,
+		barGroupPadding,
 		divergingBarPercentOfInnerWidth,
 		neutralBarSeparator,
 		neutralBarActive,

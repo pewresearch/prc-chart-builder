@@ -100,7 +100,7 @@ class WP_HTML_Table_Processor extends WP_HTML_Tag_Processor {
 		}
 		list( $opener_tag, $closer_tag ) = $bookmarks;
 
-		$after_opener_tag  = $this->bookmarks[ $opener_tag ]->start + $this->bookmarks[ $opener_tag ]->length + 1;
+		$after_opener_tag  = $this->bookmarks[ $opener_tag ]->start + $this->bookmarks[ $opener_tag ]->length;
 		$before_closer_tag = $this->bookmarks[ $closer_tag ]->start;
 
 		if ( $rewind ) {
@@ -150,14 +150,16 @@ class WP_HTML_Table_Processor extends WP_HTML_Tag_Processor {
 
 		$this->next_tag( 'table' );
 
-		$this->next_tag( 'thead' );
-		$this->set_bookmark( 'thead' );
-		$this->next_tag( 'tr' );
-		while ( $this->next_tag( 'th' ) ) {
-			$table_headers[] = $this->get_content_between_balanced_template_tags();
+		if ( $this->next_tag( 'thead' ) ) {
+			$this->set_bookmark( 'thead' );
+			while ( $this->next_tag( 'tr' ) ) {
+				while ( $this->next_tag( 'th' ) ) {
+					$table_headers[] = $this->get_content_between_balanced_template_tags();
+				}
+			}
+			// Cleaning the tree as we go
+			$this->seek( 'thead' );
 		}
-		// Cleaning the tree as we go
-		$this->seek( 'thead' );
 
 		if ( empty( $table_headers ) ) {
 			return new WP_Error(

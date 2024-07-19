@@ -154,6 +154,10 @@
 			"type": "number",
 			"default": 30
 		},
+		"xLabelTextFill": {
+			"type": "string",
+			"default": "#231F20"
+		},
 		"xMinDomain": {
 			"type": "number",
 			"default": 0
@@ -309,6 +313,10 @@
 			"type": "number",
 			"default": 12
 		},
+		"yLabelTextFill": {
+			"type": "string",
+			"default": "#231F20"
+		},
 		"yLabelPadding": {
 			"type": "number",
 			"default": 30
@@ -425,14 +433,6 @@
 		"barLabelCutoffMobile": {
 			"type": "number",
 			"default": 5
-		},
-		"barPadding": {
-			"type": "number",
-			"default": 0.2
-		},
-		"barGroupPadding": {
-			"type": "number",
-			"default": 0.2
 		},
 		"barPadding": {
 			"type": "number",
@@ -590,10 +590,6 @@
 			"type": "boolean",
 			"default": false
 		},
-		"showFirstLastPointsOnly": {
-			"type": "boolean",
-			"default": false
-		},
 		"labelPositionDX": {
 			"type": "integer",
 			"default": 0
@@ -611,6 +607,10 @@
 			"default": false
 		},
 		"labelFormatValue": {
+			"type": "boolean",
+			"default": true
+		},
+		"labelTruncateDecimal": {
 			"type": "boolean",
 			"default": true
 		},
@@ -648,10 +648,6 @@
 			"type": "array",
 			"default": []
 		},
-		"legendCategories": {
-			"type": "array",
-			"default": []
-		},
 		"legendOrientation": {
 			"type": "string",
 			"enum": ["row", "column", "row-reverse", "column-reverse"],
@@ -660,11 +656,6 @@
 		"legendTitle": {
 			"type": "string",
 			"default": ""
-		},
-		"legendAlignment": {
-			"type": "string",
-			"enum": ["flex-start", "center", "flex-end", "none"],
-			"default": "center"
 		},
 		"legendAlignment": {
 			"type": "string",
@@ -783,45 +774,9 @@
 			"type": "number",
 			"default": 16
 		},
-		"explodedBarColumnGap": {
-			"type": "number",
-			"default": 16
-		},
 		"availableCategories": {
 			"type": "array",
 			"default": ["y"]
-		},
-		"diffColumnActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"diffColumnCategory": {
-			"type": "string",
-			"default": ""
-		},
-		"diffColumnHeader": {
-			"type": "string",
-			"default": ""
-		},
-		"diffColumnWidth": {
-			"type": "integer",
-			"default": 30
-		},
-		"diffColumnBackgroundColor": {
-			"type": "string",
-			"default": ""
-		},
-		"diffColumnMarginLeft": {
-			"type": "integer",
-			"default": 10
-		},
-		"diffColumnHeightOffset": {
-			"type": "integer",
-			"default": 0
-		},
-		"diffColumnAppearance": {
-			"type": "string",
-			"default": "default"
 		},
 		"diffColumnActive": {
 			"type": "boolean",

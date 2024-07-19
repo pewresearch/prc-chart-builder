@@ -58,7 +58,7 @@ const barTemplate = [
 			barWidth: 24,
 			barGroupOffset: 28,
 			labelsActive: true,
-			labelPositionDY: 3,
+			labelPositionDY: 4,
 			sortOrder: 'descending',
 			tooltipHeaderValue: 'independentValue',
 			tooltipFormat: '{{column}}: {{value}}',

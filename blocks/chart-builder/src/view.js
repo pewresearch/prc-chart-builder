@@ -181,7 +181,7 @@ const renderCharts = () => {
 			'.wp-chart-builder-view-buttons'
 		);
 		const { isStaticChart, staticImageId, staticImageUrl } = config;
-		const { postId, postUrl } = renderEl.dataset;
+		const { postId, postUrl, postPubDate } = renderEl.dataset;
 		const pngAttrs = {
 			url: !isStaticChart
 				? window.chartConfigs[hash].pngUrl
@@ -214,8 +214,14 @@ const renderCharts = () => {
 			const blob = new Blob([csv], { type: 'text/csv' });
 			const url = URL.createObjectURL(blob);
 			const link = document.createElement('a');
+			const csvTitle = config.metadata.title
+				.toLowerCase()
+				.replace(/\s+/g, '_');
 			link.setAttribute('href', url);
-			link.setAttribute('download', `chart-export-${hash}.csv`);
+			link.setAttribute(
+				'download',
+				`${csvTitle}_data_${postPubDate}.csv`
+			);
 			link.click();
 			e.stopPropagation();
 		};

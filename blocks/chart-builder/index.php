@@ -37,6 +37,8 @@ class Chart_Builder extends PRC_Chart_Builder {
 		}
 
 		$post_id 	   = get_the_ID();
+		// get the publication date of the post
+		$publication_date = get_the_date('Y-m-d', $post_id);
 		$root_url 	   = get_bloginfo('url');
 		wp_add_inline_script($script_handle, "if ( !window.chartConfigs ) {window.chartConfigs = {};} chartConfigs['".$id."'] = " . $attrs . ";");
 
@@ -46,6 +48,7 @@ class Chart_Builder extends PRC_Chart_Builder {
 				'data-chart-hash' => $id,
 				'data-post-id' => $post_id,
 				'data-post-url' => get_permalink( $post_id ),
+				'data-post-pub-date' => $publication_date,
 				'data-root-url' => $root_url,
 				'data-iframe-height' => null,
 			)

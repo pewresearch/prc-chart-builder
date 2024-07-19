@@ -47,8 +47,10 @@ function XAxisControls({ attributes, setAttributes }) {
 		xTickLabelVerticalAnchor,
 		xTickLabelTextAnchor,
 		xLabel,
+		xLabelFontSize,
 		xLabelPadding,
 		xLabelMaxWidth,
+		xLabelTextFill,
 		xAxisStroke,
 		xGridStroke,
 		xGridOpacity,
@@ -246,7 +248,7 @@ function XAxisControls({ attributes, setAttributes }) {
 							xAbbreviateTicks
 								? __(
 										'Tick values will be abbreviated when possible (eg. 100,000 -> 100K)'
-								  )
+									)
 								: __('Tick values will be displayed as-is')
 						}
 						checked={xAbbreviateTicks}
@@ -281,7 +283,7 @@ function XAxisControls({ attributes, setAttributes }) {
 							xTicksToLocaleString
 								? __(
 										'Tick values will be formatted to locale string (eg. 100000 -> 100,000)'
-								  )
+									)
 								: __('Tick values will be displayed as-is')
 						}
 						checked={xTicksToLocaleString}
@@ -317,7 +319,25 @@ function XAxisControls({ attributes, setAttributes }) {
 					});
 				}}
 			/>
-			<PanelRow>Label Positioning</PanelRow>
+			<PanelRow className="components-base-control__label">
+				Label Size and Positioning
+			</PanelRow>
+			<ToggleGroupControl
+				__nextHasNoMarginBottom
+				isBlock
+				value={xLabelFontSize}
+				label={__('Label Font Size')}
+				onChange={(value) => {
+					setAttributes({
+						xLabelFontSize: formatNum(value, 'integer'),
+					});
+				}}
+			>
+				<ToggleGroupControlOption label="10px" value={10} />
+				<ToggleGroupControlOption label="12px" value={12} />
+				<ToggleGroupControlOption label="14px" value={14} />
+				<ToggleGroupControlOption label="16px" value={16} />
+			</ToggleGroupControl>
 			<PanelRow>
 				Determines the position of label relative to it's parent node
 			</PanelRow>
@@ -417,6 +437,12 @@ function XAxisControls({ attributes, setAttributes }) {
 						onChange: (value) =>
 							setAttributes({ xGridStroke: value }),
 						label: __('Grid Stroke'),
+					},
+					{
+						value: xLabelTextFill,
+						onChange: (value) =>
+							setAttributes({ xLabelTextFill: value }),
+						label: __('Text Fill'),
 					},
 				]}
 			/>

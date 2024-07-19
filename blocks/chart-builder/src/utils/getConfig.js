@@ -44,6 +44,7 @@ const getConfig = (
 		xGridOpacity,
 		xLabel,
 		xLabelFontSize,
+		xLabelTextFill,
 		xLabelPadding,
 		xLabelMaxWidth,
 		xMaxDomain,
@@ -73,6 +74,7 @@ const getConfig = (
 		yScaleFormat,
 		yLabel,
 		yLabelFontSize,
+		yLabelTextFill,
 		yLabelPadding,
 		yLabelMaxWidth,
 		yMinDomain,
@@ -109,6 +111,7 @@ const getConfig = (
 		labelColor,
 		labelFontSize,
 		labelFontWeight,
+		labelTruncateDecimal,
 		labelToFixedDecimal,
 	} = attributes;
 	// legend attributes
@@ -258,9 +261,9 @@ const getConfig = (
 				textAnchor: xTickLabelTextAnchor,
 				dy: xTickLabelDY,
 				dx: xTickLabelDX,
-				fontSize: 12,
+				fontSize: xLabelFontSize,
 				padding: 0,
-				fill: 'rgba(35, 31, 32,0.7)',
+				fill: xLabelTextFill,
 				fontFamily:
 					"'franklin-gothic-urw', Verdana, Geneva, sans-serif",
 				maxWidth: xTickLabelMaxWidth,
@@ -268,7 +271,7 @@ const getConfig = (
 			axisLabel: {
 				...baseConfig.independentAxis.axisLabel,
 				fontSize: xLabelFontSize,
-				fill: 'rgba(35, 31, 32,0.7)',
+				fill: xLabelTextFill,
 				padding: xLabelPadding,
 				angle: 0,
 				dx: 0,
@@ -322,8 +325,8 @@ const getConfig = (
 				textAnchor: yTickLabelTextAnchor,
 				dy: yTickLabelDY,
 				dx: yTickLabelDX,
-				fontSize: 12,
-				fill: 'rgba(35, 31, 32,0.7)',
+				fontSize: yLabelFontSize,
+				fill: yLabelTextFill,
 				padding: 15,
 				fontFamily:
 					"'franklin-gothic-urw', Verdana, Geneva, sans-serif",
@@ -332,7 +335,7 @@ const getConfig = (
 			axisLabel: {
 				...baseConfig.dependentAxis.axisLabel,
 				fontSize: yLabelFontSize,
-				fill: 'rgba(35, 31, 32,0.7)',
+				fill: yLabelTextFill,
 				padding: yLabelPadding,
 				angle: 270,
 				dx: 0,
@@ -495,6 +498,7 @@ const getConfig = (
 			abbreviateValue: false,
 			toLocaleString: labelFormatValue,
 			absoluteValue: labelAbsoluteValue,
+			truncateDecimal: labelTruncateDecimal,
 			toFixedDecimal: labelToFixedDecimal,
 			labelUnit, // '%', '$', '€', '£', '¥'
 			labelUnitPosition,

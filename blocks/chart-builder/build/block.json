@@ -164,6 +164,10 @@
       "type": "number",
       "default": 30
     },
+    "xLabelTextFill": {
+      "type": "string",
+      "default": "#231F20"
+    },
     "xMinDomain": {
       "type": "number",
       "default": 0
@@ -334,6 +338,10 @@
     "yLabelFontSize": {
       "type": "number",
       "default": 12
+    },
+    "yLabelTextFill": {
+      "type": "string",
+      "default": "#231F20"
     },
     "yLabelPadding": {
       "type": "number",
@@ -653,6 +661,10 @@
       "default": false
     },
     "labelFormatValue": {
+      "type": "boolean",
+      "default": true
+    },
+    "labelTruncateDecimal": {
       "type": "boolean",
       "default": true
     },
