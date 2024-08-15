@@ -48,45 +48,42 @@ function ControlSections(props) {
 	const { chartType, attributes } = props;
 	if (attributes.isStaticChart) {
 		return <TextFieldControls {...props} />;
-	} else {
-		return (
-			<>
-				<TextFieldControls {...props} />
-				<DataControls {...props} />
-				<ColorControls {...props} />
-				<XAxisControls {...props} />
-				<YAxisControls {...props} />
-				{('bar' === chartType ||
-					'stacked-bar' === chartType ||
-					'exploded-bar' === chartType) && <BarControls {...props} />}
-				{'diverging-bar' === chartType && (
-					<DivergingBarControls {...props} />
-				)}
-				{('line' === chartType ||
-					'area' === chartType ||
-					'stacked-area' === chartType) && (
-					<>
-						<PlotBandControls {...props} />
-						<LineControls {...props} />
-					</>
-				)}
-				{'dot-plot' === chartType && <DotPlotControls {...props} />}
-				{('line' === chartType ||
-					'area' === chartType ||
-					'stacked-area' === chartType ||
-					'dot-plot' === chartType ||
-					'scatter' === chartType) && (
-					<NodeControls {...props} chartType={chartType} />
-				)}
-				{attributes.diffColumnActive && (
-					<DiffColumnControls {...props} />
-				)}
-				<LabelControls {...props} chartType={chartType} />
-				<TooltipControls {...props} />
-				<LegendControls {...props} />
-			</>
-		);
 	}
+	return (
+		<>
+			<TextFieldControls {...props} />
+			<DataControls {...props} />
+			<ColorControls {...props} />
+			<XAxisControls {...props} />
+			<YAxisControls {...props} />
+			{('bar' === chartType ||
+				'stacked-bar' === chartType ||
+				'exploded-bar' === chartType) && <BarControls {...props} />}
+			{'diverging-bar' === chartType && (
+				<DivergingBarControls {...props} />
+			)}
+			{('line' === chartType ||
+				'area' === chartType ||
+				'stacked-area' === chartType) && (
+				<>
+					<PlotBandControls {...props} />
+					<LineControls {...props} />
+				</>
+			)}
+			{'dot-plot' === chartType && <DotPlotControls {...props} />}
+			{('line' === chartType ||
+				'area' === chartType ||
+				'stacked-area' === chartType ||
+				'dot-plot' === chartType ||
+				'scatter' === chartType) && (
+				<NodeControls {...props} chartType={chartType} />
+			)}
+			{attributes.diffColumnActive && <DiffColumnControls {...props} />}
+			<LabelControls {...props} chartType={chartType} />
+			<TooltipControls {...props} />
+			<LegendControls {...props} />
+		</>
+	);
 }
 
 function ChartControls({ attributes, setAttributes, clientId }) {
@@ -174,34 +171,28 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 	return (
 		<InspectorControls>
 			<PanelBody title={__('Chart Layout')}>
-				{!isStaticChart && (
-					<>
-						{('bar' === chartType ||
-							'stacked-bar' === chartType) && (
-							<SelectControl
-								label={__(
-									'Chart Orientation (Bar charts only)'
-								)}
-								value={chartOrientation}
-								options={[
-									{
-										value: 'vertical',
-										label: 'Vertical',
-									},
-									{
-										value: 'horizontal',
-										label: 'Horizontal',
-									},
-								]}
-								onChange={(orientation) => {
-									setAttributes({
-										chartOrientation: orientation,
-									});
-								}}
-							/>
-						)}
-					</>
-				)}
+				{!isStaticChart &&
+					('bar' === chartType || 'stacked-bar' === chartType) && (
+						<SelectControl
+							label={__('Chart Orientation (Bar charts only)')}
+							value={chartOrientation}
+							options={[
+								{
+									value: 'vertical',
+									label: 'Vertical',
+								},
+								{
+									value: 'horizontal',
+									label: 'Horizontal',
+								},
+							]}
+							onChange={(orientation) => {
+								setAttributes({
+									chartOrientation: orientation,
+								});
+							}}
+						/>
+					)}
 				<RangeControl
 					label={__('Width')}
 					withInputField
@@ -241,7 +232,7 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 							bottom: 0,
 							left: 0,
 						}}
-						onChange={(value) => {
+						onChange={(value) =>
 							setAttributes({
 								paddingTop: formatNum(value.top, 'integer'),
 								paddingRight: formatNum(value.right, 'integer'),
@@ -250,8 +241,8 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 									'integer'
 								),
 								paddingLeft: formatNum(value.left, 'integer'),
-							});
-						}}
+							})
+						}
 					/>
 				)}
 			</PanelBody>

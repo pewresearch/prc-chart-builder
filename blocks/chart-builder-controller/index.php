@@ -133,13 +133,9 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 
 		// check if url has the parameter offerSVGDownload and if so, add the data attribute to the block
 		$offer_svg_download = isset( $_GET['offerSVGDownload'] ) ? $_GET['offerSVGDownload'] : false;
-
-		$maxWidth = array_key_exists('width', $chart_block['attrs']) ? $chart_block['attrs']['width'].'px' : '100%';
+		$maxWidth = array_key_exists('width', $chart_block['attrs']) ? $chart_block['attrs']['width'].'px' : '640px';
 		$align = array_key_exists('align', $attributes) ? $attributes['align'] : 'center';
-		// sometimes the converted charts just don't play nicely. set a hard max width cap
-		if ($attributes['isConvertedChart']) {
-			$maxWidth = array_key_exists('width', $chart_block['attrs']) ? $chart_block['attrs']['width'].'px' : '640px';
-		}
+
 		$block_attrs = get_block_wrapper_attributes(
 			array(
 				'class' => 'wp-chart-builder-wrapper' . ' align' . $align,

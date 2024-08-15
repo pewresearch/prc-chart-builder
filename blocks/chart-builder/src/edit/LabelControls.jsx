@@ -293,6 +293,7 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					hasValue={() => labelToFixedDecimal}
 					label={__('Decimal Places')}
 					panelId={clientId}
+					isShownByDefault
 				>
 					<NumberControl
 						label={__('Decimal Places')}
