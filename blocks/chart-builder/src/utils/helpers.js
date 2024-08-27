@@ -209,3 +209,52 @@ export const formatLegacyAttrs = (legacyMeta, attributes, siteID) => {
 		colorValue: getColorSpectrum(siteID),
 	};
 };
+
+// use a reducer to create an array of objects with the headers as keys
+// and the table data as values
+export const formatCellContent = (content, key) => {
+	const replaceNonNumeric = (str) => {
+		// Replace all non-numeric, non-decimal characters, and negative sign
+		str = str.replace(/[^0-9.-]/g, '');
+
+		// if string has no numbers, return empty string
+		if (!str.match(/[0-9]/g)) {
+			return '';
+		}
+		// Replace all non-numeric, non-decimal characters, and negative sign
+		str = str.replace(/[^0-9.-]/g, '');
+
+		// if string has no numbers, return empty string
+		if (!str.match(/[0-9]/g)) {
+			return '';
+		}
+
+		// Ensure only the first decimal place is kept
+		const decimalIndex = str.indexOf('.');
+		if (decimalIndex !== -1) {
+			str =
+				str.slice(0, decimalIndex + 1) +
+				str.slice(decimalIndex + 1).replace(/\./g, '');
+		}
+
+		// Likewise, ensure only the first negative sign is kept
+		const negativeIndex = str.indexOf('-');
+		if (negativeIndex !== -1) {
+			str =
+				str.slice(0, negativeIndex + 1) +
+				str.slice(negativeIndex + 1).replace(/-/g, '');
+		}
+
+		return str;
+	};
+
+	if ('x' === key) {
+		return content;
+	}
+	// TODO: temporary fix for less than signs in table cells.
+	// If value is < something, return empty string
+	if (content.includes('&lt;') || content.charAt(0) === '<') {
+		return '';
+	}
+	return replaceNonNumeric(content);
+};

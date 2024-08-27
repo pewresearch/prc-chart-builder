@@ -8,7 +8,8 @@ import { getDomain, getTicks, stringToArrayOfNums } from './helpers';
 const getConfig = (
 	attributes,
 	clientId,
-	parentClass = 'wp-chart-builder-wrapper'
+	parentClass = 'wp-chart-builder-wrapper',
+	editorClickEvent = null
 ) => {
 	// layout attributes
 	const {
@@ -174,7 +175,7 @@ const getConfig = (
 		lineStrokeWidth,
 		lineNodes,
 		nodeSize,
-		nodeStroke,
+		nodeStrokeWidth,
 		nodeFill,
 		areaFillOpacity,
 	} = attributes;
@@ -387,6 +388,10 @@ const getConfig = (
 			animationWhitelist: [],
 			duration: 2000, // time in ms
 		},
+		events: {
+			...baseConfig.events,
+			click: editorClickEvent,
+		},
 		tooltip: {
 			...baseConfig.tooltip,
 			active: tooltipActive,
@@ -476,8 +481,7 @@ const getConfig = (
 			...baseConfig.nodes,
 			pointSize: nodeSize,
 			pointFill: nodeFill,
-			pointStrokeWidth: 1,
-			pointStroke: nodeStroke,
+			pointStrokeWidth: nodeStrokeWidth,
 			pointCustomSize: null, // function(d) { return d; },
 		},
 		labels: {

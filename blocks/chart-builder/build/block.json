@@ -532,7 +532,7 @@
       "type": "string",
       "default": "inherit"
     },
-    "nodeStroke": {
+    "nodeStrokeWidth": {
       "type": "integer",
       "default": 3
     },
@@ -900,7 +900,8 @@
     }
   },
   "usesContext": [
-    "refId"
+    "refId",
+    "prc-chart-builder/id"
   ],
   "supports": {
     "html": false,

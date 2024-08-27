@@ -45,7 +45,7 @@ function LineControls({ attributes, setAttributes, chartType, clientId }) {
 		lineStrokeWidth,
 		lineNodes,
 		nodeSize,
-		nodeStroke,
+		nodeStrokeWidth,
 		areaFillOpacity,
 		lineStrokeDashArray,
 	} = attributes;
@@ -174,11 +174,11 @@ function LineControls({ attributes, setAttributes, chartType, clientId }) {
 					<NumberControl
 						disabled={!lineNodes}
 						min={1}
-						label={__('Line Node Stroke')}
-						value={nodeStroke}
+						label={__('Line Node Stroke Width')}
+						value={nodeStrokeWidth}
 						onChange={(value) =>
 							setAttributes({
-								nodeStroke: formatNum(value, 'integer'),
+								nodeStrokeWidth: formatNum(value, 'integer'),
 							})
 						}
 					/>

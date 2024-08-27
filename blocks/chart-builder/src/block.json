@@ -486,7 +486,7 @@
 			"type": "string",
 			"default": "inherit"
 		},
-		"nodeStroke": {
+		"nodeStrokeWidth": {
 			"type": "integer",
 			"default": 3
 		},
@@ -821,7 +821,7 @@
 			"className": "is-style-bar"
 		}
 	},
-	"usesContext": ["refId"],
+	"usesContext": ["refId", "prc-chart-builder/id"],
 	"supports": {
 		"html": false,
 		"inserter": false

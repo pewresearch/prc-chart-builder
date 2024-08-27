@@ -140,7 +140,7 @@ const getLayoutAttributes = (attributes) => {
 		lineStrokeWidth,
 		lineNodes,
 		nodeSize,
-		nodeStroke,
+		nodeStrokeWidth,
 		nodeFill,
 		areaFillOpacity,
 	} = attributes;
@@ -270,7 +270,7 @@ const getLayoutAttributes = (attributes) => {
 		lineStrokeWidth,
 		lineNodes,
 		nodeSize,
-		nodeStroke,
+		nodeStrokeWidth,
 		nodeFill,
 		areaFillOpacity,
 		plotBandsActive,

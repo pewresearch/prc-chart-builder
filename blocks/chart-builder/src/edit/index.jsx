@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable max-lines-per-function */
 /**
@@ -27,11 +28,16 @@ import {
 /**
  * Internal Dependencies
  */
-import { formatLegacyAttrs, handleLegacyConversion } from '../utils/helpers';
+import {
+	formatLegacyAttrs,
+	handleLegacyConversion,
+	formatCellContent,
+} from '../utils/helpers';
 import ChartControls from './ChartControls';
 import getConfig from '../utils/getConfig';
 import WaybackHelper from './WaybackHelper'; // This is temporary for the migration.
 import CopyPasteStylesHandler from './CopyPasteStylesHandler';
+import { TitleSubtitle, Footer } from './metaTextFields';
 
 export default function Edit({
 	attributes: attrs,
@@ -54,17 +60,19 @@ export default function Edit({
 		metaNote,
 		metaSource,
 		metaTag,
+		chartData,
 	} = attrs;
-
-	useEffect(() => {
-		if (!id) {
-			setAttributes({ id: clientId });
-		}
-	}, []);
-
 	const { converted } = chartConverted || {};
 
 	const [isConverting, toggleConversionState] = useState(false);
+
+	// use the controller id to create a unique id for the chart
+	const controllerId = context['prc-chart-builder/id'];
+	useEffect(() => {
+		if (controllerId) {
+			setAttributes({ id: `${controllerId}-chart` });
+		}
+	}, [controllerId]);
 
 	const { tableData, parentBlockId, refId, siteId, currentUserName } =
 		useSelect(
@@ -153,54 +161,6 @@ export default function Edit({
 	);
 
 	const body = useMemo(() => (tableData ? tableData.body : []), [tableData]);
-	// use a reducer to create an array of objects with the headers as keys
-	// and the table data as values
-	const formatCellContent = (content, key) => {
-		const replaceNonNumeric = (str) => {
-			// Replace all non-numeric, non-decimal characters, and negative sign
-			str = str.replace(/[^0-9.-]/g, '');
-
-			// if string has no numbers, return empty string
-			if (!str.match(/[0-9]/g)) {
-				return '';
-			}
-			// Replace all non-numeric, non-decimal characters, and negative sign
-			str = str.replace(/[^0-9.-]/g, '');
-
-			// if string has no numbers, return empty string
-			if (!str.match(/[0-9]/g)) {
-				return '';
-			}
-
-			// Ensure only the first decimal place is kept
-			const decimalIndex = str.indexOf('.');
-			if (decimalIndex !== -1) {
-				str =
-					str.slice(0, decimalIndex + 1) +
-					str.slice(decimalIndex + 1).replace(/\./g, '');
-			}
-
-			// Likewise, ensure only the first negative sign is kept
-			const negativeIndex = str.indexOf('-');
-			if (negativeIndex !== -1) {
-				str =
-					str.slice(0, negativeIndex + 1) +
-					str.slice(negativeIndex + 1).replace(/-/g, '');
-			}
-
-			return str;
-		};
-
-		if ('x' === key) {
-			return content;
-		}
-		// TODO: temporary fix for less than signs in table cells.
-		// If value is < something, return empty string
-		if (content.includes('&lt;') || content.charAt(0) === '<') {
-			return '';
-		}
-		return replaceNonNumeric(content);
-	};
 
 	const memoizedChartData = useMemo(
 		() =>
@@ -264,28 +224,11 @@ export default function Edit({
 								horizontalRules={config.layout.horizontalRules}
 							>
 								{metaTextActive && (
-									<>
-										<RichText
-											className="cb__title"
-											value={metaTitle}
-											onChange={(content) =>
-												setAttributes({
-													metaTitle: content,
-												})
-											}
-											placeholder={metaTitle}
-										/>
-										<RichText
-											className="cb__subtitle"
-											value={metaSubtitle}
-											onChange={(content) =>
-												setAttributes({
-													metaSubtitle: content,
-												})
-											}
-											placeholder={metaSubtitle}
-										/>
-									</>
+									<TitleSubtitle
+										metaTitle={metaTitle}
+										metaSubtitle={metaSubtitle}
+										setAttributes={setAttributes}
+									/>
 								)}
 								<ResizableBox
 									size={{
@@ -338,43 +281,19 @@ export default function Edit({
 										<ChartBuilderWrapper
 											className="cb__chart"
 											config={config}
-											data={memoizedChartData}
+											data={
+												chartData || memoizedChartData
+											}
 										/>
 									)}
 								</ResizableBox>
 								{metaTextActive && (
-									<>
-										<RichText
-											className="cb__note"
-											value={metaNote}
-											onChange={(content) =>
-												setAttributes({
-													metaNote: content,
-												})
-											}
-											placeholder={metaNote}
-										/>
-										<RichText
-											className="cb__note"
-											value={metaSource}
-											onChange={(content) =>
-												setAttributes({
-													metaSource: content,
-												})
-											}
-											placeholder={metaSource}
-										/>
-										<RichText
-											className="cb__tag"
-											value={metaTag}
-											onChange={(content) =>
-												setAttributes({
-													metaTag: content,
-												})
-											}
-											placeholder={metaTag}
-										/>
-									</>
+									<Footer
+										metaNote={metaNote}
+										metaSource={metaSource}
+										metaTag={metaTag}
+										setAttributes={setAttributes}
+									/>
 								)}
 							</ChartBuilderTextWrapper>
 						</figure>

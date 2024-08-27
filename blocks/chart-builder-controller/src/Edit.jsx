@@ -14,7 +14,7 @@ import {
 } from '@wordpress/block-editor';
 import { ToggleControl, PanelBody } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
-import { useEffect, Fragment } from '@wordpress/element';
+import { Fragment, useEffect } from '@wordpress/element';
 
 /**
  * Internal Dependencies
@@ -23,13 +23,42 @@ import store from './store';
 import HideTableHandler from './HideTableHandler';
 import Placeholder from './Placeholder';
 
-export default function Edit({ attributes, setAttributes, clientId }) {
+export default function Edit(props) {
+	const { attributes, setAttributes, clientId } = props;
 	const { id, isConvertedChart, tabsActive, align, isStatic, isTable } =
 		attributes;
+
+	// useSelect to check for other chart builders, filter out the current one
+	// get all chart controllers, check to see if any have the same id
+	// if so, set the id to a new id
+	const otherChartControllers = useSelect(
+		(select) =>
+			select('core/block-editor')
+				.getBlocks()
+				.filter(
+					(block) =>
+						'prc-block/chart-builder-controller' === block.name
+				)
+				.filter((block) => block.clientId !== clientId),
+		[]
+	);
 
 	useEffect(() => {
 		if (!id) {
 			setAttributes({ id: clientId });
+		} else if (
+			// check if other controllers exist, and if the id is already taken
+			otherChartControllers.length > 0 &&
+			otherChartControllers.some(
+				(controller) => controller.attributes.id === id
+			)
+		) {
+			{
+				console.log(
+					`id ${id} already exists. creating new one: ${clientId}`
+				);
+				setAttributes({ id: clientId });
+			}
 		}
 	}, []);
 
@@ -121,11 +150,14 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		return <Placeholder {...{ attributes, setAttributes, clientId }} />;
 	}
 
-	const RENDERED_TEMPLATE = isStatic
-		? STATIC_TEMPLATE
-		: isTable
-		  ? TABLE_TEMPLATE
-		  : TEMPLATE;
+	let RENDERED_TEMPLATE;
+	if (isStatic) {
+		RENDERED_TEMPLATE = STATIC_TEMPLATE;
+	} else if (isTable) {
+		RENDERED_TEMPLATE = TABLE_TEMPLATE;
+	} else {
+		RENDERED_TEMPLATE = TEMPLATE;
+	}
 	return (
 		<Fragment>
 			<InspectorControls>
