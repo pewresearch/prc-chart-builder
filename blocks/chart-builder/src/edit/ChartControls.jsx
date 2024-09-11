@@ -19,7 +19,7 @@ import {
 	ToggleControl,
 } from '@wordpress/components';
 import { uploadMedia } from '@wordpress/media-utils';
-import { useState } from '@wordpress/element';
+import { useState } from 'react';
 /**
  * External dependencies
  */
@@ -98,6 +98,7 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 		paddingLeft,
 		height,
 		width,
+		mobileBreakpoint,
 		pngUrl,
 		allowDataDownload,
 		isStaticChart,
@@ -146,6 +147,9 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 		);
 		const textWrapper = blockEl.querySelector('.cb__text-wrapper');
 		const chartWrapper = blockEl.querySelector('.cb__chart');
+		const tag = blockEl.querySelector('.cb__tag');
+		const tagText = tag.innerHTML;
+		tag.innerHTML = `© ${tagText}`;
 		const convertableEl = textWrapper || chartWrapper;
 		if (textWrapper) {
 			convertableEl.style.padding = `5px`;
@@ -166,6 +170,7 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 			);
 			resizerEl.classList.add('has-show-handle');
 			convertableEl.style.padding = '';
+			tag.innerHTML = tagText;
 		});
 	};
 	return (
@@ -214,6 +219,21 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 					onChange={(h) =>
 						setAttributes({
 							height: formatNum(h, 'integer'),
+						})
+					}
+				/>
+				<RangeControl
+					label={__('Mobile Breakpoint')}
+					help={__(
+						'Width at which the chart switches to mobile layout, which will trigger certain layout changes when activated (tooltip rendering, etc.).'
+					)}
+					withInputField
+					min={0}
+					max={1152}
+					value={parseInt(mobileBreakpoint, 10)}
+					onChange={(bp) =>
+						setAttributes({
+							mobileBreakpoint: formatNum(bp, 'integer'),
 						})
 					}
 				/>

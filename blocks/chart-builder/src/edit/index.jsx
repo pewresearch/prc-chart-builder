@@ -5,7 +5,6 @@
  * WordPress Dependencies
  */
 import { ResizableBox, Spinner } from '@wordpress/components';
-import { Fragment, useEffect, useMemo, useState } from '@wordpress/element';
 import { useSelect } from '@wordpress/data';
 import {
 	RichText,
@@ -24,6 +23,7 @@ import {
 	ChartBuilderWrapper,
 	ChartBuilderTextWrapper,
 } from '@prc/chart-builder';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 
 /**
  * Internal Dependencies

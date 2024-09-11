@@ -1,11 +1,14 @@
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 /**
+ * External Dependencies
+ */
+import { useEffect } from 'react';
+/**
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
 import { withNotices } from '@wordpress/components';
 import { createBlock } from '@wordpress/blocks';
-import { useEffect } from '@wordpress/element';
 import { useEntityBlockEditor, useEntityRecord } from '@wordpress/core-data';
 import {
 	useInnerBlocksProps,

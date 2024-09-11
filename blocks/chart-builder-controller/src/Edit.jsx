@@ -1,5 +1,7 @@
 /* eslint-disable max-lines-per-function */
 import classnames from 'classnames';
+import { Fragment, useEffect } from 'react';
+
 /**
  * WordPress Dependencies
  */
@@ -14,7 +16,6 @@ import {
 } from '@wordpress/block-editor';
 import { ToggleControl, PanelBody } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
-import { Fragment, useEffect } from '@wordpress/element';
 
 /**
  * Internal Dependencies

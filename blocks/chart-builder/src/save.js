@@ -3,7 +3,7 @@
  * WordPress dependencies
  */
 
-import { Fragment } from '@wordpress/element';
+import { Fragment } from 'react';
 import { InnerBlocks } from '@wordpress/block-editor';
 
 /** Returns a server side block callback */

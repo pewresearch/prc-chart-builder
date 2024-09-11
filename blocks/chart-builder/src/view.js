@@ -5,7 +5,6 @@
  * WordPress dependencies
  */
 import domReady from '@wordpress/dom-ready';
-import { render } from '@wordpress/element';
 import { addQueryArgs } from '@wordpress/url';
 
 /**
@@ -16,6 +15,7 @@ import {
 	ChartBuilderTextWrapper,
 } from '@prc/chart-builder';
 import { arrayToCSV } from '@prc/functions';
+import { createRoot } from 'react-dom/client';
 
 /**
  * Internal  dependencies
@@ -33,14 +33,20 @@ const getChartConfig = (el) => {
 	const attributes = window.chartConfigs[hash];
 	const config = getConfig(attributes, hash, 'wp-chart-builder-wrapper');
 	// add static image attributes to config
-	const { isStaticChart, staticImageId, staticImageUrl, staticImageAltText } =
-		attributes;
+	const {
+		isStaticChart,
+		staticImageId,
+		staticImageUrl,
+		staticImageAltText,
+		tabsActive,
+	} = attributes;
 	return {
 		...config,
 		staticImageId,
 		staticImageUrl,
 		isStaticChart,
 		staticImageAltText,
+		tabsActive,
 	};
 };
 
@@ -170,6 +176,7 @@ const renderCharts = () => {
 	const charts = document.querySelectorAll('.wp-chart-builder-wrapper');
 	charts.forEach((chart) => {
 		const renderEl = chart.querySelector('.wp-chart-builder-inner');
+		const root = createRoot(renderEl);
 		const config = getChartConfig(renderEl);
 		const hash = renderEl.dataset.chartHash;
 		const tableEl = chart.querySelector('.wp-chart-builder-table');
@@ -180,8 +187,9 @@ const renderCharts = () => {
 		const viewButtons = chart.querySelector(
 			'.wp-chart-builder-view-buttons'
 		);
-		const { isStaticChart, staticImageId, staticImageUrl } = config;
-		const { postId, postUrl, postPubDate } = renderEl.dataset;
+		const { isStaticChart, staticImageId, staticImageUrl, tabsActive } =
+			config;
+		const { postId, postUrl, postPubDate, rootUrl } = renderEl.dataset;
 		const pngAttrs = {
 			url: !isStaticChart
 				? window.chartConfigs[hash].pngUrl
@@ -199,7 +207,10 @@ const renderCharts = () => {
 		// TODO: readd csv export when WP_HTML_Tag_Processor is fixed
 		// if there are no errors getting table data, and there are rows, create a csv
 		const csv =
-			tableData && !tableData.errors && tableData.rows.length > 0
+			tabsActive &&
+			tableData &&
+			!tableData.errors &&
+			tableData.rows.length > 0
 				? arrayToCSV([tableData.header, ...tableData.rows], {
 						title: config.metadata.title,
 						subtitle: config.metadata.subtitle,
@@ -233,8 +244,7 @@ const renderCharts = () => {
 			svgDownloadButton.addEventListener('click', (e) => createSvg(hash));
 		}
 		setViewButtonEvents(viewButtons, tableEl, renderEl, hash);
-
-		render(
+		root.render(
 			<figure>
 				<ChartBuilderTextWrapper
 					active={config.metadata.active}
@@ -259,29 +269,31 @@ const renderCharts = () => {
 							data={formattedData}
 						/>
 					)}
-					<ShareModal
-						onClickFacebook={(e) =>
-							initFacebookLinks(
-								e,
-								postUrl,
-								rootUrl,
-								postId,
-								pngAttrs
-							)
-						}
-						onClickTwitter={(e) =>
-							initTwitterLinks(
-								e,
-								postUrl,
-								rootUrl,
-								postId,
-								pngAttrs,
-								config.metadata.title
-							)
-						}
-						pngAttrs={pngAttrs}
-						elementId={hash}
-					/>
+					{tabsActive && (
+						<ShareModal
+							onClickFacebook={(e) =>
+								initFacebookLinks(
+									e,
+									postUrl,
+									rootUrl,
+									postId,
+									pngAttrs
+								)
+							}
+							onClickTwitter={(e) =>
+								initTwitterLinks(
+									e,
+									postUrl,
+									rootUrl,
+									postId,
+									pngAttrs,
+									config.metadata.title
+								)
+							}
+							pngAttrs={pngAttrs}
+							elementId={hash}
+						/>
+					)}
 				</ChartBuilderTextWrapper>
 			</figure>,
 			renderEl

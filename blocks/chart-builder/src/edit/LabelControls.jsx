@@ -4,13 +4,13 @@
 /**
  * External dependencies
  */
-import styled from 'styled-components';
+import styled from '@emotion/styled';
 
 /**
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { Fragment } from '@wordpress/element';
+import { Fragment } from 'react';
 import {
 	ToggleControl,
 	SelectControl,

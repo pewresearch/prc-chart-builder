@@ -3,7 +3,7 @@
 /**
  * External dependencies
  */
-import styled from 'styled-components';
+import styled from '@emotion/styled';
 
 /**
  * WordPress dependencies
@@ -19,6 +19,7 @@ import {
 	__experimentalNumberControl as NumberControl,
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
+	RangeControl,
 	ExternalLink,
 } from '@wordpress/components';
 /**
@@ -28,6 +29,7 @@ import { formatNum } from '../utils/helpers';
 
 const WidePanelItem = styled(ToolsPanelItem)`
 	grid-column: span 2;
+	display: block;
 `;
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -54,6 +56,8 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 	const {
 		tooltipFormat,
 		tooltipActive,
+		tooltipActiveOnMobile,
+		mobileBreakpoint,
 		tooltipOffsetX,
 		tooltipHeaderActive,
 		tooltipHeaderValue,
@@ -92,6 +96,42 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 							setAttributes({ tooltipActive: !tooltipActive })
 						}
 					/>
+				</WidePanelItem>
+				<WidePanelItem
+					hasValue={() => true}
+					label={__('Show Tooltip on Mobile')}
+					isShownByDefault
+					panelId={clientId}
+				>
+					<ToggleControl
+						label={__('Show Tooltip on Mobile')}
+						help={__(
+							'Show a tooltip on mobile devices. If deselected, the tooltip will only on screens wider than a specified mobile breakpoint.'
+						)}
+						checked={tooltipActiveOnMobile}
+						onChange={() =>
+							setAttributes({
+								tooltipActiveOnMobile: !tooltipActiveOnMobile,
+							})
+						}
+					/>
+					{!tooltipActiveOnMobile && (
+						<RangeControl
+							label={__('Mobile Breakpoint')}
+							help={__(
+								'If the screen width is less than this value, the tooltip will not be displayed on mobile devices.'
+							)}
+							withInputField
+							min={0}
+							max={1152}
+							value={parseInt(mobileBreakpoint, 10)}
+							onChange={(bp) =>
+								setAttributes({
+									mobileBreakpoint: formatNum(bp, 'integer'),
+								})
+							}
+						/>
+					)}
 				</WidePanelItem>
 				<WidePanelItem
 					hasValue={() => true}

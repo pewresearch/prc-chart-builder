@@ -11,7 +11,7 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 	public function __construct( $init = false ) {
 		if ( true === $init ) {
 			// Do hooks here
-			$block_json_file = PRC_CHART_BUILDER_DIR . '/blocks/chart-builder/build/block.json';
+			$block_json_file = PRC_CHART_BUILDER_DIR . '/blocks/chart-builder-controller/build/block.json';
 			self::$block_json = wp_json_file_decode( $block_json_file, array( 'associative' => true ) );
 			self::$block_json['file'] = wp_normalize_path( realpath( $block_json_file ) );
 			add_action( 'init', array( $this, 'register_block' ), 11 );
@@ -26,19 +26,21 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 			return '';
 		}
 		$block = '';
-		$metaTitle = array_key_exists('metaTitle', $chart_attributes) ? $chart_attributes['metaTitle'] : '';
-		$metaSubtitle = array_key_exists('metaSubtitle', $chart_attributes) ? $chart_attributes['metaSubtitle'] : '';
-		$metaNote = array_key_exists('metaNote', $chart_attributes) ? $chart_attributes['metaNote'] : '';
-		$metaSource = array_key_exists('metaSource', $chart_attributes) ? $chart_attributes['metaSource'] : '';
-		$metaTag = array_key_exists('metaTag', $chart_attributes) ? $chart_attributes['metaTag'] : 'PEW RESEARCH CENTER';
-		$width = array_key_exists('width', $chart_attributes) ? $chart_attributes['width'] . 'px' : '100%';
-		$height = array_key_exists('height', $chart_attributes) ? $chart_attributes['height']-50 . 'px' : 'auto';
+		$chart_attributes = \PRC\Platform\Block_Utils\get_block_attributes('prc-block/chart-builder', $chart_attributes);
+
+		$metaTitle = $chart_attributes['metaTitle'];
+		$metaSubtitle = $chart_attributes['metaSubtitle'];
+		$metaNote = $chart_attributes['metaNote'];
+		$metaSource = $chart_attributes['metaSource'];
+		$metaTag = $chart_attributes['metaTag'];
+		$width = $chart_attributes['width'] . 'px';
+		$height = $chart_attributes['height']-50 . 'px';
 
 		ob_start();
 		?>
 		<hr style="margin: 0px 0px 10px; max-width: <?php echo esc_attr($width);?>;">
-		<div class="cb__title"><?php echo esc_html($metaTitle);?></div>
-		<div class="cb__subtitle"><?php echo esc_html($metaSubtitle);?></div>
+		<div class="cb__title"><?php echo apply_filters('the_content', $metaTitle);?></div>
+		<div class="cb__subtitle"><?php echo apply_filters('the_content', $metaSubtitle);?></div>
 		<div style="max-width: <?php echo esc_attr($width);?> !important; height: <?php echo esc_attr($height);?> !important; margin-bottom: 20px; overflow: auto;">
 			<?php echo wp_kses(render_block( $table_block ), 'post'); ?>
 		</div>
@@ -49,7 +51,7 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		 </div>
 		<div class="cb__note" ><?php echo apply_filters('the_content', $metaNote);?></div>
 		<div class="cb__note"><?php echo apply_filters('the_content',$metaSource);?></div>
-		<div class="cb__tag"><?php echo esc_html($metaTag);?></div>
+		<div class="cb__tag"><?php echo apply_filters('the_content', $metaTag);?></div>
 		<hr style="margin: 10px 0px 0px; max-width: <?php echo esc_attr($width);?>;">
 		<?php
 		$block .= ob_get_clean();
@@ -72,7 +74,9 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 			return '';
 		}
 		$script_handle = 'prc-block-chart-builder-controller-view-script';
-		$id = $attributes['id'];
+		$controller_attributes = \PRC\Platform\Block_Utils\get_block_attributes('prc-block/chart-builder-controller', $attributes);
+
+		$id = $controller_attributes['id'];
 
 		$chart_block = array_filter(
 			$block->parsed_block['innerBlocks'],
@@ -93,8 +97,8 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		);
 		$image_block = array_pop($image_block);
 
-		$chart_block['attrs']['id'] = $id;
 		$chart_block['attrs']['className'] = 'active';
+		$chart_block['attrs']['tabsActive'] = $controller_attributes['tabsActive'];
 
 		if ( $image_block ) {
 			// get attachment image url
@@ -104,8 +108,7 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 			$chart_block['attrs']['staticImageUrl'] = $static_chart_image_src;
 		}
 
-
-		$active_share_tabs = array_key_exists('tabsActive', $attributes) ? $attributes['tabsActive'] : false;
+		$active_share_tabs = $controller_attributes['tabsActive'];
 		$table_block = array_filter(
 			$block->parsed_block['innerBlocks'],
 			function( $b ) {
@@ -115,7 +118,6 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		);
 		$table_block = array_pop( $table_block );
 
-		// if the table was set to be hidden in the editor, we need to reasssign class to unhide it.
 		$preformatted_data = array_key_exists('chartPreformattedData', $attributes) ? $attributes['chartPreformattedData'] : null;
 
 		$table_array = null;
@@ -149,25 +151,49 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 				if ( $active_share_tabs && $chart_block && $table_block) {
 					$table_with_meta = $this->render_table_with_meta_text($chart_block, $table_block, $id, $chart_block['attrs']);
 					echo render_block( $chart_block );
-					// parse HTML string
-					echo wp_sprintf('<div class="wp-chart-builder-table" data-chart-hash="%1$s" style="max-width:%2$s;">%3$s</div>', esc_attr($id), esc_attr($maxWidth), wp_kses($table_with_meta, 'post'));
+					echo wp_sprintf(/* html */'
+							<div
+								class="wp-chart-builder-table"
+								id="%1$s-table"
+								data-chart-hash="%1$s-chart"
+								style="max-width:%2$s;">
+									%3$s
+							</div>',
+							esc_attr($id), esc_attr($maxWidth), wp_kses($table_with_meta, 'post')
+					);
 				} elseif ( $chart_block ) {
 					echo render_block( $chart_block );
 				} else {
 					// if no chart block, render a p tag with error message
-					echo wp_sprintf('<p class="error-message">An error has occurred on chart %1$s. Please try again later.</p>', esc_attr($id));
+					echo wp_sprintf(/* html */'
+						<p class="error-message">
+							An error has occurred on chart %1$s. Please try again later.
+						</p>',
+						esc_attr($id)
+					);
 				}
 				if ( $offer_svg_download ) {
-					echo wp_sprintf('<a href="#" class="download-svg sans-serif blue-link" style="margin-bottom: 20px;" data-chart-id="%1$s">Download graphic as SVG</a>', esc_attr($id));
+					echo wp_sprintf(/* html */'
+						<a href="#"
+							class="download-svg sans-serif blue-link"
+							style="margin-bottom: 20px;"
+							data-chart-id="%1$s">
+								Download graphic as SVG
+						</a>',
+						esc_attr($id)
+					);
 				}
 			?>
 			<?php
 				if ($active_share_tabs) {
-					echo '<div class="wp-chart-builder-view-buttons" style="max-width:' . esc_attr($maxWidth) . '">';
-					echo '<button class="view-button view-button--chart active" data-chart-id="' . esc_attr($id) . '">Chart</button>';
-					echo '<button class="view-button view-button--table" data-chart-id="' . esc_attr($id) . '">Data</button>';
-					echo '<button class="view-button view-button--share" data-chart-id="' . esc_attr($id) . '">Share</button>';
-					echo '</div>';
+					echo wp_sprintf(/* html */'
+						<div class="wp-chart-builder-view-buttons" style="max-width:%1$s;">
+							<button class="view-button view-button--chart active" data-chart-id="%2$s">Chart</button>
+							<button class="view-button view-button--table" data-chart-id="%2$s">Data</button>
+							<button class="view-button view-button--share" data-chart-id="%2$s">Share</button>
+						</div>',
+						esc_attr($maxWidth), esc_attr($id)
+					);
 				}
 			?>
 		</div>

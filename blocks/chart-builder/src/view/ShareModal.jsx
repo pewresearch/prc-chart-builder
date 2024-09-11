@@ -57,13 +57,15 @@ const ShareModal = ({
 					<div className="share-modal__body">
 						{/* share on twitter button */}
 						<button
+							type="button"
 							className="share-modal__button share-modal__button--twitter"
 							onClick={onClickTwitter}
 						>
-							<span>Share on Twitter</span>
+							<span>Share on X</span>
 						</button>
 						{/* share on facebook button */}
 						<button
+							type="button"
 							className="share-modal__button share-modal__button--facebook"
 							onClick={onClickFacebook}
 						>

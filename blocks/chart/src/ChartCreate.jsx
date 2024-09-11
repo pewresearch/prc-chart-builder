@@ -1,5 +1,9 @@
 /* eslint-disable max-lines-per-function */
 /**
+ * External Dependencies
+ */
+import { useState, useEffect } from 'react';
+/**
  * WordPress Dependencies
  */
 import {
@@ -10,7 +14,6 @@ import {
 	Spinner,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useState, useEffect } from '@wordpress/element';
 import { store as noticeStore } from '@wordpress/notices';
 import {
 	createBlock,

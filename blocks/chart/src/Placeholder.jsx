@@ -2,6 +2,7 @@
  * External Dependencies
  */
 import styled from '@emotion/styled';
+import { Fragment, useState } from 'react';
 
 /**
  * WordPress Dependencies
@@ -12,7 +13,6 @@ import {
 	Placeholder as WPComPlaceholder,
 	Spinner,
 } from '@wordpress/components';
-import { Fragment, useState } from '@wordpress/element';
 
 /**
  * Internal Dependencies

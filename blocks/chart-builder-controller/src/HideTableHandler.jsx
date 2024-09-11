@@ -3,7 +3,7 @@
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { Fragment, useEffect, useMemo } from '@wordpress/element';
+import { Fragment, useMemo } from 'react';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { BlockControls, InspectorControls } from '@wordpress/block-editor';
 import {

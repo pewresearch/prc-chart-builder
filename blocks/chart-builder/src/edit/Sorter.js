@@ -5,7 +5,7 @@ import { List, arrayMove } from 'react-movable';
 /**
  * Wordpress Dependencies
  */
-import { useState } from '@wordpress/element';
+import { useState } from 'react';
 import { Icon } from '@wordpress/components';
 
 function Sorter({ options, setAttributes, attribute, allowDisabled = true }) {

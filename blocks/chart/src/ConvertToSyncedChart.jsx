@@ -1,9 +1,13 @@
 /**
+ * External Dependencies
+ */
+import { useState } from 'react';
+
+/**
  * WordPress Dependencies
  */
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
-import { useState } from '@wordpress/element';
 import { PluginBlockSettingsMenuItem } from '@wordpress/editor';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { symbol as icon } from '@wordpress/icons';

@@ -29,7 +29,7 @@ import {
 	FlexItem,
 	Tip,
 } from '@wordpress/components';
-import { useState, useMemo } from '@wordpress/element';
+import { useState, useMemo } from 'react';
 import {
 	__experimentalPublishDateTimePicker as DateTimePicker,
 	PanelColorSettings,
@@ -57,7 +57,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 									[key]: value,
 								},
 							},
-					  }
+						}
 					: band
 			),
 		});
@@ -76,7 +76,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 									[key]: value,
 								},
 							},
-					  }
+						}
 					: band
 			),
 		});
@@ -123,7 +123,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 												? {
 														...band,
 														label: value,
-												  }
+													}
 												: band
 										),
 									});
@@ -143,7 +143,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 												? {
 														...band,
 														x: [value, band.x[1]],
-												  }
+													}
 												: band
 										),
 									});
@@ -160,7 +160,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 												? {
 														...band,
 														x: [band.x[0], value],
-												  }
+													}
 												: band
 										),
 									});
@@ -205,7 +205,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 																	value,
 															},
 														},
-												  }
+													}
 												: band
 										),
 									});
@@ -238,7 +238,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 																align: value,
 															},
 														},
-												  }
+													}
 												: band
 										),
 									});
@@ -268,7 +268,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 																			),
 																		},
 																	},
-															  }
+																}
 															: band
 												),
 											});
@@ -298,7 +298,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 																			),
 																		},
 																	},
-															  }
+																}
 															: band
 												),
 											});
@@ -410,7 +410,7 @@ const StyleOptions = ({ style, plotBands, setAttributes, index }) => {
 												fontSize: newFontSize,
 											},
 										},
-								  }
+									}
 								: band
 						),
 					});
@@ -437,7 +437,7 @@ const StyleOptions = ({ style, plotBands, setAttributes, index }) => {
 														fill: val,
 													},
 												},
-										  }
+											}
 										: band
 								),
 							}),
@@ -458,7 +458,7 @@ const StyleOptions = ({ style, plotBands, setAttributes, index }) => {
 														fill: val,
 													},
 												},
-										  }
+											}
 										: band
 								),
 							}),
@@ -482,7 +482,7 @@ const StyleOptions = ({ style, plotBands, setAttributes, index }) => {
 												fillOpacity: val,
 											},
 										},
-								  }
+									}
 								: band
 						),
 					})

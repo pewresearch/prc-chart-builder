@@ -10,7 +10,7 @@ import { Picture } from 'react-responsive-picture';
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { Fragment } from '@wordpress/element';
+import { Fragment } from 'react';
 import { MediaUpload, MediaUploadCheck } from '@wordpress/block-editor';
 import { addQueryArgs } from '@wordpress/url';
 import { Placeholder } from '@wordpress/components';

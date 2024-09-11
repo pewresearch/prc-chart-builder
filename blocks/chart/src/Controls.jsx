@@ -1,13 +1,13 @@
 /**
  * External Dependencies
  */
+import { Fragment } from 'react';
 
 /**
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
 import { InspectorControls } from '@wordpress/block-editor';
-import { Fragment } from '@wordpress/element';
 import { useEntityProp } from '@wordpress/core-data';
 import { Button, TextControl, PanelBody } from '@wordpress/components';
 

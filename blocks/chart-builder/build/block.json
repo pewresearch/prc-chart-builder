@@ -72,6 +72,9 @@
       "type": "integer",
       "default": 400
     },
+    "mobileBreakpoint": {
+      "type": "integer"
+    },
     "horizontalRules": {
       "type": "boolean",
       "default": true
@@ -541,6 +544,10 @@
       "default": 0.4
     },
     "tooltipActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "tooltipActiveOnMobile": {
       "type": "boolean",
       "default": true
     },

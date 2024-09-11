@@ -4,7 +4,7 @@
 import { symbol as icon } from '@wordpress/icons';
 import { registerBlockType } from '@wordpress/blocks';
 import { registerPlugin } from '@wordpress/plugins';
-import { addFilter } from '@wordpress/hooks';
+// import { addFilter } from '@wordpress/hooks';
 
 /**
  * Internal Dependencies

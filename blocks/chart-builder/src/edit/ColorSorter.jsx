@@ -5,7 +5,7 @@ import { List, arrayMove } from 'react-movable';
 /**
  * Wordpress Dependencies
  */
-import { useState, useEffect } from '@wordpress/element';
+import { useState, useEffect } from 'react';
 
 function labelFill(hex = '#000000') {
 	const shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;

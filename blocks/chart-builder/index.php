@@ -16,13 +16,6 @@ class Chart_Builder extends PRC_Chart_Builder {
 		}
 	}
 
-	private function cherry_pick_attr( $needle, $haystack ) {
-		if ( array_key_exists( $needle, $haystack ) ) {
-			return $haystack[ $needle ];
-		}
-		return null;
-	}
-
 	public function render_chart_builder( $attributes, $content = '', $block = null ) {
 		if ( is_admin() || null === $block ) {
 			return $content;

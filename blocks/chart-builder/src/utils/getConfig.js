@@ -21,6 +21,7 @@ const getConfig = (
 		paddingLeft,
 		height,
 		width,
+		mobileBreakpoint,
 		horizontalRules,
 	} = attributes;
 	// metadata attributes
@@ -131,6 +132,7 @@ const getConfig = (
 	// tooltip attributes
 	const {
 		tooltipActive,
+		tooltipActiveOnMobile,
 		tooltipHeaderActive,
 		tooltipHeaderValue,
 		tooltipMaxHeight,
@@ -223,6 +225,7 @@ const getConfig = (
 				right: paddingRight,
 			},
 			horizontalRules,
+			mobileBreakpoint,
 		},
 		metadata: {
 			...baseConfig.metadata,
@@ -395,6 +398,7 @@ const getConfig = (
 		tooltip: {
 			...baseConfig.tooltip,
 			active: tooltipActive,
+			activeOnMobile: tooltipActiveOnMobile,
 			deemphasizeSiblings,
 			deemphasizeOpacity,
 			headerActive: tooltipHeaderActive,

@@ -7,7 +7,7 @@ import { useFetch } from '@prc/hooks';
  * WordPress Dependencies
  */
 import { BlockControls } from '@wordpress/block-editor';
-import { useEffect, useState, useMemo } from '@wordpress/element';
+import { useEffect, useState, useMemo } from 'react';
 import { ToolbarGroup, ToolbarButton } from '@wordpress/components';
 import { useEntityProp } from '@wordpress/core-data';
 
