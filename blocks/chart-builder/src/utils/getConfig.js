@@ -21,6 +21,7 @@ const getConfig = (
 		paddingLeft,
 		height,
 		width,
+		overflowX,
 		mobileBreakpoint,
 		horizontalRules,
 	} = attributes;
@@ -128,6 +129,9 @@ const getConfig = (
 		legendMarkerStyle,
 		legendBorderStroke,
 		legendFill,
+		legendLabelDelimiter,
+		legendLabelLower,
+		legendLabelUpper,
 	} = attributes;
 	// tooltip attributes
 	const {
@@ -206,6 +210,19 @@ const getConfig = (
 		dateInputFormat,
 		sortKey,
 	} = attributes;
+	// map attributes
+	const {
+		mapShowCountyBoundaries,
+		mapShowStateBoundaries,
+		mapPathBackgroundFill,
+		mapPathStroke,
+		mapBlockRectSize,
+		// mapAbbreviateLabels,
+		mapIgnoreSmallStateLabels,
+		// mapIgnoredLabels,
+		mapScale,
+		mapScaleDomain,
+	} = attributes;
 	const xTicks = stringToArrayOfNums(xTickExact);
 	const yTicks = stringToArrayOfNums(yTickExact);
 	return {
@@ -218,6 +235,7 @@ const getConfig = (
 			orientation: chartOrientation,
 			width,
 			height,
+			overflowX,
 			padding: {
 				top: paddingTop,
 				bottom: paddingBottom,
@@ -381,6 +399,8 @@ const getConfig = (
 				0 < categories.length ? categories : availableCategories,
 			xScale,
 			yScale,
+			mapScale,
+			mapScaleDomain,
 			xFormat: dateInputFormat,
 			yFormat: yScaleFormat,
 			numberFormat: 'en-US',
@@ -443,6 +463,9 @@ const getConfig = (
 			markerStyle: legendMarkerStyle,
 			borderStroke: legendBorderStroke,
 			fill: legendFill,
+			labelDelimiter: legendLabelDelimiter,
+			labelLower: legendLabelLower,
+			labelUpper: legendLabelUpper,
 		},
 		bar: {
 			...baseConfig.bar,
@@ -480,6 +503,17 @@ const getConfig = (
 		explodedBar: {
 			...baseConfig.explodedBar,
 			columnGap: explodedBarColumnGap,
+		},
+		map: {
+			...baseConfig.map,
+			// abbreviateLabels: mapAbbreviateLabels,
+			ignoreSmallStateLabels: mapIgnoreSmallStateLabels,
+			// ignoredLabels: mapIgnoredLabels,
+			showCountyBoundaries: mapShowCountyBoundaries,
+			showStateBoundaries: mapShowStateBoundaries,
+			pathBackgroundFill: mapPathBackgroundFill,
+			pathStroke: mapPathStroke,
+			blockRectSize: mapBlockRectSize,
 		},
 		nodes: {
 			...baseConfig.nodes,

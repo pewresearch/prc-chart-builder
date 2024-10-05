@@ -50,9 +50,18 @@
 				"stacked-bar",
 				"grouped-bar",
 				"exploded-bar",
-				"static"
+				"static",
+				"map-usa",
+				"map-usa-counties",
+				"map-usa-block",
+				"map-world"
 			],
 			"default": "bar"
+		},
+		"chartFamily": {
+			"type": "string",
+			"enum": ["chart", "map"],
+			"default": "chart"
 		},
 		"chartOrientation": {
 			"type": "string",
@@ -66,6 +75,11 @@
 		"height": {
 			"type": "integer",
 			"default": 400
+		},
+		"overflowX": {
+			"type": "string",
+			"enum": ["scroll", "responsive", "scroll-fixed-y-axis"],
+			"default": "responsive"
 		},
 		"mobileBreakpoint": {
 			"type": "integer"
@@ -690,6 +704,18 @@
 			"type": "string",
 			"default": "white"
 		},
+		"legendLabelDelimiter": {
+			"type": "string",
+			"default": " - "
+		},
+		"legendLabelLower": {
+			"type": "string",
+			"default": "Less than "
+		},
+		"legendLabelUpper": {
+			"type": "string",
+			"default": "More than "
+		},
 		"metaTextActive": {
 			"type": "boolean",
 			"default": true
@@ -816,6 +842,47 @@
 		"diffColumnAppearance": {
 			"type": "string",
 			"default": "default"
+		},
+		"mapScale": {
+			"type": "string",
+			"enum": ["threshold", "ordinal", "linear"],
+			"default": "threshold"
+		},
+		"mapScaleDomain": {
+			"type": "array",
+			"default": [10, 20, 30, 40, 50]
+		},
+		"mapAbbreviateLabels": {
+			"type": "boolean",
+			"default": true
+		},
+		"mapIgnoreSmallStateLabels": {
+			"type": "boolean",
+			"default": true
+		},
+		"mapIgnoredLabels": {
+			"type": "array",
+			"default": []
+		},
+		"showCountyBoundaries": {
+			"type": "boolean",
+			"default": true
+		},
+		"mapShowStateBoundaries": {
+			"type": "boolean",
+			"default": true
+		},
+		"mapPathBackgroundFill": {
+			"type": "string",
+			"default": "#f7f7f7"
+		},
+		"mapPathStroke": {
+			"type": "string",
+			"default": "#d3d3d3"
+		},
+		"mapBlockRectSize": {
+			"type": "integer",
+			"default": 44
 		},
 		"allowDataDownload": {
 			"type": "boolean",

@@ -3,6 +3,8 @@
  */
 import { registerBlockType } from '@wordpress/blocks';
 import { register } from '@wordpress/data';
+import { addAction } from '@wordpress/hooks';
+
 /**
  * Internal Dependencies
  */
@@ -27,3 +29,9 @@ const settings = {
 register(store);
 
 registerBlockType(name, { ...metadata, ...settings });
+
+// TODO: test savePost filter for adding pngs and svgs
+addAction('editor.savePost', 'editor', async (edits) => {
+	console.log({ edits });
+	throw { message: 'This is the error message.' };
+});

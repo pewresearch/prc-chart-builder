@@ -13,6 +13,9 @@ import {
 	stackedBarIcon,
 	stackedColumnIcon,
 	pieIcon,
+	USAMap,
+	USABlockMap,
+	worldMap,
 } from './icons';
 // import { icons } from '@prc/icons';
 // import { icons } from '@prc/icons';
@@ -31,6 +34,10 @@ import {
 	explodedBarTemplate,
 	divergingBarTemplate,
 	imageTemplate,
+	USAMapTemplate,
+	USACountyMapTemplate,
+	USABlockMapTemplate,
+	WorldMapTemplate,
 } from '../../../.shared/variation-templates';
 
 const variations = [
@@ -170,6 +177,44 @@ const variations = [
 		icon: barIcon,
 		attributes: { chartType: 'static' },
 		innerBlocks: imageTemplate,
+	},
+	{
+		name: 'cbUSAMap',
+		title: __('USA Map'),
+		keywords: [__('map'), __('USA'), __('US')],
+		description: __('Create a map of the United States.'),
+		icon: USAMap,
+		attributes: { chartType: 'us-map' },
+		innerBlocks: USAMapTemplate,
+	},
+	{
+		name: 'cbUSACountyMap',
+		title: __('USA County Map'),
+		keywords: [__('map'), __('USA'), __('US'), __('county')],
+		description: __(
+			'Create a map of the United States, with county borders.'
+		),
+		icon: USAMap,
+		attributes: { chartType: 'us-map-county' },
+		innerBlocks: USACountyMapTemplate,
+	},
+	{
+		name: 'cbUSABlockMap',
+		title: __('USA Block Map'),
+		keywords: [__('map'), __('USA'), __('US')],
+		description: __('Create a block map of the United States.'),
+		icon: USABlockMap,
+		attributes: { chartType: 'us-map-block' },
+		innerBlocks: USABlockMapTemplate,
+	},
+	{
+		name: 'cbWorldMap',
+		title: __('World Map'),
+		keywords: [__('map'), __('world')],
+		description: __('Create a map of the world.'),
+		icon: worldMap,
+		attributes: { chartType: 'world-map' },
+		innerBlocks: WorldMapTemplate,
 	},
 	{
 		name: 'cbstatic',

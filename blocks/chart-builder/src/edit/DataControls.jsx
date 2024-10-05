@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /**
  * External dependencies
@@ -14,6 +15,7 @@ import {
 	__experimentalToolsPanelItem as ToolsPanelItem,
 	SelectControl,
 	ToggleControl,
+	FormTokenField,
 } from '@wordpress/components';
 
 import Sorter from './Sorter';
@@ -38,12 +40,16 @@ function DataControls({ attributes, setAttributes, clientId }) {
 		sortOrder,
 		availableCategories,
 		chartType,
+		chartFamily,
+		categories,
 		diffColumnActive,
 		positiveCategories,
 		negativeCategories,
 		diffColumnCategory,
 		neutralCategory,
 		xScale,
+		mapScale,
+		mapScaleDomain,
 		dateInputFormat,
 		sortKey,
 		independentVariable,
@@ -63,58 +69,62 @@ function DataControls({ attributes, setAttributes, clientId }) {
 	return (
 		<PanelBody title={__('Data')} initialOpen>
 			<ToolsPanel
-				label={__('Data Rendering and Sorting')}
+				label={__('Data Rendering, Sorting, and Accessors')}
 				panelId={clientId}
 				style={{
 					paddingLeft: '0',
 					paddingRight: '0',
 				}}
 			>
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Sorting')}
-					isShownByDefault
-					panelId={clientId}
-				>
-					<SelectControl
-						label={__('Sort Key')}
-						value={sortKey}
-						help={__(
-							'Choose the column you would like to sort your data by.'
-						)}
-						onChange={(value) => setAttributes({ sortKey: value })}
-						options={[
-							...availableOptions,
-							{
-								label: independentVariable,
-								value: 'x',
-							},
-						]}
-					/>
-					<SelectControl
-						label={__('Sort Order')}
-						value={sortOrder}
-						options={[
-							{
-								value: 'ascending',
-								label: 'Ascending',
-							},
-							{
-								value: 'descending',
-								label: 'Descending',
-							},
-							{
-								value: 'none',
-								label: 'No Sort',
-							},
-						]}
-						onChange={(type) => {
-							setAttributes({
-								sortOrder: type,
-							});
-						}}
-					/>
-				</WidePanelItem>
+				{'map' !== chartFamily && (
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('Sorting')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<SelectControl
+							label={__('Sort Key')}
+							value={sortKey}
+							help={__(
+								'Choose the column you would like to sort your data by.'
+							)}
+							onChange={(value) =>
+								setAttributes({ sortKey: value })
+							}
+							options={[
+								...availableOptions,
+								{
+									label: independentVariable,
+									value: 'x',
+								},
+							]}
+						/>
+						<SelectControl
+							label={__('Sort Order')}
+							value={sortOrder}
+							options={[
+								{
+									value: 'ascending',
+									label: 'Ascending',
+								},
+								{
+									value: 'descending',
+									label: 'Descending',
+								},
+								{
+									value: 'none',
+									label: 'No Sort',
+								},
+							]}
+							onChange={(type) => {
+								setAttributes({
+									sortOrder: type,
+								});
+							}}
+						/>
+					</WidePanelItem>
+				)}
 				<PanelDescription>
 					<StyledLabel>Data Accessors</StyledLabel>
 				</PanelDescription>
@@ -218,7 +228,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						/>
 					</WidePanelItem>
 				)}
-				{'diverging-bar' !== chartType && (
+				{'map' !== chartFamily && 'diverging-bar' !== chartType && (
 					<WidePanelItem
 						hasValue={() => 0 < availableOptions.length}
 						label={__('Categories')}
@@ -236,42 +246,133 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						/>
 					</WidePanelItem>
 				)}
-
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Diff Column')}
-					isShownByDefault
-					panelId={clientId}
-				>
-					<PanelDescription>
-						<StyledLabel>Data Column</StyledLabel>
-					</PanelDescription>
-					<ToggleControl
-						label={diffColumnActive ? __('Active') : __('Inactive')}
-						checked={diffColumnActive}
-						onChange={(value) =>
-							setAttributes({ diffColumnActive: value })
-						}
-					/>
-					<PanelDescription>
-						Activate if you'd like to include a column that shows
-						the total/difference/or any other data column to the
-						right of the chart (optional).
-					</PanelDescription>
-					{diffColumnActive && (
-						<SelectControl
-							label={__('Diff Column Category')}
-							value={diffColumnCategory}
-							onChange={(value) =>
-								setAttributes({ diffColumnCategory: value })
+				{'map' === chartFamily && (
+					<>
+						<WidePanelItem
+							hasValue={() => 0 < availableOptions.length}
+							label={__('Categories')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<PanelDescription>
+								Select the category you would like chart builder
+								to use to render your map’s data.
+							</PanelDescription>
+							<SelectControl
+								label={__('Map Data Category')}
+								value={categories[0]}
+								onChange={(value) =>
+									setAttributes({ categories: [value] })
+								}
+								options={availableOptions.map((option) => ({
+									label: option.label,
+									value: option.label,
+								}))}
+							/>
+						</WidePanelItem>
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Map Color Scale')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<SelectControl
+								label={__('Map Scale')}
+								value={mapScale}
+								onChange={(value) =>
+									setAttributes({
+										mapScale: value,
+										mapScaleDomain: [],
+									})
+								}
+								options={[
+									{
+										value: 'threshold',
+										label: 'Threshold',
+									},
+									{
+										value: 'ordinal',
+										label: 'Ordinal',
+									},
+									{
+										value: 'linear',
+										label: 'Linear',
+									},
+								]}
+							/>
+						</WidePanelItem>
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Map Color Scale Domain')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<PanelDescription>
+								Domain for the color scale. If oridinal, enter
+								the categories in the order you would like them
+								to appear. If threshold, enter the thresholds
+								for each color. If linear, enter the min and max
+								values for the scale.
+							</PanelDescription>
+							<FormTokenField
+								label={__('Map Color Scale Domain')}
+								value={mapScaleDomain || []}
+								onChange={(c) => {
+									if (mapScale !== 'ordinal') {
+										c = c
+											.map((v) => parseFloat(v))
+											.filter((v) => !isNaN(v))
+											.sort((a, b) => a - b);
+									}
+									console.log(c);
+									setAttributes({ mapScaleDomain: c });
+								}}
+								help={__(
+									'Separate with commas or the Enter key.'
+								)}
+							/>
+						</WidePanelItem>
+					</>
+				)}
+				{'map' !== chartFamily && (
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('Diff Column')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<PanelDescription>
+							<StyledLabel>Data Column</StyledLabel>
+						</PanelDescription>
+						<ToggleControl
+							label={
+								diffColumnActive ? __('Active') : __('Inactive')
 							}
-							options={availableOptions.map((option) => ({
-								label: option.label,
-								value: option.label,
-							}))}
+							checked={diffColumnActive}
+							onChange={(value) =>
+								setAttributes({ diffColumnActive: value })
+							}
 						/>
-					)}
-				</WidePanelItem>
+						<PanelDescription>
+							Activate if you'd like to include a column that
+							shows the total/difference/or any other data column
+							to the right of the chart (optional).
+						</PanelDescription>
+						{diffColumnActive && (
+							<SelectControl
+								label={__('Diff Column Category')}
+								value={diffColumnCategory}
+								onChange={(value) =>
+									setAttributes({ diffColumnCategory: value })
+								}
+								options={availableOptions.map((option) => ({
+									label: option.label,
+									value: option.label,
+								}))}
+							/>
+						)}
+					</WidePanelItem>
+				)}
 			</ToolsPanel>
 		</PanelBody>
 	);

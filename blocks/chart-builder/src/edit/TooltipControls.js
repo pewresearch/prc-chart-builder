@@ -307,7 +307,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 							setAttributes({ tooltipFormat: val })
 						}
 					/>
-					<ExternalLink href="https://www.pewresearch.org/devdocs/documentation/chart-builder/#tooltip">
+					<ExternalLink href="https://platform.pewresearch.org/wiki/2024/06/25/chart-builder-documentation/#tooltip">
 						For more information on tooltip formatting, see the dev
 						docs.
 					</ExternalLink>

@@ -1,0 +1,52 @@
+Name,FIPS,Response
+Alabama,01,maybe
+Alaska,02,yes
+Arizona,04,no
+Arkansas,05,maybe
+California,06,yes
+Colorado,08,no
+Connecticut,09,maybe
+Delaware,10,yes
+District of Columbia,11,no
+Florida,12,no
+Georgia,13,maybe
+Hawaii,15,yes
+Idaho,16,no
+Illinois,17,maybe
+Indiana,18,yes
+Iowa,19,no
+Kansas,20,maybe
+Kentucky,21,yes
+Louisiana,22,no
+Maine,23,maybe
+Maryland,24,yes
+Massachusetts,25,no
+Michigan,26,maybe
+Minnesota,27,yes
+Mississippi,28,no
+Missouri,29,maybe
+Montana,30,yes
+Nebraska,31,no
+Nevada,32,maybe
+New Hampshire,33,yes
+New Jersey,34,no
+New Mexico,35,maybe
+New York,36,yes
+North Carolina,37,no
+North Dakota,38,maybe
+Ohio,39,yes
+Oklahoma,40,no
+Oregon,41,maybe
+Pennsylvania,42,yes
+Rhode Island,44,no
+South Carolina,45,maybe
+South Dakota,46,yes
+Tennessee,47,no
+Texas,48,maybe
+Utah,49,yes
+Vermont,50,no
+Virginia,51,maybe
+Washington,53,yes
+West Virginia,54,no
+Wisconsin,55,maybe
+Wyoming,56,yes

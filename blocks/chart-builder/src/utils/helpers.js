@@ -212,7 +212,10 @@ export const formatLegacyAttrs = (legacyMeta, attributes, siteID) => {
 
 // use a reducer to create an array of objects with the headers as keys
 // and the table data as values
-export const formatCellContent = (content, key) => {
+export const formatCellContent = (content, key, scale) => {
+	if ('ordinal' === scale) {
+		return content;
+	}
 	const replaceNonNumeric = (str) => {
 		// Replace all non-numeric, non-decimal characters, and negative sign
 		str = str.replace(/[^0-9.-]/g, '');

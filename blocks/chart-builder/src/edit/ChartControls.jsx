@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable no-console */
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 /* eslint-disable max-lines-per-function */
@@ -43,19 +44,27 @@ import DivergingBarControls from './DivergingBarControls';
 import DotPlotControls from './DotPlotControls';
 import PlotBandControls from './PlotBandControls';
 import DiffColumnControls from './DiffColumnControls';
+import MapControls from './MapControls';
 
 function ControlSections(props) {
-	const { chartType, attributes } = props;
+	const { chartType, chartFamily, attributes } = props;
 	if (attributes.isStaticChart) {
 		return <TextFieldControls {...props} />;
 	}
 	return (
+		// TODO: probably a smarter way to do this, maybe with switch statement
 		<>
 			<TextFieldControls {...props} />
 			<DataControls {...props} />
 			<ColorControls {...props} />
-			<XAxisControls {...props} />
-			<YAxisControls {...props} />
+			{'map' !== chartFamily && (
+				<>
+					<XAxisControls {...props} />
+					<YAxisControls {...props} />
+				</>
+			)}
+			{'map' === chartFamily && <MapControls {...props} />}
+
 			{('bar' === chartType ||
 				'stacked-bar' === chartType ||
 				'exploded-bar' === chartType) && <BarControls {...props} />}
@@ -91,6 +100,7 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 	const [svgLoading, setSVGLoading] = useState(false);
 	const {
 		chartType,
+		chartFamily,
 		chartOrientation,
 		paddingTop,
 		paddingRight,
@@ -98,6 +108,7 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 		paddingLeft,
 		height,
 		width,
+		overflowX,
 		mobileBreakpoint,
 		pngUrl,
 		allowDataDownload,
@@ -111,7 +122,6 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 				}),
 			],
 			onFileChange: ([fileObj]) => {
-				console.log({ fileObj });
 				setAttributes({
 					pngUrl: fileObj.url,
 					pngId: fileObj.id,
@@ -222,6 +232,32 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 						})
 					}
 				/>
+				<SelectControl
+					label={__('Overflow')}
+					value={overflowX}
+					help={__(
+						'Choose how the chart should handle overflow on the x-axis when the chart width is wider than the window. "Responsive" will resize the chart width to fit the window, "Scroll" will allow the chart to be scrolled horizontally, and "Scroll (fixed y-axis)" will allow the chart to be scrolled horizontally while keeping the y-axis fixed (if applicable).'
+					)}
+					options={[
+						{
+							value: 'responsive',
+							label: 'Responsive',
+						},
+						{
+							value: 'scroll',
+							label: 'Scroll',
+						},
+						{
+							value: 'scroll-fixed-y-axis',
+							label: 'Scroll (fixed y-axis)',
+						},
+					]}
+					onChange={(overflow) =>
+						setAttributes({
+							overflowX: overflow,
+						})
+					}
+				/>
 				<RangeControl
 					label={__('Mobile Breakpoint')}
 					help={__(
@@ -271,6 +307,7 @@ function ChartControls({ attributes, setAttributes, clientId }) {
 				setAttributes={setAttributes}
 				clientId={clientId}
 				chartType={chartType}
+				chartFamily={chartFamily}
 			/>
 			<PanelBody title="Image and Data Exports" initialOpen={false}>
 				<ToggleControl

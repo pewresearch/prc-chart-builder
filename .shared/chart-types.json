@@ -83,6 +83,34 @@
 			"attributes": {
 				"chartType": "pie"
 			}
+		},
+		{
+			"title": "USA State Map",
+			"slug": "map-usa",
+			"attributes": {
+				"chartType": "map-usa"
+			}
+		},
+		{
+			"title": "USA County Map",
+			"slug": "map-usa-county",
+			"attributes": {
+				"chartType": "map-usa-county"
+			}
+		},
+		{
+			"title": "World Map",
+			"slug": "map-world",
+			"attributes": {
+				"chartType": "map-world"
+			}
+		},
+		{
+			"title": "USA Block Map",
+			"slug": "map-usa-block",
+			"attributes": {
+				"chartType": "map-usa-block"
+			}
 		}
 	]
 }

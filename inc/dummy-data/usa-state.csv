@@ -1,0 +1,52 @@
+Name,FIPS,Response
+Alabama,01,45
+Alaska,02,89
+Arizona,04,23
+Arkansas,05,67
+California,06,34
+Colorado,08,56
+Connecticut,09,78
+District of Columbia,11,12
+Delaware,10,12
+Florida,12,90
+Georgia,13,37
+Hawaii,15,55
+Idaho,16,80
+Illinois,17,29
+Indiana,18,66
+Iowa,19,73
+Kansas,20,11
+Kentucky,21,49
+Louisiana,22,60
+Maine,23,88
+Maryland,24,42
+Massachusetts,25,76
+Michigan,26,34
+Minnesota,27,53
+Mississippi,28,22
+Missouri,29,91
+Montana,30,15
+Nebraska,31,39
+Nevada,32,77
+New Hampshire,33,84
+New Jersey,34,29
+New Mexico,35,63
+New York,36,47
+North Carolina,37,95
+North Dakota,38,35
+Ohio,39,59
+Oklahoma,40,72
+Oregon,41,26
+Pennsylvania,42,82
+Rhode Island,44,41
+South Carolina,45,50
+South Dakota,46,64
+Tennessee,47,71
+Texas,48,86
+Utah,49,32
+Vermont,50,19
+Virginia,51,75
+Washington,53,57
+West Virginia,54,18
+Wisconsin,55,33
+Wyoming,56,25

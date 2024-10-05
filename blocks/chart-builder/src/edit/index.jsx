@@ -61,6 +61,7 @@ export default function Edit({
 		metaSource,
 		metaTag,
 		chartData,
+		mapScale,
 	} = attrs;
 	const { converted } = chartConverted || {};
 
@@ -169,11 +170,11 @@ export default function Edit({
 					const key = 0 === index ? 'x' : headers[index];
 					return {
 						...acc,
-						[key]: formatCellContent(cell.content, key),
+						[key]: formatCellContent(cell.content, key, mapScale),
 					};
 				}, {})
 			),
-		[tableData, body, headers]
+		[tableData, body, headers, mapScale]
 	);
 	useEffect(() => {
 		const [, ...rest] = headers;

@@ -198,7 +198,7 @@ const renderCharts = () => {
 				? window.chartConfigs[hash].pngId
 				: staticImageId,
 		};
-		const tableData = window.tableData[hash];
+		const tableData = tableEl ? window.tableData[tableEl.id] : false;
 		// if there is preformatted data, use that, otherwise use the data from the chart config
 		const preformattedDataArr = window.chartPreformattedData[hash];
 		const { chartData } = window.chartConfigs[hash];

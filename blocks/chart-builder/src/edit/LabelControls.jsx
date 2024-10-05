@@ -74,6 +74,7 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 		labelFormatValue,
 		pieCategoryLabelsActive,
 		showFirstLastPointsOnly,
+		mapIgnoreSmallStateLabels,
 	} = attributes;
 	return (
 		<PanelBody title={__('Labels')} initialOpen={false}>
@@ -98,6 +99,20 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 							setAttributes({ labelsActive: !labelsActive })
 						}
 					/>
+					{'map-usa' === chartType && (
+						<ToggleControl
+							label={__('Ignore Small State Labels')}
+							checked={mapIgnoreSmallStateLabels}
+							disabled={!labelsActive}
+							onChange={() =>
+								setAttributes({
+									mapIgnoreSmallStateLabels:
+										!mapIgnoreSmallStateLabels,
+								})
+							}
+						/>
+					)}
+
 					{'line' === chartType && (
 						<ToolsPanelItem
 							hasValue={() => true}

@@ -46,7 +46,7 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		</div>
 		<div class="wp-block-buttons wp-container-2">
 			<div class="wp-block-button has-custom-width has-custom-font-size is-style-fill has-sans-serif-font-family has-small-label-font-size">
-				<a download class="wp-block-button__link has-white-color has-link-color-background-color has-text-color has-background wp-element-button wp-chart-builder-download button">Download data as .csv</a>
+				<a download	class="wp-block-button__link has-white-color has-link-color-background-color has-text-color has-background wp-element-button wp-chart-builder-download button">Download data as .csv</a>
 			</div>
 		 </div>
 		<div class="cb__note" ><?php echo apply_filters('the_content', $metaNote);?></div>
@@ -59,11 +59,6 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 
 		return render_block( array_pop($parsed_block) );
 	}
-
-	// TODO: read to table function when WP_HTML_Tag_Processor is fixed -->
-
-
-
 
 	public function render_chart_builder_controller( $attributes, $content = '', $block = null ) {
 		if ( is_admin() ) {
@@ -123,15 +118,14 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 		$table_array = null;
 		if ($table_block) {
 			$table_block['attrs']['className'] = 'chart-builder-data-table';
-			// TODO: uncomment when WP_HTML_Tag_Processor is fixed
 			$table_array = array_key_exists('tableData', $attributes) ? $attributes['tableData'] : false;
 			$table_array = true !== $table_array || empty($attributes['tableData']) ? parse_table_block_into_array( $table_block['innerHTML'] ) : $table_array;
 		}
 
 		// @TODO: I wonder if we can create a wordpress redux registry to manage multiple chart configs on a page...
-		wp_add_inline_script($script_handle, "if ( !window.tableData ) {window.tableData = {};} window.tableData['".$id."'] = " . wp_json_encode( $table_array ) . ";");
+		wp_add_inline_script($script_handle, "if ( !window.tableData ) {window.tableData = {};} window.tableData['".$id."-table'] = " . wp_json_encode( $table_array ) . ";");
 
-		wp_add_inline_script($script_handle, "if ( !window.chartPreformattedData ) {window.chartPreformattedData = {};} window.chartPreformattedData['".$id."'] = " . wp_json_encode( $preformatted_data ) . ";");
+		wp_add_inline_script($script_handle, "if ( !window.chartPreformattedData ) {window.chartPreformattedData = {};} window.chartPreformattedData['".$id."-chart'] = " . wp_json_encode( $preformatted_data ) . ";");
 
 		// check if url has the parameter offerSVGDownload and if so, add the data attribute to the block
 		$offer_svg_download = isset( $_GET['offerSVGDownload'] ) ? $_GET['offerSVGDownload'] : false;
@@ -155,7 +149,6 @@ class Chart_Builder_Controller extends PRC_Chart_Builder {
 							<div
 								class="wp-chart-builder-table"
 								id="%1$s-table"
-								data-chart-hash="%1$s-chart"
 								style="max-width:%2$s;">
 									%3$s
 							</div>',

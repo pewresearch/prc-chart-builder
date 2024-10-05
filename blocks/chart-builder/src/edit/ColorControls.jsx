@@ -30,7 +30,6 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 	return (
 		<PanelBody title={__('Colors')} initialOpen={false}>
 			<ToolsPanel
-				label={__('Attributes')}
 				panelId={clientId}
 				style={{
 					paddingLeft: '0',
@@ -113,9 +112,7 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 						<ToggleControl
 							label={__('Stroke')}
 							checked={elementHasStroke}
-							help={
-								'If selected, the slices of a pie or bar segements will have a stroke applied.'
-							}
+							help="If selected, the slices of a pie or bar segements will have a stroke applied."
 							onChange={() =>
 								setAttributes({
 									elementHasStroke: !elementHasStroke,

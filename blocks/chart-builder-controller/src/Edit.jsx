@@ -126,6 +126,25 @@ export default function Edit(props) {
 		],
 	];
 
+	const dummyCSVS = [
+		{
+			name: 'US State Map',
+			url: 'https://www.pewresearch.org/wp-content/uploads/sites/20/2024/10/usa-state.csv',
+		},
+		{
+			name: 'US County Map',
+			url: 'https://www.pewresearch.org/wp-content/uploads/sites/20/2024/10/usa-county.csv',
+		},
+		{
+			name: 'US Block Map',
+			url: 'https://www.pewresearch.org/wp-content/uploads/sites/20/2024/10/usa-block-map.csv',
+		},
+		{
+			name: 'World Map',
+			url: 'https://www.pewresearch.org/wp-content/uploads/sites/20/2024/10/world.csv',
+		},
+	];
+
 	const STATIC_TEMPLATE = [TABLE, ['core/image', {}]];
 
 	const TABLE_TEMPLATE = [TABLE];
@@ -162,6 +181,31 @@ export default function Edit(props) {
 	return (
 		<Fragment>
 			<InspectorControls>
+				<PanelBody>
+					<p>
+						<strong>
+							Your table must include{' '}
+							<a href="https://transition.fcc.gov/oet/info/maps/census/fips/fips.txt">
+								county or state FIPS codes
+							</a>{' '}
+							to match the data for a US Map, or{' '}
+							<a href="https://www.iban.com/country-codes">
+								3-digit ISO codes
+							</a>{' '}
+							for world maps.
+						</strong>{' '}
+					</p>
+					<p>Dummy data for maps can be found here:</p>
+					<ul>
+						{dummyCSVS.map((csv) => (
+							<li key={csv.name}>
+								<a href={csv.url} download>
+									{csv.name}
+								</a>
+							</li>
+						))}
+					</ul>
+				</PanelBody>
 				<PanelBody>
 					<ToggleControl
 						label={__('Show data and share tabs')}

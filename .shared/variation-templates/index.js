@@ -11,6 +11,10 @@ export { default as scatterTemplate } from './scatter';
 export { default as dotPlotTemplate } from './dotPlot';
 export { default as pieTemplate } from './pie';
 export { default as imageTemplate } from './image';
+export { default as USAMapTemplate } from './map-usa';
+export { default as USABlockMapTemplate } from './map-usa-block';
+export { default as USACountyMapTemplate } from './map-usa-county';
+export { default as WorldMapTemplate } from './map-world';
 // legacy variations
 export { default as legacyBarTemplate } from './legacyBar';
 export { default as legacyLineTemplate } from './legacyLine';

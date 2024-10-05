@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 /* eslint-disable max-lines-per-function */
 /**
@@ -64,7 +65,14 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 		legendMarkerStyle,
 		legendBorderStroke,
 		legendFill,
+		legendLabelDelimiter,
+		legendLabelLower,
+		legendLabelUpper,
+		legendCategories,
+		mapScale,
+		mapScaleDomain,
 		chartType,
+		chartFamily,
 		neutralBarActive,
 		positiveCategories,
 		negativeCategories,
@@ -75,9 +83,16 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 	const divergingCategories = neutralBarActive
 		? [...negativeCategories, ...positiveCategories, neutralCategory]
 		: [...negativeCategories, ...positiveCategories];
-	const availableLegendCategories =
-		chartType === 'diverging-bar' ? divergingCategories : categories;
-
+	let availableLegendCategories = categories;
+	if (chartType === 'diverging-bar') {
+		availableLegendCategories = divergingCategories;
+	}
+	if (mapScale === 'ordinal') {
+		availableLegendCategories = mapScaleDomain;
+	}
+	if (legendCategories) {
+		availableLegendCategories = legendCategories;
+	}
 	return (
 		<PanelBody title={__('Legend')} initialOpen={false}>
 			<ToolsPanel
@@ -321,6 +336,39 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 						]}
 					/>
 				</WidePanelItem>
+				{'map' === chartFamily && 'threshold' === mapScale && (
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('Threshold language')}
+						panelId={clientId}
+					>
+						<PanelDescription>
+							<StyledLabel>Threshold langauge</StyledLabel>
+						</PanelDescription>
+						<TextControl
+							label={__('Lower label')}
+							value={legendLabelLower}
+							onChange={(value) => {
+								console.log(value);
+								setAttributes({ legendLabelLower: value });
+							}}
+						/>
+						<TextControl
+							label={__('Label delimiter')}
+							value={legendLabelDelimiter}
+							onChange={(value) =>
+								setAttributes({ legendLabelDelimiter: value })
+							}
+						/>
+						<TextControl
+							label={__('Upper label')}
+							value={legendLabelUpper}
+							onChange={(value) =>
+								setAttributes({ legendLabelUpper: value })
+							}
+						/>
+					</WidePanelItem>
+				)}
 			</ToolsPanel>
 		</PanelBody>
 	);

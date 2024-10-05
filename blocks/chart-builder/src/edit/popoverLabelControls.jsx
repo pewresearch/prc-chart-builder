@@ -7,14 +7,11 @@
 // might have to adjust how we handle this on a chart by chart basis
 
 const renderPopover = (nodeData) => {
-	console.log(nodeData);
-	console.log(chartData);
 	const dataToReplace = chartData.find((obj) => {
 		// find the object in chartData where the x value matches the x value of the nodeData
 		// and obj[category] matches y value of the nodeData
 		return obj.x === nodeData.x && obj[nodeData.category] === nodeData.y;
 	});
-	console.log({ dataToReplace });
 	// get the index of the object in chartData
 	// update the object in chartData with the new data
 	const updatedData = {
