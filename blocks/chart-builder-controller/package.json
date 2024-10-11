@@ -3,7 +3,7 @@
 	"description": "Chart Builder Controller",
 	"version": "0.1.0",
 	"devDependencies": {
-		"@wordpress/scripts": "^26.2.0"
+		"@wordpress/scripts": "^30.1.0"
 	},
 	"scripts": {
 		"build": "wp-scripts build",

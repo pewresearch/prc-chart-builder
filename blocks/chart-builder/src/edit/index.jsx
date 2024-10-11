@@ -35,7 +35,6 @@ import {
 } from '../utils/helpers';
 import ChartControls from './ChartControls';
 import getConfig from '../utils/getConfig';
-import WaybackHelper from './WaybackHelper'; // This is temporary for the migration.
 import CopyPasteStylesHandler from './CopyPasteStylesHandler';
 import { TitleSubtitle, Footer } from './metaTextFields';
 
@@ -198,7 +197,6 @@ export default function Edit({
 
 	return (
 		<Fragment>
-			<WaybackHelper postId={refId} />
 			<ChartControls
 				attributes={attrs}
 				setAttributes={setAttributes}
