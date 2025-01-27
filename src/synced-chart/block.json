@@ -1,0 +1,25 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "prc-block/chart",
+	"title": "Chart",
+	"category": "media",
+	"description": "Create, save, and sync charts to reuse across the site. Update the chart, and the changes apply everywhere it’s used.",
+	"textdomain": "default",
+	"attributes": {
+		"ref": {
+			"type": "number"
+		}
+	},
+	"supports": {
+		"customClassName": false,
+		"html": false,
+		"align": true,
+		"interactivity": true
+	},
+	"providesContext": {
+		"refId": "ref"
+	},
+	"editorScript": "file:./index.js",
+	"editorStyle": "file:./index.css"
+}

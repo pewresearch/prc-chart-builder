@@ -1,19 +1,31 @@
 {
-	"name": "@pewresearch/chart-builder",
-	"version": "0.1.0",
+	"name": "@pewresearch/prc-chart-builder",
+	"version": "3.0.0",
 	"description": "Create interactive D3 charts for your WordPress site.",
-	"author": "Ben Wormald",
+	"author": "Pew Research Center",
+	"contributors": [
+		"Ben Wormald",
+		"Seth Rubenstein"
+	],
 	"license": "GPL-2.0-or-later",
 	"main": "build/index.js",
 	"scripts": {
-		"build": "wp-scripts build",
-		"build:chart": "wp-scripts build blocks/chart/index.js --output-path=build/blocks/chart",
-		"build:chart-builder": "wp-scripts build blocks/chart-builder/index.js --output-path=build/blocks/chart-builder",
-		"build:chart-builder-controller": "wp-scripts build blocks/chart-builder-controller/index.js --output-path=build/blocks/chart-builder-controller",
-		"test": "wp-scripts test"
+		"build": "wp-scripts build --webpack-copy-php --experimental-modules; wp-scripts build-blocks-manifest",
+		"build:block": "node .scripts/build-block.js",
+		"build:manifest": "wp-scripts build-blocks-manifest",
+		"start": "wp-scripts start --webpack-copy-php --experimental-modules",
+		"start:block": "node .scripts/start-block.js",
+		"package": "node ./scripts/package.js"
 	},
 	"devDependencies": {
-		"@wordpress/dependency-extraction-webpack-plugin": "^4.4.0",
-		"@wordpress/scripts": "^24.5.0"
+		"@wordpress/dependency-extraction-webpack-plugin": "^6.10.0",
+		"@wordpress/scripts": "^30.3.0"
+	},
+	"dependencies": {
+		"@wordpress/icons": "^10.10.0",
+		"@emotion/react": "^11.13.3",
+		"@emotion/styled": "^11.13.0",
+		"html2canvas": "^1.4.1",
+		"react-movable": "^3.3.1"
 	}
 }

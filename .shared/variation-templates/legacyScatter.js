@@ -1,6 +1,6 @@
 const legacyScatterTemplate = [
 	[
-		'flexible-table-block/table',
+		'core/table',
 		{
 			className: 'chart-builder-data-table',
 			fontSize: 'small',

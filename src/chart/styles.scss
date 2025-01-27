@@ -1,0 +1,250 @@
+$thunder: #231f20;
+$gallery: #eee;
+$white: #ffffff;
+$franklin: franklin-gothic-urw, Verdana, Geneva, sans-serif;
+$abril:
+	abril-text,
+	Georgia,
+	Times New Roman,
+	Times,
+	serif;
+
+.wp-chart-builder-wrapper {
+	.wp-block-prc-block-tabs-menu-item {
+		font-size: 12px;
+	}
+}
+
+.wp-chart-builder-inner,
+.wp-block-prc-block-chart-builder {
+	figure {
+		margin: 0 !important;
+	}
+	.cb__text-wrapper,
+	.cb__chart {
+		font-family: $franklin;
+		font-size: 16px;
+		line-height: 150%;
+		color: $thunder;
+		background-color: $white;
+		position: relative;
+		// @media (prefers-color-scheme: dark) {
+		// 	color: #fff;
+		// 	background-color: #1e1e1e;
+		// }
+	}
+	.chart-fallback {
+		width: 100%;
+	}
+
+	.flex {
+		display: flex;
+		flex-wrap: wrap;
+	}
+
+	.flex > div {
+		flex: 1 0 auto;
+	}
+
+	.cb__text-wrapper {
+		margin: 0;
+	}
+
+	.cb__title {
+		font-size: 18px;
+		line-height: 110%;
+		font-family: $franklin;
+		font-weight: 700;
+		color: $thunder;
+		margin-bottom: 10px;
+		// @media (prefers-color-scheme: dark) {
+		// 	color: #fff;
+		// }
+	}
+
+	.cb__subtitle {
+		font-size: 14px;
+		line-height: 130%;
+		color: rgba(100, 100, 100, 0.7);
+		font-style: italic;
+		font-family: $abril;
+		margin-bottom: 20px;
+		// @media (prefers-color-scheme: dark) {
+		// 	color: rgba(255, 255, 255, 0.7);
+		// 	a {
+		// 		color: #809fff;
+		// 	}
+		// }
+	}
+
+	.cb__static-img {
+		width: 100%;
+	}
+
+	.cb__note {
+		font-size: 12px;
+		line-height: 125%;
+		color: rgba(100, 100, 100, 0.6);
+		font-family: $franklin;
+		margin-top: 20px;
+		// @media (prefers-color-scheme: dark) {
+		// 	color: rgba(255, 255, 255, 0.6);
+		// 	a {
+		// 		color: #809fff;
+		// 	}
+		// }
+	}
+
+	.cb__note ~ .cb__note {
+		margin-top: auto;
+	}
+
+	.cb__tag {
+		font-size: 12px;
+		line-height: 100%;
+		letter-spacing: 0.2px;
+		font-weight: 500;
+		font-family: $franklin;
+		color: $thunder;
+		margin-top: 10px;
+		// @media (prefers-color-scheme: dark) {
+		// 	color: #fff;
+		// }
+	}
+
+	// couple of visx overrides
+	.visx-legend-item {
+		line-height: 110%;
+	}
+
+	.visx-columns,
+	.visx-rows {
+		.visx-line {
+			stroke-linecap: round;
+		}
+	}
+}
+
+.wp-chart-builder-table {
+	width: 100%;
+}
+
+.share-modal__overlay {
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	top: 0;
+	left: 0;
+	background-color: rgba(0, 0, 0, 0.2);
+	z-index: 999;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	opacity: 0;
+	visibility: hidden;
+
+	&.active {
+		opacity: 1;
+		visibility: visible;
+	}
+}
+.share-modal {
+	position: absolute;
+	width: 100%;
+	height: 100%;
+	text-align: center;
+	top: 0;
+	left: 0;
+	position: absolute;
+	display: flex;
+	margin: auto;
+	justify-content: center;
+	align-items: center;
+	visibility: hidden;
+	opacity: 0;
+	&.active {
+		visibility: visible;
+		opacity: 1;
+	}
+}
+.share-modal__inner {
+	border: 1px solid #dadbdb;
+	border-radius: 3px;
+	box-shadow: 0px 0px 2px 0px #63646480;
+	background-color: #fff;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+	z-index: 1000;
+	.share-modal__close {
+		position: absolute;
+		top: 10px;
+		right: 10px;
+		font-size: 20px;
+		line-height: 100%;
+		color: #636464;
+		background-color: transparent;
+		border: none;
+		&:hover {
+			color: #000;
+			cursor: pointer;
+		}
+		// @media (prefers-color-scheme: dark) {
+		// 	color: #fff;
+		// }
+	}
+	.share-modal__body {
+		display: flex;
+		flex-direction: column;
+		justify-content: space-evenly;
+		align-items: center;
+		min-height: 100px;
+	}
+	h2.share-modal__title {
+		font-size: 15px;
+		line-height: 18px;
+		font-family: $franklin;
+		font-weight: 500;
+		color: $thunder;
+		margin-bottom: 10px;
+		text-transform: uppercase;
+	}
+	.share-modal__button {
+		border-radius: 3px;
+		border: 1px solid #dadbdb;
+		background-color: transparent;
+		transition: all 0.2s ease-in-out;
+		padding: 5px 10px;
+		font-size: 14px;
+		line-height: 150%;
+		font-family: $franklin;
+		font-weight: 500;
+		width: 200px;
+		&.share-modal__button--twitter {
+			color: #000;
+			&:hover {
+				background-color: #000;
+				color: #fff;
+				cursor: pointer;
+			}
+		}
+		&.share-modal__button--facebook {
+			color: #3b5998;
+			transition: all 0.2s ease-in-out;
+			&:hover {
+				background-color: #3b5998;
+				color: #fff;
+				cursor: pointer;
+			}
+		}
+	}
+	.share-modal__download-png {
+		padding: 5px 10px;
+		font-size: 14px;
+		line-height: 150%;
+		font-family: $franklin;
+	}
+}

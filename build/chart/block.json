@@ -1,0 +1,1053 @@
+{
+  "$schema": "https://schemas.wp.org/trunk/block.json",
+  "apiVersion": 3,
+  "name": "prc-block/chart-builder",
+  "title": "Chart Builder",
+  "description": "Chart element for the Chart Builder Controller block.",
+  "category": "media",
+  "icon": "chart-line",
+  "parent": [
+    "prc-block/chart-builder-controller"
+  ],
+  "attributes": {
+    "test": {
+      "type": "string",
+      "default": "test"
+    },
+    "id": {
+      "type": "string"
+    },
+    "parentClass": {
+      "type": "string",
+      "default": "wp-chart-builder-wrapper"
+    },
+    "isConvertedChart": {
+      "type": "boolean",
+      "default": false
+    },
+    "isStaticChart": {
+      "type": "boolean",
+      "default": false
+    },
+    "staticImage": {
+      "type": "string"
+    },
+    "staticImageAltText": {
+      "type": "string"
+    },
+    "chartConverted": {
+      "type": "object",
+      "default": {
+        "converted": false,
+        "requester": "",
+        "timestamp": ""
+      }
+    },
+    "chartData": {
+      "type": "array"
+    },
+    "tableData": {
+      "type": "string"
+    },
+    "hasPreformattedData": {
+      "type": "boolean",
+      "default": false
+    },
+    "preformattedData": {
+      "type": "array"
+    },
+    "chartType": {
+      "type": "string",
+      "enum": [
+        "bar",
+        "diverging-bar",
+        "line",
+        "area",
+        "stacked-area",
+        "scatter",
+        "pie",
+        "dot-plot",
+        "stacked-bar",
+        "grouped-bar",
+        "exploded-bar",
+        "static",
+        "map-usa",
+        "map-usa-counties",
+        "map-usa-block",
+        "map-world"
+      ],
+      "default": "bar"
+    },
+    "chartFamily": {
+      "type": "string",
+      "enum": [
+        "chart",
+        "map"
+      ],
+      "default": "chart"
+    },
+    "chartOrientation": {
+      "type": "string",
+      "enum": [
+        "vertical",
+        "horizontal"
+      ],
+      "default": "horizontal"
+    },
+    "width": {
+      "type": "integer",
+      "default": 640
+    },
+    "height": {
+      "type": "integer",
+      "default": 400
+    },
+    "overflowX": {
+      "type": "string",
+      "enum": [
+        "scroll",
+        "responsive",
+        "scroll-fixed-y-axis"
+      ],
+      "default": "responsive"
+    },
+    "mobileBreakpoint": {
+      "type": "integer"
+    },
+    "horizontalRules": {
+      "type": "boolean",
+      "default": true
+    },
+    "paddingTop": {
+      "type": "integer",
+      "default": 20
+    },
+    "paddingLeft": {
+      "type": "integer",
+      "default": 60
+    },
+    "paddingBottom": {
+      "type": "integer",
+      "default": 25
+    },
+    "paddingRight": {
+      "type": "integer",
+      "default": 0
+    },
+    "pieCategoryLabelsActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "dateInputFormat": {
+      "type": "string",
+      "enum": [
+        "YYYY",
+        "YYYY-MM",
+        "YYYY-MM-DD",
+        "MM-YYYY",
+        "MM-DD-YYYY",
+        "DD-MM-YYYY",
+        "MM/DD/YYYY",
+        "MM/YYYY",
+        "DD/MM/YYYY",
+        "MM/DD",
+        "DD/MM",
+        "MM"
+      ],
+      "default": "YYYY"
+    },
+    "sortOrder": {
+      "type": "string",
+      "enum": [
+        "ascending",
+        "descending",
+        "none",
+        "reverse"
+      ],
+      "default": "none"
+    },
+    "sortKey": {
+      "type": "string",
+      "default": "x"
+    },
+    "colorValue": {
+      "type": "string",
+      "default": "general"
+    },
+    "customColors": {
+      "type": "array",
+      "default": []
+    },
+    "elementHasStroke": {
+      "type": "boolean",
+      "default": false
+    },
+    "tabsActive": {
+      "type": "boolean",
+      "default": false
+    },
+    "xAxisActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "xLabel": {
+      "type": "string",
+      "default": null
+    },
+    "xLabelMaxWidth": {
+      "type": "number",
+      "default": 100
+    },
+    "xLabelFontSize": {
+      "type": "number",
+      "default": 12
+    },
+    "xLabelPadding": {
+      "type": "number",
+      "default": 30
+    },
+    "xLabelTextFill": {
+      "type": "string",
+      "default": "#231F20"
+    },
+    "xMinDomain": {
+      "type": "number",
+      "default": 0
+    },
+    "xMaxDomain": {
+      "type": "number",
+      "default": 100
+    },
+    "showXMinDomainLabel": {
+      "type": "boolean",
+      "default": true
+    },
+    "xTickMarksActive": {
+      "type": "boolean",
+      "default": false
+    },
+    "xTickNum": {
+      "type": "integer",
+      "default": 5
+    },
+    "xTickExact": {
+      "type": "string",
+      "default": ""
+    },
+    "xTickUnit": {
+      "type": "string",
+      "default": ""
+    },
+    "xTickUnitPosition": {
+      "type": "string",
+      "enum": [
+        "start",
+        "end"
+      ],
+      "default": "end"
+    },
+    "xTickLabelAngle": {
+      "type": "integer",
+      "default": 0
+    },
+    "xTickLabelMaxWidth": {
+      "type": "integer",
+      "default": 50
+    },
+    "xTickLabelTextAnchor": {
+      "type": "string",
+      "enum": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "default": "middle"
+    },
+    "xTickLabelVerticalAnchor": {
+      "type": "string",
+      "enum": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "default": "start"
+    },
+    "xTickLabelDY": {
+      "type": "integer",
+      "default": 0
+    },
+    "xTickLabelDX": {
+      "type": "integer",
+      "default": 0
+    },
+    "xAbbreviateTicks": {
+      "type": "boolean",
+      "default": false
+    },
+    "xAbbreviateTicksDecimals": {
+      "type": "integer",
+      "default": 0
+    },
+    "xTicksToLocaleString": {
+      "type": "boolean",
+      "default": false
+    },
+    "xMultiLineTickLabels": {
+      "type": "boolean",
+      "default": false
+    },
+    "xMultiLineTickLabelsBreak": {
+      "type": "integer",
+      "default": 1
+    },
+    "xScale": {
+      "type": "string",
+      "enum": [
+        "linear",
+        "time",
+        "log",
+        "sqrt"
+      ],
+      "default": "linear"
+    },
+    "xDateFormat": {
+      "type": "string",
+      "enum": [
+        "%Y",
+        "%B/%Y",
+        "%b/%Y",
+        "%-m/%Y",
+        "%-m/%y",
+        "%-m/%-d/%Y",
+        "%-d/%-m/%y",
+        "%B %d, %Y",
+        "%B %Y",
+        "%b %Y",
+        "%b %d, %Y",
+        "%d %b %Y",
+        "%d %b %y",
+        "%d %b",
+        "%d %B %Y",
+        "%d %B '%y",
+        "%d %b '%y",
+        "%b '%y",
+        "'%y",
+        "%d %B",
+        "%d %b, %Y"
+      ],
+      "default": "%Y"
+    },
+    "xAxisStroke": {
+      "type": "string",
+      "default": "#756f6a"
+    },
+    "xGridStroke": {
+      "type": "string",
+      "default": ""
+    },
+    "xGridStrokeDasharray": {
+      "type": "string",
+      "default": ""
+    },
+    "xGridOpacity": {
+      "type": "number",
+      "default": 0.2
+    },
+    "yAxisStroke": {
+      "type": "string",
+      "default": "#756f6a"
+    },
+    "yGridStroke": {
+      "type": "string",
+      "default": ""
+    },
+    "yGridStrokeDasharray": {
+      "type": "string",
+      "default": ""
+    },
+    "yGridOpacity": {
+      "type": "number",
+      "default": 0.2
+    },
+    "yAxisActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "yLabel": {
+      "type": "string",
+      "default": null
+    },
+    "yLabelFontSize": {
+      "type": "number",
+      "default": 12
+    },
+    "yLabelTextFill": {
+      "type": "string",
+      "default": "#231F20"
+    },
+    "yLabelPadding": {
+      "type": "number",
+      "default": 30
+    },
+    "yLabelMaxWidth": {
+      "type": "number",
+      "default": 100
+    },
+    "yScale": {
+      "type": "string",
+      "enum": [
+        "linear",
+        "time",
+        "log",
+        "sqrt"
+      ],
+      "default": "linear"
+    },
+    "yScaleFormat": {
+      "type": "string",
+      "default": ""
+    },
+    "yMinDomain": {
+      "type": "number",
+      "default": 0
+    },
+    "yMaxDomain": {
+      "type": "number",
+      "default": 100
+    },
+    "showYMinDomainLabel": {
+      "type": "boolean",
+      "default": false
+    },
+    "yTickMarksActive": {
+      "type": "boolean",
+      "default": false
+    },
+    "yTickNum": {
+      "type": "integer",
+      "default": 5
+    },
+    "yTickExact": {
+      "type": "string",
+      "default": ""
+    },
+    "yTickUnit": {
+      "type": "string",
+      "default": ""
+    },
+    "yTickUnitPosition": {
+      "type": "string",
+      "enum": [
+        "start",
+        "end"
+      ],
+      "default": "end"
+    },
+    "yTickLabelAngle": {
+      "type": "integer",
+      "default": 0
+    },
+    "yTickLabelMaxWidth": {
+      "type": "integer",
+      "default": 50
+    },
+    "yTickLabelTextAnchor": {
+      "type": "string",
+      "enum": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "default": "middle"
+    },
+    "yTickLabelVerticalAnchor": {
+      "type": "string",
+      "enum": [
+        "start",
+        "middle",
+        "end"
+      ],
+      "default": "start"
+    },
+    "yTickLabelDY": {
+      "type": "integer",
+      "default": 0
+    },
+    "yTickLabelDX": {
+      "type": "integer",
+      "default": 0
+    },
+    "yAbbreviateTicks": {
+      "type": "boolean",
+      "default": true
+    },
+    "yAbbreviateTicksDecimals": {
+      "type": "integer",
+      "default": 0
+    },
+    "yTicksToLocaleString": {
+      "type": "boolean",
+      "default": false
+    },
+    "yMultiLineTickLabels": {
+      "type": "boolean",
+      "default": false
+    },
+    "yMultiLineTickLabelsBreak": {
+      "type": "integer",
+      "default": 1
+    },
+    "plotBandsActive": {
+      "type": "boolean",
+      "default": false
+    },
+    "plotBands": {
+      "type": "array",
+      "default": []
+    },
+    "barLabelPosition": {
+      "type": "string",
+      "enum": [
+        "inside",
+        "outside",
+        "center"
+      ],
+      "default": "inside"
+    },
+    "barLabelCutoff": {
+      "type": "number",
+      "default": 10
+    },
+    "barLabelCutoffMobile": {
+      "type": "number",
+      "default": 5
+    },
+    "barPadding": {
+      "type": "number",
+      "default": 0.2
+    },
+    "barGroupPadding": {
+      "type": "number",
+      "default": 0.2
+    },
+    "groupBreaksActive": {
+      "type": "boolean",
+      "default": false
+    },
+    "groupBreaks": {
+      "type": "object",
+      "default": {}
+    },
+    "lineInterpolation": {
+      "type": "string",
+      "enum": [
+        "curveBasis",
+        "curveBasisClosed",
+        "curveBasisOpen",
+        "curveStep",
+        "curveStepAfter",
+        "curveStepBefore",
+        "curveBundle",
+        "curveLinear",
+        "curveLinearClosed",
+        "curveCardinal",
+        "curveCardinalClosed",
+        "curveCardinalOpen",
+        "curveCatmullRom",
+        "curveCatmullRomClosed",
+        "curveCatmullRomOpen",
+        "curveMonotoneX",
+        "curveMonotoneY",
+        "curveNatural"
+      ],
+      "default": "curveLinear"
+    },
+    "lineStrokeWidth": {
+      "type": "integer",
+      "default": 3
+    },
+    "lineStrokeDashArray": {
+      "type": "string",
+      "default": ""
+    },
+    "lineNodes": {
+      "type": "boolean",
+      "default": true
+    },
+    "nodeSize": {
+      "type": "integer",
+      "default": 3
+    },
+    "nodeFill": {
+      "type": "string",
+      "default": "inherit"
+    },
+    "nodeStrokeWidth": {
+      "type": "integer",
+      "default": 3
+    },
+    "areaFillOpacity": {
+      "type": "number",
+      "default": 0.4
+    },
+    "tooltipActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "tooltipActiveOnMobile": {
+      "type": "boolean",
+      "default": true
+    },
+    "deemphasizeSiblings": {
+      "type": "boolean",
+      "default": false
+    },
+    "deemphasizeOpacity": {
+      "type": "number",
+      "default": 0.5
+    },
+    "tooltipMaxHeight": {
+      "type": "integer",
+      "default": 100
+    },
+    "tooltipMaxWidth": {
+      "type": "integer",
+      "default": 200
+    },
+    "tooltipMinHeight": {
+      "type": "integer",
+      "default": 20
+    },
+    "tooltipMinWidth": {
+      "type": "integer",
+      "default": 50
+    },
+    "tooltipHeaderActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "tooltipHeaderValue": {
+      "type": "string",
+      "enum": [
+        "independentValue",
+        "categoryValue"
+      ],
+      "default": "categoryValue"
+    },
+    "tooltipOffsetX": {
+      "type": "integer",
+      "default": 10
+    },
+    "tooltipOffsetY": {
+      "type": "integer",
+      "default": 10
+    },
+    "tooltipCaretPosition": {
+      "type": "string",
+      "enum": [
+        "top",
+        "bottom",
+        "left",
+        "right"
+      ]
+    },
+    "tooltipFormat": {
+      "type": "string",
+      "default": "{{row}}: {{value}}"
+    },
+    "tooltipFormatValue": {
+      "type": "boolean",
+      "default": true
+    },
+    "tooltipAbsoluteValue": {
+      "type": "boolean",
+      "default": false
+    },
+    "tooltipDateFormat": {
+      "type": "string",
+      "enum": [
+        "%Y",
+        "%B/%Y",
+        "%b/%Y",
+        "%-m/%Y",
+        "%-m/%y",
+        "%-m/%-d/%Y",
+        "%-d/%-m/%y",
+        "%B %d, %Y",
+        "%B %Y",
+        "%b %Y",
+        "%b %d, %Y",
+        "%d %b %Y",
+        "%d %b %y",
+        "%d %b",
+        "%d %B %Y",
+        "%d %B '%y",
+        "%d %b '%y",
+        "%b '%y",
+        "'%y",
+        "%d %B",
+        "%d %b, %Y"
+      ],
+      "default": "%Y"
+    },
+    "labelsActive": {
+      "type": "boolean",
+      "default": false
+    },
+    "showFirstLastPointsOnly": {
+      "type": "boolean",
+      "default": false
+    },
+    "labelPositionDX": {
+      "type": "integer",
+      "default": 0
+    },
+    "labelPositionDY": {
+      "type": "integer",
+      "default": 0
+    },
+    "labelCutoff": {
+      "type": "number",
+      "default": 10
+    },
+    "labelAbsoluteValue": {
+      "type": "boolean",
+      "default": false
+    },
+    "labelFormatValue": {
+      "type": "boolean",
+      "default": true
+    },
+    "labelTruncateDecimal": {
+      "type": "boolean",
+      "default": true
+    },
+    "labelToFixedDecimal": {
+      "type": "integer",
+      "default": 3
+    },
+    "labelUnit": {
+      "type": "string",
+      "default": ""
+    },
+    "labelUnitPosition": {
+      "type": "string",
+      "enum": [
+        "start",
+        "end"
+      ],
+      "default": "end"
+    },
+    "labelColor": {
+      "type": "string",
+      "enum": [
+        "inherit",
+        "black",
+        "white",
+        "contrast"
+      ],
+      "default": "inherit"
+    },
+    "labelFontSize": {
+      "type": "integer",
+      "default": 10
+    },
+    "labelFontWeight": {
+      "type": "integer",
+      "default": 200
+    },
+    "legendActive": {
+      "type": "boolean",
+      "default": false
+    },
+    "legendCategories": {
+      "type": "array",
+      "default": []
+    },
+    "legendOrientation": {
+      "type": "string",
+      "enum": [
+        "row",
+        "column",
+        "row-reverse",
+        "column-reverse"
+      ],
+      "default": "row"
+    },
+    "legendTitle": {
+      "type": "string",
+      "default": ""
+    },
+    "legendAlignment": {
+      "type": "string",
+      "enum": [
+        "flex-start",
+        "center",
+        "flex-end",
+        "none"
+      ],
+      "default": "center"
+    },
+    "legendOffsetX": {
+      "type": "integer",
+      "default": 0
+    },
+    "legendOffsetY": {
+      "type": "integer",
+      "default": 0
+    },
+    "legendMarkerStyle": {
+      "type": "string",
+      "enum": [
+        "circle",
+        "rect",
+        "line"
+      ],
+      "default": "rect"
+    },
+    "legendBorderStroke": {
+      "type": "string",
+      "default": "#231F20"
+    },
+    "legendFill": {
+      "type": "string",
+      "default": "white"
+    },
+    "legendLabelDelimiter": {
+      "type": "string",
+      "default": " - "
+    },
+    "legendLabelLower": {
+      "type": "string",
+      "default": "Less than "
+    },
+    "legendLabelUpper": {
+      "type": "string",
+      "default": "More than "
+    },
+    "metaTextActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "metaTitle": {
+      "type": "string",
+      "default": "Title"
+    },
+    "metaSubtitle": {
+      "type": "string",
+      "default": "Subtitle"
+    },
+    "metaNote": {
+      "type": "string",
+      "default": "Note: This is a note."
+    },
+    "metaSource": {
+      "type": "string",
+      "default": "Source: This is your source."
+    },
+    "metaTag": {
+      "type": "string",
+      "default": "PEW RESEARCH CENTER"
+    },
+    "svgUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "svgId": {
+      "type": "integer"
+    },
+    "pngUrl": {
+      "type": "string",
+      "default": ""
+    },
+    "pngId": {
+      "type": "integer"
+    },
+    "independentVariable": {
+      "type": "string",
+      "default": "x"
+    },
+    "categories": {
+      "type": "array",
+      "default": []
+    },
+    "positiveCategories": {
+      "type": "array",
+      "default": []
+    },
+    "negativeCategories": {
+      "type": "array",
+      "default": []
+    },
+    "neutralCategory": {
+      "type": "string",
+      "default": ""
+    },
+    "neutralBarActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "neutralBarOffsetX": {
+      "type": "integer",
+      "default": 0
+    },
+    "neutralBarSeparator": {
+      "type": "boolean",
+      "default": true
+    },
+    "neutralBarSeparatorOffsetX": {
+      "type": "integer",
+      "default": -1
+    },
+    "divergingBarPercentOfInnerWidth": {
+      "type": "number",
+      "default": 70
+    },
+    "dotPlotConnectPoints": {
+      "type": "boolean",
+      "default": true
+    },
+    "dotPlotConnectPointsStroke": {
+      "type": "string",
+      "default": "#E6E7E8"
+    },
+    "dotPlotConnectPointsStrokeWidth": {
+      "type": "integer",
+      "default": 6
+    },
+    "dotPlotConnectPointsStrokeDasharray": {
+      "type": "string",
+      "default": ""
+    },
+    "explodedBarColumnGap": {
+      "type": "number",
+      "default": 16
+    },
+    "availableCategories": {
+      "type": "array",
+      "default": [
+        "y"
+      ]
+    },
+    "diffColumnActive": {
+      "type": "boolean",
+      "default": false
+    },
+    "diffColumnCategory": {
+      "type": "string",
+      "default": ""
+    },
+    "diffColumnHeader": {
+      "type": "string",
+      "default": ""
+    },
+    "diffColumnWidth": {
+      "type": "integer",
+      "default": 30
+    },
+    "diffColumnBackgroundColor": {
+      "type": "string",
+      "default": ""
+    },
+    "diffColumnMarginLeft": {
+      "type": "integer",
+      "default": 10
+    },
+    "diffColumnHeightOffset": {
+      "type": "integer",
+      "default": 0
+    },
+    "diffColumnAppearance": {
+      "type": "string",
+      "default": "default"
+    },
+    "mapScale": {
+      "type": "string",
+      "enum": [
+        "threshold",
+        "ordinal",
+        "linear"
+      ],
+      "default": "threshold"
+    },
+    "mapScaleDomain": {
+      "type": "array",
+      "default": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ]
+    },
+    "mapAbbreviateLabels": {
+      "type": "boolean",
+      "default": true
+    },
+    "mapIgnoreSmallStateLabels": {
+      "type": "boolean",
+      "default": true
+    },
+    "mapIgnoredLabels": {
+      "type": "array",
+      "default": []
+    },
+    "showCountyBoundaries": {
+      "type": "boolean",
+      "default": true
+    },
+    "mapShowStateBoundaries": {
+      "type": "boolean",
+      "default": true
+    },
+    "mapPathBackgroundFill": {
+      "type": "string",
+      "default": "#f7f7f7"
+    },
+    "mapPathStroke": {
+      "type": "string",
+      "default": "#d3d3d3"
+    },
+    "mapBlockRectSize": {
+      "type": "integer",
+      "default": 44
+    },
+    "allowDataDownload": {
+      "type": "boolean",
+      "default": true
+    },
+    "isCustomChart": {
+      "type": "boolean",
+      "default": false
+    },
+    "customAttributes": {
+      "type": "object",
+      "default": {}
+    },
+    "defaultShouldRender": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "example": {
+    "attributes": {
+      "chartType": "bar",
+      "className": "is-style-bar"
+    }
+  },
+  "usesContext": [
+    "refId",
+    "prc-chart-builder/id"
+  ],
+  "supports": {
+    "html": false,
+    "inserter": false,
+    "interactivity": true
+  },
+  "editorScript": "file:./index.js",
+  "style": [
+    "file:./index.css"
+  ],
+  "viewScriptModule": "file:./view.js",
+  "render": "file:./render.php"
+}
