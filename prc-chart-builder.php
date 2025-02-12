@@ -12,7 +12,6 @@
  * Text Domain:       prc-rls
  * Requires at least: 6.7
  * Requires PHP:      8.2
- * Requires Plugins:  prc-scripts
  */
 
 // If this file is called directly, abort.
@@ -43,4 +42,3 @@ function run_prc_platform_chart_builder() {
 	$plugin->run();
 }
 run_prc_platform_chart_builder();
-
