@@ -134,6 +134,7 @@ class Bootstrap {
 		$this->include('class-content-type.php');
 		$this->include('class-media-library.php');
 		$this->include('class-wp-html-table-processor.php');
+		$this->include('class-block-utils.php');
 
 		$this->load_blocks();
 

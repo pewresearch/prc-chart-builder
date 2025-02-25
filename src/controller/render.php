@@ -1,7 +1,5 @@
 <?php
 namespace PRC\Platform\Chart_Builder;
-
-// @TODO: @benwormald I would move all this into the controller file and use a render callback for the block. Break up these into smaller more manageable functions.
 if ( is_admin() ) {
 	return $content;
 }
@@ -13,8 +11,26 @@ if ( null === $block || empty( $block->inner_blocks ) ) {
 	return '';
 }
 
+// todo: this is a way to retrieve the datasets for the chart. not sure yet if we want to surface this in the chart builder block.
+// $post_type = get_post_type();
+// if ( 'chart' === $post_type ) {
+// 	$post_id = get_the_ID();
+// 	$datasets = wp_get_post_terms( $post_id, 'datasets' );
+// 	$datasets = array_map(
+// 		function ( $dataset ) {
+// 			return array(
+// 					'type'  => 'dataset',
+// 					'id'    => $dataset->term_id,
+// 					'label' => $dataset->name,
+// 					'url'   => get_term_link( $dataset ),
+// 				);
+// 			},
+// 			$datasets
+// 		);
+// }
+
 // get the controller block attributes and set the id
-$controller_attributes = \PRC\Platform\Block_Utils\get_block_attributes( 'prc-block/chart-builder-controller', $attributes );
+$controller_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes( 'prc-block/chart-builder-controller', $attributes );
 $id                    = $controller_attributes['id'];
 $align                 = $controller_attributes['align'];
 $active_share_tabs     = $controller_attributes['tabsActive'];
@@ -29,7 +45,8 @@ $chart_block = array_filter(
 );
 
 $chart_block      = array_pop( $chart_block );
-$chart_attributes = \PRC\Platform\Block_Utils\get_block_attributes( 'prc-block/chart-builder', $chart_block['attrs'] );
+$chart_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes( 'prc-block/chart-builder', $chart_block['attrs'] );
+
 $metaTitle        = $chart_attributes['metaTitle'];
 $metaSubtitle     = $chart_attributes['metaSubtitle'];
 $metaNote         = $chart_attributes['metaNote'];
@@ -60,8 +77,10 @@ if ( $image_block ) {
 	// get attachment image url
 	$static_chart_img                       = wp_get_attachment_image_src( $image_block['attrs']['id'], 'full' );
 	$static_chart_image_src                 = $static_chart_img[0];
+	$chart_block['attrs']['isStaticChart']  = true;
 	$chart_block['attrs']['staticImageId']  = $image_block['attrs']['id'];
 	$chart_block['attrs']['staticImageUrl'] = $static_chart_image_src;
+	$chart_block['attrs']['staticImageInnerHTML'] = $image_block['innerHTML'];
 }
 
 $featured_image_id  = $image_block ? $chart_block['attrs']['staticImageId'] : $chart_attributes['pngId'];
@@ -126,6 +145,7 @@ if ( $active_share_tabs ) {
 		data-wp-on--keydown="actions.hideModal"
 		data-chart-view="share"
 	></div>
+	<!-- TODO: I would like to be able to use the social share block here. Need to modify it to work with the share modal. -->
 	<div
 		class="share-modal" id="share-modal-<?php echo esc_attr( $id ); ?>"
 		data-wp-class--active="state.isActive"
@@ -135,7 +155,8 @@ if ( $active_share_tabs ) {
 			<div class="share-modal__header">
 				<h2 class="share-modal__title">Share this chart</h2>
 				<button class="share-modal__close" aria-label="Close Share Modal" data-wp-on--click="actions.hideModal">
-					<?php echo \PRC\Platform\Icons\render( 'regular', 'xmark' ); ?>
+						<!--checck   -->
+				<?php echo \PRC\Platform\Icons\render( 'regular', 'xmark' ); ?>
 				</button>
 			</div>
 			<div class="share-modal__body">
@@ -202,7 +223,7 @@ $block_attrs = get_block_wrapper_attributes(
 				'tableData'        => $table_array,
 			)
 		),
-		'data-wp-run'         => 'callbacks.onRun',
+		// 'data-wp-run'         => 'callbacks.onRun',
 		'class'               => 'wp-chart-builder-wrapper' . ' align' . $align,
 		'style'               => 'max-width:' . $maxWidth . ';',
 	)
@@ -212,49 +233,27 @@ ob_start();
 <div <?php echo $block_attrs; ?>>
 	<?php
 	if ( $active_share_tabs && $chart_block && $table_block ) {
-		// check to see if there is an image block, if so, render it,
-		// beacuse this is a static chart
-		if ( $image_block ) {
-			echo wp_sprintf(
-					/* html */                '
-					<div
-						class="wp-chart-builder-chart"
-						data-chart-view="chart"
-						data-allow-overlay="true"
-						data-wp-class--active="state.isActive"
-					>
-						%1$s
-						%2$s
-					</div>',
-				render_block( $image_block ),
-				$share_modal
-			);
-		} else {
-			echo wp_sprintf(
-					/* html */                '
-					<div
-						class="wp-chart-builder-chart active"
-						data-chart-view="chart"
-						data-allow-overlay="true"
-						data-wp-class--active="state.isActive"
-					>
-						%1$s
-						%2$s
-					</div>',
-				render_block( $chart_block ),
-				$share_modal
-			);
-		}
 		echo wp_sprintf(
-				/* html */            '
-					<div
-						class="wp-chart-builder-table"
-						data-chart-view="table"
-						data-wp-class--active="state.isActive"
-						id="%1$s-table"
-						style="max-width:%2$s;">
-							%3$s
-					</div>',
+				/* html */ '
+				<div
+					class="wp-chart-builder-chart active"
+					data-chart-view="chart"
+					data-allow-overlay="true"
+					data-wp-class--active="state.isActive"
+				>
+					%1$s
+					%2$s
+				</div>
+				<div
+					class="wp-chart-builder-table"
+					data-chart-view="table"
+					data-wp-class--active="state.isActive"
+					id="%3$s-table"
+					style="max-width:%4$s;">
+						%5$s
+				</div>',
+			render_block( $chart_block ),
+			$share_modal,
 			esc_attr( $id ),
 			esc_attr( $maxWidth ),
 			$table_with_meta

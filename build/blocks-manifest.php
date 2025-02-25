@@ -32,10 +32,13 @@ return array(
 				'type' => 'boolean',
 				'default' => false
 			),
-			'staticImage' => array(
+			'staticImageId' => array(
 				'type' => 'string'
 			),
-			'staticImageAltText' => array(
+			'staticImageUrl' => array(
+				'type' => 'string'
+			),
+			'staticImageInnerHTML' => array(
 				'type' => 'string'
 			),
 			'chartConverted' => array(

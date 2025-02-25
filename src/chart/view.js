@@ -1,13 +1,7 @@
 /**
  * WordPress Dependencies
  */
-import {
-	store,
-	getElement,
-	getContext,
-	getServerState,
-	withScope,
-} from '@wordpress/interactivity';
+import { store, getContext, getServerState } from '@wordpress/interactivity';
 
 /**
  * Internal  dependencies

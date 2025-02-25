@@ -29,10 +29,13 @@
       "type": "boolean",
       "default": false
     },
-    "staticImage": {
+    "staticImageId": {
       "type": "string"
     },
-    "staticImageAltText": {
+    "staticImageUrl": {
+      "type": "string"
+    },
+    "staticImageInnerHTML": {
       "type": "string"
     },
     "chartConverted": {

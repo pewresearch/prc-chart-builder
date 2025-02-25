@@ -6,8 +6,9 @@ wp_enqueue_script('prc-charting-library');
 if ( is_admin() || null === $block ) {
 	return $content;
 }
-// @TODO: Can we remove this dependency on the platform core somehow...
-$block_attributes = \PRC\Platform\Block_Utils\get_block_attributes('prc-block/chart-builder', $attributes);
+
+$block_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes('prc-block/chart-builder', $attributes);
+
 $id            		= $block_attributes['id'];
 if ( false === $id ) {
 	new \WP_Error( 'missing_id', __( 'Chart Block is missing ID', 'prc-block-library' ) );
@@ -16,18 +17,21 @@ if ( false === $id ) {
 $target_namespace       = array_key_exists( 'interactiveNamespace', $attributes ) ? $attributes['interactiveNamespace'] : 'prc-block/chart-builder';
 $svg_fallback 		   = $block_attributes['svgUrl'];
 
-// get the publication date of the post
-// @TODO: @benwormald what's going on with the post id here? Would it be better to get it from the global context? context.postId?
-$post_id               = get_the_ID();
-$publication_date 	   = get_the_date('Y-m-d', $post_id);
-$root_url 	  		   = get_bloginfo('url');
 $chart_data 		   = $block_attributes['chartData'];
+$is_static_chart 	   = $block_attributes['isStaticChart'];
 $table_data 		   = $block_attributes['tableData'];
 $has_preformatted_data = $block_attributes['hasPreformattedData'];
 $preformatted_data 	   = $block_attributes['preformattedData'];
 $should_render 	   	   = $block_attributes['defaultShouldRender'];
+
 if ( $has_preformatted_data && $preformatted_data ) {
 	$chart_data = $preformatted_data;
+}
+
+// chart should always have $chart_data or $is_static_chart. If neither is set, return an error.
+if ( ! $chart_data && ! $is_static_chart ) {
+	new \WP_Error( 'missing_chart_data', __( 'Chart Block is missing chartData or isStaticChart', 'prc-block-library' ) );
+	return;
 }
 
 wp_interactivity_state(
@@ -38,10 +42,6 @@ wp_interactivity_state(
 			// decode the table data to ensure it is an array
 			'table-data' => json_decode($table_data, true),
 			'chart-hash' => $id,
-			'post-id' => $post_id,
-			'post-url' => get_permalink( $post_id ),
-			'post-pub-date' => $publication_date,
-			'root-url' => $root_url,
 			'iframe-height' => null,
 			'should-render' => $should_render,
 		],
@@ -57,7 +57,7 @@ $block_attrs = [
 		'attributes' => $block->attributes,
 	]),
 	'class' 						=> 'wp-chart-builder-inner',
-	'data-wp-watch--init-render' => 'callbacks.watchForRender',
+	'data-wp-watch--init-render' => $is_static_chart ? null : 'callbacks.watchForRender',
 	// 'data-wp-run' => false === $has_custom_render ? 'callbacks.onRun' : null,
 ];
 
@@ -68,6 +68,15 @@ $chart = wp_sprintf('<div id="%1$s"><img src="%2$s" alt="Chart" class="chart-fal
 	$id,
 	$svg_fallback
 );
+
+$static_chart = '';
+if ($is_static_chart) {
+	$static_chart = wp_sprintf('<div id="%1$s">%2$s</div>',
+		$block_attributes['staticImageId'],
+		$block_attributes['staticImageInnerHTML']
+	);
+}
+
 // scaffold chart text elements
 $meta_text_active = $block_attributes['metaTextActive'];
 if ($meta_text_active) {
@@ -96,12 +105,12 @@ if ($meta_text_active) {
 		$top_rule,
 		$block_attributes['metaTitle'],
 		$block_attributes['metaSubtitle'],
-		$chart,
+		$is_static_chart ? $static_chart : $chart,
 		$block_attributes['metaSource'],
 		$block_attributes['metaNote'],
 		$block_attributes['metaTag'],
 		$bottom_rule
 	);
 } else {
-	echo wp_sprintf('<div %1$s>%2$s</div>', $block_wrapper_attrs, $chart);
+	echo wp_sprintf('<div %1$s>%2$s</div>', $block_wrapper_attrs, $is_static_chart ? $static_chart : $chart);
 }

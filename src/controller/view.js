@@ -126,9 +126,9 @@ const { state } = store('prc-block/chart-builder-controller', {
 		},
 	},
 	callbacks: {
-		onRun: () => {
-			const context = getContext();
-			console.log('context', context);
-		},
+		// onRun: () => {
+		// 	const context = getContext();
+		// 	console.log('context', context);
+		// },
 	},
 });
