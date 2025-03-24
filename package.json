@@ -15,16 +15,18 @@
 		"build:manifest": "wp-scripts build-blocks-manifest",
 		"start": "wp-scripts start --webpack-copy-php --experimental-modules",
 		"start:block": "node .scripts/start-block.js",
-		"package": "node ./scripts/package.js"
+		"package": "node .scripts/package.js",
+		"build:playground": "node .scripts/build-playground.js"
 	},
 	"devDependencies": {
 		"@wordpress/dependency-extraction-webpack-plugin": "^6.10.0",
-		"@wordpress/scripts": "^30.3.0"
+		"@wordpress/scripts": "^30.3.0",
+		"archiver": "^5.3.1"
 	},
 	"dependencies": {
-		"@wordpress/icons": "^10.10.0",
 		"@emotion/react": "^11.13.3",
 		"@emotion/styled": "^11.13.0",
+		"@wordpress/icons": "^10.10.0",
 		"html2canvas": "^1.4.1",
 		"react-movable": "^3.3.1"
 	}

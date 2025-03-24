@@ -1,4 +1,4 @@
 {
-  "core": "WordPress/WordPress",
-  "plugins": [ ".", "../prc-scripts"]
+	"core": "WordPress/WordPress",
+	"plugins": ["."]
 }

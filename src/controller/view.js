@@ -3,9 +3,46 @@
  */
 import { store, getElement, getContext } from '@wordpress/interactivity';
 
-const { arrayToCSV } = window.prcFunctions;
 const { addQueryArgs } = window.wp.url;
 const { innerWidth, innerHeight } = window;
+
+// convert array of arrays to formatted csv, with optional metadata
+// @see https://github.com/pewresearch/prc-scripts/blob/main/src/@prc/functions/functions.js#L145
+function arrayToCSV(objArray, metadata) {
+	if (undefined === objArray || objArray.length === 0) return false;
+	const array =
+		'object' !== typeof objArray ? JSON.parse(objArray) : objArray;
+	const checkIfEmpty = (str) => (str !== undefined ? str : '');
+	let str = '';
+	if (undefined !== metadata) {
+		str += `${checkIfEmpty(metadata.title)}
+			${checkIfEmpty(metadata.subtitle)}
+
+			`;
+	}
+	for (let i = 0; i < array.length; i += 1) {
+		let line = '';
+		// if a value has a comma in it, wrap it in quotes
+		for (let j = 0; j < array[i].length; j += 1) {
+			if (j > 0) line += ',';
+			if (array[i][j].indexOf(',') > -1) {
+				line += `"${array[i][j]}"`;
+			} else {
+				line += array[i][j];
+			}
+		}
+
+		str += `${line}
+		`;
+	}
+	if (undefined !== metadata) {
+		str += `
+		${checkIfEmpty(metadata.note)}
+		${checkIfEmpty(metadata.source)}
+		${checkIfEmpty(metadata.tag)}`;
+	}
+	return str;
+}
 
 const { state } = store('prc-block/chart-builder-controller', {
 	state: {

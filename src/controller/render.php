@@ -30,7 +30,9 @@ if ( null === $block || empty( $block->inner_blocks ) ) {
 // }
 
 // get the controller block attributes and set the id
-$controller_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes( 'prc-block/chart-builder-controller', $attributes );
+$controller_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes( 'prc-block/chart-builder-controller',
+	isset( $attributes ) ? $attributes : array()
+);
 $id                    = $controller_attributes['id'];
 $align                 = $controller_attributes['align'];
 $active_share_tabs     = $controller_attributes['tabsActive'];
@@ -45,15 +47,20 @@ $chart_block = array_filter(
 );
 
 $chart_block      = array_pop( $chart_block );
-$chart_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes( 'prc-block/chart-builder', $chart_block['attrs'] );
+$chart_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes(
+	'prc-block/chart-builder',
+	isset( $chart_block['attrs'] ) ? $chart_block['attrs'] : array()
+);
+
+// $chart_attributes refers to the combined attributes of the chart block and it's default values.
+// $chart_block['attrs'] refers to the attributes of the chart block that are set in the block editor.
 
 $metaTitle        = $chart_attributes['metaTitle'];
 $metaSubtitle     = $chart_attributes['metaSubtitle'];
 $metaNote         = $chart_attributes['metaNote'];
 $metaSource       = $chart_attributes['metaSource'];
 $metaTag          = $chart_attributes['metaTag'];
-$width            = $chart_attributes['width'] . 'px';
-$maxWidth         = array_key_exists( 'width', $chart_block['attrs'] ) ? $chart_block['attrs']['width'] . 'px' : '640px';
+$width            = $chart_attributes['width'] . 'px' ?? '640px';
 // check if preformatted data is set on the controller block
 $preformatted_data = array_key_exists( 'chartPreformattedData', $attributes ) ? $attributes['chartPreformattedData'] : null;
 // if it exists, set hasPreformattedData to true on the chart block, and set the preformatted data on the chart block
@@ -155,8 +162,7 @@ if ( $active_share_tabs ) {
 			<div class="share-modal__header">
 				<h2 class="share-modal__title">Share this chart</h2>
 				<button class="share-modal__close" aria-label="Close Share Modal" data-wp-on--click="actions.hideModal">
-						<!--checck   -->
-				<?php echo \PRC\Platform\Icons\render( 'regular', 'xmark' ); ?>
+					<span class="dashicons dashicons-no-alt"></span>
 				</button>
 			</div>
 			<div class="share-modal__body">
@@ -225,7 +231,7 @@ $block_attrs = get_block_wrapper_attributes(
 		),
 		// 'data-wp-run'         => 'callbacks.onRun',
 		'class'               => 'wp-chart-builder-wrapper' . ' align' . $align,
-		'style'               => 'max-width:' . $maxWidth . ';',
+		'style'               => 'max-width:' . $width . ';',
 	)
 );
 ob_start();
@@ -255,7 +261,7 @@ ob_start();
 			render_block( $chart_block ),
 			$share_modal,
 			esc_attr( $id ),
-			esc_attr( $maxWidth ),
+			esc_attr( $width ),
 			$table_with_meta
 		);
 	} elseif ( $chart_block && false === $active_share_tabs ) {
@@ -321,7 +327,7 @@ ob_start();
 						Share
 					</button>
 				</div>',
-			esc_attr( $maxWidth ),
+			esc_attr( $width ),
 			esc_attr( $id )
 		);
 	}

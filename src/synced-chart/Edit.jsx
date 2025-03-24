@@ -55,7 +55,7 @@ function parseTable(tableString) {
 
 function convertTableToBlock(tableMarkup) {
 	const { head, body } = parseTable(tableMarkup);
-	return createBlock('core/table', {
+	return createBlock('flexible-table-block/table', {
 		head,
 		body,
 	});

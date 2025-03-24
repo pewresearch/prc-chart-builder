@@ -1,7 +1,6 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-unresolved */
 /* eslint-disable max-lines-per-function */
-import classnames from 'classnames';
 import { Fragment, useEffect } from 'react';
 
 /**
@@ -24,8 +23,41 @@ import { useSelect } from '@wordpress/data';
  */
 import store from './store';
 import HideTableHandler from './HideTableHandler';
-import Placeholder from './Placeholder';
+import Placeholder from './placeholder';
 
+const TABLE = [
+	'flexible-table-block/table',
+	{
+		className: 'chart-builder-data-table',
+		attributes: {
+			fontSize: 'small',
+			fontFamily: 'sans-serif',
+		},
+		head: [
+			{
+				cells: [
+					{ content: 'x', tag: 'th' },
+					{ content: 'y', tag: 'th' },
+				],
+			},
+		],
+		body: [
+			{
+				cells: [
+					{ content: '', tag: 'td' },
+					{ content: '', tag: 'td' },
+				],
+			},
+			{
+				cells: [
+					{ content: '', tag: 'td' },
+					{ content: '', tag: 'td' },
+				],
+			},
+		],
+	},
+];
+console.log(TABLE);
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const {
 		id,
@@ -91,39 +123,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		[id]
 	);
 
-	const TABLE = [
-		'core/table',
-		{
-			className: 'chart-builder-data-table',
-			attributes: {
-				fontSize: 'small',
-				fontFamily: 'sans-serif',
-			},
-			head: [
-				{
-					cells: [
-						{ content: 'x', tag: 'th' },
-						{ content: 'y', tag: 'th' },
-					],
-				},
-			],
-			body: [
-				{
-					cells: [
-						{ content: '', tag: 'td' },
-						{ content: '', tag: 'td' },
-					],
-				},
-				{
-					cells: [
-						{ content: '', tag: 'td' },
-						{ content: '', tag: 'td' },
-					],
-				},
-			],
-		},
-	];
-
 	const TEMPLATE = [
 		TABLE,
 		[
@@ -164,10 +163,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	const blockProps = useBlockProps({
 		...blockElmProps,
-		className: classnames({
-			[`align${align}`]: align,
-			'hello-world': 'hello-world',
-		}),
+		className: align ? `align${align}` : 'alignnone',
 	});
 	const hasInnerBlocks = useSelect(
 		(select) => select(blockEditorStore).getBlocks(clientId).length > 0,

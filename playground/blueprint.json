@@ -1,0 +1,37 @@
+{
+	"$schema": "https://playground.wordpress.net/blueprint-schema.json",
+	"preferredVersions": {
+		"php": "8.2",
+		"wp": "latest"
+	},
+	"constants": {
+		"WP_PLAYGROUND": true
+	},
+	"siteOptions": {
+		"blogname": "PRC Chart Builder Playground",
+		"blogdescription": "A playground for testing PRC Chart Builder",
+		"WPLANG": "en_US"
+	},
+	"landingPage": "/wp-admin/post-new.php?post_type=chart",
+	"login": true,
+	"plugins": [
+		"https://raw.githubusercontent.com/pewresearch/prc-chart-builder/playground-test/prc-chart-builder.zip",
+		"https://raw.githubusercontent.com/pewresearch/prc-chart-builder/playground-test/prc-charting-library.zip"
+	],
+	"steps": [
+		{
+			"step": "installTheme",
+			"themeData": {
+				"resource": "wordpress.org/themes",
+				"slug": "twentytwentyfive"
+			}
+		},
+		{
+			"step": "importWxr",
+			"file": {
+				"resource": "url",
+				"url": "https://raw.githubusercontent.com/WordPress/theme-test-data/master/themeunittestdata.wordpress.xml"
+			}
+		}
+	]
+}

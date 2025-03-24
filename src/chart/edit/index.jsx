@@ -90,7 +90,7 @@ export default function Edit({
 				const tableBlock = getBlocks(rootBlockId).find(
 					(block) =>
 						'core/table' === block.name ||
-						'core/table' === block.name
+						'flexible-table-block/table' === block.name
 				);
 				const { attributes } = tableBlock;
 				const editorContextPostType = getCurrentPostType();

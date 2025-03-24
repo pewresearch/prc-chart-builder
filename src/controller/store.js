@@ -8,6 +8,8 @@ const store = createReduxStore('prc-block/chart-builder-controller', {
 	reducer: (
 		state = {
 			tableVisibility: false,
+			controllerClientIds: [],
+			currentlySelectController: null,
 		},
 		action
 	) => {

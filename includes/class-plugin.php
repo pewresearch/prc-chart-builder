@@ -95,7 +95,11 @@ class Bootstrap {
 	 */
 	private function include_block($block_file_name) {
 		$directory = 'local' === wp_get_environment_type() ? 'src' : 'build';
+		if ( defined( 'WP_PLAYGROUND' ) && true === WP_PLAYGROUND ) {
+			$directory = 'build';
+		}
 		$block_file_path = $directory . '/' . $block_file_name . '/' . $block_file_name . '.php';
+		// check if WP_PLAYGROUND constant is defined and is true
 		if ( file_exists( plugin_dir_path( dirname(__FILE__) ) . $block_file_path ) ) {
 			require_once plugin_dir_path( dirname(__FILE__) ) . $block_file_path;
 		} else {
@@ -109,12 +113,15 @@ class Bootstrap {
 	 */
 	private function load_blocks() {
 		$directory = 'local' === wp_get_environment_type() ? '/src' : '/build';
+		if ( defined( 'WP_PLAYGROUND' ) && true === WP_PLAYGROUND ) {
+			$directory = '/build';
+		}
 		$block_files = glob( PRC_CHART_BUILDER_DIR . $directory . '/*', GLOB_ONLYDIR );
 		foreach ($block_files as $block) {
 			$block = basename($block);
 			$loaded = $this->include_block($block);
 			if ( is_wp_error( $loaded ) ) {
-				\PRC\Platform\log_error($loaded);
+				return new WP_Error( 'missing-block', __( 'Block missing:: ' . $block, PRC_CHART_BUILDER_NAMESPACE ) );
 			}
 		}
 	}
@@ -140,7 +147,6 @@ class Bootstrap {
 
 		// Initialize the loader.
 		$this->loader = new Loader();
-
 		$this->loader->add_action('init', $this, 'register_default_templates');
 	}
 
@@ -164,7 +170,9 @@ class Bootstrap {
 			PRC_CHART_BUILDER_DIR . '/build',
 			PRC_CHART_BUILDER_DIR . '/build/blocks-manifest.php'
 		);
-		new Synced_Chart($this->get_loader());
+		if ( !defined( 'WP_PLAYGROUND' ) || true !== WP_PLAYGROUND ) {
+			new Synced_Chart($this->get_loader());
+		}
 		new Controller($this->get_loader());
 		new Chart($this->get_loader());
 	}
@@ -179,11 +187,20 @@ class Bootstrap {
 			return ob_get_clean();
 		}
 
-		register_block_template( 'prc-chart-builder//single-chart', [
-			'title'       => __( 'Single Chart', PRC_CHART_BUILDER_NAMESPACE ),
-			'description' => __( 'Displays a single chart.', PRC_CHART_BUILDER_NAMESPACE ),
-			'content'     => get_template_content( 'single-chart.php' ),
-		] );
+		if ( defined( 'WP_PLAYGROUND' ) && true === WP_PLAYGROUND ) {
+			register_block_template( 'prc-chart-builder//single-chart-playground', [
+				'title'       => __( 'Single Chart Playground', PRC_CHART_BUILDER_NAMESPACE ),
+				'description' => __( 'Displays a single chart.', PRC_CHART_BUILDER_NAMESPACE ),
+				'content'     => get_template_content( 'single-chart-playground.php' ),
+			] );
+		} else {
+			register_block_template( 'prc-chart-builder//single-chart', [
+				'title'       => __( 'Single Chart', PRC_CHART_BUILDER_NAMESPACE ),
+				'description' => __( 'Displays a single chart.', PRC_CHART_BUILDER_NAMESPACE ),
+				'content'     => get_template_content( 'single-chart.php' ),
+				] );
+		}
+
 	}
 
 	/**

@@ -7,7 +7,10 @@ if ( is_admin() || null === $block ) {
 	return $content;
 }
 
-$block_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes('prc-block/chart-builder', $attributes);
+$block_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes(
+	'prc-block/chart-builder',
+	isset( $attributes ) ? $attributes : array()
+);
 
 $id            		= $block_attributes['id'];
 if ( false === $id ) {
@@ -40,7 +43,7 @@ wp_interactivity_state(
 		$id => [
 			'chart-data' => $chart_data,
 			// decode the table data to ensure it is an array
-			'table-data' => json_decode($table_data, true),
+			'table-data' => $table_data ? json_decode($table_data, true) : null,
 			'chart-hash' => $id,
 			'iframe-height' => null,
 			'should-render' => $should_render,

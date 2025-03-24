@@ -17,8 +17,6 @@ import {
 	USABlockMap,
 	worldMap,
 } from './icons';
-// import { icons } from '@prc/icons';
-// import { icons } from '@prc/icons';
 
 import {
 	areaTemplate,
@@ -43,7 +41,7 @@ import {
 const variations = [
 	{
 		name: 'cbarea',
-		title: __('Area Chart'),
+		title: __('Area'),
 		keywords: [__('area'), __('chart'), __('area chart')],
 		description: __('Create an area chart.'),
 		icon: areaIcon,
@@ -53,7 +51,7 @@ const variations = [
 	},
 	{
 		name: 'cbBar',
-		title: 'Bar Chart',
+		title: 'Bar',
 		keywords: [__('bar'), __('chart'), __('bar chart'), __('single bar')],
 		description: __('Create a bar chart.'),
 		icon: barIcon,
@@ -64,7 +62,7 @@ const variations = [
 	},
 	{
 		name: 'cbColumn',
-		title: 'Column Chart',
+		title: 'Column',
 		keywords: [
 			__('column'),
 			__('chart'),
@@ -79,7 +77,7 @@ const variations = [
 	},
 	{
 		name: 'cbDotPlot',
-		title: __('Dot Plot Chart'),
+		title: __('Dot Plot'),
 		keywords: [__('dot'), __('chart'), __('dot plot'), __('plot')],
 		description: __('Create a dot plot chart.'),
 		icon: dotPlotIcon,
@@ -89,7 +87,7 @@ const variations = [
 	},
 	{
 		name: 'cbExplodedBar',
-		title: 'Exploded Bar Chart',
+		title: 'Exploded Bar',
 		keywords: [__('bar'), __('chart'), __('bar chart'), __('exploded bar')],
 		description: __('Create an exploded bar chart.'),
 		icon: barIcon,
@@ -114,7 +112,7 @@ const variations = [
 	},
 	{
 		name: 'cbLine',
-		title: __('Line Chart'),
+		title: __('Line'),
 		keywords: [__('line'), __('chart'), __('line chart')],
 		description: __('Create a line chart.'),
 		icon: lineIcon,
@@ -124,7 +122,7 @@ const variations = [
 	},
 	{
 		name: 'cbScatter',
-		title: __('Scatter Plot Chart'),
+		title: __('Scatter Plot'),
 		keywords: [__('scatter'), __('chart'), __('scatter plot'), __('plot')],
 		description: __('Create a scatter plot chart.'),
 		icon: scatterIcon,
@@ -144,7 +142,7 @@ const variations = [
 	},
 	{
 		name: 'cbStackedBar',
-		title: 'Stacked Bar Chart',
+		title: 'Stacked Bar',
 		keywords: [__('bar'), __('chart'), __('stacked bar')],
 		description: __('Create a stacked bar chart.'),
 		icon: stackedBarIcon,
@@ -154,7 +152,7 @@ const variations = [
 	},
 	{
 		name: 'cbStackedColumn',
-		title: 'Stacked Column Chart',
+		title: 'Stacked Column',
 		keywords: [__('column'), __('chart'), __('stacked column')],
 		description: __('Create a stacked column chart.'),
 		icon: stackedColumnIcon,
@@ -164,7 +162,7 @@ const variations = [
 	},
 	{
 		name: 'cbPie',
-		title: 'Pie Chart',
+		title: 'Pie',
 		keywords: [__('chart'), __('pie')],
 		description: __('Create a pie chart.'),
 		icon: pieIcon,
@@ -174,7 +172,7 @@ const variations = [
 	},
 	{
 		name: 'cbstatic',
-		title: __('Chart Image with Data Table'),
+		title: __('Image with Data Table'),
 		keywords: [
 			__('chart'),
 			__('image'),
@@ -188,6 +186,7 @@ const variations = [
 		icon: barIcon,
 		attributes: { chartType: 'static' },
 		innerBlocks: imageTemplate,
+		scope: ['block', 'transform'],
 	},
 	{
 		name: 'cbUSAMap',
@@ -229,24 +228,6 @@ const variations = [
 		icon: worldMap,
 		attributes: { chartType: 'world-map' },
 		innerBlocks: WorldMapTemplate,
-		scope: ['block', 'transform'],
-	},
-	{
-		name: 'cbstatic',
-		title: __('Chart Image with Data Table'),
-		keywords: [
-			__('chart'),
-			__('image'),
-			__('data table'),
-			__('static'),
-			__('static chart'),
-		],
-		description: __(
-			'Create a static chart image with a data table and share tabs.'
-		),
-		icon: barIcon,
-		attributes: { chartType: 'static' },
-		innerBlocks: imageTemplate,
 		scope: ['block', 'transform'],
 	},
 ];

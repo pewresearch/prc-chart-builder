@@ -7,7 +7,7 @@ export default {
 	from: [
 		{
 			type: 'block',
-			blocks: ['core/table', 'core/table'],
+			blocks: ['core/table', 'flexible-table-block/table'],
 			transform: (attributes) => {
 				attributes.className = 'chart-builder-data-table';
 				return createBlock(
@@ -19,7 +19,7 @@ export default {
 						tableBody: attributes.body,
 					},
 					[
-						createBlock('core/table', {
+						createBlock('flexible-table-block/table', {
 							...attributes,
 						}),
 						createBlock('prc-block/chart-builder', {
@@ -33,12 +33,15 @@ export default {
 	to: [
 		{
 			type: 'block',
-			blocks: ['core/table'],
+			blocks: ['flexible-table-block/table'],
 			transform: (attributes, innerBlocks) => {
 				const table = innerBlocks.filter(
-					(block) => 'core/table' === block.name
+					(block) => 'flexible-table-block/table' === block.name
 				)[0];
-				return createBlock('core/table', table.attributes);
+				return createBlock(
+					'flexible-table-block/table',
+					table.attributes
+				);
 			},
 		},
 	],

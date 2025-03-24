@@ -2,17 +2,16 @@
 /**
  * @wordpress-plugin
  * Plugin Name:       PRC Chart Builder
- * Plugin URI:        https://github.com/pewresearch/prc-religious-landscape-study
+ * Plugin URI:        https://github.com/pewresearch/prc-chart-builder
  * Description:       Chart Builder is a chart building tool for the PRC Platform. It allows you to create rich, highly interactive charts and data visualizations all from the block editor. Support for synced charts via the Synced Chart block is also possible, allowing you to place one chart in many places and have them all update when the original is updated.
  * Version:           3.0.1
  * Author:            Pew Research Center
  * Author URI:        https://pewresearch.org
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       prc-rls
+ * Text Domain:       prc-chart-builder
  * Requires at least: 6.7
  * Requires PHP:      8.2
- * Requires Plugins:  prc-scripts
  */
 
 // If this file is called directly, abort.
