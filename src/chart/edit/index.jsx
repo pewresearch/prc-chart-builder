@@ -35,6 +35,15 @@ import getConfig from '../utils/get-config';
 import CopyPasteStylesHandler from './copy-paste-styles-handler';
 import { TitleSubtitle, Footer } from './meta-text-fields';
 
+const getCellContent = (cell) => {
+	return (
+		cell.content?.originalContent ||
+		cell.content?.originalHTML ||
+		cell.content?.text ||
+		cell.content
+	);
+};
+
 export default function Edit({
 	attributes: attrs,
 	setAttributes,
@@ -115,12 +124,7 @@ export default function Edit({
 	const headers = useMemo(
 		() =>
 			tableData
-				? tableData.head[0].cells.map(
-						(c) =>
-							c.content?.originalContent ||
-							c.content?.originalHTML ||
-							c.content
-					)
+				? tableData.head[0].cells.map((c) => getCellContent(c))
 				: [],
 		[tableData]
 	);
@@ -135,9 +139,7 @@ export default function Edit({
 					return {
 						...acc,
 						[key]: formatCellContent(
-							cell.content?.originalContent ||
-								cell.content?.originalHTML ||
-								cell.content,
+							getCellContent(cell),
 							key,
 							mapScale
 						),
