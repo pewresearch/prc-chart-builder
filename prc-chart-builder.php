@@ -12,6 +12,8 @@
  * Text Domain:       prc-chart-builder
  * Requires at least: 6.7
  * Requires PHP:      8.2
+ * Requires Plugin:   prc-block-library
+ * @package           prc-chart-builder
  */
 
 // If this file is called directly, abort.

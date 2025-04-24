@@ -1,5 +1,6 @@
 <?php
 namespace PRC\Platform\Chart_Builder;
+
 use WP_Error;
 
 /**
@@ -64,7 +65,7 @@ class Bootstrap {
 	 * @since    3.0.0
 	 */
 	public function __construct() {
-		$this->version = PRC_CHART_BUILDER_VERSION;
+		$this->version     = PRC_CHART_BUILDER_VERSION;
 		$this->plugin_name = PRC_CHART_BUILDER_NAMESPACE;
 
 		// Initialize the plugin and include the required modules dependencies.
@@ -77,31 +78,33 @@ class Bootstrap {
 
 	/**
 	 * Include a file from the plugin's includes directory.
+	 *
 	 * @param mixed $file_path
 	 * @return WP_Error|void
 	 */
-	public function include($file_path) {
-		if ( file_exists( plugin_dir_path( dirname(__FILE__) ) . 'includes/' . $file_path ) ) {
-			require_once plugin_dir_path( dirname(__FILE__) ) . 'includes/' . $file_path;
+	public function include( $file_path ) {
+		if ( file_exists( plugin_dir_path( __DIR__ ) . 'includes/' . $file_path ) ) {
+			require_once plugin_dir_path( __DIR__ ) . 'includes/' . $file_path;
 		} else {
-			return new WP_Error('missing-dependency', __( 'Missing dependency.', PRC_CHART_BUILDER_NAMESPACE ) );
+			return new WP_Error( 'missing-dependency', __( 'Missing dependency.', PRC_CHART_BUILDER_NAMESPACE ) );
 		}
 	}
 
 	/**
 	 * Include a file from the plugin's includes directory.
+	 *
 	 * @param mixed $block_file_name
 	 * @return WP_Error|void
 	 */
-	private function include_block($block_file_name) {
+	private function include_block( $block_file_name ) {
 		$directory = 'local' === wp_get_environment_type() ? 'src' : 'build';
 		if ( defined( 'WP_PLAYGROUND' ) && true === WP_PLAYGROUND ) {
 			$directory = 'build';
 		}
 		$block_file_path = $directory . '/' . $block_file_name . '/' . $block_file_name . '.php';
 		// check if WP_PLAYGROUND constant is defined and is true
-		if ( file_exists( plugin_dir_path( dirname(__FILE__) ) . $block_file_path ) ) {
-			require_once plugin_dir_path( dirname(__FILE__) ) . $block_file_path;
+		if ( file_exists( plugin_dir_path( __DIR__ ) . $block_file_path ) ) {
+			require_once plugin_dir_path( __DIR__ ) . $block_file_path;
 		} else {
 			return new WP_Error( 'missing-block', __( 'Block missing:: ' . $block_file_name, PRC_CHART_BUILDER_NAMESPACE ) );
 		}
@@ -109,6 +112,7 @@ class Bootstrap {
 
 	/**
 	 * Include all blocks.
+	 *
 	 * @return void
 	 */
 	private function load_blocks() {
@@ -117,9 +121,9 @@ class Bootstrap {
 			$directory = '/build';
 		}
 		$block_files = glob( PRC_CHART_BUILDER_DIR . $directory . '/*', GLOB_ONLYDIR );
-		foreach ($block_files as $block) {
-			$block = basename($block);
-			$loaded = $this->include_block($block);
+		foreach ( $block_files as $block ) {
+			$block  = basename( $block );
+			$loaded = $this->include_block( $block );
 			if ( is_wp_error( $loaded ) ) {
 				return new WP_Error( 'missing-block', __( 'Block missing:: ' . $block, PRC_CHART_BUILDER_NAMESPACE ) );
 			}
@@ -137,31 +141,34 @@ class Bootstrap {
 	 */
 	private function load_dependencies() {
 		// Include plugin loading class.
-		$this->include('class-loader.php');
-		$this->include('class-content-type.php');
-		$this->include('class-media-library.php');
-		$this->include('class-wp-html-table-processor.php');
-		$this->include('class-block-utils.php');
+		$this->include( 'class-loader.php' );
+		$this->include( 'class-content-type.php' );
+		$this->include( 'class-media-library.php' );
+		$this->include( 'class-block-utils.php' );
+		$this->include( 'class-seo.php' );
 
 		$this->load_blocks();
 
 		// Initialize the loader.
 		$this->loader = new Loader();
-		$this->loader->add_action('init', $this, 'register_default_templates');
+		$this->loader->add_action( 'init', $this, 'register_default_templates' );
 	}
 
 	/**
 	 * Register the various modules that make the RLS plugin and overall system work.
+	 *
 	 * @since   3.0.0
 	 * @access private
 	 */
 	private function register_modules() {
-		new Content_Type($this->get_loader());
-		new Media_Library($this->get_loader());
+		new Content_Type( $this->get_loader() );
+		new Media_Library( $this->get_loader() );
+		new SEO( $this->get_loader() );
 	}
 
 	/**
 	 * Register the various blocks that make the RLS plugin and overall system work.
+	 *
 	 * @since   3.0.0
 	 * @access private
 	 */
@@ -170,11 +177,11 @@ class Bootstrap {
 			PRC_CHART_BUILDER_DIR . '/build',
 			PRC_CHART_BUILDER_DIR . '/build/blocks-manifest.php'
 		);
-		if ( !defined( 'WP_PLAYGROUND' ) || true !== WP_PLAYGROUND ) {
-			new Synced_Chart($this->get_loader());
+		if ( ! defined( 'WP_PLAYGROUND' ) || true !== WP_PLAYGROUND ) {
+			new Synced_Chart( $this->get_loader() );
 		}
-		new Controller($this->get_loader());
-		new Chart($this->get_loader());
+		new Controller( $this->get_loader() );
+		new Chart( $this->get_loader() );
 	}
 
 	/**
@@ -188,19 +195,24 @@ class Bootstrap {
 		}
 
 		if ( defined( 'WP_PLAYGROUND' ) && true === WP_PLAYGROUND ) {
-			register_block_template( 'prc-chart-builder//single-chart-playground', [
-				'title'       => __( 'Single Chart Playground', PRC_CHART_BUILDER_NAMESPACE ),
-				'description' => __( 'Displays a single chart.', PRC_CHART_BUILDER_NAMESPACE ),
-				'content'     => get_template_content( 'single-chart-playground.php' ),
-			] );
+			register_block_template(
+				'prc-chart-builder//single-chart-playground',
+				array(
+					'title'       => __( 'Single Chart Playground', PRC_CHART_BUILDER_NAMESPACE ),
+					'description' => __( 'Displays a single chart.', PRC_CHART_BUILDER_NAMESPACE ),
+					'content'     => get_template_content( 'single-chart-playground.php' ),
+				)
+			);
 		} else {
-			register_block_template( 'prc-chart-builder//single-chart', [
-				'title'       => __( 'Single Chart', PRC_CHART_BUILDER_NAMESPACE ),
-				'description' => __( 'Displays a single chart.', PRC_CHART_BUILDER_NAMESPACE ),
-				'content'     => get_template_content( 'single-chart.php' ),
-				] );
+			register_block_template(
+				'prc-chart-builder//single-chart',
+				array(
+					'title'       => __( 'Single Chart', PRC_CHART_BUILDER_NAMESPACE ),
+					'description' => __( 'Displays a single chart.', PRC_CHART_BUILDER_NAMESPACE ),
+					'content'     => get_template_content( 'single-chart.php' ),
+				)
+			);
 		}
-
 	}
 
 	/**
@@ -242,5 +254,4 @@ class Bootstrap {
 	public function get_version() {
 		return $this->version;
 	}
-
 }

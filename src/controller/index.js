@@ -11,8 +11,8 @@ import { store as preferencesStore } from '@wordpress/preferences';
  */
 import './style.scss';
 import metadata from './block.json';
-import Edit from './Edit';
-import Save from './Save';
+import edit from './edit';
+import save from './save';
 import store from './store';
 import transforms from './transforms';
 import variations from './variations';
@@ -29,8 +29,8 @@ function initializeUserPreferences() {
 
 const { name } = metadata;
 const settings = {
-	edit: Edit,
-	save: Save,
+	edit,
+	save,
 	variations,
 	transforms,
 };

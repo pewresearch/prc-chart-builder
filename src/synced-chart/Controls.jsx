@@ -1,50 +1,68 @@
 /**
  * External Dependencies
  */
-import { Fragment } from 'react';
 
 /**
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
+import { useMemo } from '@wordpress/element';
 import { InspectorControls } from '@wordpress/block-editor';
 import { useEntityProp } from '@wordpress/core-data';
-import { Button, TextControl, PanelBody } from '@wordpress/components';
+import {
+	Button,
+	TextControl,
+	PanelBody,
+	PanelRow,
+} from '@wordpress/components';
 
 /**
  * Internal Dependencies
  */
-import ConvertToDetachedChart from './ConvertToDetachedChart';
 
 export default function Controls({ attributes, clientId, blocks }) {
 	const { ref } = attributes;
 
 	const [title, setTitle] = useEntityProp('postType', 'chart', 'title', ref);
 	const [permalink] = useEntityProp('postType', 'chart', 'link', ref);
+	const editLink = useMemo(() => {
+		const url = new URL(window.location.href);
+		url.searchParams.set('post', ref);
+		return url.toString();
+	}, [ref]);
 
 	return (
-		<Fragment>
-			<ConvertToDetachedChart {...{ blocks, clientId }} />
-			<InspectorControls>
-				<PanelBody>
-					<div>
-						<TextControl
-							__nextHasNoMarginBottom
-							label={__('Chart Title')}
-							value={title}
-							onChange={setTitle}
-						/>
+		<InspectorControls>
+			<PanelBody>
+				<div>
+					<TextControl
+						__nextHasNoMarginBottom
+						label={__('Chart Title')}
+						value={title}
+						onChange={setTitle}
+					/>
+					<PanelRow>
 						<Button
 							variant="secondary"
 							onClick={() => {
 								window.open(permalink, '_blank');
 							}}
 						>
-							Open in new window
+							Preview chart in isolation
 						</Button>
-					</div>
-				</PanelBody>
-			</InspectorControls>
-		</Fragment>
+					</PanelRow>
+					<PanelRow>
+						<Button
+							variant="secondary"
+							onClick={() => {
+								window.open(editLink, '_blank');
+							}}
+						>
+							Edit chart in isolation
+						</Button>
+					</PanelRow>
+				</div>
+			</PanelBody>
+		</InspectorControls>
 	);
 }

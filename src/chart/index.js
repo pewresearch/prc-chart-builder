@@ -13,7 +13,7 @@ import save from './save';
 import metadata from './block.json';
 import './styles.scss';
 import store from './edit/store';
-import { createPNG, createSVG } from './utils/imageExports';
+import { createPNG, createSVG } from './utils/image-exports';
 
 const { name } = metadata;
 const settings = {

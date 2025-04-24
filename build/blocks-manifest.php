@@ -1129,7 +1129,7 @@ return array(
 		'example' => array(
 			'attributes' => array(
 				'chartType' => 'bar',
-				'className' => 'is-style-bar'
+				'className' => 'is-style-bar is-example'
 			)
 		),
 		'providesContext' => array(
@@ -1141,13 +1141,13 @@ return array(
 		),
 		'supports' => array(
 			'html' => false,
-			'interactivity' => true
+			'interactivity' => true,
+			'inserter' => false
 		),
 		'viewScriptModule' => 'file:./view.js',
 		'editorScript' => 'file:./index.js',
 		'editorStyle' => 'file:./style-index.css',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
+		'style' => 'file:./style-index.css'
 	),
 	'synced-chart' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',

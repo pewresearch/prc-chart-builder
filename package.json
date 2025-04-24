@@ -11,12 +11,12 @@
 	"main": "build/index.js",
 	"scripts": {
 		"build": "wp-scripts build --webpack-copy-php --experimental-modules; wp-scripts build-blocks-manifest",
-		"build:block": "node .scripts/build-block.js",
+		"build:block": "node bin/build-block.js",
 		"build:manifest": "wp-scripts build-blocks-manifest",
 		"start": "wp-scripts start --webpack-copy-php --experimental-modules",
-		"start:block": "node .scripts/start-block.js",
-		"package": "node .scripts/package.js",
-		"build:playground": "node .scripts/build-playground.js"
+		"start:block": "node bin/start-block.js",
+		"package": "node bin/package.js",
+		"build:playground": "node bin/build-playground.js"
 	},
 	"devDependencies": {
 		"@wordpress/dependency-extraction-webpack-plugin": "^6.10.0",

@@ -8,16 +8,12 @@
 import { useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
-import { PluginBlockSettingsMenuItem } from '@wordpress/editor';
+import { PluginBlockSettingsMenuItem, store as editorStore } from '@wordpress/editor';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { symbol as icon } from '@wordpress/icons';
 import { createBlock, serialize } from '@wordpress/blocks';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import { store as noticeStore } from '@wordpress/notices';
-
-/**
- * Internal Dependencies
- */
 
 const allowedBlocks = ['prc-block/chart-builder-controller'];
 
@@ -29,14 +25,17 @@ export default function ConvertToSyncedChartBlockSettingMenuItem() {
 
 	const { selectedBlock, allow = false } = useSelect((select) => {
 		const { getSelectedBlock, getBlockRootClientId, getBlockName } =
-			select('core/block-editor');
+			select(blockEditorStore);
+		const { getCurrentPostType } = select(editorStore);
 		const selectedRootClientId = getBlockRootClientId(
 			getSelectedBlock()?.clientId
 		);
 		const rootBlockName = getBlockName(selectedRootClientId);
+		const postType = getCurrentPostType();
+		// Check if we are in the block editor and if the post type is chart...
 		return {
 			selectedBlock: getSelectedBlock(),
-			allow: rootBlockName !== 'prc-block/chart',
+			allow: rootBlockName !== 'prc-block/chart' && postType !== 'chart',
 		};
 	}, []);
 
@@ -116,7 +115,7 @@ export default function ConvertToSyncedChartBlockSettingMenuItem() {
 		<PluginBlockSettingsMenuItem
 			allowedBlocks={allowedBlocks}
 			icon={icon}
-			label={__('Convert to synced chart', 'prc-chart-builder')}
+			label={__('Create synced chart', 'prc-chart-builder')}
 			onClick={() => {
 				convertToSyncedChart();
 			}}

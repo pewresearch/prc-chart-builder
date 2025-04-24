@@ -22,6 +22,7 @@ class Content_Type {
 	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'register_types' );
+		$loader->add_filter( 'prc_platform__datasets_enabled_post_types', $this, 'enable_datasets_support' );
 		$loader->add_filter( 'oembed_response_data', $this, 'modify_oembed_response', 10, 4 );
 	}
 
@@ -93,6 +94,19 @@ class Content_Type {
 		);
 
 		register_post_type( self::$post_type, $args );
+	}
+
+	/**
+	 * Enable datasets support.
+	 *
+	 * @hook prc_platform__datasets_enabled_post_types
+	 *
+	 * @param array $post_types The post types.
+	 * @return array The post types.
+	 */
+	public function enable_datasets_support( $post_types ) {
+		$post_types[] = 'chart';
+		return $post_types;
 	}
 
 	/**

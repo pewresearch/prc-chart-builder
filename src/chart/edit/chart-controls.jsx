@@ -4,7 +4,7 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable no-undef */
 /**
- * WordPress dependencies
+ * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
 import { InspectorControls } from '@wordpress/block-editor';
@@ -20,31 +20,33 @@ import {
 	ToggleControl,
 } from '@wordpress/components';
 import { uploadMedia } from '@wordpress/media-utils';
-import { useState } from 'react';
+import { useState } from '@wordpress/element';
+
 /**
- * External dependencies
+ * External Dependencies
  */
 import html2canvas from 'html2canvas';
+
 /**
- * Internal dependencies
+ * Internal Dependencies
  */
 import { formatNum } from '../utils/helpers';
-import BarControls from './BarControls';
-import ColorControls from './ColorControls';
-import XAxisControls from './XAxisControls';
-import YAxisControls from './YAxisControls';
-import DataControls from './DataControls';
-import LineControls from './LineControls';
-import LabelControls from './LabelControls';
-import LegendControls from './LegendControls';
-import TooltipControls from './TooltipControls';
-import TextFieldControls from './TextFieldControls';
-import NodeControls from './NodeControls';
-import DivergingBarControls from './DivergingBarControls';
-import DotPlotControls from './DotPlotControls';
-import PlotBandControls from './PlotBandControls';
-import DiffColumnControls from './DiffColumnControls';
-import MapControls from './MapControls';
+import BarControls from './bar-controls';
+import ColorControls from './color-controls';
+import XAxisControls from './x-axis-controls';
+import YAxisControls from './y-axis-controls';
+import DataControls from './data-controls';
+import LineControls from './line-controls';
+import LabelControls from './label-controls';
+import LegendControls from './legend-controls';
+import TooltipControls from './tooltip-controls';
+import TextFieldControls from './text-field-controls';
+import NodeControls from './node-controls';
+import DivergingBarControls from './diverging-bar-control';
+import DotPlotControls from './dot-plot-controls';
+import PlotBandControls from './plot-band-controls';
+import DiffColumnControls from './diff-column-controls';
+import MapControls from './map-controls';
 
 function ControlSections(props) {
 	const { chartType, chartFamily, attributes } = props;
@@ -52,7 +54,6 @@ function ControlSections(props) {
 		return <TextFieldControls {...props} />;
 	}
 	return (
-		// TODO: probably a smarter way to do this, maybe with switch statement
 		<>
 			<TextFieldControls {...props} />
 			<DataControls {...props} />

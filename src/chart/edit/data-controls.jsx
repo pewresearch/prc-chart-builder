@@ -1,14 +1,15 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /**
- * External dependencies
+ * External Dependencies
  */
 import styled from '@emotion/styled';
 
 /**
- * WordPress dependencies
+ * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
+import { useMemo } from '@wordpress/element';
 import {
 	PanelBody,
 	__experimentalToolsPanel as ToolsPanel,
@@ -35,6 +36,7 @@ const StyledLabel = styled.div`
 	margin-bottom: calc(8px) !important;
 	padding: 0px;
 `;
+
 function DataControls({ attributes, setAttributes, clientId }) {
 	const {
 		sortOrder,
@@ -54,18 +56,51 @@ function DataControls({ attributes, setAttributes, clientId }) {
 		sortKey,
 		independentVariable,
 	} = attributes;
-	const availableOptions = availableCategories.map((category) => ({
-		label: category,
-		disabled: false,
-	}));
-	const availablePositiveOptions = availableCategories.map((category) => ({
-		label: category,
-		disabled: !positiveCategories.includes(category),
-	}));
-	const availableNegativeOptions = availableCategories.map((category) => ({
-		label: category,
-		disabled: !negativeCategories.includes(category),
-	}));
+
+	const availableOptions = useMemo(
+		() =>
+			availableCategories.map((category) => {
+				console.log('category...', category);
+				return {
+					label: category,
+					disabled: false,
+				};
+			}),
+		[availableCategories]
+	);
+	const availableSelectableOptions = useMemo(
+		() =>
+			availableOptions.map((option) => ({
+				label: option.label,
+				value: option.label,
+			})),
+		[availableOptions]
+	);
+	const availablePositiveOptions = useMemo(
+		() =>
+			availableCategories.map((category) => ({
+				label: category,
+				value: category,
+				disabled: !positiveCategories.includes(category),
+			})),
+		[availableCategories, positiveCategories]
+	);
+	const availableNegativeOptions = useMemo(
+		() =>
+			availableCategories.map((category) => ({
+				label: category,
+				value: category,
+				disabled: !negativeCategories.includes(category),
+			})),
+		[availableCategories, negativeCategories]
+	);
+
+	console.log(availableSelectableOptions);
+	console.log(availableOptions);
+	console.log(availableCategories);
+	console.log(availablePositiveOptions);
+	console.log(availableNegativeOptions);
+
 	return (
 		<PanelBody title={__('Data')} initialOpen>
 			<ToolsPanel
@@ -93,7 +128,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								setAttributes({ sortKey: value })
 							}
 							options={[
-								...availableOptions,
+								...availableSelectableOptions,
 								{
 									label: independentVariable,
 									value: 'x',
@@ -139,7 +174,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							label={__('Time series input format')}
 							value={dateInputFormat}
 							help={__(
-								'Choose the format of your table’s time series data. This will be used to parse the data into a date object. If you do not see your format here, you must change your data to match one of the formats below.'
+								`Choose the format of your table's time series data. This will be used to parse the data into a date object. If you do not see your format here, you must change your data to match one of the formats below.`
 							)}
 							onChange={(value) =>
 								setAttributes({ dateInputFormat: value })
@@ -187,7 +222,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 				)}
 				{'diverging-bar' === chartType && (
 					<WidePanelItem
-						hasValue={() => 0 < availableOptions.length}
+						hasValue={() => 0 < availableSelectableOptions.length}
 						label={__('Categories')}
 						isShownByDefault
 						panelId={clientId}
@@ -221,10 +256,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							onChange={(value) =>
 								setAttributes({ neutralCategory: value })
 							}
-							options={availableOptions.map((option) => ({
-								label: option.label,
-								value: option.label,
-							}))}
+							options={availableSelectableOptions}
 						/>
 					</WidePanelItem>
 				)}
@@ -249,14 +281,16 @@ function DataControls({ attributes, setAttributes, clientId }) {
 				{'map' === chartFamily && (
 					<>
 						<WidePanelItem
-							hasValue={() => 0 < availableOptions.length}
+							hasValue={() =>
+								0 < availableSelectableOptions.length
+							}
 							label={__('Categories')}
 							isShownByDefault
 							panelId={clientId}
 						>
 							<PanelDescription>
 								Select the category you would like chart builder
-								to use to render your map’s data.
+								to use to render your map's data.
 							</PanelDescription>
 							<SelectControl
 								label={__('Map Data Category')}
@@ -264,10 +298,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								onChange={(value) =>
 									setAttributes({ categories: [value] })
 								}
-								options={availableOptions.map((option) => ({
-									label: option.label,
-									value: option.label,
-								}))}
+								options={availableSelectableOptions}
 							/>
 						</WidePanelItem>
 						<WidePanelItem
@@ -353,7 +384,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							}
 						/>
 						<PanelDescription>
-							Activate if you'd like to include a column that
+							Activate if you&apos;d like to include a column that
 							shows the total/difference/or any other data column
 							to the right of the chart (optional).
 						</PanelDescription>

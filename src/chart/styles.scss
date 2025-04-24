@@ -220,6 +220,14 @@ $georgia:
 				cursor: pointer;
 			}
 		}
+		&.share-modal__button--bluesky {
+			color: #1385fe;
+			&:hover {
+				background-color: #1385fe;
+				color: #fff;
+				cursor: pointer;
+			}
+		}
 		&.share-modal__button--facebook {
 			color: #3b5998;
 			transition: all 0.2s ease-in-out;

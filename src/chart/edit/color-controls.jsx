@@ -19,7 +19,7 @@ import {
  * Internal dependencies
  */
 import { colorNames, colors } from '../utils/colors';
-import ColorSorter from './ColorSorter';
+import ColorSorter from './color-sorter';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;

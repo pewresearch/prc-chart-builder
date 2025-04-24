@@ -2,7 +2,7 @@
  * External Dependencies
  */
 import styled from '@emotion/styled';
-import { Fragment, useState } from 'react';
+import { useState } from '@wordpress/element';
 
 /**
  * WordPress Dependencies
@@ -17,8 +17,8 @@ import {
 /**
  * Internal Dependencies
  */
-import ChartCreate from './ChartCreate';
-import ChartSearch from './ChartSearch';
+import ChartCreate from './chart-create';
+import ChartSearch from './chart-search';
 
 const LoadingIndicator = styled.div`
 	display: flex;
@@ -58,7 +58,7 @@ export default function Placeholder({
 					</LoadingIndicator>
 				)}
 				{isNew && (
-					<Fragment>
+					<>
 						{!showCreateForm && (
 							<ChartSearch setAttributes={setAttributes} />
 						)}
@@ -71,7 +71,7 @@ export default function Placeholder({
 								toggleCreateForm={toggleCreateForm}
 							/>
 						)}
-					</Fragment>
+					</>
 				)}
 			</div>
 		</WPComPlaceholder>

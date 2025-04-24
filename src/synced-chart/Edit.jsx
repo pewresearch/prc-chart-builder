@@ -20,8 +20,8 @@ import {
 /**
  * Internal Dependencies
  */
-import Controls from './Controls';
-import Placeholder from './Placeholder';
+import Controls from './controls';
+import Placeholder from './placeholder';
 
 function parseTable(tableString) {
 	// check that tableString is a string
@@ -55,7 +55,7 @@ function parseTable(tableString) {
 
 function convertTableToBlock(tableMarkup) {
 	const { head, body } = parseTable(tableMarkup);
-	return createBlock('flexible-table-block/table', {
+	return createBlock('prc-block/table', {
 		head,
 		body,
 	});

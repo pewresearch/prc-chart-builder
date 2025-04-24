@@ -1,6 +1,6 @@
 const columnTemplate = [
 	[
-		'core/table',
+		'prc-block/table',
 		{
 			className: 'chart-builder-data-table',
 			fontSize: 'small',

@@ -3,7 +3,7 @@
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { Fragment, useMemo } from 'react';
+import { useMemo } from '@wordpress/element';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { BlockControls, InspectorControls } from '@wordpress/block-editor';
 import {
@@ -13,6 +13,8 @@ import {
 	ToolbarGroup,
 	PanelBody,
 } from '@wordpress/components';
+import { useCommand } from '@wordpress/commands';
+import { table } from '@wordpress/icons';
 
 /**
  * Internal Dependencies
@@ -43,6 +45,17 @@ export default function HideTableHandler({ children, id }) {
 		},
 		[]
 	);
+
+	// Register the command for hiding/showing all tables
+	useCommand({
+		name: 'prc-chart-builder/toggle-all-tables',
+		label: tempHideAllTables ? SHOW_ALL_TABLE_LABEL : HIDE_ALL_TABLE_LABEL,
+		icon: table,
+		callback: ({ close }) => {
+			toggleAllTableVisibility();
+			close();
+		},
+	});
 
 	const userHidesThisTable = useMemo(
 		() => persistentHiddenTables && persistentHiddenTables.includes(id),
@@ -88,7 +101,7 @@ export default function HideTableHandler({ children, id }) {
 	};
 
 	return (
-		<Fragment>
+		<>
 			<BlockControls>
 				<ToolbarGroup>
 					<ToolbarButton
@@ -135,12 +148,12 @@ export default function HideTableHandler({ children, id }) {
 							<strong>Keyboard shortcuts available:</strong>
 						</p>
 						<p>
-							<code>Command + Shift + H</code> to hide/show this
+							<code>Option + Shift + H</code> to hide/show this
 							table in editor view, persistently, across your
 							sessions.
 						</p>
 						<p>
-							<code>Command + H</code> to hide/show ALL tables in
+							<code>Option + H</code> to hide/show ALL tables in
 							editor view. This is temporary and will reset on new
 							sessions.
 						</p>
@@ -156,6 +169,6 @@ export default function HideTableHandler({ children, id }) {
 			>
 				{children}
 			</KeyboardShortcuts>
-		</Fragment>
+		</>
 	);
 }

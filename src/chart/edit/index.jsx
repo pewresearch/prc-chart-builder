@@ -30,14 +30,10 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
  * Internal Dependencies
  */
 import { formatCellContent } from '../utils/helpers';
-import {
-	formatLegacyAttrs,
-	handleLegacyConversion,
-} from '../utils/legacyConversionHelpers';
-import ChartControls from './ChartControls';
-import getConfig from '../utils/getConfig';
-import CopyPasteStylesHandler from './CopyPasteStylesHandler';
-import { TitleSubtitle, Footer } from './metaTextFields';
+import ChartControls from './chart-controls';
+import getConfig from '../utils/get-config';
+import CopyPasteStylesHandler from './copy-paste-styles-handler';
+import { TitleSubtitle, Footer } from './meta-text-fields';
 
 export default function Edit({
 	attributes: attrs,
@@ -49,9 +45,7 @@ export default function Edit({
 }) {
 	const {
 		id,
-		isConvertedChart,
 		isStaticChart,
-		chartConverted,
 		height,
 		width,
 		metaTextActive,
@@ -63,11 +57,8 @@ export default function Edit({
 		chartData,
 		mapScale,
 	} = attrs;
-	const { converted } = chartConverted || {};
 
-	const [isConverting, toggleConversionState] = useState(false);
-
-	// use the controller id to create a unique id for the chart
+	// Use the controller id to create a unique id for the chart.
 	const controllerId = context['prc-chart-builder/id'];
 	useEffect(() => {
 		if (controllerId) {
@@ -75,86 +66,62 @@ export default function Edit({
 		}
 	}, [controllerId]);
 
-	const { tableData, parentBlockId, refId, siteId, currentUserName } =
-		useSelect(
-			(select) => {
-				const { getBlockParentsByBlockName, getBlocks } =
-					select(blockEditorStore);
-				const { getCurrentPostId, getCurrentPostType } =
-					select(editorStore);
+	const { tableData, parentBlockId, refId } = useSelect(
+		(select) => {
+			const {
+				getBlockParentsByBlockName,
+				getBlocks,
+				getBlockAttributes,
+			} = select(blockEditorStore);
+			const { getCurrentPostId, getCurrentPostType } =
+				select(editorStore);
 
-				const rootBlockId = getBlockParentsByBlockName(
-					clientId,
-					'prc-block/chart-builder-controller'
-				)?.[0];
-				const tableBlock = getBlocks(rootBlockId).find(
-					(block) =>
-						'core/table' === block.name ||
-						'flexible-table-block/table' === block.name
-				);
-				const { attributes } = tableBlock;
-				const editorContextPostType = getCurrentPostType();
+			const rootBlockId = getBlockParentsByBlockName(
+				clientId,
+				'prc-block/chart-builder-controller'
+			)?.[0];
+			const tableBlock = getBlocks(rootBlockId).find(
+				(block) =>
+					'core/table' === block.name ||
+					'prc-block/table' === block.name
+			);
+			const { attributes: tableAttributes } = tableBlock;
+			// Get the attributes for the tableBlock.clientId
+			const tableBlockAttributes = getBlockAttributes(
+				tableBlock.clientId
+			);
+			console.log('tableBlockAttributes...', tableBlockAttributes);
+			const editorContextPostType = getCurrentPostType();
 
-				let postId = null;
-				if (context && context.refId) {
-					postId = context.refId;
-				} else if ('chart' === editorContextPostType) {
-					postId = getCurrentPostId();
-				}
+			let postId = null;
+			if (context && context.refId) {
+				postId = context.refId;
+			} else if ('chart' === editorContextPostType) {
+				postId = getCurrentPostId();
+			}
 
-				return {
-					tableData: attributes,
-					parentBlockId: rootBlockId,
-					refId: postId,
-					editorPostType: editorContextPostType,
-					siteId: select(coreStore).getSite()?.siteId,
-					currentUserName: select(coreStore).getCurrentUser()?.slug,
-				};
-			},
-			[context]
-		);
-
-	// Convert legacy charts:
-	useEffect(() => {
-		if (converted) {
-			return;
-		}
-		if (isConvertedChart && null !== refId) {
-			toggleConversionState(true);
-			handleLegacyConversion(refId)
-				.then((data) => {
-					const { chartTitle, chartMeta } = data;
-					const legacyMeta = { title: chartTitle, ...chartMeta };
-					if (legacyMeta.cb_type) {
-						const legacyAttrs = formatLegacyAttrs(
-							legacyMeta,
-							attrs,
-							attrs,
-							siteId
-						);
-						const timestamp = new Date().getTime();
-						legacyAttrs.chartConverted = {
-							converted: true,
-							requester: currentUserName,
-							timestamp,
-						};
-						setAttributes(legacyAttrs);
-					} else {
-						// Fail if we dont have a cb_type
-						toggleConversionState(false);
-						// set conversion to fail in the attribute so it doesnt keep running.
-					}
-				})
-				.finally(() => {
-					toggleConversionState(false);
-				});
-		}
-	}, [isConvertedChart, refId, siteId, attrs, converted]);
+			return {
+				tableData: tableAttributes,
+				parentBlockId: rootBlockId,
+				refId: postId,
+				editorPostType: editorContextPostType,
+			};
+		},
+		[context]
+	);
 
 	const config = useMemo(() => getConfig(attrs, clientId), [attrs]);
 
 	const headers = useMemo(
-		() => (tableData ? tableData.head[0].cells.map((c) => c.content) : []),
+		() =>
+			tableData
+				? tableData.head[0].cells.map(
+						(c) =>
+							c.content?.originalContent ||
+							c.content?.originalHTML ||
+							c.content
+					)
+				: [],
 		[tableData]
 	);
 
@@ -167,25 +134,34 @@ export default function Edit({
 					const key = 0 === index ? 'x' : headers[index];
 					return {
 						...acc,
-						[key]: formatCellContent(cell.content, key, mapScale),
+						[key]: formatCellContent(
+							cell.content?.originalContent ||
+								cell.content?.originalHTML ||
+								cell.content,
+							key,
+							mapScale
+						),
 					};
 				}, {})
 			),
-		[tableData, body, headers, mapScale]
+		[body, headers, mapScale]
 	);
+
 	useEffect(() => {
 		const [, ...rest] = headers;
+		console.log('headers...', headers);
+		console.log('rest...', rest);
 		setAttributes({
 			availableCategories: rest,
 			independentVariable: headers[0],
 		});
-	}, [headers]);
+	}, [headers, setAttributes]);
 
 	useEffect(() => {
 		setAttributes({
 			chartData: memoizedChartData,
 		});
-	}, [memoizedChartData]);
+	}, [memoizedChartData, setAttributes]);
 
 	const blockProps = useBlockProps({
 		className: 'active',
@@ -194,7 +170,7 @@ export default function Edit({
 	const innerBlocksProps = useInnerBlocksProps();
 
 	return (
-		<Fragment>
+		<>
 			<ChartControls
 				attributes={attrs}
 				setAttributes={setAttributes}
@@ -207,96 +183,86 @@ export default function Edit({
 				setAttributes={setAttributes}
 			>
 				<div {...blockProps}>
-					{isConverting && (
-						<Warning>
-							<span>Converting legacy chart, please wait...</span>
-							<Spinner />
-						</Warning>
-					)}
-					{!isConverting && (
-						<figure>
-							<ChartBuilderTextWrapper
-								active={config.metadata.active}
-								width={width}
-								horizontalRules={config.layout.horizontalRules}
+					<figure>
+						<ChartBuilderTextWrapper
+							active={config.metadata.active}
+							width={width}
+							horizontalRules={config.layout.horizontalRules}
+						>
+							{metaTextActive && (
+								<TitleSubtitle
+									metaTitle={metaTitle}
+									metaSubtitle={metaSubtitle}
+									setAttributes={setAttributes}
+								/>
+							)}
+							<ResizableBox
+								size={{
+									height,
+									width,
+								}}
+								minHeight="50"
+								minWidth="50"
+								enable={{
+									top: false,
+									right: false,
+									bottom: false,
+									left: false,
+									topRight: false,
+									bottomRight: !!isSelected,
+									bottomLeft: false,
+									topLeft: false,
+								}}
+								onResizeStop={(
+									event,
+									direction,
+									elt,
+									delta
+								) => {
+									setAttributes({
+										height: parseInt(
+											parseInt(height, 10) +
+												parseInt(delta.height, 10),
+											10
+										),
+										width: parseInt(
+											parseInt(width, 10) +
+												parseInt(delta.width, 10),
+											10
+										),
+									});
+									toggleSelection(true);
+								}}
+								onResizeStart={() => {
+									toggleSelection(false);
+								}}
 							>
-								{metaTextActive && (
-									<TitleSubtitle
-										metaTitle={metaTitle}
-										metaSubtitle={metaSubtitle}
-										setAttributes={setAttributes}
+								{isStaticChart && (
+									<div
+										className="cb__chart"
+										{...innerBlocksProps}
 									/>
 								)}
-								<ResizableBox
-									size={{
-										height,
-										width,
-									}}
-									minHeight="50"
-									minWidth="50"
-									enable={{
-										top: false,
-										right: false,
-										bottom: false,
-										left: false,
-										topRight: false,
-										bottomRight: !!isSelected,
-										bottomLeft: false,
-										topLeft: false,
-									}}
-									onResizeStop={(
-										event,
-										direction,
-										elt,
-										delta
-									) => {
-										setAttributes({
-											height: parseInt(
-												parseInt(height, 10) +
-													parseInt(delta.height, 10),
-												10
-											),
-											width: parseInt(
-												parseInt(width, 10) +
-													parseInt(delta.width, 10),
-												10
-											),
-										});
-										toggleSelection(true);
-									}}
-									onResizeStart={() => {
-										toggleSelection(false);
-									}}
-								>
-									{isStaticChart && (
-										<div
-											className="cb__chart"
-											{...innerBlocksProps}
-										/>
-									)}
-									{!isStaticChart && memoizedChartData && (
-										<ChartBuilderWrapper
-											className="cb__chart"
-											config={config}
-											data={
-												chartData || memoizedChartData
-											}
-										/>
-									)}
-								</ResizableBox>
-								{metaTextActive && (
-									<Footer
-										metaNote={metaNote}
-										metaSource={metaSource}
-										metaTag={metaTag}
-										setAttributes={setAttributes}
+								{!isStaticChart && memoizedChartData && (
+									<ChartBuilderWrapper
+										className="cb__chart"
+										config={config}
+										data={chartData || memoizedChartData}
 									/>
 								)}
-							</ChartBuilderTextWrapper>
-						</figure>
-					)}
+							</ResizableBox>
+							{metaTextActive && (
+								<Footer
+									metaNote={metaNote}
+									metaSource={metaSource}
+									metaTag={metaTag}
+									setAttributes={setAttributes}
+								/>
+							)}
+						</ChartBuilderTextWrapper>
+					</figure>
 				</div>
 			</CopyPasteStylesHandler>
-		</Fragment>
+		</>
 	);
 }

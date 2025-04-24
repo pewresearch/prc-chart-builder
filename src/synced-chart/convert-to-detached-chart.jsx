@@ -14,10 +14,6 @@ import { ToolbarGroup, ToolbarButton } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { cloneBlock } from '@wordpress/blocks';
 
-/**
- * Internal Dependencies
- */
-
 export default function ConvertToDetachedChart({ blocks, clientId }) {
 	const { insertBlock, removeBlock } = useDispatch(blockEditorStore);
 

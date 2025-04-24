@@ -2,7 +2,6 @@
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { Fragment } from 'react';
 import { useDispatch, select } from '@wordpress/data';
 import { BlockControls } from '@wordpress/block-editor';
 import { ToolbarButton, ToolbarGroup } from '@wordpress/components';
@@ -10,7 +9,7 @@ import { ToolbarButton, ToolbarGroup } from '@wordpress/components';
  * Internal Dependencies
  */
 import store from './store';
-import getLayoutAttributes from '../utils/getLayoutAttributes';
+import getLayoutAttributes from '../utils/get-layout-attributes';
 
 const COPY_STYLES_LABEL = __('Copy Layout Styles');
 const PASTE_STYLES_LABEL = __('Paste Layout Styles');
@@ -38,7 +37,7 @@ const CopyPasteStylesHandler = ({
 	};
 
 	return (
-		<Fragment>
+		<>
 			<BlockControls>
 				<ToolbarGroup>
 					<ToolbarButton
@@ -64,7 +63,7 @@ const CopyPasteStylesHandler = ({
 				)}
 			</BlockControls>
 			{children}
-		</Fragment>
+		</>
 	);
 };
 

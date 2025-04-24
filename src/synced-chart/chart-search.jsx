@@ -9,8 +9,8 @@ export default function ChartSearch({ clientId, attributes, setAttributes }) {
 			placeholder="Search for charts"
 			entityType="postType"
 			entitySubType="chart"
+			entityStatus={['publish', 'draft']}
 			onSelect={(item) => {
-				console.log('Item? ', item);
 				setAttributes({
 					ref: parseInt(item.entityId),
 				});

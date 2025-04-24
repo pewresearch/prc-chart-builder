@@ -1,7 +1,6 @@
 /**
  * WordPress Dependencies
  */
-import { symbol as icon } from '@wordpress/icons';
 import { registerBlockType } from '@wordpress/blocks';
 import { registerPlugin } from '@wordpress/plugins';
 
@@ -9,8 +8,9 @@ import { registerPlugin } from '@wordpress/plugins';
  * Internal Dependencies
  */
 import metadata from './block.json';
-import edit from './Edit';
-import ConvertToSyncedChartBlockSettingMenuItem from './ConvertToSyncedChart';
+import edit from './edit';
+import icon from './icon';
+import ConvertToSyncedChartBlockSettingMenuItem from './convert-to-synced-chart';
 import './editor.scss';
 
 const { name } = metadata;

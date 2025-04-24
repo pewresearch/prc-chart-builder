@@ -10,6 +10,11 @@ $georgia:
 	Times,
 	serif;
 
+// Hide tables in the block list inspector/example.
+.block-editor-block-preview__content-iframe.block-editor-iframe__html .wp-block-prc-block-chart-builder-controller .chart-builder-data-table {
+	display: none!important;
+}
+
 .wp-block-prc-block-chart-builder-controller {
 	&.alignleft {
 		float: left;
@@ -45,7 +50,7 @@ $georgia:
 		}
 	}
 	.wp-chart-builder-table,
-	.wp-chart-builder-table.wp-block-flexible-table-block-table.wp-block-flexible-table-block-table {
+	.wp-chart-builder-table.wp-block-prc-block-table {
 		.cb__title {
 			font-size: 18px;
 			line-height: 110%;

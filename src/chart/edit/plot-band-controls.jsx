@@ -39,7 +39,7 @@ import { getDate, dateI18n } from '@wordpress/date';
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
-import presidentPlotBands from '../utils/presidentPlotBands';
+import presidentPlotBands from '../utils/president-plot-bands';
 
 function PlotBandControls({ attributes, setAttributes }) {
 	const { plotBandsActive, plotBands, xScale } = attributes;

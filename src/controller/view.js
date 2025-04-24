@@ -57,6 +57,12 @@ const { state } = store('prc-block/chart-builder-controller', {
 			);
 		},
 	},
+	callbacks: {
+		onInit() {
+			const context = getContext();
+			console.log('ON INIT: ', context, state);
+		},
+	},
 	actions: {
 		setActiveTab() {
 			const context = getContext();
@@ -82,6 +88,24 @@ const { state } = store('prc-block/chart-builder-controller', {
 			window.open(
 				actionUrl,
 				'twtrShareWindow',
+				`height=450, width=550, top=${innerHeight / 2 - 275}, left=${
+					innerWidth / 2 - 225
+				}, toolbar=0, location=0, menubar=0, directories=0, scrollbars=0`
+			);
+		},
+		shareBluesky() {
+			const context = getContext();
+			const { postId, postUrl, rootUrl, title, featuredImageId } =
+				context;
+			const url = featuredImageId
+				? `${rootUrl}/share/${postId}/${featuredImageId}`
+				: postUrl;
+			const actionUrl = addQueryArgs('https://bsky.app/intent/compose', {
+				text: `${title} ${url}`,
+			});
+			window.open(
+				actionUrl,
+				'bskyShareWindow',
 				`height=450, width=550, top=${innerHeight / 2 - 275}, left=${
 					innerWidth / 2 - 225
 				}, toolbar=0, location=0, menubar=0, directories=0, scrollbars=0`
@@ -161,11 +185,5 @@ const { state } = store('prc-block/chart-builder-controller', {
 			downloadLink.click();
 			document.body.removeChild(downloadLink);
 		},
-	},
-	callbacks: {
-		// onRun: () => {
-		// 	const context = getContext();
-		// 	console.log('context', context);
-		// },
 	},
 });

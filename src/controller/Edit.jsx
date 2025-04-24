@@ -22,11 +22,11 @@ import { useSelect } from '@wordpress/data';
  * Internal Dependencies
  */
 import store from './store';
-import HideTableHandler from './HideTableHandler';
+import HideTableHandler from './hide-table-handler';
 import Placeholder from './placeholder';
 
 const TABLE = [
-	'flexible-table-block/table',
+	'prc-block/table',
 	{
 		className: 'chart-builder-data-table',
 		attributes: {
@@ -57,7 +57,7 @@ const TABLE = [
 		],
 	},
 ];
-console.log(TABLE);
+
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const {
 		id,

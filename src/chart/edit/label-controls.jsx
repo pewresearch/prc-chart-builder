@@ -10,7 +10,6 @@ import styled from '@emotion/styled';
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { Fragment } from 'react';
 import {
 	ToggleControl,
 	SelectControl,
@@ -375,7 +374,7 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					'diverging-bar' === chartType ||
 					'stacked-bar' === chartType ||
 					'exploded-bar' === chartType) && (
-					<Fragment>
+					<>
 						<WidePanelItem
 							hasValue={() => barLabelPosition}
 							label={__('Label Position')}
@@ -473,7 +472,7 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 								</Help>
 							</PanelDescription>
 						</SingleColumnItem>
-					</Fragment>
+					</>
 				)}
 				{('line' === chartType ||
 					'area' === chartType ||
