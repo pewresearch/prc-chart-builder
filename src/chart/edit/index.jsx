@@ -77,11 +77,8 @@ export default function Edit({
 
 	const { tableData, parentBlockId, refId } = useSelect(
 		(select) => {
-			const {
-				getBlockParentsByBlockName,
-				getBlocks,
-				getBlockAttributes,
-			} = select(blockEditorStore);
+			const { getBlockParentsByBlockName, getBlocks } =
+				select(blockEditorStore);
 			const { getCurrentPostId, getCurrentPostType } =
 				select(editorStore);
 
@@ -95,11 +92,8 @@ export default function Edit({
 					'prc-block/table' === block.name
 			);
 			const { attributes: tableAttributes } = tableBlock;
-			// Get the attributes for the tableBlock.clientId
-			const tableBlockAttributes = getBlockAttributes(
-				tableBlock.clientId
-			);
-			console.log('tableBlockAttributes...', tableBlockAttributes);
+			// Debug table data:
+			// console.log('tableAttributes...', tableAttributes);
 			const editorContextPostType = getCurrentPostType();
 
 			let postId = null;

@@ -115,8 +115,8 @@ if ( $meta_text_active ) {
 		$block_attributes['metaTitle'],
 		$block_attributes['metaSubtitle'],
 		$is_static_chart ? $static_chart : $chart,
-		$block_attributes['metaSource'],
 		$block_attributes['metaNote'],
+		$block_attributes['metaSource'],
 		$block_attributes['metaTag'],
 		$bottom_rule
 	);

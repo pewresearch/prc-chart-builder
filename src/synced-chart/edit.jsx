@@ -93,32 +93,33 @@ function SyncedChartEdit({
 			: InnerBlocks.ButtonBlockAppender,
 	});
 
-	/**
-	 * Handle "Classic Editor" block conversion.
-	 */
-	useEffect(() => {
-		if (!blocks || !blocks.length) {
-			return;
-		}
-		// check if the first block is a freeform "classic editor" block.
-		const block = blocks[0];
-		if ('core/freeform' === block.name) {
-			const newTableBlock = convertTableToBlock(
-				block.attributes?.content
-			);
-			if (newTableBlock) {
-				const newBlocks = [newTableBlock];
-				onChange(newBlocks, {
-					selection: {
-						start: 0,
-						end: 1,
-						focus: 0,
-						anchor: 0,
-					},
-				});
-			}
-		}
-	}, [blocks]);
+	// /**
+	//  * Handle "Classic Editor" block conversion.
+	//  */
+	// useEffect(() => {
+	// 	if (!blocks || !blocks.length) {
+	// 		return;
+	// 	}
+	// 	// check if the first block is a freeform "classic editor" block.
+	// 	const block = blocks[0];
+	// 	if ('core/freeform' === block.name) {
+	// 		const newTableBlock = convertTableToBlock(
+	// 			block.attributes?.content
+	// 		);
+	// 		console.log('legacy to newTableBlock...', newTableBlock);
+	// 		if (newTableBlock) {
+	// 			const newBlocks = [newTableBlock];
+	// 			onChange(newBlocks, {
+	// 				selection: {
+	// 					start: 0,
+	// 					end: 1,
+	// 					focus: 0,
+	// 					anchor: 0,
+	// 				},
+	// 			});
+	// 		}
+	// 	}
+	// }, [blocks]);
 
 	if (hasAlreadyRendered) {
 		return (
