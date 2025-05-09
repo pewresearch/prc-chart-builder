@@ -1,11 +1,33 @@
 <?php
+/**
+ * Synced Chart Block
+ *
+ * @package PRC\Platform\Chart_Builder
+ */
 namespace PRC\Platform\Chart_Builder;
 
+/**
+ * Synced Chart Block
+ *
+ * @package PRC\Platform\Chart_Builder
+ */
 class Synced_Chart {
+	/**
+	 * Constructor
+	 *
+	 * @param object $loader Loader object.
+	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'block_init' );
 	}
 
+	/**
+	 * Render block callback
+	 *
+	 * @param array  $attributes Block attributes.
+	 * @param string $content Block content.
+	 * @return string Block content.
+	 */
 	public function render_block_callback( $attributes, $content ) {
 		static $seen_refs = array();
 
@@ -29,8 +51,16 @@ class Synced_Chart {
 				'';
 		}
 
-		if ( 'publish' !== $synced_chart_block->post_status || ! empty( $synced_chart_block->post_password ) ) {
+		$allowed_statuses = array( 'publish' );
+		if ( is_user_logged_in() ) {
+			$allowed_statuses[] = 'draft';
+			$allowed_statuses[] = 'private';
+		} elseif ( ! empty( $synced_chart_block->post_password ) ) {
 			return '';
+		}
+
+		if ( ! in_array( $synced_chart_block->post_status, $allowed_statuses ) ) {
+			return;
 		}
 
 		$seen_refs[ $attributes['ref'] ] = true;
@@ -41,13 +71,22 @@ class Synced_Chart {
 		$content = $wp_embed->autoembed( $content );
 
 		$content = do_blocks( $content );
+
 		unset( $seen_refs[ $attributes['ref'] ] );
 		return $content;
 	}
 
+	/**
+	 * Block init
+	 *
+	 * @hook init
+	 */
 	public function block_init() {
-		register_block_type_from_metadata( PRC_CHART_BUILDER_DIR . '/build/synced-chart', [
-			'render_callback' => array($this, 'render_block_callback'),
-		] );
+		register_block_type_from_metadata(
+			PRC_CHART_BUILDER_DIR . '/build/synced-chart',
+			array(
+				'render_callback' => array( $this, 'render_block_callback' ),
+			)
+		);
 	}
 }

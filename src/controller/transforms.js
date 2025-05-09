@@ -14,7 +14,6 @@ export default {
 					'prc-block/chart-builder-controller',
 					{
 						transformed: true,
-						isConvertedChart: true,
 						tableHead: attributes.head,
 						tableBody: attributes.body,
 					},
@@ -23,7 +22,7 @@ export default {
 							...attributes,
 						}),
 						createBlock('prc-block/chart-builder', {
-							isConvertedChart: true,
+							chartType: 'area',
 						}),
 					]
 				);
