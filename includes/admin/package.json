@@ -1,0 +1,16 @@
+{
+	"name": "@prc/chart-builder-admin",
+	"version": "1.0.0",
+	"private": true,
+	"dependencies": {
+		"@wordpress/dataviews": "^4.19.0",
+		"@wordpress/icons": "^10.23.0"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^30.16.0"
+	},
+	"scripts": {
+		"build": "wp-scripts build ./src/index.js --output-path=./build",
+		"start": "wp-scripts start ./src/index.js --output-path=./build"
+	}
+}

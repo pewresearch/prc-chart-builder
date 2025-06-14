@@ -146,6 +146,7 @@ class Bootstrap {
 		$this->include( 'class-media-library.php' );
 		$this->include( 'class-block-utils.php' );
 		$this->include( 'class-seo.php' );
+		$this->include( 'admin/class-admin.php' );
 
 		$this->load_blocks();
 
@@ -164,6 +165,7 @@ class Bootstrap {
 		new Content_Type( $this->get_loader() );
 		new Media_Library( $this->get_loader() );
 		new SEO( $this->get_loader() );
+		new Admin( $this->get_loader() );
 	}
 
 	/**

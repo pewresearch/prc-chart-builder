@@ -11,6 +11,7 @@ import metadata from './block.json';
 import edit from './edit';
 import icon from './icon';
 import ConvertToSyncedChartBlockSettingMenuItem from './convert-to-synced-chart';
+// import registerChartLibraryMediaPanel from './__wip__media-inserter-panel';
 import './editor.scss';
 
 const { name } = metadata;
@@ -25,3 +26,5 @@ registerBlockType(name, { ...metadata, ...settings });
 registerPlugin('block-settings-menu-synced-chart', {
 	render: ConvertToSyncedChartBlockSettingMenuItem,
 });
+
+// registerChartLibraryMediaPanel();

@@ -249,3 +249,10 @@ A WordPress block for building charts using the PRC Charting Library.
 ## License
 
 [Add license information here]
+
+# Changelog
+
+## [3.1.0] - 2024-06-07
+
+### Added
+- Admin page for Charts using WordPress DataViews, accessible under the Charts menu as "DataViews". This page provides a searchable, filterable table of all Chart posts with quick links to view and edit.
