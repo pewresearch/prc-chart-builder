@@ -70,13 +70,9 @@ function PreviewField({ item }) {
 	const [backgroundColor = 'white'] = useGlobalStyle('color.background');
 
 	const blocks = useMemo(() => {
-		console.log('item.content.raw...', item);
 		const parsed = parseBlocks(item.content.raw);
-		console.log('parsed...', item.content.raw, parsed);
 		return parsed;
 	}, [item.content.raw]);
-
-	console.log('blocks...', blocks);
 
 	const isEmpty = !blocks?.length;
 	// Wrap everything in a block editor provider to ensure 'styles' that are needed

@@ -31,7 +31,6 @@ export default function DataViews({}) {
 
 	const { data: shownData, paginationInfo } = useMemo(() => {
 		const result = filterSortAndPaginate(charts, view, fields);
-		console.log('filterSortAndPaginate:', result);
 		return result;
 	}, [view, charts]);
 

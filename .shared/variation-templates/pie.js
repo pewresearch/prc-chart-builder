@@ -2,6 +2,9 @@ const pieTemplate = [
 	[
 		'prc-block/table',
 		{
+			isScrollOnPc: true,
+			isScrollOnMobile: true,
+			sticky: 'first-column',
 			className: 'chart-builder-data-table',
 			fontSize: 'small',
 			fontFamily: 'sans-serif',

@@ -47,6 +47,7 @@ wp_interactivity_state(
 			'chart-hash'    => $block_id,
 			'iframe-height' => null,
 			'should-render' => $should_render,
+			'attributes' => $block->attributes,
 		),
 	),
 );
@@ -58,7 +59,6 @@ $block_attrs = array(
 	'data-wp-context'            => wp_json_encode(
 		array(
 			'id'         => $block_id,
-			'attributes' => $block->attributes,
 		)
 	),
 	'class'                      => 'wp-chart-builder-inner',
@@ -86,7 +86,7 @@ if ( $is_static_chart ) {
 // Scaffold chart text elements.
 $meta_text_active = $block_attributes['metaTextActive'];
 if ( $meta_text_active ) {
-	$max_width   = $block_attributes['width'];
+	$max_width   = $block_attributes['width'].'px';
 	$top_rule    = $block_attributes['horizontalRules'] ? wp_sprintf(
 		'<hr class="cb__hr" style="margin: 0 0 10px; max-width:%1$s;" />',
 		$max_width

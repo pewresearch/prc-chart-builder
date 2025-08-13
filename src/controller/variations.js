@@ -16,6 +16,7 @@ import {
 	USAMap,
 	USABlockMap,
 	worldMap,
+	freeformIcon,
 } from './icons';
 
 import {
@@ -36,6 +37,7 @@ import {
 	USACountyMapTemplate,
 	USABlockMapTemplate,
 	WorldMapTemplate,
+	freeformTemplate,
 } from '../../.shared/variation-templates';
 
 const variations = [
@@ -184,7 +186,7 @@ const variations = [
 			'Create a static chart image with a data table and share tabs.'
 		),
 		icon: barIcon,
-		attributes: { chartType: 'static' },
+		attributes: { chartType: 'static', isStatic: true },
 		innerBlocks: imageTemplate,
 		scope: ['block', 'transform'],
 	},
@@ -228,6 +230,21 @@ const variations = [
 		icon: worldMap,
 		attributes: { chartType: 'world-map' },
 		innerBlocks: WorldMapTemplate,
+		scope: ['block', 'transform'],
+	},
+	{
+		name: 'freeform',
+		title: __('Freeform'),
+		keywords: [__('freeform'), __('chart'), __('freeform chart')],
+		description: __(
+			'Create a freeform chart. Any block can be used in the chart view.'
+		),
+		icon: freeformIcon,
+		attributes: {
+			chartType: 'freeform',
+			isFreeform: true,
+		},
+		innerBlocks: freeformTemplate,
 		scope: ['block', 'transform'],
 	},
 ];

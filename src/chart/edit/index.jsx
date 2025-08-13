@@ -31,6 +31,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react';
  */
 import { formatCellContent } from '../utils/helpers';
 import ChartControls from './chart-controls';
+// import AnnotationControls, { editorClickEvent } from './annotation-controls';
 import getConfig from '../utils/get-config';
 import CopyPasteStylesHandler from './copy-paste-styles-handler';
 import { TitleSubtitle, Footer } from './meta-text-fields';
@@ -55,6 +56,7 @@ export default function Edit({
 	const {
 		id,
 		isStaticChart,
+		isFreeformChart,
 		height,
 		width,
 		metaTextActive,
@@ -93,7 +95,6 @@ export default function Edit({
 			);
 			const { attributes: tableAttributes } = tableBlock;
 			// Debug table data:
-			// console.log('tableAttributes...', tableAttributes);
 			const editorContextPostType = getCurrentPostType();
 
 			let postId = null;
@@ -112,8 +113,13 @@ export default function Edit({
 		},
 		[context]
 	);
-
-	const config = useMemo(() => getConfig(attrs, clientId), [attrs]);
+	const editorClickEvent = () => {
+		console.log('editorClickEvent...');
+	};
+	const config = useMemo(
+		() => getConfig(attrs, clientId, editorClickEvent),
+		[attrs]
+	);
 
 	const headers = useMemo(
 		() =>
@@ -145,8 +151,6 @@ export default function Edit({
 
 	useEffect(() => {
 		const [, ...rest] = headers;
-		console.log('headers...', headers);
-		console.log('rest...', rest);
 		setAttributes({
 			availableCategories: rest,
 			independentVariable: headers[0],
@@ -173,6 +177,10 @@ export default function Edit({
 				parentBlock={parentBlockId}
 				clientId={clientId}
 			/>
+			{/* <AnnotationControls
+				attributes={attrs}
+				setAttributes={setAttributes}
+			/> */}
 			<CopyPasteStylesHandler
 				id={id}
 				attributes={attrs}
@@ -233,19 +241,23 @@ export default function Edit({
 									toggleSelection(false);
 								}}
 							>
-								{isStaticChart && (
+								{(isStaticChart || isFreeformChart) && (
 									<div
 										className="cb__chart"
 										{...innerBlocksProps}
 									/>
 								)}
-								{!isStaticChart && memoizedChartData && (
-									<ChartBuilderWrapper
-										className="cb__chart"
-										config={config}
-										data={chartData || memoizedChartData}
-									/>
-								)}
+								{!isStaticChart &&
+									!isFreeformChart &&
+									memoizedChartData && (
+										<ChartBuilderWrapper
+											className="cb__chart"
+											config={config}
+											data={
+												chartData || memoizedChartData
+											}
+										/>
+									)}
 							</ResizableBox>
 							{metaTextActive && (
 								<Footer

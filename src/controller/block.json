@@ -16,6 +16,10 @@
 			"type": "boolean",
 			"default": false
 		},
+		"isFreeform": {
+			"type": "boolean",
+			"default": false
+		},
 		"isTable": {
 			"type": "boolean",
 			"default": false
@@ -36,6 +40,10 @@
 			"default": false
 		},
 		"tabsActive": {
+			"type": "boolean",
+			"default": true
+		},
+		"shareActive": {
 			"type": "boolean",
 			"default": true
 		},
@@ -65,6 +73,6 @@
 	},
 	"viewScriptModule": "file:./view.js",
 	"editorScript": "file:./index.js",
-	"editorStyle": "file:./style-index.css",
-	"style": "file:./style-index.css"
+	"style": "file:./style-index.css",
+	"render": "file:./render.php"
 }

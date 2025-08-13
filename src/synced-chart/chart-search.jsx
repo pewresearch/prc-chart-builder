@@ -15,12 +15,6 @@ export default function ChartSearch({ clientId, attributes, setAttributes }) {
 					ref: parseInt(item.entityId),
 				});
 			}}
-			onKeyEnter={() => {
-				console.log("Enter Key Pressed");
-			}}
-			onKeyESC={() => {
-				console.log("ESC Key Pressed");
-			}}
 			perPage={10}
 		/>
 	);

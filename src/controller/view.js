@@ -44,7 +44,7 @@ function arrayToCSV(objArray, metadata) {
 	return str;
 }
 
-const { state } = store('prc-block/chart-builder-controller', {
+const { state, actions } = store('prc-block/chart-builder-controller', {
 	state: {
 		get isActive() {
 			const context = getContext();
@@ -58,22 +58,50 @@ const { state } = store('prc-block/chart-builder-controller', {
 		},
 	},
 	callbacks: {
-		onInit() {
-			const context = getContext();
-			console.log('ON INIT: ', context, state);
+		detectWebShareSupport() {
+			if (window.navigator.share === undefined) {
+				state.webShareSupported = false;
+			} else {
+				state.webShareSupported = true;
+			}
 		},
 	},
 	actions: {
-		setActiveTab() {
+		setActiveTab(event) {
+			event.preventDefault();
 			const context = getContext();
 			const { id } = context;
 			const element = getElement();
-			state[id].activeTab = element.attributes['data-chart-view'];
+			// if the active tab is share and the native share is supported, do onShareClick
+			if (
+				element.attributes['data-chart-view'] === 'share' &&
+				state.webShareSupported
+			) {
+				actions.shareNative();
+			} else {
+				// otherwise, set the active tab to the current tab
+				state[id].activeTab = element.attributes['data-chart-view'];
+			}
 		},
 		hideModal() {
 			const context = getContext();
 			const { id } = context;
 			state[id].activeTab = 'chart';
+		},
+		shareNative: () => {
+			const context = getContext();
+			const { postId, postUrl, rootUrl, title, featuredImageId } =
+				context;
+			const url = featuredImageId
+				? `${rootUrl}/share/${postId}/${featuredImageId}`
+				: postUrl;
+
+			if (true === state.webShareSupported) {
+				window.navigator.share({
+					title: title + ' | Pew Research Center',
+					url: url,
+				});
+			}
 		},
 		shareTwitter() {
 			const context = getContext();

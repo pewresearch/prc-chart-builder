@@ -2,6 +2,9 @@ const tableTemplate = [
 	'prc-block/table',
 	{
 		className: 'chart-builder-data-table',
+		isScrollOnPc: true,
+		isScrollOnMobile: true,
+		sticky: 'first-column',
 		fontSize: 'small',
 		fontFamily: 'sans-serif',
 		head: [

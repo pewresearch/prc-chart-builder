@@ -4,9 +4,7 @@
 import { colors } from './colors';
 import { getDomain, getTicks, stringToArrayOfNums } from './helpers';
 
-const { ChartBuilderBaseConfig } = window.prcChartBuilder;
-
-const baseConfig = ChartBuilderBaseConfig;
+const { baseConfig } = window.prcChartBuilder;
 
 const getConfig = (attributes, clientId, editorClickEvent = null) => {
 	// layout attributes
@@ -209,6 +207,8 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 		dateInputFormat,
 		sortKey,
 	} = attributes;
+	// annotations
+	const { annotationsActive, annotations } = attributes;
 	// map attributes
 	const {
 		mapShowCountyBoundaries,
@@ -614,6 +614,11 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 			attributes: {
 				...customAttributes,
 			},
+		},
+		annotations: {
+			...baseConfig.annotations,
+			active: annotationsActive && annotations.length > 0,
+			items: annotations || [],
 		},
 	};
 };

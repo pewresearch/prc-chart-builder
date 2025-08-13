@@ -43,7 +43,6 @@ const createSVG = (clientId) => {
 		.querySelector('iframe')
 		.contentDocument.body.querySelector(`[data-block="${clientId}"]`);
 	const svg = blockEl.querySelector('svg');
-	console.log({ svg });
 	svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
 	svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
 	const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });

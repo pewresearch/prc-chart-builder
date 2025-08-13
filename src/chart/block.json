@@ -27,6 +27,10 @@
 			"type": "boolean",
 			"default": false
 		},
+		"isFreeformChart": {
+			"type": "boolean",
+			"default": false
+		},
 		"staticImageId": {
 			"type": "string"
 		},
@@ -75,7 +79,8 @@
 				"map-usa",
 				"map-usa-counties",
 				"map-usa-block",
-				"map-world"
+				"map-world",
+				"freeform"
 			],
 			"default": "bar"
 		},
@@ -99,11 +104,17 @@
 		},
 		"overflowX": {
 			"type": "string",
-			"enum": ["scroll", "responsive", "scroll-fixed-y-axis"],
+			"enum": [
+				"scroll",
+				"responsive",
+				"scroll-fixed-y-axis",
+				"preserve-aspect-ratio"
+			],
 			"default": "responsive"
 		},
 		"mobileBreakpoint": {
-			"type": "integer"
+			"type": "integer",
+			"default": 480
 		},
 		"horizontalRules": {
 			"type": "boolean",
@@ -456,6 +467,14 @@
 			"default": false
 		},
 		"plotBands": {
+			"type": "array",
+			"default": []
+		},
+		"annotationsActive": {
+			"type": "boolean",
+			"default": false
+		},
+		"annotations": {
 			"type": "array",
 			"default": []
 		},
@@ -950,7 +969,6 @@
 		"interactivity": true
 	},
 	"editorScript": "file:./index.js",
-	"style": ["file:./index.css"],
 	"viewScriptModule": "file:./view.js",
 	"render": "file:./render.php"
 }

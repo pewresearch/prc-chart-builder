@@ -10,12 +10,17 @@ import { __ } from '@wordpress/i18n';
 import {
 	InnerBlocks,
 	InspectorControls,
+	useInnerBlocksProps,
 	useBlockProps,
 	store as blockEditorStore,
 	BlockControls,
 	BlockAlignmentControl,
 } from '@wordpress/block-editor';
-import { ToggleControl, PanelBody } from '@wordpress/components';
+import {
+	ToggleControl,
+	PanelBody,
+	CheckboxControl,
+} from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 
 /**
@@ -25,44 +30,12 @@ import store from './store';
 import HideTableHandler from './hide-table-handler';
 import Placeholder from './placeholder';
 
-const TABLE = [
-	'prc-block/table',
-	{
-		className: 'chart-builder-data-table',
-		attributes: {
-			fontSize: 'small',
-			fontFamily: 'sans-serif',
-		},
-		head: [
-			{
-				cells: [
-					{ content: 'x', tag: 'th' },
-					{ content: 'y', tag: 'th' },
-				],
-			},
-		],
-		body: [
-			{
-				cells: [
-					{ content: '', tag: 'td' },
-					{ content: '', tag: 'td' },
-				],
-			},
-			{
-				cells: [
-					{ content: '', tag: 'td' },
-					{ content: '', tag: 'td' },
-				],
-			},
-		],
-	},
-];
-
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const {
 		id,
 		isConvertedChart,
 		tabsActive,
+		shareActive,
 		align,
 		isStatic,
 		isTable,
@@ -123,16 +96,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		[id]
 	);
 
-	const TEMPLATE = [
-		TABLE,
-		[
-			'prc-block/chart-builder',
-			{
-				isConvertedChart,
-			},
-		],
-	];
-
 	const dummyCSVS = [
 		{
 			name: 'US State Map',
@@ -152,10 +115,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		},
 	];
 
-	const STATIC_TEMPLATE = [TABLE, ['core/image', {}]];
-
-	const TABLE_TEMPLATE = [TABLE];
-
 	const blockElmProps = {};
 	if (hideThisTable) {
 		blockElmProps['data-hide-table'] = true;
@@ -170,18 +129,16 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		[clientId]
 	);
 
+	const innerBlocksProps = useInnerBlocksProps(blockProps, {
+		orientation: 'horizontal',
+		renderAppender: false,
+		templateLock: false,
+	});
+
 	if (!hasInnerBlocks) {
 		return <Placeholder {...{ attributes, setAttributes, clientId }} />;
 	}
 
-	let RENDERED_TEMPLATE;
-	if (isStatic) {
-		RENDERED_TEMPLATE = STATIC_TEMPLATE;
-	} else if (isTable) {
-		RENDERED_TEMPLATE = TABLE_TEMPLATE;
-	} else {
-		RENDERED_TEMPLATE = TEMPLATE;
-	}
 	return (
 		<Fragment>
 			<InspectorControls>
@@ -215,7 +172,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				)}
 				<PanelBody>
 					<ToggleControl
-						label={__('Show data and share tabs')}
+						label={__('Show tabs')}
 						checked={tabsActive}
 						help={__(
 							'If unchecked, only the chart will be shown. Disable this for small multiples and charts where you do not want to show underlying data.'
@@ -224,29 +181,33 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 							setAttributes({ tabsActive: !tabsActive })
 						}
 					/>
+					<ToggleControl
+						label={__('Show share tab')}
+						help={__(
+							'If unchecked, only chart and data tabs will be shown.'
+						)}
+						checked={shareActive}
+						onChange={() =>
+							setAttributes({
+								shareActive: !shareActive,
+							})
+						}
+					/>
 				</PanelBody>
 			</InspectorControls>
 			<BlockControls>
 				<BlockAlignmentControl
 					value={align}
 					onChange={(nextAlign) => {
-						// const extraUpdatedAttributes = [
-						// 	'wide',
-						// 	'full',
-						// ].includes(nextAlign)
-						// 	? { width: undefined, height: undefined }
-						// 	: {};
 						setAttributes({
-							// ...extraUpdatedAttributes,
 							align: nextAlign,
 						});
 					}}
 				/>
 			</BlockControls>
 			<HideTableHandler id={id}>
-				{/* for some reason there is an extra div being rendered here, which makes the editor alignment a little screwy. need to figure out */}
 				<figure {...blockProps}>
-					<InnerBlocks template={RENDERED_TEMPLATE} />
+					<div {...innerBlocksProps} />
 				</figure>
 			</HideTableHandler>
 		</Fragment>

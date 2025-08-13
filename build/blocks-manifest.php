@@ -32,6 +32,10 @@ return array(
 				'type' => 'boolean',
 				'default' => false
 			),
+			'isFreeformChart' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
 			'staticImageId' => array(
 				'type' => 'string'
 			),
@@ -80,7 +84,8 @@ return array(
 					'map-usa',
 					'map-usa-counties',
 					'map-usa-block',
-					'map-world'
+					'map-world',
+					'freeform'
 				),
 				'default' => 'bar'
 			),
@@ -113,12 +118,14 @@ return array(
 				'enum' => array(
 					'scroll',
 					'responsive',
-					'scroll-fixed-y-axis'
+					'scroll-fixed-y-axis',
+					'preserve-aspect-ratio'
 				),
 				'default' => 'responsive'
 			),
 			'mobileBreakpoint' => array(
-				'type' => 'integer'
+				'type' => 'integer',
+				'default' => 480
 			),
 			'horizontalRules' => array(
 				'type' => 'boolean',
@@ -510,6 +517,16 @@ return array(
 				'default' => false
 			),
 			'plotBands' => array(
+				'type' => 'array',
+				'default' => array(
+					
+				)
+			),
+			'annotationsActive' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'annotations' => array(
 				'type' => 'array',
 				'default' => array(
 					
@@ -1069,9 +1086,6 @@ return array(
 			'interactivity' => true
 		),
 		'editorScript' => 'file:./index.js',
-		'style' => array(
-			'file:./index.css'
-		),
 		'viewScriptModule' => 'file:./view.js',
 		'render' => 'file:./render.php'
 	),
@@ -1095,6 +1109,10 @@ return array(
 				'type' => 'boolean',
 				'default' => false
 			),
+			'isFreeform' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
 			'isTable' => array(
 				'type' => 'boolean',
 				'default' => false
@@ -1115,6 +1133,10 @@ return array(
 				'default' => false
 			),
 			'tabsActive' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'shareActive' => array(
 				'type' => 'boolean',
 				'default' => true
 			),
@@ -1146,8 +1168,8 @@ return array(
 		),
 		'viewScriptModule' => 'file:./view.js',
 		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./style-index.css',
-		'style' => 'file:./style-index.css'
+		'style' => 'file:./style-index.css',
+		'render' => 'file:./render.php'
 	),
 	'synced-chart' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',

@@ -60,7 +60,6 @@ function DataControls({ attributes, setAttributes, clientId }) {
 	const availableOptions = useMemo(
 		() =>
 			availableCategories.map((category) => {
-				console.log('category...', category);
 				return {
 					label: category,
 					disabled: false,
@@ -95,14 +94,8 @@ function DataControls({ attributes, setAttributes, clientId }) {
 		[availableCategories, negativeCategories]
 	);
 
-	console.log(availableSelectableOptions);
-	console.log(availableOptions);
-	console.log(availableCategories);
-	console.log(availablePositiveOptions);
-	console.log(availableNegativeOptions);
-
 	return (
-		<PanelBody title={__('Data')} initialOpen>
+		<PanelBody title={__('Data')} initialOpen={false}>
 			<ToolsPanel
 				label={__('Data Rendering, Sorting, and Accessors')}
 				panelId={clientId}

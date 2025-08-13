@@ -36,7 +36,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 		mapBlockRectSize,
 	} = attributes;
 	return (
-		<PanelBody title={__('Map')} initialOpen>
+		<PanelBody title={__('Map')} initialOpen={false}>
 			<ToolsPanel
 				label={__('Attributes')}
 				panelId={clientId}
@@ -51,37 +51,40 @@ function MapControls({ attributes, setAttributes, clientId }) {
 					isShownByDefault
 					panelId={clientId}
 				>
-					<ToggleControl
-						label={__('Show State Boundaries')}
-						checked={mapShowStateBoundaries}
-						onChange={() =>
-							setAttributes({
-								mapShowStateBoundaries: !mapShowStateBoundaries,
-							})
-						}
-						help={__(
-							'If active, the map will show state boundaries. This is only available for the US country map.'
-						)}
-					/>
 					{'map-usa-county' === chartType && (
-						<ToggleControl
-							label={__('Show County Boundaries')}
-							checked={mapShowCountyBoundaries}
-							onChange={() =>
-								setAttributes({
-									mapShowCountyBoundaries:
-										!mapShowCountyBoundaries,
-								})
-							}
-							help={__(
-								'If active, the map will show county boundaries. This is only available for the US country map.'
-							)}
-						/>
+						<>
+							<ToggleControl
+								label={__('Show State Boundaries')}
+								checked={mapShowStateBoundaries}
+								onChange={() =>
+									setAttributes({
+										mapShowStateBoundaries:
+											!mapShowStateBoundaries,
+									})
+								}
+								help={__(
+									'If active, the map will show state boundaries. This is only available for the US country map.'
+								)}
+							/>
+							<ToggleControl
+								label={__('Show County Boundaries')}
+								checked={mapShowCountyBoundaries}
+								onChange={() =>
+									setAttributes({
+										mapShowCountyBoundaries:
+											!mapShowCountyBoundaries,
+									})
+								}
+								help={__(
+									'If active, the map will show county boundaries. This is only available for the US country map.'
+								)}
+							/>
+						</>
 					)}
 					<PanelColorSettings
 						__experimentalHasMultipleOrigins
 						__experimentalIsRenderedInSidebar
-						title={__('State/County Styles')}
+						title={__('Map Styles')}
 						initialOpen
 						colorSettings={[
 							{

@@ -8,7 +8,7 @@ import { store, getContext, getServerState } from '@wordpress/interactivity';
  */
 import getConfig from './utils/get-config';
 
-import './styles.scss';
+// import './styles.scss';
 
 const { ChartBuilderRenderer } = window.prcChartBuilder;
 
@@ -17,13 +17,19 @@ const { actions, state } = store('prc-block/chart-builder', {
 		renderChart() {
 			const serverState = getServerState();
 			const context = getContext();
-			const { id, attributes } = context;
+			// TODO: use server state to get attributes
+			const { id } = context;
+			if (!serverState[id]) {
+				return;
+			}
+			const attributes = serverState[id]['attributes'];
 			const data = serverState[id]['chart-data'];
 			const tableData = serverState[id]['table-data'];
-			console.log('TABLE DATA: ', context, state);
-
+			if (!attributes) {
+				return;
+			}
+			console.log({ id, attributes, data, tableData });
 			const config = getConfig(attributes, id);
-			console.log('CONFIG: ', config);
 			ChartBuilderRenderer(id, data, config, tableData);
 		},
 		// TODO: this is a POC of how to update data. will need more unique query params
