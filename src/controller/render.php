@@ -39,7 +39,7 @@ $block_id          = $controller_attributes['id'];
 $align             = $controller_attributes['align'];
 $tabs_active = $controller_attributes['tabsActive'];
 $share_active = $controller_attributes['shareActive'];
-$is_static_chart   = $controller_attributes['isStatic'];
+$is_static_chart   = $controller_attributes['isStatic'] || $controller_attributes['chartType'] === 'static';
 $is_freeform_chart = $controller_attributes['isFreeform'];
 
 // todo: this is a way to retrieve the datasets for the chart. not sure yet if we want to surface this in the chart builder block.
@@ -85,6 +85,11 @@ foreach ( $inner_blocks as $inner_block ) {
 	}
 }
 
+// if no chart block, return
+if ( ! $blocks['chart'] ) {
+	return '';
+}
+
 if ( $is_freeform_chart ) {
 	$blocks['freeform'] = array_filter( $blocks['chart']['innerBlocks'], function ( $chart_inner_block ) {
 		return 'core/group' === ( $chart_inner_block['blockName'] ) && 'wp-chart-builder-freeform-chart' === ( $chart_inner_block['attrs']['className'] ?? '' );
@@ -93,7 +98,7 @@ if ( $is_freeform_chart ) {
 	$blocks['freeform'] = null;
 }
 
-if ( $is_static_chart && $blocks['chart'] ) {
+if ( $is_static_chart) {
 	// Find image block within chart block if it exists
 	foreach ( $blocks['chart']['innerBlocks'] as $chart_inner_block ) {
 		if ( 'core/image' === ( $chart_inner_block['blockName'] ?? '' ) ) {
