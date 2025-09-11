@@ -140,6 +140,14 @@
 			"type": "boolean",
 			"default": true
 		},
+		"dataRenderX": {
+			"type": "string",
+			"default": "x"
+		},
+		"dataRenderY": {
+			"type": "string",
+			"default": "y"
+		},
 		"dateInputFormat": {
 			"type": "string",
 			"enum": [

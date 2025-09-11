@@ -151,6 +151,14 @@ return array(
 				'type' => 'boolean',
 				'default' => true
 			),
+			'dataRenderX' => array(
+				'type' => 'string',
+				'default' => 'x'
+			),
+			'dataRenderY' => array(
+				'type' => 'string',
+				'default' => 'y'
+			),
 			'dateInputFormat' => array(
 				'type' => 'string',
 				'enum' => array(

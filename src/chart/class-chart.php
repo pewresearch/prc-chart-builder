@@ -1,6 +1,6 @@
 <?php
 /**
- * Controller Block
+ * Chart Block
  *
  * @package PRC\Platform\Chart_Builder
  */
@@ -8,15 +8,15 @@
 namespace PRC\Platform\Chart_Builder;
 
 /**
- * Controller Block
+ * Chart Block
  *
  * @package PRC\Platform\Chart_Builder
  */
-class Controller {
+class Chart {
 	/**
 	 * The constructor.
 	 *
-	 * @param mixed $loader
+	 * @param mixed $loader Loader object.
 	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'block_init' );
@@ -26,6 +26,6 @@ class Controller {
 	 * Initialize the block.
 	 */
 	public function block_init() {
-		register_block_type_from_metadata( PRC_CHART_BUILDER_DIR . '/build/controller' );
+		register_block_type_from_metadata( PRC_CHART_BUILDER_DIR . '/build/chart' );
 	}
 }

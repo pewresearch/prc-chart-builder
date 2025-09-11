@@ -248,7 +248,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 								<FlexItem>
 									<NumberControl
 										label={__('X Offset')}
-										value={plotBand.style.label.dy}
+										value={plotBand.style.label.dx}
 										onChange={(value) => {
 											setAttributes({
 												plotBands: plotBands.map(
@@ -327,7 +327,6 @@ function PlotBandControls({ attributes, setAttributes }) {
 				</>
 			))}
 			<Button
-				isPrimary={true}
 				onClick={() => {
 					setAttributes({
 						plotBands: [
@@ -543,8 +542,7 @@ function PostScheduleToggle({ isOpen, onClick, value }) {
 			label={label}
 			showTooltip
 			aria-expanded={isOpen}
-			// translators: %s: Current post date.
-			aria-label={sprintf(__('Change date: %s'), label)}
+			aria-label={`Change date: ${label}`}
 			onClick={onClick}
 		>
 			{label}

@@ -1,4 +1,10 @@
 <?php
+/**
+ * The file that defines the core plugin class
+ *
+ * @package    PRC_CHART_BUILDER
+ */
+
 namespace PRC\Platform\Chart_Builder;
 
 use WP_Error;
@@ -12,7 +18,6 @@ use WP_Error;
  * @package    PRC_CHART_BUILDER
  * @subpackage PRC_CHART_BUILDER/includes
  */
-
 
 /**
  * The core plugin class, responsible for loading all dependencies, defining
@@ -29,7 +34,7 @@ use WP_Error;
  * @subpackage PRC_CHART_BUILDER/includes
  * @author     Seth Rubenstein <srubenstein@pewresearch.org>
  */
-class Bootstrap {
+class Plugin_Bootstrap {
 
 	/**
 	 * The loader that's responsible for maintaining and registering all hooks that power
@@ -79,21 +84,21 @@ class Bootstrap {
 	/**
 	 * Include a file from the plugin's includes directory.
 	 *
-	 * @param mixed $file_path
+	 * @param mixed $file_path Relative file path within the includes directory.
 	 * @return WP_Error|void
 	 */
 	public function include( $file_path ) {
 		if ( file_exists( plugin_dir_path( __DIR__ ) . 'includes/' . $file_path ) ) {
 			require_once plugin_dir_path( __DIR__ ) . 'includes/' . $file_path;
 		} else {
-			return new WP_Error( 'missing-dependency', __( 'Missing dependency.', PRC_CHART_BUILDER_NAMESPACE ) );
+			return new WP_Error( 'missing-dependency', __( 'Missing dependency.', 'prc-chart-builder' ) );
 		}
 	}
 
 	/**
 	 * Include a file from the plugin's includes directory.
 	 *
-	 * @param mixed $block_file_name
+	 * @param mixed $block_file_name The block directory name.
 	 * @return WP_Error|void
 	 */
 	private function include_block( $block_file_name ) {
@@ -101,19 +106,18 @@ class Bootstrap {
 		if ( defined( 'WP_PLAYGROUND' ) && true === WP_PLAYGROUND ) {
 			$directory = 'build';
 		}
-		$block_file_path = $directory . '/' . $block_file_name . '/' . $block_file_name . '.php';
-		// check if WP_PLAYGROUND constant is defined and is true
+		$block_file_path = $directory . '/' . $block_file_name . '/class-' . $block_file_name . '.php';
+		// check if WP_PLAYGROUND constant is defined and is true.
 		if ( file_exists( plugin_dir_path( __DIR__ ) . $block_file_path ) ) {
 			require_once plugin_dir_path( __DIR__ ) . $block_file_path;
 		} else {
-			return new WP_Error( 'missing-block', __( 'Block missing:: ' . $block_file_name, PRC_CHART_BUILDER_NAMESPACE ) );
+			// translators: %s is the block directory name/slug that could not be loaded.
+			return new WP_Error( 'missing-block', wp_sprintf( __( 'Block missing:: %s', 'prc-chart-builder' ), $block_file_name ) );
 		}
 	}
 
 	/**
 	 * Include all blocks.
-	 *
-	 * @return void
 	 */
 	private function load_blocks() {
 		$directory = 'local' === wp_get_environment_type() ? '/src' : '/build';
@@ -125,7 +129,8 @@ class Bootstrap {
 			$block  = basename( $block );
 			$loaded = $this->include_block( $block );
 			if ( is_wp_error( $loaded ) ) {
-				return new WP_Error( 'missing-block', __( 'Block missing:: ' . $block, PRC_CHART_BUILDER_NAMESPACE ) );
+				// translators: %s is the block directory name/slug that could not be loaded.
+				return new WP_Error( 'missing-block', wp_sprintf( __( 'Block missing:: %s', 'prc-chart-builder' ), $block ) );
 			}
 		}
 	}
@@ -147,6 +152,7 @@ class Bootstrap {
 		$this->include( 'class-block-utils.php' );
 		$this->include( 'class-seo.php' );
 		$this->include( 'admin/class-admin.php' );
+		$this->include( 'inspector-sidebar-panel/class-inspector-sidebar-panel.php' );
 
 		$this->load_blocks();
 
@@ -166,6 +172,7 @@ class Bootstrap {
 		new Media_Library( $this->get_loader() );
 		new SEO( $this->get_loader() );
 		new Admin( $this->get_loader() );
+		new Inspector_Sidebar_Panel( $this->get_loader() );
 	}
 
 	/**
@@ -190,6 +197,12 @@ class Bootstrap {
 	 * Register the default block templates for the RLS plugin.
 	 */
 	public function register_default_templates() {
+		/**
+		 * Get the content of a template file.
+		 *
+		 * @param string $template The template file name.
+		 * @return string The content of the template file.
+		 */
 		function get_template_content( $template ) {
 			ob_start();
 			include PRC_CHART_BUILDER_DIR . "/templates/{$template}";
@@ -197,20 +210,20 @@ class Bootstrap {
 		}
 
 		if ( defined( 'WP_PLAYGROUND' ) && true === WP_PLAYGROUND ) {
-			register_block_template(
+			\register_block_template(
 				'prc-chart-builder//single-chart-playground',
 				array(
-					'title'       => __( 'Single Chart Playground', PRC_CHART_BUILDER_NAMESPACE ),
-					'description' => __( 'Displays a single chart.', PRC_CHART_BUILDER_NAMESPACE ),
+					'title'       => __( 'Single Chart Playground', 'prc-chart-builder' ),
+					'description' => __( 'Displays a single chart.', 'prc-chart-builder' ),
 					'content'     => get_template_content( 'single-chart-playground.php' ),
 				)
 			);
 		} else {
-			register_block_template(
+			\register_block_template(
 				'prc-chart-builder//single-chart',
 				array(
-					'title'       => __( 'Single Chart', PRC_CHART_BUILDER_NAMESPACE ),
-					'description' => __( 'Displays a single chart.', PRC_CHART_BUILDER_NAMESPACE ),
+					'title'       => __( 'Single Chart', 'prc-chart-builder' ),
+					'description' => __( 'Displays a single chart.', 'prc-chart-builder' ),
 					'content'     => get_template_content( 'single-chart.php' ),
 				)
 			);

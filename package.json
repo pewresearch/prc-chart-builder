@@ -10,7 +10,7 @@
 	"license": "GPL-2.0-or-later",
 	"main": "build/index.js",
 	"scripts": {
-		"build": "wp-scripts build --webpack-copy-php --experimental-modules; wp-scripts build-blocks-manifest",
+		"build": "wp-scripts build --webpack-copy-php --experimental-modules; wp-scripts build-blocks-manifest; wp-scripts build --source-path=includes/inspector-sidebar-panel/src/ --output-path=includes/inspector-sidebar-panel/build/",
 		"build:block": "node bin/build-block.js",
 		"build:manifest": "wp-scripts build-blocks-manifest",
 		"start": "wp-scripts start --webpack-copy-php --experimental-modules",

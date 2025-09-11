@@ -206,6 +206,8 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 		availableCategories,
 		dateInputFormat,
 		sortKey,
+		dataRenderX,
+		dataRenderY,
 	} = attributes;
 	// annotations
 	const { annotationsActive, annotations } = attributes;
@@ -390,8 +392,8 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 		},
 		dataRender: {
 			...baseConfig.dataRender,
-			x: 'x',
-			y: 'y',
+			x: dataRenderX,
+			y: dataRenderY,
 			x2: null,
 			y2: null,
 			sortKey,

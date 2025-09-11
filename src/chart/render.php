@@ -27,6 +27,7 @@ $has_preformatted_data = $block_attributes['hasPreformattedData'];
 $preformatted_data     = $block_attributes['preformattedData'];
 $should_render         = $block_attributes['defaultShouldRender'];
 
+
 if ( $has_preformatted_data && $preformatted_data ) {
 	$chart_data = $preformatted_data;
 }

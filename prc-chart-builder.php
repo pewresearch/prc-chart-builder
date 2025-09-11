@@ -1,5 +1,7 @@
 <?php
 /**
+ * PRC Chart Builder
+ *
  * @wordpress-plugin
  * Plugin Name:       PRC Chart Builder
  * Plugin URI:        https://github.com/pewresearch/prc-chart-builder
@@ -28,7 +30,7 @@ define( 'PRC_CHART_BUILDER_NAMESPACE', 'prc-chart-builder' );
 /**
  * The core plugin class that is used to define the hooks that initialize the various plugin components.
  */
-require plugin_dir_path( __FILE__ ) . 'includes/class-plugin.php';
+require plugin_dir_path( __FILE__ ) . 'includes/class-plugin-bootstrap.php';
 
 /**
  * Begins execution of the plugin.
@@ -40,7 +42,7 @@ require plugin_dir_path( __FILE__ ) . 'includes/class-plugin.php';
  * @since    3.0.0
  */
 function run_prc_platform_chart_builder() {
-	$plugin = new \PRC\Platform\Chart_Builder\Bootstrap();
+	$plugin = new \PRC\Platform\Chart_Builder\Plugin_Bootstrap();
 	$plugin->run();
 }
 run_prc_platform_chart_builder();
