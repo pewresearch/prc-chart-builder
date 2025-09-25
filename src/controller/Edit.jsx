@@ -50,8 +50,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			select('core/block-editor')
 				.getBlocks()
 				.filter(
-					(block) =>
-						'prc-block/chart-builder-controller' === block.name
+					(block) => 'prc-chart-builder/controller' === block.name
 				)
 				.filter((block) => block.clientId !== clientId),
 		[]
@@ -82,7 +81,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 			const { getAllTableVisibility } = select(store);
 
 			const persistentHiddenTables = get(
-				'prc-block/chart-builder-controller',
+				'prc-chart-builder/controller',
 				'persistentHiddenTables'
 			);
 

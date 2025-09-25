@@ -4,13 +4,13 @@ return array(
 	'chart' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
-		'name' => 'prc-block/chart-builder',
-		'title' => 'Chart Builder',
+		'name' => 'prc-chart-builder/chart',
+		'title' => 'Chart Builder Chart',
 		'description' => 'Chart element for the Chart Builder Controller block.',
 		'category' => 'media',
 		'icon' => 'chart-line',
 		'parent' => array(
-			'prc-block/chart-builder-controller'
+			'prc-chart-builder/controller'
 		),
 		'attributes' => array(
 			'test' => array(
@@ -351,10 +351,10 @@ return array(
 					'%d %b %y',
 					'%d %b',
 					'%d %B %Y',
-					'%d %B \'%y',
-					'%d %b \'%y',
-					'%b \'%y',
-					'\'%y',
+					'%d %B ’%y',
+					'%d %b ’%y',
+					'%b ’%y',
+					'’%y',
 					'%d %B',
 					'%d %b, %Y'
 				),
@@ -1101,7 +1101,7 @@ return array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
 		'textdomain' => 'chart-builder-controller',
-		'name' => 'prc-block/chart-builder-controller',
+		'name' => 'prc-chart-builder/controller',
 		'category' => 'media',
 		'title' => 'Chart Builder Controller',
 		'description' => 'Create a custom data-driven chart using blocks.',
@@ -1182,8 +1182,8 @@ return array(
 	'synced-chart' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
-		'name' => 'prc-block/chart',
-		'title' => 'Chart',
+		'name' => 'prc-chart-builder/synced-chart',
+		'title' => 'Synced Chart',
 		'category' => 'media',
 		'description' => 'Create, save, and sync charts to reuse across the site. Update the chart, and the changes apply everywhere it’s used.',
 		'textdomain' => 'default',

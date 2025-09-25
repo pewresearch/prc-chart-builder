@@ -43,7 +43,7 @@ const stackedBarTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: true,
 			chartType: 'stacked-bar',

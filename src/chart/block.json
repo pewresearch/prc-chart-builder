@@ -1,12 +1,12 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "prc-block/chart-builder",
-	"title": "Chart Builder",
+	"name": "prc-chart-builder/chart",
+	"title": "Chart Builder Chart",
 	"description": "Chart element for the Chart Builder Controller block.",
 	"category": "media",
 	"icon": "chart-line",
-	"parent": ["prc-block/chart-builder-controller"],
+	"parent": ["prc-chart-builder/controller"],
 	"attributes": {
 		"test": {
 			"type": "string",
@@ -317,10 +317,10 @@
 				"%d %b %y",
 				"%d %b",
 				"%d %B %Y",
-				"%d %B '%y",
-				"%d %b '%y",
-				"%b '%y",
-				"'%y",
+				"%d %B ’%y",
+				"%d %b ’%y",
+				"%b ’%y",
+				"’%y",
 				"%d %B",
 				"%d %b, %Y"
 			],

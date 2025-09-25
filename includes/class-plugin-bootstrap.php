@@ -151,6 +151,8 @@ class Plugin_Bootstrap {
 		$this->include( 'class-media-library.php' );
 		$this->include( 'class-block-utils.php' );
 		$this->include( 'class-seo.php' );
+		$this->include( 'class-block-migration.php' );
+		$this->include( 'class-wp-cli-commands.php' );
 		$this->include( 'admin/class-admin.php' );
 		$this->include( 'inspector-sidebar-panel/class-inspector-sidebar-panel.php' );
 
@@ -171,8 +173,8 @@ class Plugin_Bootstrap {
 		new Content_Type( $this->get_loader() );
 		new Media_Library( $this->get_loader() );
 		new SEO( $this->get_loader() );
+		new Block_Migration( $this->get_loader() );
 		new Admin( $this->get_loader() );
-		new Inspector_Sidebar_Panel( $this->get_loader() );
 	}
 
 	/**

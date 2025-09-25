@@ -87,7 +87,7 @@ function SyncedChartEdit({
 		value: blocks,
 		onInput,
 		onChange,
-		allowedBlocks: ['prc-block/chart-builder-controller'],
+		allowedBlocks: ['prc-chart-builder/controller'],
 		renderAppender: blocks?.length
 			? undefined
 			: InnerBlocks.ButtonBlockAppender,

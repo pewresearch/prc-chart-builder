@@ -37,7 +37,7 @@ export default function HideTableHandler({ children, id }) {
 			const { getAllTableVisibility } = select(store);
 			return {
 				persistentHiddenTables: get(
-					'prc-block/chart-builder-controller',
+					'prc-chart-builder/controller',
 					'persistentHiddenTables'
 				),
 				tempHideAllTables: getAllTableVisibility(),
@@ -65,16 +65,12 @@ export default function HideTableHandler({ children, id }) {
 	const hideThisTablePersistently = () => {
 		// check if persistentHiddenTables exists, if not, create it
 		if (!persistentHiddenTables) {
-			set(
-				'prc-block/chart-builder-controller',
-				'persistentHiddenTables',
-				[id]
-			);
+			set('prc-chart-builder/controller', 'persistentHiddenTables', [id]);
 			return;
 		}
 
 		const newHiddenTables = [...persistentHiddenTables, id];
-		set('prc-block/chart-builder-controller', 'persistentHiddenTables', [
+		set('prc-chart-builder/controller', 'persistentHiddenTables', [
 			...newHiddenTables,
 		]);
 	};
@@ -83,7 +79,7 @@ export default function HideTableHandler({ children, id }) {
 		const newHiddenTables = persistentHiddenTables.filter(
 			(tableId) => tableId !== id
 		);
-		set('prc-block/chart-builder-controller', 'persistentHiddenTables', [
+		set('prc-chart-builder/controller', 'persistentHiddenTables', [
 			...newHiddenTables,
 		]);
 	};

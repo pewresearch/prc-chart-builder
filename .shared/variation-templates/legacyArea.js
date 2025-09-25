@@ -43,7 +43,7 @@ const legacyAreaTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			chartType: 'area',
 			paddingLeft: 30,

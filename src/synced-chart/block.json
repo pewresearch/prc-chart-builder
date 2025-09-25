@@ -1,8 +1,8 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "prc-block/chart",
-	"title": "Chart",
+	"name": "prc-chart-builder/synced-chart",
+	"title": "Synced Chart",
 	"category": "media",
 	"description": "Create, save, and sync charts to reuse across the site. Update the chart, and the changes apply everywhere it’s used.",
 	"textdomain": "default",

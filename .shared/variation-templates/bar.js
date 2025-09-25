@@ -39,7 +39,7 @@ const barTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: false,
 			chartType: 'bar',

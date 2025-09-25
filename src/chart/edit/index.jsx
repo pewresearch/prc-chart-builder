@@ -86,7 +86,7 @@ export default function Edit({
 
 			const rootBlockId = getBlockParentsByBlockName(
 				clientId,
-				'prc-block/chart-builder-controller'
+				'prc-chart-builder/controller'
 			)?.[0];
 			const tableBlock = getBlocks(rootBlockId).find(
 				(block) =>

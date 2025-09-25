@@ -51,12 +51,20 @@ class SEO {
 			return;
 		}
 
+		// Prevent multiple processing of the same chart
+		static $processed_charts = array();
+		$cache_key = $post_id . '_' . $attribute;
+
+		if ( isset( $processed_charts[ $cache_key ] ) ) {
+			return $processed_charts[ $cache_key ];
+		}
+
 		$post_content      = get_post_field( 'post_content', $post_id );
 		$blocks            = parse_blocks( $post_content );
 		$controller_blocks = array_filter(
 			$blocks,
 			function ( $block ) {
-				return 'prc-block/chart-builder-controller' === $block['blockName'];
+				return 'prc-chart-builder/controller' === $block['blockName'];
 			}
 		);
 		if ( empty( $controller_blocks ) ) {
@@ -67,17 +75,41 @@ class SEO {
 				return array_filter(
 					$block['innerBlocks'],
 					function ( $inner_block ) {
-						return 'prc-block/chart-builder' === $inner_block['blockName'];
+						return 'prc-chart-builder/chart' === $inner_block['blockName'];
 					}
 				);
 			},
 			$controller_blocks
 		);
+
 		// Get the first chart block.
 		$chart_block = reset( $chart_blocks );
-		$attributes  = $chart_block[1]['attrs'];
+
+		// Validate that we have a chart block with the expected structure.
+		if ( false === $chart_block || empty( $chart_block ) ) {
+			return false;
+		}
+
+		// Get the first chart block from the inner blocks array.
+		$chart_block = reset( $chart_block );
+
+		// Validate that we have a chart block with the expected structure.
+		if ( false === $chart_block || empty( $chart_block ) || ! isset( $chart_block['attrs'] ) ) {
+			return false;
+		}
+
+		$attributes = $chart_block['attrs'];
+
+		// Ensure attributes is an array before checking key existence.
+		if ( ! is_array( $attributes ) ) {
+			$processed_charts[ $cache_key ] = false;
+			return false;
+		}
 
 		$block_attribute = array_key_exists( $attribute, $attributes ) ? $attributes[ $attribute ] : false;
+
+		// Cache the result
+		$processed_charts[ $cache_key ] = $block_attribute;
 
 		return $block_attribute;
 	}

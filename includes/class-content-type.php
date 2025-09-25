@@ -1,6 +1,15 @@
 <?php
+/**
+ * Content Type class for Chart Builder.
+ *
+ * @package PRC\Platform\Chart_Builder
+ */
+
 namespace PRC\Platform\Chart_Builder;
 
+/**
+ * Content Type class for Chart Builder.
+ */
 class Content_Type {
 	/**
 	 * The post type slug.
@@ -18,7 +27,7 @@ class Content_Type {
 	/**
 	 * The constructor.
 	 *
-	 * @param mixed $loader
+	 * @param mixed $loader The loader object.
 	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'register_types' );
@@ -90,7 +99,7 @@ class Content_Type {
 			'publicly_queryable'  => true,
 			'rewrite'             => $rewrite,
 			'capability_type'     => 'post',
-			'template'            => array( array( 'prc-block/chart-builder-controller' ) ),
+			'template'            => array( array( 'prc-chart-builder/controller' ) ),
 		);
 
 		register_post_type( self::$post_type, $args );
@@ -114,11 +123,11 @@ class Content_Type {
 	 *
 	 * @hook oembed_response_data
 	 *
-	 * @param mixed $data
-	 * @param mixed $post
-	 * @param mixed $width
-	 * @param mixed $height
-	 * @return mixed
+	 * @param mixed $data The oEmbed data.
+	 * @param mixed $post The post object.
+	 * @param mixed $width The width.
+	 * @param mixed $height The height.
+	 * @return mixed The modified data.
 	 */
 	public function modify_oembed_response( $data, $post, $width, $height ) {
 		// Doing a little bit of checking here to make sure we're only modifying the oEmbed response for the chart post type.

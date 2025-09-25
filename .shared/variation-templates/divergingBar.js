@@ -47,7 +47,7 @@ const divergingBarTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: false,
 			chartType: 'diverging-bar',

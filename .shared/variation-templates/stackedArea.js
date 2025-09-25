@@ -43,7 +43,7 @@ const areaTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: false,
 			chartType: 'stacked-area',

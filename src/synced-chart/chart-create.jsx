@@ -27,7 +27,7 @@ import apiFetch from '@wordpress/api-fetch';
  * Internal Dependencies
  */
 
-const BLOCK_TO_CREATE = 'prc-block/chart-builder-controller';
+const BLOCK_TO_CREATE = 'prc-chart-builder/controller';
 
 export default function ChartCreate({ setAttributes }) {
 	const { createSuccessNotice, createErrorNotice } = useDispatch(noticeStore);

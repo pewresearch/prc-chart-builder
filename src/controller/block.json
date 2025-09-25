@@ -2,7 +2,7 @@
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
 	"textdomain": "chart-builder-controller",
-	"name": "prc-block/chart-builder-controller",
+	"name": "prc-chart-builder/controller",
 	"category": "media",
 	"title": "Chart Builder Controller",
 	"description": "Create a custom data-driven chart using blocks.",

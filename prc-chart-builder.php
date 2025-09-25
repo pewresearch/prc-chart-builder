@@ -22,7 +22,7 @@
 if ( ! defined( 'WPINC' ) ) {
 	die;
 }
-define( 'PRC_CHART_BUILDER_VERSION', '3.0.0' );
+define( 'PRC_CHART_BUILDER_VERSION', '3.1.0' );
 define( 'PRC_CHART_BUILDER_DIR', __DIR__ );
 define( 'PRC_CHART_BUILDER_DIR_MANIFEST_FILE', __DIR__ . '/build/block-manifest.php' );
 define( 'PRC_CHART_BUILDER_NAMESPACE', 'prc-chart-builder' );

@@ -1,6 +1,6 @@
 {
-	"name": "@pewresearch/prc-chart-builder",
-	"version": "3.0.0",
+	"name": "@prc/chart-builder",
+	"version": "3.1.0",
 	"description": "Create interactive D3 charts for your WordPress site.",
 	"author": "Pew Research Center",
 	"contributors": [

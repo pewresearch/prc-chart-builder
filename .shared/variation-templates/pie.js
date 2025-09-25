@@ -39,7 +39,7 @@ const pieTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: false,
 			chartType: 'pie',

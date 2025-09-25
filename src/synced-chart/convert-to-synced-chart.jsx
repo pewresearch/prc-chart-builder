@@ -8,14 +8,17 @@
 import { useState } from '@wordpress/element';
 import apiFetch from '@wordpress/api-fetch';
 import { __ } from '@wordpress/i18n';
-import { PluginBlockSettingsMenuItem, store as editorStore } from '@wordpress/editor';
+import {
+	PluginBlockSettingsMenuItem,
+	store as editorStore,
+} from '@wordpress/editor';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { symbol as icon } from '@wordpress/icons';
 import { createBlock, serialize } from '@wordpress/blocks';
 import { store as blockEditorStore } from '@wordpress/block-editor';
 import { store as noticeStore } from '@wordpress/notices';
 
-const allowedBlocks = ['prc-block/chart-builder-controller'];
+const allowedBlocks = ['prc-chart-builder/controller'];
 
 export default function ConvertToSyncedChartBlockSettingMenuItem() {
 	const [processing, setProcessing] = useState(false);
@@ -35,7 +38,9 @@ export default function ConvertToSyncedChartBlockSettingMenuItem() {
 		// Check if we are in the block editor and if the post type is chart...
 		return {
 			selectedBlock: getSelectedBlock(),
-			allow: rootBlockName !== 'prc-block/chart' && postType !== 'chart',
+			allow:
+				rootBlockName !== 'prc-chart-builder/synced-chart' &&
+				postType !== 'chart',
 		};
 	}, []);
 
@@ -48,12 +53,12 @@ export default function ConvertToSyncedChartBlockSettingMenuItem() {
 		const innerBlocks = selectedBlock?.innerBlocks;
 		if (clientId && attributes) {
 			const newChartControllerBlock = createBlock(
-				'prc-block/chart-builder-controller',
+				'prc-chart-builder/controller',
 				attributes,
 				innerBlocks
 			);
 			const newTitle = newChartControllerBlock.innerBlocks.find(
-				(block) => block.name === 'prc-block/chart-builder'
+				(block) => block.name === 'prc-chart-builder/chart'
 			)?.attributes?.metaTitle;
 			const newChartContent = serialize(newChartControllerBlock);
 
@@ -70,7 +75,7 @@ export default function ConvertToSyncedChartBlockSettingMenuItem() {
 					if (chart.id) {
 						const chartId = parseInt(chart.id);
 						const newChartBlock = createBlock(
-							'prc-block/chart',
+							'prc-chart-builder/synced-chart',
 							{
 								ref: chartId,
 							},

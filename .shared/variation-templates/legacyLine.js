@@ -43,7 +43,7 @@ const legacyLineTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: true,
 			chartType: 'line',

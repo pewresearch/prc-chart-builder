@@ -40,7 +40,7 @@ registerBlockType(name, { ...metadata, ...settings });
 // addAction('editor.savePost', 'editor', async (edits) => {
 // 	console.log('async:savePost', { edits });
 // 	const blockClientIds = select('core/block-editor').getBlocksByName(
-// 		'prc-block/chart-builder'
+// 		'prc-chart-builder/chart'
 // 	);
 
 // 	blockClientIds.forEach((blockClientId) => {

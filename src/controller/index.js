@@ -18,12 +18,9 @@ import transforms from './transforms';
 import variations from './variations';
 
 function initializeUserPreferences() {
-	dispatch(preferencesStore).setDefaults(
-		'prc-block/chart-builder-controller',
-		{
-			persistentHiddenTables: [],
-		}
-	);
+	dispatch(preferencesStore).setDefaults('prc-chart-builder/controller', {
+		persistentHiddenTables: [],
+	});
 	register(store);
 }
 

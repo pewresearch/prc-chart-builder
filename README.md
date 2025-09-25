@@ -2,6 +2,8 @@
 
 A WordPress block for building charts using the PRC Charting Library.
 
+> BREAKING CHANGE: This plugin and its block namespace have been updated to align with other PRC products `{plugin-name}/{block-name}` and `@prc/{plugin-name (sans prc-)}`. Please update your references to follow the `prc-chart-builder/chart|controller|synced-chart` convention and change the package name to `@prc/chart-builder`. A WP CLI tool is included to aid in mass migration of data.
+
 ## Configuration Reference
 
 ### General Layout Attributes
@@ -255,4 +257,5 @@ A WordPress block for building charts using the PRC Charting Library.
 ## [3.1.0] - 2024-06-07
 
 ### Added
+
 - Admin page for Charts using WordPress DataViews, accessible under the Charts menu as "DataViews". This page provides a searchable, filterable table of all Chart posts with quick links to view and edit.

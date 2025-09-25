@@ -34,7 +34,7 @@ const transforms = {
 				// We should try to get the chart id by passing the url to a rest endpoint to just see if it can return a chart id. This function will probaly need to be async to work correctly...
 				const foundChart = await getChartRef(url);
 				const { id } = foundChart;
-				return createBlock('prc-block/chart', {
+				return createBlock('prc-chart-builder/synced-chart', {
 					ref: id,
 				});
 			},

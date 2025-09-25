@@ -12,7 +12,7 @@ import getConfig from './utils/get-config';
 
 const { ChartBuilderRenderer } = window.prcChartBuilder;
 
-const { actions, state } = store('prc-block/chart-builder', {
+const { actions, state } = store('prc-chart-builder/chart', {
 	actions: {
 		renderChart() {
 			const serverState = getServerState();
@@ -28,7 +28,6 @@ const { actions, state } = store('prc-block/chart-builder', {
 			if (!attributes) {
 				return;
 			}
-			console.log({ id, attributes, data, tableData });
 			const config = getConfig(attributes, id);
 			ChartBuilderRenderer(id, data, config, tableData);
 		},
@@ -47,7 +46,6 @@ const { actions, state } = store('prc-block/chart-builder', {
 			const context = getContext();
 			const { id } = context;
 			const shouldRender = state[id]['should-render'];
-			console.log('SHOULD RENDER: ', shouldRender, context);
 
 			if (shouldRender) {
 				actions.renderChart();

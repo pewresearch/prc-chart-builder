@@ -4,7 +4,7 @@
  */
 import { createReduxStore } from '@wordpress/data';
 
-const store = createReduxStore('prc-block/chart-builder', {
+const store = createReduxStore('prc-chart-builder/chart', {
 	// a redux store that has two variables: isCopied which is a boolean
 	// and copiedStyles which is an object that holds the styles
 	reducer: (

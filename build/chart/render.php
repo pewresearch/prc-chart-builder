@@ -1,4 +1,10 @@
 <?php
+/**
+ * Chart block render callback.
+ *
+ * @package PRC\Platform\Chart_Builder
+ */
+
 namespace PRC\Platform\Chart_Builder;
 
 wp_enqueue_script( 'prc-charting-library' );
@@ -7,17 +13,41 @@ if ( is_admin() || null === $block ) {
 	return $content;
 }
 
+// Prevent double rendering by tracking rendered blocks
+static $rendered_blocks = array();
+
 $block_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes(
-	'prc-block/chart-builder',
+	'prc-chart-builder/chart',
 	isset( $attributes ) ? $attributes : array()
 );
 
 $block_id = $block_attributes['id'];
-if ( false === $block_id ) {
-	new \WP_Error( 'missing_id', __( 'Chart Block is missing ID', 'prc-block-library' ) );
-	return;
+
+// Handle missing ID for converted charts
+if ( false === $block_id || empty( $block_id ) ) {
+	$chart_converted = $block_attributes['chartConverted'] ?? null;
+
+	// If this is a converted chart without an ID, generate a unique one.
+	if ( $chart_converted && isset( $chart_converted['converted'] ) && $chart_converted['converted'] ) {
+		$block_id = wp_unique_id( 'converted-chart-' );
+		// Update the block attributes with the generated ID.
+		$block_attributes['id'] = $block_id;
+	} else {
+		// For non-converted charts, return an error as before.
+		new \WP_Error( 'missing_id', __( 'Chart Block is missing ID', 'prc-block-library' ) );
+		return;
+	}
 }
-$target_namespace = array_key_exists( 'interactiveNamespace', $attributes ) ? $attributes['interactiveNamespace'] : 'prc-block/chart-builder';
+
+// Check if this block has already been rendered.
+if ( isset( $rendered_blocks[ $block_id ] ) ) {
+	return $content;
+}
+
+// Mark this block as rendered.
+$rendered_blocks[ $block_id ] = true;
+
+$target_namespace = array_key_exists( 'interactiveNamespace', $attributes ) ? $attributes['interactiveNamespace'] : 'prc-chart-builder/chart';
 $svg_fallback     = $block_attributes['svgUrl'];
 
 $chart_data            = $block_attributes['chartData'];
@@ -25,8 +55,7 @@ $is_static_chart       = $block_attributes['isStaticChart'];
 $table_data            = $block_attributes['tableData'];
 $has_preformatted_data = $block_attributes['hasPreformattedData'];
 $preformatted_data     = $block_attributes['preformattedData'];
-$should_render         = $block_attributes['defaultShouldRender'];
-
+$should_render         = $block_attributes['defaultShouldRender'] ?? true;
 
 if ( $has_preformatted_data && $preformatted_data ) {
 	$chart_data = $preformatted_data;
@@ -43,12 +72,12 @@ wp_interactivity_state(
 	array(
 		$block_id => array(
 			'chart-data'    => $chart_data,
-			// decode the table data to ensure it is an array
+			// Decode the table data to ensure it is an array.
 			'table-data'    => $table_data ? json_decode( $table_data, true ) : null,
 			'chart-hash'    => $block_id,
 			'iframe-height' => null,
 			'should-render' => $should_render,
-			'attributes' => $block->attributes,
+			'attributes'    => $block->attributes,
 		),
 	),
 );
@@ -59,7 +88,7 @@ $block_attrs = array(
 	'data-wp-interactive'        => $target_namespace,
 	'data-wp-context'            => wp_json_encode(
 		array(
-			'id'         => $block_id,
+			'id' => $block_id,
 		)
 	),
 	'class'                      => 'wp-chart-builder-inner',
@@ -87,17 +116,17 @@ if ( $is_static_chart ) {
 // Scaffold chart text elements.
 $meta_text_active = $block_attributes['metaTextActive'];
 if ( $meta_text_active ) {
-	$max_width   = $block_attributes['width'].'px';
-	$top_rule    = $block_attributes['horizontalRules'] ? wp_sprintf(
+		$max_width = $block_attributes['width'] . 'px';
+	$top_rule      = $block_attributes['horizontalRules'] ? wp_sprintf(
 		'<hr class="cb__hr" style="margin: 0 0 10px; max-width:%1$s;" />',
 		$max_width
 	) : '';
-	$bottom_rule = $block_attributes['horizontalRules'] ? wp_sprintf(
+	$bottom_rule   = $block_attributes['horizontalRules'] ? wp_sprintf(
 		'<hr class="cb__hr" style="margin: 10px 0 0; max-width:%1$s;" />',
 		$max_width
 	) : '';
-	echo wp_sprintf(
-		'
+		echo wp_sprintf(
+			'
 		<div %1$s>
 			<div class="cb__text-wrapper" style="max-width:%2$s;">
 				%3$s
@@ -110,17 +139,17 @@ if ( $meta_text_active ) {
 				%10$s
 			</div>
 		</div>',
-		$block_wrapper_attrs,
-		$max_width,
-		$top_rule,
-		$block_attributes['metaTitle'],
-		$block_attributes['metaSubtitle'],
-		$is_static_chart ? $static_chart : $chart,
-		$block_attributes['metaNote'],
-		$block_attributes['metaSource'],
-		$block_attributes['metaTag'],
-		$bottom_rule
-	);
+			wp_kses_post( $block_wrapper_attrs ),
+			esc_attr( $max_width ),
+			wp_kses_post( $top_rule ),
+			wp_kses_post( $block_attributes['metaTitle'] ),
+			wp_kses_post( $block_attributes['metaSubtitle'] ),
+			wp_kses_post( $is_static_chart ? $static_chart : $chart ),
+			wp_kses_post( $block_attributes['metaNote'] ),
+			wp_kses_post( $block_attributes['metaSource'] ),
+			wp_kses_post( $block_attributes['metaTag'] ),
+			wp_kses_post( $bottom_rule )
+		);
 } else {
-	echo wp_sprintf( '<div %1$s>%2$s</div>', $block_wrapper_attrs, $is_static_chart ? $static_chart : $chart );
+		echo wp_sprintf( '<div %1$s>%2$s</div>', wp_kses_post( $block_wrapper_attrs ), wp_kses_post( $is_static_chart ? $static_chart : $chart ) );
 }

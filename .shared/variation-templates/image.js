@@ -43,7 +43,7 @@ const imageTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: false,
 			isStatic: true,

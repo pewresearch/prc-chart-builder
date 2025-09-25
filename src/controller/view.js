@@ -12,13 +12,21 @@ function arrayToCSV(objArray, metadata) {
 	if (undefined === objArray || objArray.length === 0) return false;
 	const array =
 		'object' !== typeof objArray ? JSON.parse(objArray) : objArray;
-	const checkIfEmpty = (str) => (str !== undefined ? str : '');
+	const checkIfEmptyAndSanitize = (str) => {
+		if (undefined === str) {
+			return '';
+		}
+		// remove any inner html tags that might be present, both open and close
+		str = str.replace(/<[^>]*>?/g, '');
+		str = str.replace(/<\/[^>]*>?/g, '');
+		if (str.indexOf(',') > -1) {
+			return `"${str}"`;
+		}
+		return str;
+	};
 	let str = '';
 	if (undefined !== metadata) {
-		str += `${checkIfEmpty(metadata.title)}
-			${checkIfEmpty(metadata.subtitle)}
-
-			`;
+		str += `${checkIfEmptyAndSanitize(metadata.title)}\n${checkIfEmptyAndSanitize(metadata.subtitle)}\n\n`;
 	}
 	for (let i = 0; i < array.length; i += 1) {
 		let line = '';
@@ -31,20 +39,15 @@ function arrayToCSV(objArray, metadata) {
 				line += array[i][j];
 			}
 		}
-
-		str += `${line}
-		`;
+		str += `${line}\n`;
 	}
 	if (undefined !== metadata) {
-		str += `
-		${checkIfEmpty(metadata.note)}
-		${checkIfEmpty(metadata.source)}
-		${checkIfEmpty(metadata.tag)}`;
+		str += `\n${checkIfEmptyAndSanitize(metadata.note)}\n${checkIfEmptyAndSanitize(metadata.source)}\n${checkIfEmptyAndSanitize(metadata.tag)}`;
 	}
 	return str;
 }
 
-const { state, actions } = store('prc-block/chart-builder-controller', {
+const { state, actions } = store('prc-chart-builder/controller', {
 	state: {
 		get isActive() {
 			const context = getContext();

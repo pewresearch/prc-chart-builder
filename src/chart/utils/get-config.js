@@ -1,5 +1,3 @@
-/* eslint-disable max-lines */
-/* eslint-disable max-lines-per-function */
 // eslint-disable-next-line import/no-unresolved
 import { colors } from './colors';
 import { getDomain, getTicks, stringToArrayOfNums } from './helpers';

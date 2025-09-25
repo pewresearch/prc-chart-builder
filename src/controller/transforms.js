@@ -11,7 +11,7 @@ export default {
 			transform: (attributes) => {
 				attributes.className = 'chart-builder-data-table';
 				return createBlock(
-					'prc-block/chart-builder-controller',
+					'prc-chart-builder/controller',
 					{
 						transformed: true,
 						tableHead: attributes.head,
@@ -21,7 +21,7 @@ export default {
 						createBlock('prc-block/table', {
 							...attributes,
 						}),
-						createBlock('prc-block/chart-builder', {
+						createBlock('prc-chart-builder/chart', {
 							chartType: 'area',
 						}),
 					]

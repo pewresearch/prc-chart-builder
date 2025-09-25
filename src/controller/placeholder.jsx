@@ -19,7 +19,7 @@ import {
 } from '@wordpress/blocks';
 
 export default function Placeholder({ clientId, setAttributes }) {
-	const name = 'prc-block/chart-builder-controller';
+	const name = 'prc-chart-builder/controller';
 
 	const { blockType, defaultVariation, variations } = useSelect(
 		(select) => {

@@ -39,7 +39,7 @@ const legacyColumnTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: true,
 			chartType: 'bar',

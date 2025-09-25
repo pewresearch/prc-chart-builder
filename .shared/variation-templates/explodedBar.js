@@ -47,7 +47,7 @@ const explodedBarTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: false,
 			chartType: 'exploded-bar',

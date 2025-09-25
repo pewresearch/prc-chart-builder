@@ -12,12 +12,12 @@ $georgia:
 
 // Hide tables in the block list inspector/example.
 .block-editor-block-preview__content-iframe.block-editor-iframe__html
-	.wp-block-prc-block-chart-builder-controller
+	.wp-block-prc-chart-builder-controller
 	.chart-builder-data-table {
 	display: none !important;
 }
 
-.wp-block-prc-block-chart-builder-controller {
+.wp-block-prc-chart-builder-controller {
 	&.alignleft {
 		float: left;
 		margin-inline-start: 0 !important;

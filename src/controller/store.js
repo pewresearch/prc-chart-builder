@@ -4,7 +4,7 @@
  */
 import { createReduxStore } from '@wordpress/data';
 
-const store = createReduxStore('prc-block/chart-builder-controller', {
+const store = createReduxStore('prc-chart-builder/controller', {
 	reducer: (
 		state = {
 			tableVisibility: false,

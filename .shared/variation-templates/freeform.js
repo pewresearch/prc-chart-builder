@@ -43,7 +43,7 @@ const freeformTemplate = [
 		},
 	],
 	[
-		'prc-block/chart-builder',
+		'prc-chart-builder/chart',
 		{
 			isConvertedChart: false,
 			isStaticChart: false,
