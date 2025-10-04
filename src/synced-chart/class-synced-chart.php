@@ -113,7 +113,7 @@ class Synced_Chart {
 		}
 
 		$allowed_statuses = array( 'publish' );
-		if ( is_user_logged_in() ) {
+		if ( is_user_logged_in() || is_preview() ) {
 			$allowed_statuses[] = 'draft';
 			$allowed_statuses[] = 'private';
 		} elseif ( ! empty( $synced_chart_block->post_password ) ) {

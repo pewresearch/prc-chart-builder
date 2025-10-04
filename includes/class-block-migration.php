@@ -119,12 +119,6 @@ class Block_Migration {
 		$total_processed = 0;
 		$batch_count = 0;
 
-		// Switch to blog ID 20 for the migration.
-		$switched = false;
-		if ( is_multisite() ) {
-			$switched = switch_to_blog( 20 );
-		}
-
 		// Check if we're resuming from a previous run.
 		$resume_offset = get_option( 'prc_chart_builder_migration_offset', 0 );
 		if ( $resume_offset > 0 && $args['offset'] === 0 ) {
@@ -284,11 +278,6 @@ class Block_Migration {
 				$batch_count
 			)
 		);
-
-		// Restore original blog if we switched.
-		if ( $switched ) {
-			restore_current_blog();
-		}
 
 		return true;
 	}
@@ -465,23 +454,12 @@ class Block_Migration {
 	 * @return bool True if migration was successful, false otherwise.
 	 */
 	public function manual_migration( $args = array() ) {
-		// Switch to blog ID 20 for option handling.
-		$switched = false;
-		if ( is_multisite() ) {
-			$switched = switch_to_blog( 20 );
-		}
-
 		// Reset migration status to allow re-running (unless resuming).
 		if ( ! isset( $args['resume'] ) || ! $args['resume'] ) {
 			delete_option( 'prc_chart_builder_block_migration_completed' );
 			delete_option( 'prc_chart_builder_block_migration_status' );
 			delete_option( 'prc_chart_builder_block_migration_stats' );
 			delete_option( 'prc_chart_builder_migration_offset' );
-		}
-
-		// Restore blog before running migration (run_migration will handle blog switching).
-		if ( $switched ) {
-			restore_current_blog();
 		}
 
 		return $this->run_migration( $args );
@@ -494,22 +472,11 @@ class Block_Migration {
 	 * @return array Migration status information.
 	 */
 	public function get_migration_status() {
-		// Switch to blog ID 20 to check status.
-		$switched = false;
-		if ( is_multisite() ) {
-			$switched = switch_to_blog( 20 );
-		}
-
 		$status = array(
 			'completed' => get_option( 'prc_chart_builder_block_migration_completed', false ),
 			'status'    => get_option( 'prc_chart_builder_block_migration_status', 'not_started' ),
 			'stats'     => get_option( 'prc_chart_builder_block_migration_stats', array() ),
 		);
-
-		// Restore original blog if we switched.
-		if ( $switched ) {
-			restore_current_blog();
-		}
 
 		return $status;
 	}
@@ -521,21 +488,10 @@ class Block_Migration {
 	 * @return bool True if reset was successful.
 	 */
 	public function reset_migration_status() {
-		// Switch to blog ID 20 for option handling.
-		$switched = false;
-		if ( is_multisite() ) {
-			$switched = switch_to_blog( 20 );
-		}
-
 		// Reset migration status options.
 		delete_option( 'prc_chart_builder_block_migration_completed' );
 		delete_option( 'prc_chart_builder_block_migration_status' );
 		delete_option( 'prc_chart_builder_block_migration_stats' );
-
-		// Restore original blog if we switched.
-		if ( $switched ) {
-			restore_current_blog();
-		}
 
 		// Log the reset.
 		error_log( 'PRC Chart Builder: Migration status reset, ready for re-run.' );
@@ -593,12 +549,6 @@ class Block_Migration {
 	public function migrate_single_post( $post_id ) {
 		global $wpdb;
 
-		// Switch to blog ID 20 for the migration.
-		$switched = false;
-		if ( is_multisite() ) {
-			$switched = switch_to_blog( 20 );
-		}
-
 		// Get the specific post.
 		$post = $wpdb->get_row(
 			$wpdb->prepare(
@@ -619,12 +569,6 @@ class Block_Migration {
 
 		if ( ! $post ) {
 			$result['error'] = 'Post not found or not published';
-
-			// Restore original blog if we switched.
-			if ( $switched ) {
-				restore_current_blog();
-			}
-
 			return $result;
 		}
 
@@ -643,12 +587,6 @@ class Block_Migration {
 
 		if ( ! $has_old_blocks ) {
 			$result['error'] = 'Post does not contain any blocks that need migration';
-
-			// Restore original blog if we switched.
-			if ( $switched ) {
-				restore_current_blog();
-			}
-
 			return $result;
 		}
 
@@ -688,11 +626,6 @@ class Block_Migration {
 		} else {
 			$result['migrated'] = true;
 			$result['error'] = 'No changes needed - post content already up to date';
-		}
-
-		// Restore original blog if we switched.
-		if ( $switched ) {
-			restore_current_blog();
 		}
 
 		return $result;
@@ -746,6 +679,9 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		 *
 		 *     # Migrate single post by ID
 		 *     wp prc-chart-builder migrate --post-id=123
+		 *
+		 *     # Target a specific site (use WP-CLI --url parameter)
+		 *     wp prc-chart-builder migrate --url=https://example.com
 		 *
 		 * @subcommand migrate
 		 * @synopsis [--dry-run] [--posts-per-page=<number>] [--offset=<number>] [--limit=<number>] [--resume] [--post-id=<id>]
@@ -947,6 +883,97 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 			WP_CLI::line( 'Updated content:' );
 			WP_CLI::line( $result['updated_content'] );
 		}
+
+		/**
+		 * Debug command to see what posts and blocks exist.
+		 *
+		 * ## OPTIONS
+		 *
+		 * [--limit=<number>]
+		 * : Limit the number of posts to show. Default: 10
+		 *
+		 * ## EXAMPLES
+		 *
+		 *     # Show posts with chart-related blocks
+		 *     wp prc-chart-builder debug
+		 *
+		 * @subcommand debug
+		 * @synopsis [--limit=<number>]
+		 */
+		public function debug( $args, $assoc_args ) {
+			global $wpdb;
+
+			$limit = isset( $assoc_args['limit'] ) ? intval( $assoc_args['limit'] ) : 10;
+
+			WP_CLI::line( 'Debug: Searching for posts with chart-related blocks...' );
+			WP_CLI::line( '' );
+
+			// Search for posts with old block names
+			$old_blocks_query = $wpdb->prepare(
+				"SELECT ID, post_title, post_type, post_content FROM {$wpdb->posts}
+				WHERE post_status = 'publish'
+				AND (post_content LIKE %s OR post_content LIKE %s OR post_content LIKE %s)
+				ORDER BY ID
+				LIMIT %d",
+				'%prc-block/chart%',
+				'%prc-block/chart-builder-controller%',
+				'%prc-block/chart-builder%',
+				$limit
+			);
+
+			$old_blocks_posts = $wpdb->get_results( $old_blocks_query );
+
+			WP_CLI::line( sprintf( 'Found %d posts with OLD block names:', count( $old_blocks_posts ) ) );
+			foreach ( $old_blocks_posts as $post ) {
+				WP_CLI::line( sprintf( '  ID: %d, Title: %s, Type: %s', $post->ID, $post->post_title, $post->post_type ) );
+			}
+
+			WP_CLI::line( '' );
+
+			// Search for posts with new block names
+			$new_blocks_query = $wpdb->prepare(
+				"SELECT ID, post_title, post_type, post_content FROM {$wpdb->posts}
+				WHERE post_status = 'publish'
+				AND (post_content LIKE %s OR post_content LIKE %s OR post_content LIKE %s)
+				ORDER BY ID
+				LIMIT %d",
+				'%prc-chart-builder/synced-chart%',
+				'%prc-chart-builder/controller%',
+				'%prc-chart-builder/chart%',
+				$limit
+			);
+
+			$new_blocks_posts = $wpdb->get_results( $new_blocks_query );
+
+			WP_CLI::line( sprintf( 'Found %d posts with NEW block names:', count( $new_blocks_posts ) ) );
+			foreach ( $new_blocks_posts as $post ) {
+				WP_CLI::line( sprintf( '  ID: %d, Title: %s, Type: %s', $post->ID, $post->post_title, $post->post_type ) );
+			}
+
+			WP_CLI::line( '' );
+
+			// Search for any posts with "chart" in the content
+			$any_chart_query = $wpdb->prepare(
+				"SELECT ID, post_title, post_type FROM {$wpdb->posts}
+				WHERE post_status = 'publish'
+				AND post_content LIKE %s
+				ORDER BY ID
+				LIMIT %d",
+				'%chart%',
+				$limit
+			);
+
+			$any_chart_posts = $wpdb->get_results( $any_chart_query );
+
+			WP_CLI::line( sprintf( 'Found %d posts with "chart" in content:', count( $any_chart_posts ) ) );
+			foreach ( $any_chart_posts as $post ) {
+				WP_CLI::line( sprintf( '  ID: %d, Title: %s, Type: %s', $post->ID, $post->post_title, $post->post_type ) );
+			}
+
+			WP_CLI::line( '' );
+			WP_CLI::line( 'Total posts in database: ' . $wpdb->get_var( "SELECT COUNT(*) FROM {$wpdb->posts} WHERE post_status = 'publish'" ) );
+		}
+
 	}
 
 	WP_CLI::add_command( 'prc-chart-builder', '\PRC\Platform\Chart_Builder\PRC_Chart_Builder_Migration_CLI_Command' );

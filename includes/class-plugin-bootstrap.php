@@ -175,6 +175,7 @@ class Plugin_Bootstrap {
 		new SEO( $this->get_loader() );
 		new Block_Migration( $this->get_loader() );
 		new Admin( $this->get_loader() );
+		new Inspector_Sidebar_Panel( $this->get_loader() );
 	}
 
 	/**
