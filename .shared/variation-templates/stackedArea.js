@@ -69,6 +69,7 @@ const areaTemplate = [
 			yTickLabelVerticalAnchor: 'middle',
 			yTickLabelDX: -5,
 			lineStrokeWidth: 4,
+			labelColor: 'inherit',
 			nodeSize: 4,
 			nodeFill: 'white',
 			nodeStroke: 1,
@@ -76,6 +77,8 @@ const areaTemplate = [
 			tooltipOffsetY: 30,
 			tooltipHeaderValue: 'categoryValue',
 			tooltipFormat: '{{row}}: {{value}}',
+			legendActive: true,
+			legendMarkerStyle: 'line',
 		},
 	],
 ];

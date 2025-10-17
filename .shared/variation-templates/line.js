@@ -69,6 +69,7 @@ const lineTemplate = [
 			yTickLabelVerticalAnchor: 'middle',
 			yTickLabelDX: -5,
 			labelPositionDY: -5,
+			labelColor: 'inherit',
 			lineStrokeWidth: 4,
 			nodeSize: 4,
 			nodeFill: 'white',
@@ -77,6 +78,8 @@ const lineTemplate = [
 			tooltipOffsetY: 30,
 			tooltipHeaderValue: 'categoryValue',
 			tooltipFormat: '{{row}}: {{value}}',
+			legendActive: true,
+			legendMarkerStyle: 'line',
 		},
 	],
 ];

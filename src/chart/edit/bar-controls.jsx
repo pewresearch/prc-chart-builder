@@ -28,6 +28,7 @@ const WidePanelItem = styled(ToolsPanelItem)`
 function BarControls({ attributes, setAttributes, clientId }) {
 	const { chartType, barPadding, barGroupPadding, explodedBarColumnGap } =
 		attributes;
+
 	return (
 		<PanelBody title={__('Bar Configuration')} initialOpen={false}>
 			<ToolsPanel

@@ -406,6 +406,9 @@ const USABlockMapTemplate = [
 			labelFontSize: 16,
 			labelPositionDX: 22,
 			labelPositionDY: 30,
+			labelColor: 'contrast',
+			legendActive: true,
+			legendMarkerStyle: 'rect',
 		},
 	],
 ];

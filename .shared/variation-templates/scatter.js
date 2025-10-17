@@ -82,6 +82,8 @@ const scatterTemplate = [
 			tooltipOffsetY: 70,
 			tooltipHeaderValue: 'categoryValue',
 			tooltipFormat: '{{row}}: {{value}}',
+			legendActive: true,
+			legendMarkerStyle: 'circle',
 		},
 	],
 ];

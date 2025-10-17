@@ -430,6 +430,9 @@ const WorldMapTemplate = [
 			categories: ['Population (millions)'],
 			mapScale: 'threshold',
 			mapScaleDomain: [20, 100, 200, 500],
+			labelColor: 'contrast',
+			legendActive: true,
+			legendMarkerStyle: 'rect',
 		},
 	],
 ];

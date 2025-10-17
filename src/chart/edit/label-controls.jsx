@@ -16,6 +16,7 @@ import {
 	TextControl,
 	Flex,
 	FlexItem,
+	Button,
 	__experimentalNumberControl as NumberControl,
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
@@ -74,7 +75,28 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 		pieCategoryLabelsActive,
 		showFirstLastPointsOnly,
 		mapIgnoreSmallStateLabels,
+		chartData,
 	} = attributes;
+
+	// Check if any data points have custom label positions
+	const hasCustomLabelPositions = chartData?.some(
+		(d) => d.__labelPositions && Object.keys(d.__labelPositions).length > 0
+	);
+
+	// Reset all custom label positions
+	const handleResetLabelPositions = () => {
+		if (!chartData) return;
+
+		const updatedData = chartData.map((d) => {
+			if (d.__labelPositions) {
+				const { __labelPositions, ...rest } = d;
+				return rest;
+			}
+			return d;
+		});
+
+		setAttributes({ chartData: updatedData });
+	};
 	return (
 		<PanelBody title={__('Labels')} initialOpen={false}>
 			<ToolsPanel
@@ -226,11 +248,34 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					<PanelDescription>
 						<Help>
 							{__(
-								'Select the position of the label relative to it’s parent node, as well as any label units number formatting.'
+								"Select the position of the label relative to it's parent node, as well as any label units number formatting."
 							)}
 						</Help>
 					</PanelDescription>
 				</WidePanelItem>
+				{hasCustomLabelPositions && (
+					<WidePanelItem
+						hasValue={() => hasCustomLabelPositions}
+						label={__('Reset Custom Positions')}
+						panelId={clientId}
+					>
+						<Button
+							variant="secondary"
+							isDestructive
+							onClick={handleResetLabelPositions}
+							disabled={!labelsActive}
+						>
+							{__('Reset All Label Positions')}
+						</Button>
+						<PanelDescription>
+							<Help>
+								{__(
+									'Remove all custom label positions and return to default positioning.'
+								)}
+							</Help>
+						</PanelDescription>
+					</WidePanelItem>
+				)}
 				<WidePanelItem
 					hasValue={() => labelAbsoluteValue}
 					label={__('Absolute Value')}
@@ -474,34 +519,33 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 						</SingleColumnItem>
 					</>
 				)}
-				{('line' === chartType ||
-					'area' === chartType ||
-					'stacked-area' === chartType ||
-					'scatter' === chartType) && (
-					<WidePanelItem
-						hasValue={() => labelColor}
+				<WidePanelItem
+					hasValue={() => labelColor}
+					label={__('Label Color')}
+					panelId={clientId}
+				>
+					<SelectControl
 						label={__('Label Color')}
-						panelId={clientId}
-					>
-						<SelectControl
-							label={__('Label Color')}
-							value={labelColor}
-							disabled={!labelsActive}
-							onChange={(value) =>
-								setAttributes({ labelColor: value })
-							}
-							options={[
-								{ label: __('Inherit'), value: 'inherit' },
-								{ label: __('Black'), value: 'black' },
-								{ label: __('White'), value: 'white' },
-								// { label: __('Contrast'), value: 'contrast' },
-							]}
-						/>
-						<PanelDescription>
-							<Help>{__('Select the color of the label.')}</Help>
-						</PanelDescription>
-					</WidePanelItem>
-				)}
+						value={labelColor}
+						disabled={!labelsActive}
+						onChange={(value) =>
+							setAttributes({ labelColor: value })
+						}
+						options={[
+							{ label: __('Contrast'), value: 'contrast' },
+							{ label: __('Inherit'), value: 'inherit' },
+							{ label: __('Black'), value: 'black' },
+							{ label: __('White'), value: 'white' },
+						]}
+					/>
+					<PanelDescription>
+						<Help>
+							{__(
+								'Select the color of the label. Contrast will determine color based on bar background for optimal contrast.'
+							)}
+						</Help>
+					</PanelDescription>
+				</WidePanelItem>
 			</ToolsPanel>
 		</PanelBody>
 	);

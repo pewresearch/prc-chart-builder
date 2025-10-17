@@ -79,10 +79,13 @@ const explodedBarTemplate = [
 			barGroupOffset: 28,
 			barLabelPosition: 'center',
 			barLabelCutoff: 11,
+			labelColor: 'contrast',
 			labelsActive: true,
 			labelPositionDY: 4,
 			tooltipHeaderValue: 'independentValue',
 			tooltipFormat: '{{column}}: {{value}}',
+			legendActive: true,
+			legendMarkerStyle: 'rect',
 		},
 	],
 ];

@@ -59,6 +59,11 @@ const { state, actions } = store('prc-chart-builder/controller', {
 					state[id].activeTab === 'share')
 			);
 		},
+		get isQuestionExpanded() {
+			const context = getContext();
+			const { id } = context;
+			return state[id]?.isQuestionExpanded || false;
+		},
 	},
 	callbacks: {
 		detectWebShareSupport() {
@@ -67,6 +72,39 @@ const { state, actions } = store('prc-chart-builder/controller', {
 			} else {
 				state.webShareSupported = true;
 			}
+		},
+		syncTableHeight() {
+			const context = getContext();
+			const { id } = context;
+			console.log({ id });
+			// Wait a bit for the chart to fully render
+			setTimeout(() => {
+				const controllerEl = document.getElementById(id);
+				if (!controllerEl) {
+					return;
+				}
+
+				const chartContainer = controllerEl.querySelector('.cb__chart');
+				const tableContainer = controllerEl.querySelector(
+					'.wp-chart-builder-table__inner'
+				);
+				const imgContainer =
+					controllerEl.querySelector('.wp-block-image');
+
+				if ((chartContainer || imgContainer) && tableContainer) {
+					const chartHeight =
+						chartContainer?.offsetHeight ||
+						imgContainer?.offsetHeight;
+
+					if (chartHeight) {
+						// Set min-height instead of fixed height to allow table to be taller if needed
+						// -65px is the height of the download data button and the margin bottom of the table
+						tableContainer.style.height = '100%';
+						tableContainer.style.minHeight = `${chartHeight - 37}px`;
+						tableContainer.style.maxHeight = `${chartHeight - 37}px`;
+					}
+				}
+			}, 100);
 		},
 	},
 	actions: {
@@ -85,6 +123,14 @@ const { state, actions } = store('prc-chart-builder/controller', {
 				// otherwise, set the active tab to the current tab
 				state[id].activeTab = element.attributes['data-chart-view'];
 			}
+		},
+		toggleQuestionWordingExpanded() {
+			const context = getContext();
+			const { id } = context;
+			console.log('toggleQuestionWordingExpanded');
+			console.log({ state });
+			console.log({ context });
+			state[id].isQuestionExpanded = !state[id].isQuestionExpanded;
 		},
 		hideModal() {
 			const context = getContext();

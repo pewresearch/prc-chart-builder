@@ -7,13 +7,11 @@
 
 namespace PRC\Platform\Chart_Builder;
 
-wp_enqueue_script( 'prc-charting-library' );
-
 if ( is_admin() || null === $block ) {
 	return $content;
 }
 
-// Prevent double rendering by tracking rendered blocks
+// Prevent double rendering by tracking rendered blocks.
 static $rendered_blocks = array();
 
 $block_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes(
@@ -21,9 +19,16 @@ $block_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attribute
 	isset( $attributes ) ? $attributes : array()
 );
 
+// Conditionally load prc-custom-charts if the block has a customAttributes property.
+if ( isset( $block_attributes['customAttributes'] ) && isset( $block_attributes['customAttributes']['chartType'] ) ) {
+	wp_enqueue_script( 'prc-custom-charts' );
+} else {
+	wp_enqueue_script( 'prc-charting-library' );
+}
+
 $block_id = $block_attributes['id'];
 
-// Handle missing ID for converted charts
+// Handle missing ID for converted charts.
 if ( false === $block_id || empty( $block_id ) ) {
 	$chart_converted = $block_attributes['chartConverted'] ?? null;
 
@@ -71,13 +76,14 @@ wp_interactivity_state(
 	$target_namespace,
 	array(
 		$block_id => array(
-			'chart-data'    => $chart_data,
+			'chart-data'         => $chart_data,
 			// Decode the table data to ensure it is an array.
-			'table-data'    => $table_data ? json_decode( $table_data, true ) : null,
-			'chart-hash'    => $block_id,
-			'iframe-height' => null,
-			'should-render' => $should_render,
-			'attributes'    => $block->attributes,
+			'table-data'         => $table_data ? json_decode( $table_data, true ) : null,
+			'chart-hash'         => $block_id,
+			'iframe-height'      => null,
+			'should-render'      => $should_render,
+			'attributes'         => $block->attributes,
+			'isQuestionExpanded' => false,
 		),
 	),
 );
@@ -125,6 +131,31 @@ if ( $meta_text_active ) {
 		'<hr class="cb__hr" style="margin: 10px 0 0; max-width:%1$s;" />',
 		$max_width
 	) : '';
+
+	// Build question wording section if active.
+	$meta_question_wording        = $block_attributes['metaQuestionWording'] ?? '';
+	$meta_question_wording_active = $block_attributes['metaQuestionWordingActive'] ?? false;
+	$question_wording_html        = '';
+
+	if ( $meta_question_wording_active ) {
+		$plus_icon  = \PRC\Platform\Icons\render( 'regular', 'circle-plus', 1 );
+		$minus_icon = \PRC\Platform\Icons\render( 'regular', 'circle-minus', 1 );
+
+		ob_start();
+		?>
+		<div class="cb__note cb__note--question-wording-button" role="button" data-wp-on--click="actions.toggleQuestionWordingExpanded">
+			<span data-wp-bind--hidden="state.isQuestionExpanded"><?php echo $plus_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Icons\render returns trusted SVG markup ?></span>
+			<span data-wp-bind--hidden="state.isQuestionExpanded">Expand to find question wording</span>
+			<span data-wp-bind--hidden="!state.isQuestionExpanded"><?php echo $minus_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Icons\render returns trusted SVG markup ?></span>
+			<span data-wp-bind--hidden="!state.isQuestionExpanded">Collapse question wording</span>
+		</div>
+		<div class="cb__note cb__note--question-wording" data-wp-bind--hidden="!state.isQuestionExpanded">
+			<?php echo wp_kses_post( $meta_question_wording ); ?>
+		</div>
+		<?php
+		$question_wording_html = ob_get_clean();
+	}
+
 		echo wp_sprintf(
 			'
 		<div %1$s>
@@ -133,10 +164,11 @@ if ( $meta_text_active ) {
 				<div class="cb__title">%4$s</div>
 				<div class="cb__subtitle">%5$s</div>
 				%6$s
-				<div class="cb__note">%7$s</div>
+				%7$s
 				<div class="cb__note">%8$s</div>
-				<div class="cb__tag">%9$s</div>
-				%10$s
+				<div class="cb__note">%9$s</div>
+				<div class="cb__tag">%10$s</div>
+				%11$s
 			</div>
 		</div>',
 			wp_kses_post( $block_wrapper_attrs ),
@@ -144,12 +176,13 @@ if ( $meta_text_active ) {
 			wp_kses_post( $top_rule ),
 			wp_kses_post( $block_attributes['metaTitle'] ),
 			wp_kses_post( $block_attributes['metaSubtitle'] ),
-			wp_kses_post( $is_static_chart ? $static_chart : $chart ),
+			$is_static_chart ? $static_chart : $chart, //phpcs:ignore
+			$question_wording_html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean.
 			wp_kses_post( $block_attributes['metaNote'] ),
 			wp_kses_post( $block_attributes['metaSource'] ),
 			wp_kses_post( $block_attributes['metaTag'] ),
 			wp_kses_post( $bottom_rule )
 		);
 } else {
-		echo wp_sprintf( '<div %1$s>%2$s</div>', wp_kses_post( $block_wrapper_attrs ), wp_kses_post( $is_static_chart ? $static_chart : $chart ) );
+		echo wp_sprintf( '<div %1$s>%2$s</div>', wp_kses_post( $block_wrapper_attrs ), $is_static_chart ? $static_chart : $chart ); //phpcs:ignore
 }

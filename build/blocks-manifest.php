@@ -569,6 +569,31 @@ return array(
 				'type' => 'boolean',
 				'default' => false
 			),
+			'groupBreaksCategory' => array(
+				'type' => 'string',
+				'default' => ''
+			),
+			'groupBreaksCategoryValues' => array(
+				'type' => 'array',
+				'default' => array(
+					
+				)
+			),
+			'groupBreaksStyleVariation' => array(
+				'type' => 'string',
+				'enum' => array(
+					'empty',
+					'solid',
+					'dotted',
+					'dashed',
+					'heartbeat'
+				),
+				'default' => 'empty'
+			),
+			'groupBreaksHeight' => array(
+				'type' => 'number',
+				'default' => 30
+			),
 			'groupBreaks' => array(
 				'type' => 'object',
 				'default' => array(
@@ -778,12 +803,11 @@ return array(
 			'labelColor' => array(
 				'type' => 'string',
 				'enum' => array(
+					'contrast',
 					'inherit',
 					'black',
-					'white',
-					'contrast'
-				),
-				'default' => 'inherit'
+					'white'
+				)
 			),
 			'labelFontSize' => array(
 				'type' => 'integer',
@@ -845,12 +869,23 @@ return array(
 				'default' => 'rect'
 			),
 			'legendBorderStroke' => array(
-				'type' => 'string',
-				'default' => '#231F20'
+				'type' => 'string'
 			),
 			'legendFill' => array(
-				'type' => 'string',
-				'default' => 'white'
+				'type' => 'string'
+			),
+			'legendFontSize' => array(
+				'type' => 'integer',
+				'default' => 12
+			),
+			'legendMargin' => array(
+				'type' => 'object',
+				'default' => array(
+					'top' => 0,
+					'right' => 5,
+					'bottom' => 0,
+					'left' => 0
+				)
 			),
 			'legendLabelDelimiter' => array(
 				'type' => 'string',
@@ -876,6 +911,13 @@ return array(
 				'type' => 'string',
 				'default' => 'Subtitle'
 			),
+			'metaQuestionWordingActive' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'metaQuestionWording' => array(
+				'type' => 'string'
+			),
 			'metaNote' => array(
 				'type' => 'string',
 				'default' => 'Note: This is a note.'
@@ -887,6 +929,10 @@ return array(
 			'metaTag' => array(
 				'type' => 'string',
 				'default' => 'PEW RESEARCH CENTER'
+			),
+			'metaAlt' => array(
+				'type' => 'string',
+				'default' => ''
 			),
 			'svgUrl' => array(
 				'type' => 'string',
@@ -1076,6 +1122,13 @@ return array(
 			'defaultShouldRender' => array(
 				'type' => 'boolean',
 				'default' => true
+			),
+			'lock' => array(
+				'type' => 'object',
+				'default' => array(
+					'move' => true,
+					'remove' => false
+				)
 			)
 		),
 		'example' => array(

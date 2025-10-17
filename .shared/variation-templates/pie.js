@@ -61,9 +61,12 @@ const pieTemplate = [
 			yAxisActive: false,
 			labelsActive: true,
 			labelPositionDX: -20,
+			labelColor: 'contrast',
 			sortOrder: 'reverse',
 			tooltipHeaderValue: 'independentValue',
 			tooltipFormat: '{{column}}: {{value}}',
+			legendActive: true,
+			legendMarkerStyle: 'circle',
 		},
 	],
 ];

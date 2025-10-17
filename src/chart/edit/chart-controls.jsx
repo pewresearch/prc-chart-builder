@@ -89,6 +89,9 @@ function ControlSections(props) {
 	if (limitControls) {
 		return <TextFieldControls {...props} />;
 	}
+	const barTypes = ['bar', 'stacked-bar', 'diverging-bar', 'exploded-bar'];
+	const lineTypes = ['line', 'area', 'stacked-area'];
+	const nodeTypes = ['scatter', 'dot-plot'];
 	return (
 		<>
 			<TextFieldControls {...props} />
@@ -102,28 +105,21 @@ function ControlSections(props) {
 			)}
 			{'map' === chartFamily && <MapControls {...props} />}
 
-			{('bar' === chartType ||
-				'stacked-bar' === chartType ||
-				'exploded-bar' === chartType) && <BarControls {...props} />}
+			{barTypes.includes(chartType) && <BarControls {...props} />}
 			{'diverging-bar' === chartType && (
 				<DivergingBarControls {...props} />
 			)}
-			{('line' === chartType ||
-				'area' === chartType ||
-				'stacked-area' === chartType) && (
+			{lineTypes.includes(chartType) && (
 				<>
 					<PlotBandControls {...props} />
 					<LineControls {...props} />
 				</>
 			)}
 			{'dot-plot' === chartType && <DotPlotControls {...props} />}
-			{('line' === chartType ||
-				'area' === chartType ||
-				'stacked-area' === chartType ||
-				'dot-plot' === chartType ||
-				'scatter' === chartType) && (
-				<NodeControls {...props} chartType={chartType} />
-			)}
+			{nodeTypes.includes(chartType) ||
+				(lineTypes.includes(chartType) && (
+					<NodeControls {...props} chartType={chartType} />
+				))}
 			{attributes.diffColumnActive && <DiffColumnControls {...props} />}
 			<AnnotationControls {...props} />
 			<LabelControls {...props} chartType={chartType} />

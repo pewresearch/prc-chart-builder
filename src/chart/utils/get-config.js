@@ -1,11 +1,16 @@
-// eslint-disable-next-line import/no-unresolved
 import { colors } from './colors';
-import { getDomain, getTicks, stringToArrayOfNums } from './helpers';
+import {
+	getDomain,
+	getTicks,
+	stringToArrayOfNums,
+	stringToArray,
+	generateDefaultAltText,
+} from './helpers';
 
-const { baseConfig } = window.prcChartBuilder;
-
+const { baseConfig } = window.prcCustomCharts || window.prcChartingLibrary;
 const getConfig = (attributes, clientId, editorClickEvent = null) => {
 	// layout attributes
+
 	const {
 		chartType,
 		chartOrientation,
@@ -28,6 +33,7 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 		metaNote,
 		metaSource,
 		metaTag,
+		metaAlt,
 	} = attributes;
 	// independent axis attributes
 	const {
@@ -124,6 +130,8 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 		legendMarkerStyle,
 		legendBorderStroke,
 		legendFill,
+		legendFontSize,
+		legendMargin,
 		legendLabelDelimiter,
 		legendLabelLower,
 		legendLabelUpper,
@@ -206,6 +214,11 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 		sortKey,
 		dataRenderX,
 		dataRenderY,
+		groupBreaksActive,
+		groupBreaksCategory,
+		groupBreaksCategoryValues,
+		groupBreaksStyleVariation,
+		groupBreaksHeight,
 	} = attributes;
 	// annotations
 	const { annotationsActive, annotations } = attributes;
@@ -224,8 +237,16 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 	} = attributes;
 
 	const { isCustomChart, customAttributes } = attributes;
-	const xTicks = stringToArrayOfNums(xTickExact);
-	const yTicks = stringToArrayOfNums(yTickExact);
+	// Use stringToArray for time scales to preserve date strings, stringToArrayOfNums for numeric scales
+	const xTicks =
+		xScale === 'time'
+			? stringToArray(xTickExact)
+			: stringToArrayOfNums(xTickExact);
+	const yTicks =
+		yScale === 'time'
+			? stringToArray(yTickExact)
+			: stringToArrayOfNums(yTickExact);
+	console.log({ xTicks, yTicks });
 	return {
 		...baseConfig,
 		layout: {
@@ -254,6 +275,10 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 			note: metaNote,
 			source: metaSource,
 			tag: metaTag,
+			alt:
+				metaAlt.length > 0
+					? metaAlt
+					: generateDefaultAltText(chartType, metaTitle),
 		},
 		colors: 0 < customColors.length ? customColors : colors[colorValue],
 		plotBands: {
@@ -270,7 +295,7 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 			domain: getDomain(xMinDomain, xMaxDomain, chartType, xScale, 'x'),
 			showZero: showXMinDomainLabel,
 			tickCount: xTickNum,
-			tickValues: 1 >= xTicks.length ? null : getTicks(xTicks, xScale),
+			tickValues: 0 >= xTicks.length ? null : getTicks(xTicks),
 			tickUnit: xTickUnit,
 			tickUnitPosition: xTickUnitPosition,
 			tickFormat: null,
@@ -332,7 +357,7 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 			domain: getDomain(yMinDomain, yMaxDomain, chartType, yScale, 'y'),
 			showZero: showYMinDomainLabel,
 			tickCount: yTickNum,
-			tickValues: 1 >= yTicks.length ? null : getTicks(yTicks, yScale),
+			tickValues: 0 >= yTicks.length ? null : getTicks(yTicks),
 			tickUnit: yTickUnit,
 			tickUnitPosition: yTickUnitPosition,
 			tickAngle: yTickLabelAngle,
@@ -406,6 +431,20 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 			yFormat: yScaleFormat,
 			numberFormat: 'en-US',
 			isHighlightedColor: '#ECDBAC',
+			groupBreaksActive,
+			groupBreaksCategory,
+			groupBreaksCategoryValues,
+			groupBreaks: {
+				...baseConfig.dataRender.groupBreaks,
+				breakStyles: {
+					...baseConfig.dataRender.groupBreaks.breakStyles,
+					variation: groupBreaksStyleVariation,
+					height: groupBreaksHeight,
+				},
+				labelStyles: {
+					...baseConfig.dataRender.groupBreaks.labelStyles,
+				},
+			},
 		},
 		animate: {
 			active: false,
@@ -456,7 +495,30 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 			...baseConfig.legend,
 			active: legendActive,
 			orientation: legendOrientation,
-			categories: legendCategories || categories,
+			categories: (() => {
+				// If legendCategories is set, use it (custom user-defined order)
+				if (legendCategories && legendCategories.length > 0) {
+					return legendCategories;
+				}
+				// Otherwise determine categories based on chart type and data source
+				if (chartType === 'diverging-bar') {
+					// For diverging bar charts, combine negative, positive, and neutral categories
+					const divergingCategories = neutralBarActive
+						? [
+								...negativeCategories,
+								...positiveCategories,
+								neutralCategory,
+							]
+						: [...negativeCategories, ...positiveCategories];
+					return divergingCategories;
+				}
+				if (mapScale === 'ordinal') {
+					// For maps with ordinal scale, use the mapScaleDomain
+					return mapScaleDomain;
+				}
+				// For all other charts, use the categories array
+				return categories;
+			})(),
 			title: legendTitle,
 			offsetX: legendOffsetX,
 			offsetY: legendOffsetY,
@@ -464,6 +526,8 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 			markerStyle: legendMarkerStyle,
 			borderStroke: legendBorderStroke,
 			fill: legendFill,
+			fontSize: legendFontSize,
+			margin: legendMargin,
 			labelDelimiter: legendLabelDelimiter,
 			labelLower: legendLabelLower,
 			labelUpper: legendLabelUpper,

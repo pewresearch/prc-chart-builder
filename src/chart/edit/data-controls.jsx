@@ -17,9 +17,11 @@ import {
 	SelectControl,
 	ToggleControl,
 	FormTokenField,
+	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
 
-import Sorter from './Sorter';
+import Sorter from './sorter';
+import { formatNum } from '../utils/helpers';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -55,6 +57,12 @@ function DataControls({ attributes, setAttributes, clientId }) {
 		dateInputFormat,
 		sortKey,
 		independentVariable,
+		groupBreaksActive,
+		groupBreaksCategory,
+		groupBreaksStyleVariation,
+		groupBreaksHeight,
+		groupBreaksCategoryValues,
+		chartData,
 	} = attributes;
 
 	const availableOptions = useMemo(
@@ -94,8 +102,34 @@ function DataControls({ attributes, setAttributes, clientId }) {
 		[availableCategories, negativeCategories]
 	);
 
+	// Derive unique group values from the selected groupBreaksCategory
+	const availableGroupValues = useMemo(() => {
+		if (!groupBreaksActive || !groupBreaksCategory || !chartData) {
+			return [];
+		}
+
+		const uniqueGroups = new Set();
+		chartData.forEach((datum) => {
+			const groupValue = datum[groupBreaksCategory];
+			if (groupValue) {
+				uniqueGroups.add(groupValue);
+			}
+		});
+		return Array.from(uniqueGroups);
+	}, [groupBreaksActive, groupBreaksCategory, chartData]);
+
+	// Create options for the Sorter component
+	const groupOrderOptions = useMemo(
+		() =>
+			availableGroupValues.map((value) => ({
+				label: value,
+				disabled: false,
+			})),
+		[availableGroupValues]
+	);
+
 	return (
-		<PanelBody title={__('Data')} initialOpen={false}>
+		<PanelBody title={__('Data')} initialOpen={true}>
 			<ToolsPanel
 				label={__('Data Rendering, Sorting, and Accessors')}
 				panelId={clientId}
@@ -104,57 +138,8 @@ function DataControls({ attributes, setAttributes, clientId }) {
 					paddingRight: '0',
 				}}
 			>
-				{'map' !== chartFamily && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Sorting')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<SelectControl
-							label={__('Sort Key')}
-							value={sortKey}
-							help={__(
-								'Choose the column you would like to sort your data by.'
-							)}
-							onChange={(value) =>
-								setAttributes({ sortKey: value })
-							}
-							options={[
-								...availableSelectableOptions,
-								{
-									label: independentVariable,
-									value: 'x',
-								},
-							]}
-						/>
-						<SelectControl
-							label={__('Sort Order')}
-							value={sortOrder}
-							options={[
-								{
-									value: 'ascending',
-									label: 'Ascending',
-								},
-								{
-									value: 'descending',
-									label: 'Descending',
-								},
-								{
-									value: 'none',
-									label: 'No Sort',
-								},
-							]}
-							onChange={(type) => {
-								setAttributes({
-									sortOrder: type,
-								});
-							}}
-						/>
-					</WidePanelItem>
-				)}
 				<PanelDescription>
-					<StyledLabel>Data Accessors</StyledLabel>
+					<StyledLabel>1. Data Accessors</StyledLabel>
 				</PanelDescription>
 				{'time' === xScale && (
 					<WidePanelItem
@@ -210,64 +195,6 @@ function DataControls({ attributes, setAttributes, clientId }) {
 									label: 'DD/MM/YYYY',
 								},
 							]}
-						/>
-					</WidePanelItem>
-				)}
-				{'diverging-bar' === chartType && (
-					<WidePanelItem
-						hasValue={() => 0 < availableSelectableOptions.length}
-						label={__('Categories')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<PanelDescription>
-							Select the categories you would like chart builder
-							to use to render your data. A diverging bar chart
-							can have three categories: one for the positive
-							values, one for the negative values, and one for the
-							neutral values (optional).
-						</PanelDescription>
-						<PanelDescription>
-							<StyledLabel>Positive Categories</StyledLabel>
-						</PanelDescription>
-						<Sorter
-							options={availablePositiveOptions}
-							setAttributes={setAttributes}
-							attribute="positiveCategories"
-						/>
-						<PanelDescription>
-							<StyledLabel>Negative Categories</StyledLabel>
-						</PanelDescription>
-						<Sorter
-							options={availableNegativeOptions}
-							setAttributes={setAttributes}
-							attribute="negativeCategories"
-						/>
-						<SelectControl
-							label={__('Neutral Category')}
-							value={neutralCategory}
-							onChange={(value) =>
-								setAttributes({ neutralCategory: value })
-							}
-							options={availableSelectableOptions}
-						/>
-					</WidePanelItem>
-				)}
-				{'map' !== chartFamily && 'diverging-bar' !== chartType && (
-					<WidePanelItem
-						hasValue={() => 0 < availableOptions.length}
-						label={__('Categories')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<PanelDescription>
-							Select the catogories you would like chart builder
-							to use to render your data.
-						</PanelDescription>
-						<Sorter
-							options={availableOptions}
-							setAttributes={setAttributes}
-							attribute="categories"
 						/>
 					</WidePanelItem>
 				)}
@@ -357,6 +284,231 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						</WidePanelItem>
 					</>
 				)}
+				{'diverging-bar' === chartType && (
+					<WidePanelItem
+						hasValue={() => 0 < availableSelectableOptions.length}
+						label={__('Categories')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<PanelDescription>
+							Select the categories you would like chart builder
+							to use to render your data. A diverging bar chart
+							can have three categories: one for the positive
+							values, one for the negative values, and one for the
+							neutral values (optional).
+						</PanelDescription>
+						<PanelDescription>
+							<StyledLabel>Positive Categories</StyledLabel>
+						</PanelDescription>
+						<Sorter
+							options={availablePositiveOptions}
+							setAttributes={setAttributes}
+							attribute="positiveCategories"
+						/>
+						<PanelDescription>
+							<StyledLabel>Negative Categories</StyledLabel>
+						</PanelDescription>
+						<Sorter
+							options={availableNegativeOptions}
+							setAttributes={setAttributes}
+							attribute="negativeCategories"
+						/>
+						<SelectControl
+							label={__('Neutral Category')}
+							value={neutralCategory}
+							onChange={(value) =>
+								setAttributes({ neutralCategory: value })
+							}
+							options={availableSelectableOptions}
+						/>
+					</WidePanelItem>
+				)}
+				{'map' !== chartFamily && 'diverging-bar' !== chartType && (
+					<WidePanelItem
+						hasValue={() => 0 < availableOptions.length}
+						label={__('Categories')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<PanelDescription>
+							Select the catogories you would like chart builder
+							to use to render your data.
+						</PanelDescription>
+						<Sorter
+							options={availableOptions}
+							setAttributes={setAttributes}
+							attribute="categories"
+						/>
+					</WidePanelItem>
+				)}
+				<PanelDescription>
+					<StyledLabel>2. Group Breaks</StyledLabel>
+				</PanelDescription>
+				{'map' !== chartFamily && (
+					<>
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Group Breaks')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<ToggleControl
+								label={__('Enable Group Breaks')}
+								checked={groupBreaksActive}
+								onChange={() =>
+									setAttributes({
+										groupBreaksActive: !groupBreaksActive,
+									})
+								}
+							/>
+							<PanelDescription>
+								Visually separate your data into groups by
+								selecting a category column. Each unique value
+								in that column will become a separate group with
+								visual breaks in between.
+							</PanelDescription>
+							{groupBreaksActive && (
+								<>
+									<SelectControl
+										label={__('Group By Category')}
+										value={groupBreaksCategory}
+										onChange={(value) =>
+											setAttributes({
+												groupBreaksCategory: value,
+											})
+										}
+										options={availableCategories.map(
+											(category) => ({
+												label: category,
+												value: category,
+											})
+										)}
+									/>
+									<SelectControl
+										label={__('Break Line Style')}
+										value={groupBreaksStyleVariation}
+										onChange={(value) =>
+											setAttributes({
+												groupBreaksStyleVariation:
+													value,
+											})
+										}
+										options={[
+											{ value: 'empty', label: 'Empty' },
+											{ value: 'solid', label: 'Solid' },
+											{
+												value: 'dotted',
+												label: 'Dotted',
+											},
+											{
+												value: 'dashed',
+												label: 'Dashed',
+											},
+											{
+												value: 'heartbeat',
+												label: 'Heartbeat',
+											},
+										]}
+									/>
+									<NumberControl
+										label={__('Break Height')}
+										withInputField
+										step={1}
+										value={parseInt(groupBreaksHeight, 10)}
+										onChange={(value) => {
+											setAttributes({
+												groupBreaksHeight: formatNum(
+													value,
+													'integer'
+												),
+											});
+										}}
+									/>
+								</>
+							)}
+						</WidePanelItem>
+						<PanelDescription>
+							<StyledLabel>3. Group Order</StyledLabel>
+						</PanelDescription>
+						{groupBreaksActive &&
+							groupBreaksCategory &&
+							availableGroupValues.length > 0 && (
+								<WidePanelItem
+									hasValue={() => true}
+									label={__('Group Order')}
+									isShownByDefault
+									panelId={clientId}
+								>
+									<PanelDescription>
+										Drag to rearrange the order in which
+										groups appear in the chart.
+									</PanelDescription>
+									<Sorter
+										options={groupOrderOptions}
+										setAttributes={setAttributes}
+										attribute="groupBreaksCategoryValues"
+										allowDisabled={false}
+									/>
+								</WidePanelItem>
+							)}
+					</>
+				)}
+				<PanelDescription>
+					<StyledLabel>4. Data Sorting</StyledLabel>
+				</PanelDescription>
+				{'map' !== chartFamily && (
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('Sorting')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<SelectControl
+							label={__('Sort Key')}
+							value={sortKey}
+							help={__(
+								'Choose the column you would like to sort your data by.'
+							)}
+							onChange={(value) =>
+								setAttributes({ sortKey: value })
+							}
+							options={[
+								...availableSelectableOptions,
+								{
+									label: independentVariable,
+									value: 'x',
+								},
+							]}
+						/>
+						<SelectControl
+							label={__('Sort Order')}
+							value={sortOrder}
+							options={[
+								{
+									value: 'ascending',
+									label: 'Ascending',
+								},
+								{
+									value: 'descending',
+									label: 'Descending',
+								},
+								{
+									value: 'none',
+									label: 'No Sort',
+								},
+							]}
+							onChange={(type) => {
+								setAttributes({
+									sortOrder: type,
+								});
+							}}
+						/>
+					</WidePanelItem>
+				)}
+				<PanelDescription>
+					<StyledLabel>5. Diff Column</StyledLabel>
+				</PanelDescription>
 				{'map' !== chartFamily && (
 					<WidePanelItem
 						hasValue={() => true}
@@ -364,9 +516,6 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						isShownByDefault
 						panelId={clientId}
 					>
-						<PanelDescription>
-							<StyledLabel>Data Column</StyledLabel>
-						</PanelDescription>
 						<ToggleControl
 							label={
 								diffColumnActive ? __('Active') : __('Inactive')
@@ -386,7 +535,9 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								label={__('Diff Column Category')}
 								value={diffColumnCategory}
 								onChange={(value) =>
-									setAttributes({ diffColumnCategory: value })
+									setAttributes({
+										diffColumnCategory: value,
+									})
 								}
 								options={availableOptions.map((option) => ({
 									label: option.label,

@@ -374,7 +374,10 @@ const USACountyMapTemplate = [
 			tooltipFormat: '{{row}}: {{value}}',
 			colorValue: 'blue-spectrum',
 			mapScale: 'threshold',
+			labelColor: 'contrast',
 			mapScaleDomain: [20, 40, 60, 80],
+			legendActive: true,
+			legendMarkerStyle: 'rect',
 		},
 	],
 ];

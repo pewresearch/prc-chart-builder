@@ -5,11 +5,16 @@ import { List, arrayMove } from 'react-movable';
 /**
  * Wordpress Dependencies
  */
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Icon } from '@wordpress/components';
 
 function Sorter({ options, setAttributes, attribute, allowDisabled = true }) {
 	const [items, setItems] = useState(options);
+
+	// Update items when options prop changes
+	useEffect(() => {
+		setItems(options);
+	}, [options]);
 	return (
 		<div style={{ width: '100%' }}>
 			<List

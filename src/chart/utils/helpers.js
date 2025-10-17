@@ -35,11 +35,27 @@ export const formattedData = (data, scale, chartType) => {
 	return seriesData;
 };
 
-export const stringToArrayOfNums = (str) =>
-	str
+export const stringToArrayOfNums = (str) => {
+	if (!str || str.trim() === '') {
+		return [];
+	}
+	return str
 		.split(',')
+		.map((item) => item.trim())
+		.filter((item) => item.length > 0)
 		.map(Number)
 		.filter((num) => !Number.isNaN(num));
+};
+
+export const stringToArray = (str) => {
+	if (!str || str.trim() === '') {
+		return [];
+	}
+	return str
+		.split(',')
+		.map((item) => item.trim())
+		.filter((item) => item.length > 0);
+};
 
 export const getDomain = (min, max, type, scale, axis) => {
 	if (Number.isNaN(min) || Number.isNaN(max)) {
@@ -65,10 +81,8 @@ export const getDomain = (min, max, type, scale, axis) => {
 	return [parseFloat(min), parseFloat(max)];
 };
 
-export const getTicks = (ticks, scale) => {
-	if ('time' === scale) {
-		return ticks.map((tick) => new Date(`${tick}`));
-	}
+export const getTicks = (ticks) => {
+	// Return ticks as-is, parsing will be handled by charting-utilities
 	return ticks;
 };
 
@@ -84,7 +98,7 @@ export const formatNum = (num, output) => {
 
 // use a reducer to create an array of objects with the headers as keys
 // and the table data as values
-export const formatCellContent = (content, key, scale) => {
+export const formatCellContent = (content, key, scale, groupBreaksCategory) => {
 	if ('ordinal' === scale) {
 		return content;
 	}
@@ -123,7 +137,9 @@ export const formatCellContent = (content, key, scale) => {
 		return str;
 	};
 
-	if ('x' === key) {
+	// group breaks category is used to identify the category that the group breaks are applied to
+	// if the key is x or groupBreaksCategory, return the content
+	if ('x' === key || groupBreaksCategory === key) {
 		return content;
 	}
 	// TODO: temporary fix for less than signs in table cells.
@@ -132,4 +148,56 @@ export const formatCellContent = (content, key, scale) => {
 		return '';
 	}
 	return replaceNonNumeric(content);
+};
+
+/**
+ * Safely remove all HTML tags from input string by iteratively applying regex until no tags remain
+ *
+ * @param {string} input - String potentially containing HTML tags
+ * @returns {string} String with all HTML tags removed
+ */
+function removeHtmlTags(input) {
+	let previous;
+	do {
+		previous = input;
+		input = input.replace(/<[^>]*>/g, '');
+	} while (input !== previous);
+	return input;
+}
+
+/**
+ * Generate default alt text based on chart type and title
+ *
+ * @param {string} chartType - Type of chart (bar, line, pie, etc.)
+ * @param {string} metaTitle - Chart title
+ * @returns {string} Default alt text
+ */
+export const generateDefaultAltText = (chartType, metaTitle) => {
+	// Convert chart type to readable format
+	const chartTypeMap = {
+		bar: 'bar',
+		'diverging-bar': 'diverging bar',
+		line: 'line',
+		area: 'area',
+		'stacked-area': 'stacked area',
+		scatter: 'scatter',
+		pie: 'pie',
+		'dot-plot': 'dot plot',
+		'stacked-bar': 'stacked bar',
+		'grouped-bar': 'grouped bar',
+		'exploded-bar': 'exploded bar',
+		'map-usa': 'map of the United States',
+		'map-usa-counties': 'county map of the United States',
+		'map-usa-block': 'block map of the United States',
+		'map-world': 'world map',
+	};
+
+	const readableChartType = chartTypeMap[chartType] || chartType;
+	const cleanTitle = metaTitle ? removeHtmlTags(metaTitle) : '';
+
+	if (cleanTitle) {
+		return `A ${readableChartType} chart showing that ${cleanTitle}.`;
+	}
+
+	return `A ${readableChartType} chart.`;
 };

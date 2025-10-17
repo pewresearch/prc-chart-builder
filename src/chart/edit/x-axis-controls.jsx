@@ -55,6 +55,7 @@ function XAxisControls({ attributes, setAttributes }) {
 		xGridStroke,
 		xGridOpacity,
 		xGridStrokeDasharray,
+		dateInputFormat,
 	} = attributes;
 	return (
 		<PanelBody
@@ -237,7 +238,7 @@ function XAxisControls({ attributes, setAttributes }) {
 				value={xTickExact}
 				onChange={(val) => setAttributes({ xTickExact: val })}
 				help={__(
-					'List of numbers seperated by commas (eg. 0, 50, 100). Setting this value will override the "Number of Ticks" parameter'
+					`List of numbers seperated by commas (eg. 0, 50, 100). Setting this value will override the "Number of Ticks" parameter. ${'time' === xScale ? `If independent axis is time scale, ticks must match the date input format (${dateInputFormat}).` : ''}`
 				)}
 			/>
 			{'time' !== xScale && (

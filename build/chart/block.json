@@ -511,6 +511,23 @@
 			"type": "boolean",
 			"default": false
 		},
+		"groupBreaksCategory": {
+			"type": "string",
+			"default": ""
+		},
+		"groupBreaksCategoryValues": {
+			"type": "array",
+			"default": []
+		},
+		"groupBreaksStyleVariation": {
+			"type": "string",
+			"enum": ["empty", "solid", "dotted", "dashed", "heartbeat"],
+			"default": "empty"
+		},
+		"groupBreaksHeight": {
+			"type": "number",
+			"default": 30
+		},
 		"groupBreaks": {
 			"type": "object",
 			"default": {}
@@ -706,8 +723,7 @@
 		},
 		"labelColor": {
 			"type": "string",
-			"enum": ["inherit", "black", "white", "contrast"],
-			"default": "inherit"
+			"enum": ["contrast", "inherit", "black", "white"]
 		},
 		"labelFontSize": {
 			"type": "integer",
@@ -753,12 +769,23 @@
 			"default": "rect"
 		},
 		"legendBorderStroke": {
-			"type": "string",
-			"default": "#231F20"
+			"type": "string"
 		},
 		"legendFill": {
-			"type": "string",
-			"default": "white"
+			"type": "string"
+		},
+		"legendFontSize": {
+			"type": "integer",
+			"default": 12
+		},
+		"legendMargin": {
+			"type": "object",
+			"default": {
+				"top": 0,
+				"right": 5,
+				"bottom": 0,
+				"left": 0
+			}
 		},
 		"legendLabelDelimiter": {
 			"type": "string",
@@ -784,6 +811,13 @@
 			"type": "string",
 			"default": "Subtitle"
 		},
+		"metaQuestionWordingActive": {
+			"type": "boolean",
+			"default": false
+		},
+		"metaQuestionWording": {
+			"type": "string"
+		},
 		"metaNote": {
 			"type": "string",
 			"default": "Note: This is a note."
@@ -795,6 +829,10 @@
 		"metaTag": {
 			"type": "string",
 			"default": "PEW RESEARCH CENTER"
+		},
+		"metaAlt": {
+			"type": "string",
+			"default": ""
 		},
 		"svgUrl": {
 			"type": "string",
@@ -962,6 +1000,13 @@
 		"defaultShouldRender": {
 			"type": "boolean",
 			"default": true
+		},
+		"lock": {
+			"type": "object",
+			"default": {
+				"move": true,
+				"remove": false
+			}
 		}
 	},
 	"example": {

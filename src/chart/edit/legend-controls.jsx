@@ -10,6 +10,7 @@ import styled from '@emotion/styled';
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
+import { useMemo } from '@wordpress/element';
 import {
 	PanelBody,
 	TextControl,
@@ -17,6 +18,7 @@ import {
 	SelectControl,
 	Flex,
 	FlexItem,
+	Button,
 	__experimentalNumberControl as NumberControl,
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
@@ -26,9 +28,12 @@ import {
 /**
  * Internal dependencies
  */
-import { PanelColorSettings } from '@wordpress/block-editor';
+import {
+	PanelColorSettings,
+	__experimentalSpacingSizesControl as SpacingSizesControl,
+} from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
-import Sorter from './Sorter';
+import Sorter from './sorter';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -68,6 +73,8 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 		legendLabelDelimiter,
 		legendLabelLower,
 		legendLabelUpper,
+		legendFontSize,
+		legendMargin,
 		legendCategories,
 		mapScale,
 		mapScaleDomain,
@@ -78,21 +85,89 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 		negativeCategories,
 		neutralCategory,
 		categories,
+		availableCategories,
 	} = attributes;
 
-	const divergingCategories = neutralBarActive
-		? [...negativeCategories, ...positiveCategories, neutralCategory]
-		: [...negativeCategories, ...positiveCategories];
-	let availableLegendCategories = categories;
-	if (chartType === 'diverging-bar') {
-		availableLegendCategories = divergingCategories;
-	}
-	if (mapScale === 'ordinal') {
-		availableLegendCategories = mapScaleDomain;
-	}
-	if (legendCategories) {
-		availableLegendCategories = legendCategories;
-	}
+	// Determine available legend categories based on chart type
+	// This is the source of truth for what categories exist in the data
+	const availableLegendCategories = useMemo(() => {
+		const cat = categories || availableCategories;
+		if (chartType === 'diverging-bar') {
+			const divergingCategories = neutralBarActive
+				? [
+						...negativeCategories,
+						...positiveCategories,
+						neutralCategory,
+					]
+				: [...negativeCategories, ...positiveCategories];
+			return divergingCategories;
+		}
+		if (chartFamily === 'map' && mapScale === 'ordinal') {
+			return mapScaleDomain;
+		}
+		return cat;
+	}, [
+		chartType,
+		chartFamily,
+		mapScale,
+		categories,
+		availableCategories,
+		negativeCategories,
+		positiveCategories,
+		neutralCategory,
+		neutralBarActive,
+		mapScaleDomain,
+	]);
+
+	// Create options for the Sorter
+	// Use legendCategories if it exists and matches available categories, otherwise use available categories
+	const legendOrderOptions = useMemo(() => {
+		// If legendCategories exists and contains the same items as available categories, use it
+		if (
+			legendCategories &&
+			legendCategories.length > 0 &&
+			legendCategories.length === availableLegendCategories.length
+		) {
+			const sortedLegend = [...legendCategories].sort();
+			const sortedAvailable = [...availableLegendCategories].sort();
+			if (
+				JSON.stringify(sortedLegend) === JSON.stringify(sortedAvailable)
+			) {
+				// Same items, use custom order
+				return legendCategories.map((c) => ({
+					label: c,
+					disabled: false,
+				}));
+			}
+		}
+		// Otherwise use available categories in their default order
+		return availableLegendCategories.map((c) => ({
+			label: c,
+			disabled: false,
+		}));
+	}, [legendCategories, availableLegendCategories]);
+
+	// Check if legend has custom position (non-default offsets)
+	const hasCustomLegendPosition =
+		legendOffsetX !== 0 ||
+		legendOffsetY !== 0 ||
+		legendAlignment === 'none';
+
+	// Reset legend to default position
+	const handleResetLegendPosition = () => {
+		setAttributes({
+			legendOffsetX: 0,
+			legendOffsetY: 0,
+			legendAlignment: 'flex-start',
+		});
+	};
+
+	// Determine if Legend Order control should be visible
+	// Hide for maps with threshold or linear scale (they don't use ordinal legends)
+	const shouldShowLegendOrder =
+		chartFamily !== 'map' ||
+		(chartFamily === 'map' && mapScale === 'ordinal');
+
 	return (
 		<PanelBody title={__('Legend')} initialOpen={false}>
 			<ToolsPanel
@@ -125,25 +200,6 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 					<PanelDescription>
 						<StyledLabel>Legend Positioning</StyledLabel>
 					</PanelDescription>
-					{/* <ToggleGroupControl
-						isBlock
-						label="Legend Width"
-						value={legendWidth}
-						onChange={(type) => {
-							setAttributes({
-								legendWidth: type,
-							});
-						}}
-					>
-						<ToggleGroupControlOption
-							label="Full Width"
-							value="100%"
-						/>
-						<ToggleGroupControlOption
-							label="Fit Content"
-							value="auto"
-						/>
-					</ToggleGroupControl> */}
 					<ToggleGroupControl
 						isBlock
 						label="Legend Alignment"
@@ -205,6 +261,28 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 						</Help>
 					</PanelDescription>
 				</WidePanelItem>
+				{hasCustomLegendPosition && (
+					<WidePanelItem
+						hasValue={() => hasCustomLegendPosition}
+						label={__('Reset Position')}
+						panelId={clientId}
+					>
+						<Button
+							variant="secondary"
+							isDestructive
+							onClick={handleResetLegendPosition}
+						>
+							{__('Reset Legend Position')}
+						</Button>
+						<PanelDescription>
+							<Help>
+								{__(
+									'Reset legend to default position and alignment.'
+								)}
+							</Help>
+						</PanelDescription>
+					</WidePanelItem>
+				)}
 				<WidePanelItem
 					hasValue={() => true}
 					label={__('Title')}
@@ -218,31 +296,30 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 						}
 					/>
 				</WidePanelItem>
-				{
-					// Diverging bar charts are DEEPLY ANNOYING.
-					// Legend orderjust doesn't work for them.
-					// So we are going to set themmanually.
-				}
-				{/* {chartType === 'diverging-bar' && ( */}
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Legend Order')}
-					panelId={clientId}
-				>
-					<PanelDescription>
-						<StyledLabel>Legend Order</StyledLabel>
-					</PanelDescription>
-					<Sorter
-						options={availableLegendCategories.map((c) => ({
-							label: c,
-							disabled: false,
-						}))}
-						setAttributes={setAttributes}
-						attribute="legendCategories"
-						allowDisabled={false}
-					/>
-				</WidePanelItem>
-				{/* )} */}
+				{shouldShowLegendOrder && legendOrderOptions.length > 0 && (
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('Legend Order')}
+						panelId={clientId}
+					>
+						<PanelDescription>
+							<StyledLabel>Legend Order</StyledLabel>
+						</PanelDescription>
+						<Sorter
+							options={legendOrderOptions}
+							setAttributes={setAttributes}
+							attribute="legendCategories"
+							allowDisabled={false}
+						/>
+						<PanelDescription>
+							<Help>
+								{__(
+									'Drag to rearrange the order in which legend items appear. This order is independent of the data order set in Data Controls.'
+								)}
+							</Help>
+						</PanelDescription>
+					</WidePanelItem>
+				)}
 				<WidePanelItem
 					hasValue={() => true}
 					label={__('Orientation')}
@@ -304,6 +381,78 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 							});
 						}}
 					/>
+				</WidePanelItem>
+				<WidePanelItem
+					hasValue={() => legendFontSize}
+					label={__('Font Size')}
+					panelId={clientId}
+				>
+					<ToggleGroupControl
+						__nextHasNoMarginBottom
+						isBlock
+						value={legendFontSize}
+						label={__('Legend Font Size')}
+						onChange={(value) => {
+							setAttributes({
+								legendFontSize: formatNum(value, 'integer'),
+							});
+						}}
+					>
+						<ToggleGroupControlOption label="10px" value={10} />
+						<ToggleGroupControlOption label="12px" value={12} />
+						<ToggleGroupControlOption label="14px" value={14} />
+						<ToggleGroupControlOption label="16px" value={16} />
+					</ToggleGroupControl>
+					<PanelDescription>
+						<Help>
+							{__(
+								'Select the font size for legend text. Default is 12px.'
+							)}
+						</Help>
+					</PanelDescription>
+				</WidePanelItem>
+				<WidePanelItem
+					hasValue={() => true}
+					label={__('Margin')}
+					panelId={clientId}
+				>
+					<SpacingSizesControl
+						label={__('Legend Margin')}
+						values={{
+							top: legendMargin?.top
+								? `${legendMargin.top}px`
+								: '0px',
+							right: legendMargin?.right
+								? `${legendMargin.right}px`
+								: '0px',
+							bottom: legendMargin?.bottom
+								? `${legendMargin.bottom}px`
+								: '0px',
+							left: legendMargin?.left
+								? `${legendMargin.left}px`
+								: '0px',
+						}}
+						onChange={(value) => {
+							// Parse string values like '12px' to numbers like 12
+							const parsedValue = {
+								top: parseInt(value?.top || '0', 10),
+								right: parseInt(value?.right || '0', 10),
+								bottom: parseInt(value?.bottom || '0', 10),
+								left: parseInt(value?.left || '0', 10),
+							};
+							setAttributes({ legendMargin: parsedValue });
+						}}
+						sides={['top', 'right', 'bottom', 'left']}
+						units={[{ label: 'px' }]}
+						allowReset={true}
+					/>
+					<PanelDescription>
+						<Help>
+							{__(
+								'Spacing in pixels between legend items. Default: 0px 5px 0px 0px'
+							)}
+						</Help>
+					</PanelDescription>
 				</WidePanelItem>
 				<WidePanelItem
 					hasValue={() => true}

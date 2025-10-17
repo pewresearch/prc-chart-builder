@@ -57,7 +57,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 	const addAnnotation = () => {
 		const newAnnotation = {
 			x: 0,
-			y: 0,
+			y: 10,
 			text: 'New annotation',
 			fontSize: 12,
 			fontWeight: 'normal',

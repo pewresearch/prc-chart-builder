@@ -403,6 +403,9 @@ const USAMapTemplate = [
 			categories: ['Response'],
 			mapScale: 'threshold',
 			mapScaleDomain: [20, 40, 60, 80],
+			labelColor: 'contrast',
+			legendActive: true,
+			legendMarkerStyle: 'rect',
 		},
 	],
 ];

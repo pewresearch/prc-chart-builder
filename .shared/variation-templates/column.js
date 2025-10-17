@@ -64,8 +64,12 @@ const columnTemplate = [
 			barGroupOffset: 28,
 			tooltipActive: false,
 			labelsActive: true,
+			labelColor: 'contrast',
+			labelPositionDX: 3,
 			tooltipHeaderValue: 'independentValue',
 			tooltipFormat: '{{column}}: {{value}}',
+			legendActive: true,
+			legendMarkerStyle: 'rect',
 		},
 	],
 ];

@@ -14,7 +14,6 @@ import {
 	Warning,
 } from '@wordpress/block-editor';
 import { store as editorStore } from '@wordpress/editor';
-import { store as coreStore } from '@wordpress/core-data';
 
 /**
  * External Dependencies
@@ -22,19 +21,20 @@ import { store as coreStore } from '@wordpress/core-data';
 import {
 	ChartBuilderWrapper,
 	ChartBuilderTextWrapper,
-} from '@prc/chart-builder';
+} from '@prc/charting-library';
 // eslint-disable-next-line
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, memo, useEffect, useMemo, useState } from 'react';
 
 /**
  * Internal Dependencies
  */
 import { formatCellContent } from '../utils/helpers';
 import ChartControls from './chart-controls';
-// import AnnotationControls, { editorClickEvent } from './annotation-controls';
 import getConfig from '../utils/get-config';
 import CopyPasteStylesHandler from './copy-paste-styles-handler';
 import { TitleSubtitle, Footer } from './meta-text-fields';
+import { createWpEditorFunctions } from './wp-editor-functions';
+import { AlignmentOverlay } from './alignment-overlay';
 
 const getCellContent = (cell) => {
 	return (
@@ -44,6 +44,21 @@ const getCellContent = (cell) => {
 		cell.content
 	);
 };
+
+/**
+ * Memoized wrapper for ChartBuilderWrapper to prevent re-renders during drag.
+ * This ensures that alignment state updates don't break drag interactions.
+ */
+const MemoizedChartBuilder = memo(
+	({ className, config, data, wpEditorFunctions }) => (
+		<ChartBuilderWrapper
+			className={className}
+			config={config}
+			data={data}
+			wpEditorFunctions={wpEditorFunctions}
+		/>
+	)
+);
 
 export default function Edit({
 	attributes: attrs,
@@ -62,11 +77,14 @@ export default function Edit({
 		metaTextActive,
 		metaTitle,
 		metaSubtitle,
+		metaQuestionWordingActive,
+		metaQuestionWording,
 		metaNote,
 		metaSource,
 		metaTag,
 		chartData,
 		mapScale,
+		groupBreaksCategory,
 	} = attrs;
 
 	// Use the controller id to create a unique id for the chart.
@@ -116,10 +134,42 @@ export default function Edit({
 	const editorClickEvent = () => {
 		console.log('editorClickEvent...');
 	};
-	const config = useMemo(
-		() => getConfig(attrs, clientId, editorClickEvent),
-		[attrs]
+
+	// Alignment state for visual guides during drag
+	const [alignments, setAlignments] = useState({
+		vertical: [],
+		horizontal: [],
+	});
+
+	// Editor functions for chart interactions
+	// IMPORTANT: setAlignments is NOT in dependencies to avoid recreating on every alignment change
+	const wpEditorFunctions = useMemo(
+		() =>
+			createWpEditorFunctions({
+				attrs,
+				chartData,
+				setAttributes,
+				toggleSelection,
+				setAlignments, // Pass alignment setter (stable reference)
+			}),
+		[attrs, chartData, setAttributes, toggleSelection] // setAlignments intentionally excluded
 	);
+
+	const config = useMemo(() => {
+		const baseConfig = getConfig(attrs, clientId, editorClickEvent);
+
+		// Add IDs to annotations
+		if (baseConfig.annotations?.items) {
+			baseConfig.annotations.items = baseConfig.annotations.items.map(
+				(annotation, index) => ({
+					...annotation,
+					id: String(index),
+				})
+			);
+		}
+
+		return baseConfig;
+	}, [attrs, clientId]);
 
 	const headers = useMemo(
 		() =>
@@ -141,12 +191,13 @@ export default function Edit({
 						[key]: formatCellContent(
 							getCellContent(cell),
 							key,
-							mapScale
+							mapScale,
+							groupBreaksCategory
 						),
 					};
 				}, {})
 			),
-		[body, headers, mapScale]
+		[body, headers, mapScale, groupBreaksCategory]
 	);
 
 	useEffect(() => {
@@ -158,9 +209,41 @@ export default function Edit({
 	}, [headers, setAttributes]);
 
 	useEffect(() => {
-		setAttributes({
-			chartData: memoizedChartData,
-		});
+		if (!memoizedChartData || memoizedChartData.length === 0) {
+			return;
+		}
+
+		// Check if we have custom positions to preserve in the current chartData
+		// Note: We read from chartData but don't include it in dependencies to avoid infinite loop
+		const hasCustomPositions = chartData?.some(
+			(d) =>
+				d.__labelPositions && Object.keys(d.__labelPositions).length > 0
+		);
+
+		if (hasCustomPositions) {
+			// Create lookup map of old positions by x-value
+			const positionsMap = new Map();
+			chartData.forEach((d) => {
+				if (d.__labelPositions) {
+					positionsMap.set(d.x, d.__labelPositions);
+				}
+			});
+
+			// Merge positions into new data where x-values match
+			const mergedData = memoizedChartData.map((d) => {
+				const existingPositions = positionsMap.get(d.x);
+				if (existingPositions) {
+					return { ...d, __labelPositions: existingPositions };
+				}
+				return d;
+			});
+
+			setAttributes({ chartData: mergedData });
+		} else {
+			// No custom positions to preserve, use new data directly
+			setAttributes({ chartData: memoizedChartData });
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [memoizedChartData, setAttributes]);
 
 	const blockProps = useBlockProps({
@@ -177,10 +260,6 @@ export default function Edit({
 				parentBlock={parentBlockId}
 				clientId={clientId}
 			/>
-			{/* <AnnotationControls
-				attributes={attrs}
-				setAttributes={setAttributes}
-			/> */}
 			<CopyPasteStylesHandler
 				id={id}
 				attributes={attrs}
@@ -200,7 +279,7 @@ export default function Edit({
 									setAttributes={setAttributes}
 								/>
 							)}
-							<ResizableBox
+							{/* <ResizableBox
 								size={{
 									height,
 									width,
@@ -240,27 +319,44 @@ export default function Edit({
 								onResizeStart={() => {
 									toggleSelection(false);
 								}}
-							>
-								{(isStaticChart || isFreeformChart) && (
-									<div
-										className="cb__chart"
-										{...innerBlocksProps}
-									/>
-								)}
-								{!isStaticChart &&
-									!isFreeformChart &&
-									memoizedChartData && (
-										<ChartBuilderWrapper
+							> */}
+							{(isStaticChart || isFreeformChart) && (
+								<div
+									className="cb__chart"
+									{...innerBlocksProps}
+								/>
+							)}
+							{!isStaticChart &&
+								!isFreeformChart &&
+								memoizedChartData && (
+									<div style={{ position: 'relative' }}>
+										<MemoizedChartBuilder
 											className="cb__chart"
 											config={config}
 											data={
 												chartData || memoizedChartData
 											}
+											wpEditorFunctions={
+												wpEditorFunctions
+											}
 										/>
-									)}
-							</ResizableBox>
+										<AlignmentOverlay
+											alignments={alignments}
+											chartDimensions={{
+												width,
+												height,
+												padding: config.layout.padding,
+											}}
+										/>
+									</div>
+								)}
+							{/* </ResizableBox> */}
 							{metaTextActive && (
 								<Footer
+									metaQuestionWordingActive={
+										metaQuestionWordingActive
+									}
+									metaQuestionWording={metaQuestionWording}
 									metaNote={metaNote}
 									metaSource={metaSource}
 									metaTag={metaTag}

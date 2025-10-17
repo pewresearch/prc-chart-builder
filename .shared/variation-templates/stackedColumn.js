@@ -68,8 +68,12 @@ const stackedBarTemplate = [
 			barWidth: 24,
 			barGroupOffset: 28,
 			labelsActive: true,
+			labelColor: 'contrast',
+			labelPositionDY: 3,
 			tooltipHeaderValue: 'independentValue',
 			tooltipFormat: '{{row}}: {{value}}',
+			legendActive: true,
+			legendMarkerStyle: 'rect',
 		},
 	],
 ];
