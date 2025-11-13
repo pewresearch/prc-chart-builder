@@ -264,7 +264,7 @@
 		"xTickLabelVerticalAnchor": {
 			"type": "string",
 			"enum": ["start", "middle", "end"],
-			"default": "start"
+			"default": "end"
 		},
 		"xTickLabelDY": {
 			"type": "integer",
@@ -435,12 +435,12 @@
 		"yTickLabelTextAnchor": {
 			"type": "string",
 			"enum": ["start", "middle", "end"],
-			"default": "middle"
+			"default": "end"
 		},
 		"yTickLabelVerticalAnchor": {
 			"type": "string",
 			"enum": ["start", "middle", "end"],
-			"default": "start"
+			"default": "middle"
 		},
 		"yTickLabelDY": {
 			"type": "integer",
@@ -600,6 +600,18 @@
 			"type": "number",
 			"default": 0.5
 		},
+		"emphasizeStrokeActive": {
+			"type": "boolean",
+			"default": false
+		},
+		"emphasizeStrokeColor": {
+			"type": "string",
+			"default": "#000000"
+		},
+		"emphasizeStrokeWidth": {
+			"type": "number",
+			"default": 1
+		},
 		"tooltipMaxHeight": {
 			"type": "integer",
 			"default": 100
@@ -615,6 +627,10 @@
 		"tooltipMinWidth": {
 			"type": "integer",
 			"default": 50
+		},
+		"tooltipFontSize": {
+			"type": "integer",
+			"default": 13
 		},
 		"tooltipHeaderActive": {
 			"type": "boolean",
@@ -985,6 +1001,76 @@
 			"type": "integer",
 			"default": 44
 		},
+		"mapProjectionPreset": {
+			"type": "string",
+			"enum": [
+				"default",
+				"europe",
+				"asia",
+				"east-asia",
+				"south-asia",
+				"southeast-asia",
+				"middle-east",
+				"africa",
+				"north-africa",
+				"sub-saharan-africa",
+				"north-america",
+				"central-america",
+				"south-america",
+				"oceania",
+				"custom"
+			],
+			"default": "default"
+		},
+		"mapTopologyRegion": {
+			"type": "string",
+			"enum": [
+				"default",
+				"europe",
+				"asia",
+				"east-asia",
+				"south-asia",
+				"southeast-asia",
+				"middle-east",
+				"africa",
+				"north-africa",
+				"sub-saharan-africa",
+				"north-america",
+				"central-america",
+				"south-america",
+				"oceania",
+				"custom"
+			],
+			"default": "default"
+		},
+		"mapCenterLongitude": {
+			"type": "number",
+			"default": 0
+		},
+		"mapCenterLatitude": {
+			"type": "number",
+			"default": 0
+		},
+		"mapRotateLambda": {
+			"type": "number",
+			"default": 0
+		},
+		"mapRotatePhi": {
+			"type": "number",
+			"default": 0
+		},
+		"mapRotateGamma": {
+			"type": "number",
+			"default": 0
+		},
+		"mapCustomScale": {
+			"type": "number",
+			"default": 1
+		},
+		"mapZoomActive": {
+			"type": "boolean",
+			"default": false
+		},
 		"allowDataDownload": {
 			"type": "boolean",
 			"default": true
@@ -1022,6 +1108,5 @@
 		"interactivity": true
 	},
 	"editorScript": "file:./index.js",
-	"viewScriptModule": "file:./view.js",
-	"render": "file:./render.php"
+	"viewScriptModule": "file:./view.js"
 }

@@ -41,8 +41,16 @@ const fs = require('fs');
 		console.log(' '.repeat(50)); // Clear the line
 		readline.cursorTo(process.stdout, 0);
 
-		if (error) {
-			console.error(`Error: ${stderr}`);
+		// Check for webpack compilation errors in stdout
+		const hasWebpackError = stdout && (
+			stdout.includes('webpack compiled with') && stdout.includes('error') ||
+			stdout.includes('ERROR in') ||
+			stdout.includes('Failed to compile')
+		);
+
+		if (error || hasWebpackError) {
+			console.error(stderr || stdout);
+			process.exit(1);
 		} else {
 			console.log(stdout);
 		}

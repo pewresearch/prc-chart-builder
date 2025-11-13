@@ -14,17 +14,25 @@ $chart_highlight_color: #b8236d;
 		}
 	}
 
-	&.block-editor-block-list__block:not([contenteditable]).has-block-overlay:hover:not(.is-dragging-blocks):not(.is-multi-selected) {
+	&.block-editor-block-list__block:not(
+			[contenteditable]
+		).has-block-overlay:hover:not(.is-dragging-blocks):not(
+			.is-multi-selected
+		) {
 		&::before {
-			background: rgba(2, 181, 213, .04);
+			background: rgba(2, 181, 213, 0.04);
 			outline-color: $chart_highlight_color;
 		}
 	}
 }
 
-// Hide tables in the block list inspector/example.
-.wp-block-prc-block-chart.wp-block:not(.is-selected):not(.has-child-selected) {
+// Hide tables in the block list inspector/example and when synced chart is not selected.
+// This improves layout by hiding data tables when users aren't actively editing the chart.
+// Tables will automatically show when the synced chart block is selected.
+.wp-block-prc-chart-builder-synced-chart:not(.is-selected):not(
+		.has-child-selected
+	) {
 	.chart-builder-data-table {
-		display: none!important;
+		display: none !important;
 	}
 }

@@ -24,7 +24,6 @@ const { actions, state } = store('prc-chart-builder/chart', {
 		renderChart() {
 			const serverState = getServerState();
 			const context = getContext();
-
 			const { id } = context;
 			if (!serverState[id]) {
 				return;
@@ -64,7 +63,6 @@ const { actions, state } = store('prc-chart-builder/chart', {
 			const context = getContext();
 			const { id } = context;
 			const shouldRender = state[id]['should-render'];
-
 			if (shouldRender) {
 				actions.renderChart();
 			}

@@ -91,7 +91,7 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 	// Determine available legend categories based on chart type
 	// This is the source of truth for what categories exist in the data
 	const availableLegendCategories = useMemo(() => {
-		const cat = categories || availableCategories;
+		const cat = categories?.length > 0 ? categories : availableCategories;
 		if (chartType === 'diverging-bar') {
 			const divergingCategories = neutralBarActive
 				? [

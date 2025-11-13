@@ -119,14 +119,14 @@ function ChartInspectorPanel() {
 	return (
 		<PluginDocumentSettingPanel
 			name="prc-chart-builder-referencing-posts"
-			title={__('Posts Using This Chart', 'prc-chart-builder')}
+			title={__('Posts Referencing This Chart', 'prc-chart-builder')}
 			className="prc-chart-builder-inspector-panel"
 		>
 			{isLoading && (
 				<div className="loading-container">
 					<Spinner />
 					<span className="loading-text">
-						{__('Loading referencing posts...', 'prc-chart-builder')}
+						{__('Finding references to chart...', 'prc-chart-builder')}
 					</span>
 				</div>
 			)}
@@ -139,7 +139,7 @@ function ChartInspectorPanel() {
 
 			{!isLoading && !error && referencingPosts.length === 0 && (
 				<p className="empty-state">
-					{__('This chart is not currently used in any posts.', 'prc-chart-builder')}
+					{__('This chart is not currently referenced in any posts.', 'prc-chart-builder')}
 				</p>
 			)}
 
@@ -147,8 +147,8 @@ function ChartInspectorPanel() {
 				<div>
 					<p className="posts-list-header">
 						{referencingPosts.length === 1
-							? __('This chart is used in 1 post:', 'prc-chart-builder')
-							: `${__('This chart is used in', 'prc-chart-builder')} ${referencingPosts.length} ${__('posts:', 'prc-chart-builder')}`
+							? __('This chart is referenced in 1 post:', 'prc-chart-builder')
+							: `${__('This chart is referenced in', 'prc-chart-builder')} ${referencingPosts.length} ${__('posts:', 'prc-chart-builder')}`
 						}
 					</p>
 					{referencingPosts.map((post) => (

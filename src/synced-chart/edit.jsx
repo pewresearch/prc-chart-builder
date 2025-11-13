@@ -3,11 +3,13 @@
 /**
  * WordPress Dependencies
  */
-import { useEffect } from '@wordpress/element';
+import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { withNotices } from '@wordpress/components';
+import { withNotices, KeyboardShortcuts } from '@wordpress/components';
 import { createBlock } from '@wordpress/blocks';
 import { useEntityBlockEditor, useEntityRecord } from '@wordpress/core-data';
+import { useSelect, useDispatch } from '@wordpress/data';
+import { useCommand } from '@wordpress/commands';
 import {
 	useInnerBlocksProps,
 	RecursionProvider,
@@ -22,6 +24,7 @@ import {
  */
 import Controls from './controls';
 import Placeholder from './placeholder';
+import controllerStore from '../controller/store';
 
 function parseTable(tableString) {
 	// check that tableString is a string
@@ -67,19 +70,114 @@ function SyncedChartEdit({
 	clientId,
 	noticeOperations,
 	noticeUI,
+	isSelected,
 }) {
 	const { ref } = attributes;
 	const isNew = !ref;
-	const hasAlreadyRendered = useHasRecursion(ref);
+	const hasAlreadyRendered = useHasRecursion(ref); // @TODO: Could this be an issue for realtime collab?
 	const { record, hasResolved } = useEntityRecord('postType', 'chart', ref);
 	const isResolving = !hasResolved;
 	const isMissing = hasResolved && !record && !isNew;
+
+	console.log("SyncedChartEdit render:");
+	console.log('hasAlreadyRendered:', hasAlreadyRendered);
+	console.log('isMissing:', isMissing);
+	console.log('isResolving:', isResolving);
+	console.log('isNew:', isNew);
+	console.log('---');
 
 	const [blocks, onInput, onChange] = useEntityBlockEditor(
 		'postType',
 		'chart',
 		{ id: ref }
 	);
+
+	// Get the controller block's id attribute for keyboard shortcuts
+	const controllerId = useMemo(() => {
+		const controllerBlock = blocks?.find(
+			(block) => block.name === 'prc-chart-builder/controller'
+		);
+		return controllerBlock?.attributes?.id;
+	}, [blocks]);
+
+	const { set } = useDispatch('core/preferences');
+	const { toggleAllTableVisibility } = useDispatch(controllerStore);
+
+	const { userHidesThisTable, tempHideAllTables, hasChildSelected } =
+		useSelect(
+			(select) => {
+				const { get } = select('core/preferences');
+				const { getAllTableVisibility } = select(controllerStore);
+				const { hasSelectedInnerBlock } = select('core/block-editor');
+				const persistentHiddenTables = get(
+					'prc-chart-builder/controller',
+					'persistentHiddenTables'
+				);
+
+				return {
+					userHidesThisTable:
+						persistentHiddenTables &&
+						controllerId &&
+						persistentHiddenTables.includes(controllerId),
+					tempHideAllTables: getAllTableVisibility(),
+					hasChildSelected: hasSelectedInnerBlock(clientId, true),
+				};
+			},
+			[controllerId, clientId]
+		);
+
+	// Register the command for hiding/showing all tables
+	useCommand({
+		name: 'prc-chart-builder/synced-chart-toggle-all-tables',
+		label: tempHideAllTables
+			? __('Show ALL Tables (Temporary)')
+			: __('Hide ALL Tables (Temporary)'),
+		callback: ({ close }) => {
+			toggleAllTableVisibility();
+			close();
+		},
+	});
+
+	const handlePersistentTableVisibility = () => {
+		if (!controllerId) {
+			return;
+		}
+
+		const { get } = wp.data.select('core/preferences');
+		const persistentHiddenTables = get(
+			'prc-chart-builder/controller',
+			'persistentHiddenTables'
+		);
+
+		if (userHidesThisTable) {
+			// Show this table
+			const newHiddenTables = persistentHiddenTables.filter(
+				(tableId) => tableId !== controllerId
+			);
+			set('prc-chart-builder/controller', 'persistentHiddenTables', [
+				...newHiddenTables,
+			]);
+		} else {
+			// Hide this table
+			if (!persistentHiddenTables) {
+				set('prc-chart-builder/controller', 'persistentHiddenTables', [
+					controllerId,
+				]);
+			} else {
+				const newHiddenTables = [
+					...persistentHiddenTables,
+					controllerId,
+				];
+				set('prc-chart-builder/controller', 'persistentHiddenTables', [
+					...newHiddenTables,
+				]);
+			}
+		}
+	};
+
+	const handleTemporaryTableVisibility = () => {
+		toggleAllTableVisibility();
+	};
 
 	const blockProps = useBlockProps();
 
@@ -92,34 +190,6 @@ function SyncedChartEdit({
 			? undefined
 			: InnerBlocks.ButtonBlockAppender,
 	});
-
-	// /**
-	//  * Handle "Classic Editor" block conversion.
-	//  */
-	// useEffect(() => {
-	// 	if (!blocks || !blocks.length) {
-	// 		return;
-	// 	}
-	// 	// check if the first block is a freeform "classic editor" block.
-	// 	const block = blocks[0];
-	// 	if ('core/freeform' === block.name) {
-	// 		const newTableBlock = convertTableToBlock(
-	// 			block.attributes?.content
-	// 		);
-	// 		console.log('legacy to newTableBlock...', newTableBlock);
-	// 		if (newTableBlock) {
-	// 			const newBlocks = [newTableBlock];
-	// 			onChange(newBlocks, {
-	// 				selection: {
-	// 					start: 0,
-	// 					end: 1,
-	// 					focus: 0,
-	// 					anchor: 0,
-	// 				},
-	// 			});
-	// 		}
-	// 	}
-	// }, [blocks]);
 
 	if (hasAlreadyRendered) {
 		return (
@@ -157,6 +227,17 @@ function SyncedChartEdit({
 		);
 	}
 
+	// Only bind keyboard shortcuts when the synced chart itself is selected,
+	// not when a child block (like controller) is selected.
+	// This allows the controller's own keyboard shortcuts to work.
+	const keyboardShortcuts =
+		isSelected && !hasChildSelected
+			? {
+					'option+shift+h': () => handlePersistentTableVisibility(),
+					'option+h': () => handleTemporaryTableVisibility(),
+				}
+			: {};
+
 	return (
 		<RecursionProvider uniqueId={ref}>
 			<Controls
@@ -166,7 +247,9 @@ function SyncedChartEdit({
 					blocks,
 				}}
 			/>
-			<div {...innerBlocksProps} />
+			<KeyboardShortcuts bindGlobal shortcuts={keyboardShortcuts}>
+				<div {...innerBlocksProps} />
+			</KeyboardShortcuts>
 		</RecursionProvider>
 	);
 }

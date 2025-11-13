@@ -56,8 +56,6 @@ const pieTemplate = [
 			paddingRight: 20,
 			xDomainPadding: 16,
 			xTickNum: null,
-			xTickLabelTextAnchor: 'end',
-			xTickLabelVerticalAnchor: 'middle',
 			yAxisActive: false,
 			labelsActive: true,
 			labelPositionDX: -20,

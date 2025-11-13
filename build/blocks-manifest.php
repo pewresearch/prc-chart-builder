@@ -293,7 +293,7 @@ return array(
 					'middle',
 					'end'
 				),
-				'default' => 'start'
+				'default' => 'end'
 			),
 			'xTickLabelDY' => array(
 				'type' => 'integer',
@@ -481,7 +481,7 @@ return array(
 					'middle',
 					'end'
 				),
-				'default' => 'middle'
+				'default' => 'end'
 			),
 			'yTickLabelVerticalAnchor' => array(
 				'type' => 'string',
@@ -490,7 +490,7 @@ return array(
 					'middle',
 					'end'
 				),
-				'default' => 'start'
+				'default' => 'middle'
 			),
 			'yTickLabelDY' => array(
 				'type' => 'integer',
@@ -668,6 +668,18 @@ return array(
 				'type' => 'number',
 				'default' => 0.5
 			),
+			'emphasizeStrokeActive' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
+			'emphasizeStrokeColor' => array(
+				'type' => 'string',
+				'default' => '#000000'
+			),
+			'emphasizeStrokeWidth' => array(
+				'type' => 'number',
+				'default' => 1
+			),
 			'tooltipMaxHeight' => array(
 				'type' => 'integer',
 				'default' => 100
@@ -683,6 +695,10 @@ return array(
 			'tooltipMinWidth' => array(
 				'type' => 'integer',
 				'default' => 50
+			),
+			'tooltipFontSize' => array(
+				'type' => 'integer',
+				'default' => 13
 			),
 			'tooltipHeaderActive' => array(
 				'type' => 'boolean',
@@ -1105,6 +1121,76 @@ return array(
 				'type' => 'integer',
 				'default' => 44
 			),
+			'mapProjectionPreset' => array(
+				'type' => 'string',
+				'enum' => array(
+					'default',
+					'europe',
+					'asia',
+					'east-asia',
+					'south-asia',
+					'southeast-asia',
+					'middle-east',
+					'africa',
+					'north-africa',
+					'sub-saharan-africa',
+					'north-america',
+					'central-america',
+					'south-america',
+					'oceania',
+					'custom'
+				),
+				'default' => 'default'
+			),
+			'mapTopologyRegion' => array(
+				'type' => 'string',
+				'enum' => array(
+					'default',
+					'europe',
+					'asia',
+					'east-asia',
+					'south-asia',
+					'southeast-asia',
+					'middle-east',
+					'africa',
+					'north-africa',
+					'sub-saharan-africa',
+					'north-america',
+					'central-america',
+					'south-america',
+					'oceania',
+					'custom'
+				),
+				'default' => 'default'
+			),
+			'mapCenterLongitude' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'mapCenterLatitude' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'mapRotateLambda' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'mapRotatePhi' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'mapRotateGamma' => array(
+				'type' => 'number',
+				'default' => 0
+			),
+			'mapCustomScale' => array(
+				'type' => 'number',
+				'default' => 1
+			),
+			'mapZoomActive' => array(
+				'type' => 'boolean',
+				'default' => false
+			),
 			'allowDataDownload' => array(
 				'type' => 'boolean',
 				'default' => true
@@ -1147,8 +1233,7 @@ return array(
 			'interactivity' => true
 		),
 		'editorScript' => 'file:./index.js',
-		'viewScriptModule' => 'file:./view.js',
-		'render' => 'file:./render.php'
+		'viewScriptModule' => 'file:./view.js'
 	),
 	'controller' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
@@ -1229,8 +1314,7 @@ return array(
 		),
 		'viewScriptModule' => 'file:./view.js',
 		'editorScript' => 'file:./index.js',
-		'style' => 'file:./style-index.css',
-		'render' => 'file:./render.php'
+		'style' => 'file:./style-index.css'
 	),
 	'synced-chart' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',

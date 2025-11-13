@@ -19,9 +19,12 @@ import {
 	__experimentalNumberControl as NumberControl,
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
+	__experimentalToggleGroupControl as ToggleGroupControl,
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	RangeControl,
 	ExternalLink,
 } from '@wordpress/components';
+import { PanelColorSettings } from '@wordpress/block-editor';
 /**
  * Internal dependencies
  */
@@ -54,6 +57,7 @@ const Help = styled.div`
 
 function TooltipControls({ attributes, setAttributes, clientId }) {
 	const {
+		chartFamily,
 		tooltipFormat,
 		tooltipActive,
 		tooltipActiveOnMobile,
@@ -64,6 +68,9 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 		tooltipOffsetY,
 		deemphasizeSiblings,
 		deemphasizeOpacity,
+		emphasizeStrokeActive,
+		emphasizeStrokeColor,
+		emphasizeStrokeWidth,
 		tooltipAbsoluteValue,
 		xScale,
 		tooltipDateFormat,
@@ -72,6 +79,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 		tooltipMaxWidth,
 		toltipMinHeight,
 		tooltipMaxHeight,
+		tooltipFontSize,
 	} = attributes;
 	return (
 		<PanelBody title={__('Tooltip')} initialOpen={false}>
@@ -106,7 +114,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					<ToggleControl
 						label={__('Show Tooltip on Mobile')}
 						help={__(
-							'Show a tooltip on mobile devices. If deselected, the tooltip will only on screens wider than a specified mobile breakpoint.'
+							`Show a tooltip on mobile devices. If deselected, the tooltip will only on screens wider than a specified mobile breakpoint (currently set to ${mobileBreakpoint}px).`
 						)}
 						checked={tooltipActiveOnMobile}
 						onChange={() =>
@@ -119,7 +127,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						<RangeControl
 							label={__('Mobile Breakpoint')}
 							help={__(
-								'If the screen width is less than this value, the tooltip will not be displayed on mobile devices.'
+								`If the screen width is less than this value, the tooltip will not be displayed on mobile devices.`
 							)}
 							withInputField
 							min={0}
@@ -208,8 +216,8 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					</Flex>
 					<PanelDescription>
 						<Help>
-							Determines the position of tooltip relative to it’s
-							data point
+							Determines the position of tooltip relative to the
+							cursor
 						</Help>
 					</PanelDescription>
 				</WidePanelItem>
@@ -422,6 +430,37 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					</PanelDescription>
 				</WidePanelItem>
 				<WidePanelItem
+					hasValue={() => tooltipFontSize}
+					label={__('Font Size')}
+					panelId={clientId}
+				>
+					<ToggleGroupControl
+						__nextHasNoMarginBottom
+						isBlock
+						value={tooltipFontSize}
+						label={__('Tooltip Font Size')}
+						disabled={!tooltipActive}
+						onChange={(value) => {
+							setAttributes({
+								tooltipFontSize: formatNum(value, 'integer'),
+							});
+						}}
+					>
+						<ToggleGroupControlOption label="10px" value={10} />
+						<ToggleGroupControlOption label="12px" value={12} />
+						<ToggleGroupControlOption label="13px" value={13} />
+						<ToggleGroupControlOption label="14px" value={14} />
+						<ToggleGroupControlOption label="16px" value={16} />
+					</ToggleGroupControl>
+					<PanelDescription>
+						<Help>
+							{__(
+								'Select the font size for tooltip text. Default is 13px.'
+							)}
+						</Help>
+					</PanelDescription>
+				</WidePanelItem>
+				<WidePanelItem
 					hasValue={() => true}
 					label={__('Deemphasize Siblings')}
 					panelId={clientId}
@@ -452,6 +491,64 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						}
 					/>
 				</WidePanelItem>
+				{'map' === chartFamily && (
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('Emphasize Stroke')}
+						panelId={clientId}
+					>
+						<ToggleControl
+							label={__('Emphasize Stroke')}
+							checked={emphasizeStrokeActive}
+							onChange={() =>
+								setAttributes({
+									emphasizeStrokeActive:
+										!emphasizeStrokeActive,
+								})
+							}
+							help={__(
+								'If selected, the stroke(outline) of the data point will be emphasized when hovering over it.'
+							)}
+						/>
+						<PanelColorSettings
+							__experimentalHasMultipleOrigins
+							__experimentalIsRenderedInSidebar
+							title={__('Emphasize Stroke')}
+							style={{
+								paddingLeft: '0',
+								paddingRight: '0',
+								marginTop: '10px',
+							}}
+							disabled={!emphasizeStrokeActive}
+							colorSettings={[
+								{
+									value: emphasizeStrokeColor,
+									onChange: (value) =>
+										setAttributes({
+											emphasizeStrokeColor: value,
+										}),
+									label: __('Stroke Color'),
+								},
+							]}
+						/>
+						<NumberControl
+							label={__('Stroke Width')}
+							value={emphasizeStrokeWidth}
+							min={0}
+							max={10}
+							step={0.1}
+							disabled={!emphasizeStrokeActive}
+							onChange={(value) =>
+								setAttributes({
+									emphasizeStrokeWidth: formatNum(
+										value,
+										'integer'
+									),
+								})
+							}
+						/>
+					</WidePanelItem>
+				)}
 			</ToolsPanel>
 		</PanelBody>
 	);

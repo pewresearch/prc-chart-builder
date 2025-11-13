@@ -4,6 +4,11 @@
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 
 /**
+ * External dependencies
+ */
+import { useMemo } from 'react';
+
+/**
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
@@ -25,7 +30,11 @@ import {
 	FlexBlock,
 	FlexItem,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
+import {
+	PanelColorSettings,
+	useSettings,
+	__experimentalFontFamilyControl as FontFamilyControl,
+} from '@wordpress/block-editor';
 
 /**
  * Internal dependencies
@@ -34,7 +43,14 @@ import { formatNum } from '../utils/helpers';
 
 function AnnotationControls({ attributes, setAttributes }) {
 	const { annotationsActive, annotations, mobileBreakpoint } = attributes;
+	const [blockLevelFontFamilies] = useSettings('typography.fontFamilies');
 
+	const fontFamilyOptions = useMemo(() => {
+		return blockLevelFontFamilies.theme.map(({ fontFamily, name }) => ({
+			fontFamily,
+			name,
+		}));
+	}, [blockLevelFontFamilies]);
 	const updateAnnotation = (index, key, value) => {
 		setAttributes({
 			annotations: annotations.map((annotation, i) =>
@@ -62,6 +78,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 			fontSize: 12,
 			fontWeight: 'normal',
 			fontStyle: 'normal',
+			fontFamily: "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
 			fill: '#000000',
 			textAnchor: 'start',
 			verticalAnchor: 'start',
@@ -73,6 +90,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 			opacity: 1,
 			maxWidth: 200,
 			activeOnMobile: true,
+			positioningContext: 'chart',
 		};
 
 		setAttributes({
@@ -106,6 +124,30 @@ function AnnotationControls({ attributes, setAttributes }) {
 						</CardHeader>
 						<CardBody>
 							<Heading level={2}>Position</Heading>
+							<SelectControl
+								label={__('Positioning Context')}
+								value={annotation.positioningContext || 'chart'}
+								options={[
+									{
+										label: __('Full Chart Area'),
+										value: 'chart',
+									},
+									{
+										label: __('Data Area (Inner)'),
+										value: 'inner',
+									},
+								]}
+								onChange={(value) => {
+									updateAnnotation(
+										index,
+										'positioningContext',
+										value
+									);
+								}}
+								help={__(
+									'Chart: positions relative to the entire chart including axes and padding (eg. use for titles, etc.). Data Area: positions relative to the chart data area (eg. use if annotating a specific data point).'
+								)}
+							/>
 							<FlexBlock>
 								<FlexItem>
 									<NumberControl
@@ -190,6 +232,18 @@ function AnnotationControls({ attributes, setAttributes }) {
 										index,
 										'fontSize',
 										newFontSize
+									);
+								}}
+							/>
+							<FontFamilyControl
+								label={__('Font Family')}
+								value={annotation.fontFamily}
+								fontFamilies={fontFamilyOptions}
+								onChange={(value) => {
+									updateAnnotation(
+										index,
+										'fontFamily',
+										value
 									);
 								}}
 							/>

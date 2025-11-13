@@ -152,7 +152,6 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 		tooltipDateFormat,
 		tooltipFormatValue,
 		tooltipAbsoluteValue,
-		tooltipFontSize,
 		deemphasizeSiblings,
 		deemphasizeOpacity,
 		emphasizeStrokeActive,
@@ -497,7 +496,7 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 				minWidth: tooltipMinWidth,
 				width: 'auto',
 				height: 'auto',
-				fontSize: `${tooltipFontSize}px`,
+				fontSize: '13px',
 				fontFamily:
 					"'franklin-gothic-urw', Verdana, Geneva, sans-serif",
 				background: 'white',
@@ -597,8 +596,7 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 			blockRectSize: mapBlockRectSize,
 			// Projection controls
 			projectionPreset: mapProjectionPreset,
-			topologyRegion: mapTopologyRegion,
-			mapTopologyRegion,
+		mapTopologyRegion,
 			centerLongitude: mapCenterLongitude,
 			centerLatitude: mapCenterLatitude,
 			rotateLambda: mapRotateLambda,

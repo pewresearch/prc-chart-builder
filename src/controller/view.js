@@ -76,7 +76,6 @@ const { state, actions } = store('prc-chart-builder/controller', {
 		syncTableHeight() {
 			const context = getContext();
 			const { id } = context;
-			console.log({ id });
 			// Wait a bit for the chart to fully render
 			setTimeout(() => {
 				const controllerEl = document.getElementById(id);
@@ -127,9 +126,6 @@ const { state, actions } = store('prc-chart-builder/controller', {
 		toggleQuestionWordingExpanded() {
 			const context = getContext();
 			const { id } = context;
-			console.log('toggleQuestionWordingExpanded');
-			console.log({ state });
-			console.log({ context });
 			state[id].isQuestionExpanded = !state[id].isQuestionExpanded;
 		},
 		hideModal() {

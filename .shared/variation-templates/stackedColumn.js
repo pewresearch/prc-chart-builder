@@ -63,8 +63,6 @@ const stackedBarTemplate = [
 			colorValue: 'social-trends-main',
 			xDomainPadding: 30,
 			yAxisActive: false,
-			yTickLabelTextAnchor: 'end',
-			yTickLabelVerticalAnchor: 'middle',
 			barWidth: 24,
 			barGroupOffset: 28,
 			labelsActive: true,

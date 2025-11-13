@@ -49,7 +49,6 @@ const columnTemplate = [
 			metaSource: 'Source: Add source note here',
 			metaNote: 'Note: Add note about the chart',
 			metaTag: 'PEW RESEARCH CENTER',
-
 			width: 240,
 			height: 160,
 			paddingLeft: 20,
@@ -58,8 +57,6 @@ const columnTemplate = [
 			xDomainPadding: 16,
 			xTickNum: null,
 			yAxisActive: false,
-			yTickLabelTextAnchor: 'end',
-			yTickLabelVerticalAnchor: 'middle',
 			barWidth: 24,
 			barGroupOffset: 28,
 			tooltipActive: false,
