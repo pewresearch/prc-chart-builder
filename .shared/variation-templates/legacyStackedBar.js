@@ -45,26 +45,53 @@ const stackedBarTemplate = [
 	[
 		'prc-chart-builder/chart',
 		{
-			isConvertedChart: true,
+			_version: 'v2',
 			chartType: 'stacked-bar',
 			chartOrientation: 'horizontal',
-			width: 640,
-			height: 400,
-			paddingLeft: 100,
-			xDomainPadding: 16,
-			xTickNum: null,
-			xTickLabelTextAnchor: 'end',
-			xTickLabelVerticalAnchor: 'middle',
-			metaTag: 'PEW RESEARCH CENTER',
-			yAxisActive: false,
-			barWidth: 24,
-			barGroupOffset: 28,
-			labelsActive: true,
-			labelPositionDX: 0,
-			colorValue: 'journalism-main',
-			tooltipActive: true,
-			tooltipHeaderValue: 'independentValue',
-			tooltipFormat: '{{row}}: {{value}}',
+			layout: {
+				type: 'stacked-bar',
+				orientation: 'horizontal',
+				width: 640,
+				height: 400,
+				padding: {
+					left: 100,
+				},
+			},
+			metadata: {
+				active: true,
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'journalism-main',
+			},
+			independentAxis: {
+				tickCount: null,
+				domainPadding: 16,
+				tickLabels: {
+					textAnchor: 'end',
+					verticalAnchor: 'middle',
+				},
+			},
+			dependentAxis: {
+				active: false,
+			},
+			tooltip: {
+				active: true,
+				headerValue: 'independentValue',
+				format: '{{row}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				labelPositionDX: 0,
+			},
+			bar: {
+				barWidth: 24,
+				barGroupOffset: 28,
+			},
+			io: {
+				isConvertedChart: true,
+				colorValue: 'journalism-main',
+			},
 		},
 	],
 ];

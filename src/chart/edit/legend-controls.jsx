@@ -1,3 +1,4 @@
+// V2
 /* eslint-disable max-lines */
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 /* eslint-disable max-lines-per-function */
@@ -34,6 +35,7 @@ import {
 } from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
 import Sorter from './sorter';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -60,46 +62,41 @@ const Help = styled.div`
 `;
 
 function LegendControls({ attributes, setAttributes, clientId }) {
-	const {
-		legendActive,
-		legendOrientation,
-		legendTitle,
-		legendOffsetX,
-		legendOffsetY,
-		legendAlignment,
-		legendMarkerStyle,
-		legendBorderStroke,
-		legendFill,
-		legendLabelDelimiter,
-		legendLabelLower,
-		legendLabelUpper,
-		legendFontSize,
-		legendMargin,
-		legendCategories,
-		mapScale,
-		mapScaleDomain,
-		chartType,
-		chartFamily,
-		neutralBarActive,
-		positiveCategories,
-		negativeCategories,
-		neutralCategory,
-		categories,
-		availableCategories,
-	} = attributes;
+	// Viewport-aware attribute management
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
 
+	const legend = getCurrentValue('legend') || {};
+	// Content attributes - NOT viewport-aware
+	const io = attributes.io || {};
+	const dataRender = attributes.dataRender || {};
+
+	// Presentation attributes - viewport-aware
+	const layout = getCurrentValue('layout') || {};
+	const divergingBar = attributes.divergingBar || {};
+
+	const { type: chartType } = layout;
+	const { chartFamily, availableCategories } = io;
+	const { mapScale, mapScaleDomain, categories: dataCategories } = dataRender;
+	const { neutralBar } = divergingBar;
 	// Determine available legend categories based on chart type
 	// This is the source of truth for what categories exist in the data
 	const availableLegendCategories = useMemo(() => {
-		const cat = categories?.length > 0 ? categories : availableCategories;
+		const cat =
+			dataCategories?.length > 0 ? dataCategories : availableCategories;
 		if (chartType === 'diverging-bar') {
-			const divergingCategories = neutralBarActive
+			const divergingCategories = neutralBar.active
 				? [
-						...negativeCategories,
-						...positiveCategories,
-						neutralCategory,
+						...divergingBar.negativeCategories,
+						...divergingBar.positiveCategories,
+						neutralBar.category,
 					]
-				: [...negativeCategories, ...positiveCategories];
+				: [
+						...divergingBar.negativeCategories,
+						...divergingBar.positiveCategories,
+					];
 			return divergingCategories;
 		}
 		if (chartFamily === 'map' && mapScale === 'ordinal') {
@@ -110,17 +107,15 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 		chartType,
 		chartFamily,
 		mapScale,
-		categories,
+		dataCategories,
 		availableCategories,
-		negativeCategories,
-		positiveCategories,
-		neutralCategory,
-		neutralBarActive,
+		divergingBar,
 		mapScaleDomain,
 	]);
 
 	// Create options for the Sorter
-	// Use legendCategories if it exists and matches available categories, otherwise use available categories
+	// Use categories if it exists and matches available categories, otherwise use available categories
+	const legendCategories = getCurrentValue('legend', 'categories');
 	const legendOrderOptions = useMemo(() => {
 		// If legendCategories exists and contains the same items as available categories, use it
 		if (
@@ -149,16 +144,16 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 
 	// Check if legend has custom position (non-default offsets)
 	const hasCustomLegendPosition =
-		legendOffsetX !== 0 ||
-		legendOffsetY !== 0 ||
-		legendAlignment === 'none';
+		getCurrentValue('legend', 'offsetX') !== 0 ||
+		getCurrentValue('legend', 'offsetY') !== 0 ||
+		getCurrentValue('legend', 'alignment') === 'none';
 
 	// Reset legend to default position
 	const handleResetLegendPosition = () => {
-		setAttributes({
-			legendOffsetX: 0,
-			legendOffsetY: 0,
-			legendAlignment: 'flex-start',
+		updateAttributeForDevice('legend', {
+			offsetX: 0,
+			offsetY: 0,
+			alignment: 'flex-start',
 		});
 	};
 
@@ -186,9 +181,11 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 				>
 					<ToggleControl
 						label="Legend Active"
-						checked={legendActive}
-						onChange={() =>
-							setAttributes({ legendActive: !legendActive })
+						checked={getCurrentValue('legend', 'active')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('legend', {
+								active: newValue,
+							})
 						}
 					/>
 				</ToolsPanelItem>
@@ -203,10 +200,10 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 					<ToggleGroupControl
 						isBlock
 						label="Legend Alignment"
-						value={legendAlignment}
+						value={getCurrentValue('legend', 'alignment')}
 						onChange={(type) => {
-							setAttributes({
-								legendAlignment: type,
+							updateAttributeForDevice('legend', {
+								alignment: type,
 							});
 						}}
 					>
@@ -228,13 +225,10 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('DX')}
-								value={legendOffsetX}
+								value={getCurrentValue('legend', 'offsetX')}
 								onChange={(value) =>
-									setAttributes({
-										legendOffsetX: formatNum(
-											value,
-											'integer'
-										),
+									updateAttributeForDevice('legend', {
+										offsetX: formatNum(value, 'integer'),
 									})
 								}
 							/>
@@ -242,13 +236,10 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('DY')}
-								value={legendOffsetY}
+								value={getCurrentValue('legend', 'offsetY')}
 								onChange={(value) =>
-									setAttributes({
-										legendOffsetY: formatNum(
-											value,
-											'integer'
-										),
+									updateAttributeForDevice('legend', {
+										offsetY: formatNum(value, 'integer'),
 									})
 								}
 							/>
@@ -290,9 +281,9 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 				>
 					<TextControl
 						label={__('Legend Title')}
-						value={legendTitle}
+						value={getCurrentValue('legend', 'title')}
 						onChange={(value) =>
-							setAttributes({ legendTitle: value })
+							updateAttributeForDevice('legend', { title: value })
 						}
 					/>
 				</WidePanelItem>
@@ -307,8 +298,21 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 						</PanelDescription>
 						<Sorter
 							options={legendOrderOptions}
-							setAttributes={setAttributes}
-							attribute="legendCategories"
+							setAttributes={(updates) => {
+								// Sorter calls setAttributes with { legend: { ...legend, categories: [...] } }
+								// Extract categories and use updateAttributeForDevice
+								if (
+									updates.legend &&
+									updates.legend.categories
+								) {
+									updateAttributeForDevice('legend', {
+										categories: updates.legend.categories,
+									});
+								}
+							}}
+							attribute="categories"
+							parentObject="legend"
+							parentObjectValue={legend}
 							allowDisabled={false}
 						/>
 						<PanelDescription>
@@ -327,7 +331,7 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 				>
 					<SelectControl
 						label={__('Orientation')}
-						value={legendOrientation}
+						value={getCurrentValue('legend', 'orientation')}
 						options={[
 							{
 								value: 'row',
@@ -347,8 +351,8 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 							},
 						]}
 						onChange={(type) => {
-							setAttributes({
-								legendOrientation: type,
+							updateAttributeForDevice('legend', {
+								orientation: type,
 							});
 						}}
 					/>
@@ -360,7 +364,7 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 				>
 					<SelectControl
 						label={__('Marker Style')}
-						value={legendMarkerStyle}
+						value={getCurrentValue('legend', 'markerStyle')}
 						options={[
 							{
 								value: 'rect',
@@ -376,25 +380,25 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 							},
 						]}
 						onChange={(type) => {
-							setAttributes({
-								legendMarkerStyle: type,
+							updateAttributeForDevice('legend', {
+								markerStyle: type,
 							});
 						}}
 					/>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => legendFontSize}
+					hasValue={() => getCurrentValue('legend', 'fontSize')}
 					label={__('Font Size')}
 					panelId={clientId}
 				>
 					<ToggleGroupControl
 						__nextHasNoMarginBottom
 						isBlock
-						value={legendFontSize}
+						value={getCurrentValue('legend', 'fontSize')}
 						label={__('Legend Font Size')}
 						onChange={(value) => {
-							setAttributes({
-								legendFontSize: formatNum(value, 'integer'),
+							updateAttributeForDevice('legend', {
+								fontSize: formatNum(value, 'integer'),
 							});
 						}}
 					>
@@ -419,17 +423,17 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 					<SpacingSizesControl
 						label={__('Legend Margin')}
 						values={{
-							top: legendMargin?.top
-								? `${legendMargin.top}px`
+							top: getCurrentValue('legend', 'margin')?.top
+								? `${getCurrentValue('legend', 'margin').top}px`
 								: '0px',
-							right: legendMargin?.right
-								? `${legendMargin.right}px`
+							right: getCurrentValue('legend', 'margin')?.right
+								? `${getCurrentValue('legend', 'margin').right}px`
 								: '0px',
-							bottom: legendMargin?.bottom
-								? `${legendMargin.bottom}px`
+							bottom: getCurrentValue('legend', 'margin')?.bottom
+								? `${getCurrentValue('legend', 'margin').bottom}px`
 								: '0px',
-							left: legendMargin?.left
-								? `${legendMargin.left}px`
+							left: getCurrentValue('legend', 'margin')?.left
+								? `${getCurrentValue('legend', 'margin').left}px`
 								: '0px',
 						}}
 						onChange={(value) => {
@@ -440,7 +444,9 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 								bottom: parseInt(value?.bottom || '0', 10),
 								left: parseInt(value?.left || '0', 10),
 							};
-							setAttributes({ legendMargin: parsedValue });
+							updateAttributeForDevice('legend', {
+								margin: parsedValue,
+							});
 						}}
 						sides={['top', 'right', 'bottom', 'left']}
 						units={[{ label: 'px' }]}
@@ -469,17 +475,22 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 						}}
 						colorSettings={[
 							{
-								value: legendBorderStroke,
+								value: getCurrentValue(
+									'legend',
+									'borderStroke'
+								),
 								onChange: (value) =>
-									setAttributes({
-										legendBorderStroke: value,
+									updateAttributeForDevice('legend', {
+										borderStroke: value,
 									}),
 								label: __('Stroke'),
 							},
 							{
-								value: legendFill,
+								value: getCurrentValue('legend', 'fill'),
 								onChange: (value) =>
-									setAttributes({ legendFill: value }),
+									updateAttributeForDevice('legend', {
+										fill: value,
+									}),
 								label: __('Fill'),
 							},
 						]}
@@ -496,23 +507,29 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 						</PanelDescription>
 						<TextControl
 							label={__('Lower label')}
-							value={legendLabelLower}
+							value={getCurrentValue('legend', 'labelLower')}
 							onChange={(value) => {
-								setAttributes({ legendLabelLower: value });
+								updateAttributeForDevice('legend', {
+									labelLower: value,
+								});
 							}}
 						/>
 						<TextControl
 							label={__('Label delimiter')}
-							value={legendLabelDelimiter}
+							value={getCurrentValue('legend', 'labelDelimiter')}
 							onChange={(value) =>
-								setAttributes({ legendLabelDelimiter: value })
+								updateAttributeForDevice('legend', {
+									labelDelimiter: value,
+								})
 							}
 						/>
 						<TextControl
 							label={__('Upper label')}
-							value={legendLabelUpper}
+							value={getCurrentValue('legend', 'labelUpper')}
 							onChange={(value) =>
-								setAttributes({ legendLabelUpper: value })
+								updateAttributeForDevice('legend', {
+									labelUpper: value,
+								})
 							}
 						/>
 					</WidePanelItem>

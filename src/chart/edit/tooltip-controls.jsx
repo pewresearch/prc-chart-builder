@@ -1,3 +1,6 @@
+/* eslint-disable @wordpress/no-unsafe-wp-apis */
+/* eslint-disable @wordpress/i18n-text-domain */
+/* eslint-disable @wordpress/i18n-translator-comments */
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /**
@@ -29,6 +32,7 @@ import { PanelColorSettings } from '@wordpress/block-editor';
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const WidePanelItem = styled(ToolsPanelItem)`
 	grid-column: span 2;
@@ -56,31 +60,18 @@ const Help = styled.div`
 `;
 
 function TooltipControls({ attributes, setAttributes, clientId }) {
-	const {
-		chartFamily,
-		tooltipFormat,
-		tooltipActive,
-		tooltipActiveOnMobile,
-		mobileBreakpoint,
-		tooltipOffsetX,
-		tooltipHeaderActive,
-		tooltipHeaderValue,
-		tooltipOffsetY,
-		deemphasizeSiblings,
-		deemphasizeOpacity,
-		emphasizeStrokeActive,
-		emphasizeStrokeColor,
-		emphasizeStrokeWidth,
-		tooltipAbsoluteValue,
-		xScale,
-		tooltipDateFormat,
-		tooltipFormatValue,
-		tooltipMinWidth,
-		tooltipMaxWidth,
-		toltipMinHeight,
-		tooltipMaxHeight,
-		tooltipFontSize,
-	} = attributes;
+	// Viewport-aware attribute management
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
+
+	// Content attributes - NOT viewport-aware
+	const io = attributes.io || {};
+	const dataRender = attributes.dataRender || {};
+
+	const style = getCurrentValue('tooltip', 'style') || {};
+	const { maxWidth, maxHeight, minWidth, minHeight, fontSize } = style;
 	return (
 		<PanelBody title={__('Tooltip')} initialOpen={false}>
 			<ToolsPanel
@@ -99,47 +90,13 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 				>
 					<ToggleControl
 						label={__('Show Tooltip')}
-						checked={tooltipActive}
-						onChange={() =>
-							setAttributes({ tooltipActive: !tooltipActive })
-						}
-					/>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Show Tooltip on Mobile')}
-					isShownByDefault
-					panelId={clientId}
-				>
-					<ToggleControl
-						label={__('Show Tooltip on Mobile')}
-						help={__(
-							`Show a tooltip on mobile devices. If deselected, the tooltip will only on screens wider than a specified mobile breakpoint (currently set to ${mobileBreakpoint}px).`
-						)}
-						checked={tooltipActiveOnMobile}
-						onChange={() =>
-							setAttributes({
-								tooltipActiveOnMobile: !tooltipActiveOnMobile,
+						checked={getCurrentValue('tooltip', 'active')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('tooltip', {
+								active: newValue,
 							})
 						}
 					/>
-					{!tooltipActiveOnMobile && (
-						<RangeControl
-							label={__('Mobile Breakpoint')}
-							help={__(
-								`If the screen width is less than this value, the tooltip will not be displayed on mobile devices.`
-							)}
-							withInputField
-							min={0}
-							max={1152}
-							value={parseInt(mobileBreakpoint, 10)}
-							onChange={(bp) =>
-								setAttributes({
-									mobileBreakpoint: formatNum(bp, 'integer'),
-								})
-							}
-						/>
-					)}
 				</WidePanelItem>
 				<WidePanelItem
 					hasValue={() => true}
@@ -149,10 +106,10 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					<ToggleControl
 						label={__('Show Header')}
 						help={__('Show a header in the tooltip')}
-						checked={tooltipHeaderActive}
-						onChange={() =>
-							setAttributes({
-								tooltipHeaderActive: !tooltipHeaderActive,
+						checked={getCurrentValue('tooltip', 'headerActive')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('tooltip', {
+								headerActive: newValue,
 							})
 						}
 					/>
@@ -164,15 +121,17 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 				>
 					<SelectControl
 						label={__('Header Value')}
-						value={tooltipHeaderValue}
-						disabled={!tooltipHeaderActive}
+						value={getCurrentValue('tooltip', 'headerValue')}
+						disabled={!getCurrentValue('tooltip', 'headerActive')}
 						help={__('Select the value to display in the header')}
 						options={[
 							{ label: __('Column'), value: 'categoryValue' },
 							{ label: __('Row'), value: 'independentValue' },
 						]}
 						onChange={(value) =>
-							setAttributes({ tooltipHeaderValue: value })
+							updateAttributeForDevice('tooltip', {
+								headerValue: value,
+							})
 						}
 					/>
 				</WidePanelItem>
@@ -186,14 +145,11 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('DX')}
-								value={tooltipOffsetX}
-								disabled={!tooltipActive}
+								value={getCurrentValue('tooltip', 'offsetX')}
+								disabled={!getCurrentValue('tooltip', 'active')}
 								onChange={(value) =>
-									setAttributes({
-										tooltipOffsetX: formatNum(
-											value,
-											'integer'
-										),
+									updateAttributeForDevice('tooltip', {
+										offsetX: formatNum(value, 'integer'),
 									})
 								}
 							/>
@@ -201,14 +157,11 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('DY')}
-								value={tooltipOffsetY}
-								disabled={!tooltipActive}
+								value={getCurrentValue('tooltip', 'offsetY')}
+								disabled={!getCurrentValue('tooltip', 'active')}
 								onChange={(value) =>
-									setAttributes({
-										tooltipOffsetY: formatNum(
-											value,
-											'integer'
-										),
+									updateAttributeForDevice('tooltip', {
+										offsetY: formatNum(value, 'integer'),
 									})
 								}
 							/>
@@ -231,14 +184,17 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('Min Width')}
-								value={tooltipMinWidth}
-								disabled={!tooltipActive}
+								value={minWidth}
+								disabled={!getCurrentValue('tooltip', 'active')}
 								onChange={(value) =>
-									setAttributes({
-										tooltipMinWidth: formatNum(
-											value,
-											'integer'
-										),
+									updateAttributeForDevice('tooltip', {
+										style: {
+											...style,
+											minWidth: formatNum(
+												value,
+												'integer'
+											),
+										},
 									})
 								}
 							/>
@@ -246,14 +202,17 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('Max Width')}
-								value={tooltipMaxWidth}
-								disabled={!tooltipActive}
+								value={maxWidth}
+								disabled={!getCurrentValue('tooltip', 'active')}
 								onChange={(value) =>
-									setAttributes({
-										tooltipMaxWidth: formatNum(
-											value,
-											'integer'
-										),
+									updateAttributeForDevice('tooltip', {
+										style: {
+											...style,
+											maxWidth: formatNum(
+												value,
+												'integer'
+											),
+										},
 									})
 								}
 							/>
@@ -263,14 +222,17 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('Min Height')}
-								value={toltipMinHeight}
-								disabled={!tooltipActive}
+								value={minHeight}
+								disabled={!getCurrentValue('tooltip', 'active')}
 								onChange={(value) =>
-									setAttributes({
-										toltipMinHeight: formatNum(
-											value,
-											'integer'
-										),
+									updateAttributeForDevice('tooltip', {
+										style: {
+											...style,
+											minHeight: formatNum(
+												value,
+												'integer'
+											),
+										},
 									})
 								}
 							/>
@@ -278,14 +240,17 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('Max Height')}
-								value={tooltipMaxHeight}
-								disabled={!tooltipActive}
+								value={maxHeight}
+								disabled={!getCurrentValue('tooltip', 'active')}
 								onChange={(value) =>
-									setAttributes({
-										tooltipMaxHeight: formatNum(
-											value,
-											'integer'
-										),
+									updateAttributeForDevice('tooltip', {
+										style: {
+											...style,
+											maxHeight: formatNum(
+												value,
+												'integer'
+											),
+										},
 									})
 								}
 							/>
@@ -308,11 +273,11 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						help={__(
 							"Tooltip formatter is a string that takes up to three variables. The first variable {{column}} corresponds with the category/column header of a data point, the second {{value}}, the numerical value, and the third {{row}} is the row of the value. (eg. '{{column}}: {{value}} people in {{row}}' would return something like '2010: 500 people in France'). Adding `.toLowerCase()` to the end of any of these variables will lowercase the entire string."
 						)}
-						disabled={!tooltipActive}
-						value={tooltipFormat}
+						disabled={!getCurrentValue('tooltip', 'active')}
+						value={getCurrentValue('tooltip', 'format')}
 						placeholder="{{row}}: {{value}}"
 						onChange={(val) =>
-							setAttributes({ tooltipFormat: val })
+							updateAttributeForDevice('tooltip', { format: val })
 						}
 					/>
 					<ExternalLink href="https://platform.pewresearch.org/wiki/2024/06/25/chart-builder-documentation/#tooltip">
@@ -320,7 +285,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						docs.
 					</ExternalLink>
 				</WidePanelItem>
-				{'time' === xScale && (
+				{'time' === dataRender.xScale && (
 					<WidePanelItem
 						hasValue={() => true}
 						label={__('Tooltip Date Format')}
@@ -328,7 +293,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					>
 						<SelectControl
 							label={__('Time scale format')}
-							value={tooltipDateFormat}
+							value={getCurrentValue('tooltip', 'dateFormat')}
 							options={[
 								{ value: '%Y', label: '2023' },
 								{ value: "'%y", label: "'23" },
@@ -378,23 +343,25 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 								{ value: '%b', label: 'Apr' },
 							]}
 							onChange={(type) => {
-								setAttributes({ tooltipDateFormat: type });
+								updateAttributeForDevice('tooltip', {
+									dateFormat: type,
+								});
 							}}
 						/>
 					</WidePanelItem>
 				)}
 				<WidePanelItem
-					hasValue={() => tooltipAbsoluteValue}
+					hasValue={() => true}
 					label={__('Absolute Value')}
 					panelId={clientId}
 				>
 					<ToggleControl
 						label={__('Absolute Value')}
-						checked={tooltipAbsoluteValue}
-						disabled={!tooltipActive}
-						onChange={() =>
-							setAttributes({
-								tooltipAbsoluteValue: !tooltipAbsoluteValue,
+						checked={getCurrentValue('tooltip', 'absoluteValue')}
+						disabled={!getCurrentValue('tooltip', 'active')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('tooltip', {
+								absoluteValue: newValue,
 							})
 						}
 					/>
@@ -407,17 +374,60 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					</PanelDescription>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => tooltipFormatValue}
+					hasValue={() => true}
+					label={__('Abbreviate Value')}
+					panelId={clientId}
+				>
+					<ToggleControl
+						label={__('Abbreviate Value')}
+						checked={getCurrentValue('tooltip', 'abbreviateValue')}
+						disabled={!getCurrentValue('tooltip', 'active')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('tooltip', {
+								abbreviateValue: newValue,
+							})
+						}
+					/>
+					<PanelDescription>
+						<Help>
+							{__(
+								'If checked, abbreviates the value displayed in the tooltip.'
+							)}
+						</Help>
+					</PanelDescription>
+				</WidePanelItem>
+				<WidePanelItem
+					hasValue={() => true}
+					label={__('Decimal Places')}
+					panelId={clientId}
+					isShownByDefault
+				>
+					<NumberControl
+						label={__('Decimal Places')}
+						value={getCurrentValue('tooltip', 'toFixedDecimal')}
+						disabled={!getCurrentValue('tooltip', 'active')}
+						min={0}
+						max={100}
+						onChange={(value) =>
+							updateAttributeForDevice('tooltip', {
+								toFixedDecimal: formatNum(value, 'integer'),
+							})
+						}
+					/>
+				</WidePanelItem>
+
+				<WidePanelItem
+					hasValue={() => true}
 					label={__('Format Value')}
 					panelId={clientId}
 				>
 					<ToggleControl
 						label={__('Format Value')}
-						checked={tooltipFormatValue}
-						disabled={!tooltipActive}
-						onChange={() =>
-							setAttributes({
-								tooltipFormatValue: !tooltipFormatValue,
+						checked={getCurrentValue('tooltip', 'toLocaleString')}
+						disabled={!getCurrentValue('tooltip', 'active')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('tooltip', {
+								toLocaleString: newValue,
 							})
 						}
 					/>
@@ -430,19 +440,22 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					</PanelDescription>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => tooltipFontSize}
+					hasValue={() => true}
 					label={__('Font Size')}
 					panelId={clientId}
 				>
 					<ToggleGroupControl
 						__nextHasNoMarginBottom
 						isBlock
-						value={tooltipFontSize}
+						value={fontSize}
 						label={__('Tooltip Font Size')}
-						disabled={!tooltipActive}
+						disabled={!getCurrentValue('tooltip', 'active')}
 						onChange={(value) => {
-							setAttributes({
-								tooltipFontSize: formatNum(value, 'integer'),
+							updateAttributeForDevice('tooltip', {
+								style: {
+									...style,
+									fontSize: formatNum(value, 'integer'),
+								},
 							});
 						}}
 					>
@@ -470,28 +483,33 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						help={__(
 							'When hovering over a data point, deemphasize all other data points visually'
 						)}
-						checked={deemphasizeSiblings}
-						onChange={() =>
-							setAttributes({
-								deemphasizeSiblings: !deemphasizeSiblings,
+						checked={getCurrentValue(
+							'tooltip',
+							'deemphasizeSiblings'
+						)}
+						onChange={(newValue) =>
+							updateAttributeForDevice('tooltip', {
+								deemphasizeSiblings: newValue,
 							})
 						}
 					/>
 					<NumberControl
 						label={__('Opacity')}
-						value={deemphasizeOpacity}
+						value={getCurrentValue('tooltip', 'deemphasizeOpacity')}
 						min={0}
 						max={1}
 						step={0.1}
-						disabled={!deemphasizeSiblings}
+						disabled={
+							!getCurrentValue('tooltip', 'deemphasizeSiblings')
+						}
 						onChange={(value) =>
-							setAttributes({
+							updateAttributeForDevice('tooltip', {
 								deemphasizeOpacity: formatNum(value, 'float'),
 							})
 						}
 					/>
 				</WidePanelItem>
-				{'map' === chartFamily && (
+				{'map' === io.chartFamily && (
 					<WidePanelItem
 						hasValue={() => true}
 						label={__('Emphasize Stroke')}
@@ -499,11 +517,13 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					>
 						<ToggleControl
 							label={__('Emphasize Stroke')}
-							checked={emphasizeStrokeActive}
-							onChange={() =>
-								setAttributes({
-									emphasizeStrokeActive:
-										!emphasizeStrokeActive,
+							checked={getCurrentValue(
+								'tooltip',
+								'emphasizeStrokeActive'
+							)}
+							onChange={(newValue) =>
+								updateAttributeForDevice('tooltip', {
+									emphasizeStrokeActive: newValue,
 								})
 							}
 							help={__(
@@ -513,18 +533,26 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						<PanelColorSettings
 							__experimentalHasMultipleOrigins
 							__experimentalIsRenderedInSidebar
-							title={__('Emphasize Stroke')}
+							title={__('Emphasize Stroke Color')}
 							style={{
 								paddingLeft: '0',
 								paddingRight: '0',
 								marginTop: '10px',
 							}}
-							disabled={!emphasizeStrokeActive}
+							disabled={
+								!getCurrentValue(
+									'tooltip',
+									'emphasizeStrokeActive'
+								)
+							}
 							colorSettings={[
 								{
-									value: emphasizeStrokeColor,
+									value: getCurrentValue(
+										'tooltip',
+										'emphasizeStrokeColor'
+									),
 									onChange: (value) =>
-										setAttributes({
+										updateAttributeForDevice('tooltip', {
 											emphasizeStrokeColor: value,
 										}),
 									label: __('Stroke Color'),
@@ -533,13 +561,21 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						/>
 						<NumberControl
 							label={__('Stroke Width')}
-							value={emphasizeStrokeWidth}
+							value={getCurrentValue(
+								'tooltip',
+								'emphasizeStrokeWidth'
+							)}
 							min={0}
 							max={10}
 							step={0.1}
-							disabled={!emphasizeStrokeActive}
+							disabled={
+								!getCurrentValue(
+									'tooltip',
+									'emphasizeStrokeActive'
+								)
+							}
 							onChange={(value) =>
-								setAttributes({
+								updateAttributeForDevice('tooltip', {
 									emphasizeStrokeWidth: formatNum(
 										value,
 										'integer'

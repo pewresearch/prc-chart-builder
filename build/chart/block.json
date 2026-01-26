@@ -8,1104 +8,548 @@
 	"icon": "chart-line",
 	"parent": ["prc-chart-builder/controller"],
 	"attributes": {
-		"test": {
+		"_version": {
 			"type": "string",
-			"default": "test"
+			"enum": ["v1", "v2"]
 		},
 		"id": {
 			"type": "string"
 		},
-		"parentClass": {
-			"type": "string",
-			"default": "wp-chart-builder-wrapper"
+		"mobile": {
+			"type": "object",
+			"default": {}
 		},
-		"isConvertedChart": {
-			"type": "boolean",
-			"default": false
+		"tablet": {
+			"type": "object",
+			"default": {}
 		},
-		"isStaticChart": {
-			"type": "boolean",
-			"default": false
-		},
-		"isFreeformChart": {
-			"type": "boolean",
-			"default": false
-		},
-		"staticImageId": {
-			"type": "string"
-		},
-		"staticImageUrl": {
-			"type": "string"
-		},
-		"staticImageInnerHTML": {
-			"type": "string"
-		},
-		"chartConverted": {
+		"layout": {
 			"type": "object",
 			"default": {
-				"converted": false,
-				"requester": "",
-				"timestamp": ""
+				"name": "wp-block-prc-block-chart-builder-controller",
+				"type": "bar",
+				"orientation": "horizontal",
+				"width": 640,
+				"height": 400,
+				"padding": {
+					"top": 20,
+					"bottom": 25,
+					"left": 60,
+					"right": 0
+				},
+				"overflowX": "responsive",
+				"horizontalRules": true,
+				"mobileBreakpoint": 480,
+				"parentClass": "wp-chart-builder-wrapper"
 			}
 		},
-		"chartData": {
-			"type": "array"
+		"metadata": {
+			"type": "object",
+			"default": {
+				"active": true,
+				"title": "Title",
+				"subtitle": "Subtitle",
+				"note": "Note: This is a note.",
+				"source": "Source: This is your source.",
+				"tag": "PEW RESEARCH CENTER",
+				"alt": ""
+			}
 		},
-		"tableData": {
-			"type": "string"
-		},
-		"hasPreformattedData": {
-			"type": "boolean",
-			"default": false
-		},
-		"preformattedData": {
-			"type": "array"
-		},
-		"chartType": {
-			"type": "string",
-			"enum": [
-				"bar",
-				"diverging-bar",
-				"line",
-				"area",
-				"stacked-area",
-				"scatter",
-				"pie",
-				"dot-plot",
-				"stacked-bar",
-				"grouped-bar",
-				"exploded-bar",
-				"static",
-				"map-usa",
-				"map-usa-counties",
-				"map-usa-block",
-				"map-world",
-				"freeform"
-			],
-			"default": "bar"
-		},
-		"chartFamily": {
-			"type": "string",
-			"enum": ["chart", "map"],
-			"default": "chart"
-		},
-		"chartOrientation": {
-			"type": "string",
-			"enum": ["vertical", "horizontal"],
-			"default": "horizontal"
-		},
-		"width": {
-			"type": "integer",
-			"default": 640
-		},
-		"height": {
-			"type": "integer",
-			"default": 400
-		},
-		"overflowX": {
-			"type": "string",
-			"enum": [
-				"scroll",
-				"responsive",
-				"scroll-fixed-y-axis",
-				"preserve-aspect-ratio"
-			],
-			"default": "responsive"
-		},
-		"mobileBreakpoint": {
-			"type": "integer",
-			"default": 480
-		},
-		"horizontalRules": {
-			"type": "boolean",
-			"default": true
-		},
-		"paddingTop": {
-			"type": "integer",
-			"default": 20
-		},
-		"paddingLeft": {
-			"type": "integer",
-			"default": 60
-		},
-		"paddingBottom": {
-			"type": "integer",
-			"default": 25
-		},
-		"paddingRight": {
-			"type": "integer",
-			"default": 0
-		},
-		"pieCategoryLabelsActive": {
-			"type": "boolean",
-			"default": true
-		},
-		"dataRenderX": {
-			"type": "string",
-			"default": "x"
-		},
-		"dataRenderY": {
-			"type": "string",
-			"default": "y"
-		},
-		"dateInputFormat": {
-			"type": "string",
-			"enum": [
-				"YYYY",
-				"YYYY-MM",
-				"YYYY-MM-DD",
-				"MM-YYYY",
-				"MM-DD-YYYY",
-				"DD-MM-YYYY",
-				"MM/DD/YYYY",
-				"MM/YYYY",
-				"DD/MM/YYYY",
-				"MM/DD",
-				"DD/MM",
-				"MM"
-			],
-			"default": "YYYY"
-		},
-		"sortOrder": {
-			"type": "string",
-			"enum": ["ascending", "descending", "none", "reverse"],
-			"default": "none"
-		},
-		"sortKey": {
-			"type": "string",
-			"default": "x"
-		},
-		"colorValue": {
-			"type": "string",
-			"default": "general"
-		},
-		"customColors": {
+		"colors": {
 			"type": "array",
-			"default": []
-		},
-		"elementHasStroke": {
-			"type": "boolean",
-			"default": false
-		},
-		"tabsActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"xAxisActive": {
-			"type": "boolean",
-			"default": true
-		},
-		"xLabel": {
-			"type": "string",
-			"default": null
-		},
-		"xLabelMaxWidth": {
-			"type": "number",
-			"default": 100
-		},
-		"xLabelFontSize": {
-			"type": "number",
-			"default": 12
-		},
-		"xLabelPadding": {
-			"type": "number",
-			"default": 30
-		},
-		"xLabelTextFill": {
-			"type": "string",
-			"default": "#231F20"
-		},
-		"xMinDomain": {
-			"type": "number",
-			"default": 0
-		},
-		"xMaxDomain": {
-			"type": "number",
-			"default": 100
-		},
-		"showXMinDomainLabel": {
-			"type": "boolean",
-			"default": true
-		},
-		"xTickMarksActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"xTickNum": {
-			"type": "integer",
-			"default": 5
-		},
-		"xTickExact": {
-			"type": "string",
-			"default": ""
-		},
-		"xTickUnit": {
-			"type": "string",
-			"default": ""
-		},
-		"xTickUnitPosition": {
-			"type": "string",
-			"enum": ["start", "end"],
-			"default": "end"
-		},
-		"xTickLabelAngle": {
-			"type": "integer",
-			"default": 0
-		},
-		"xTickLabelMaxWidth": {
-			"type": "integer",
-			"default": 50
-		},
-		"xTickLabelTextAnchor": {
-			"type": "string",
-			"enum": ["start", "middle", "end"],
-			"default": "middle"
-		},
-		"xTickLabelVerticalAnchor": {
-			"type": "string",
-			"enum": ["start", "middle", "end"],
-			"default": "end"
-		},
-		"xTickLabelDY": {
-			"type": "integer",
-			"default": 0
-		},
-		"xTickLabelDX": {
-			"type": "integer",
-			"default": 0
-		},
-		"xAbbreviateTicks": {
-			"type": "boolean",
-			"default": false
-		},
-		"xAbbreviateTicksDecimals": {
-			"type": "integer",
-			"default": 0
-		},
-		"xTicksToLocaleString": {
-			"type": "boolean",
-			"default": false
-		},
-		"xMultiLineTickLabels": {
-			"type": "boolean",
-			"default": false
-		},
-		"xMultiLineTickLabelsBreak": {
-			"type": "integer",
-			"default": 1
-		},
-		"xScale": {
-			"type": "string",
-			"enum": ["linear", "time", "log", "sqrt"],
-			"default": "linear"
-		},
-		"xDateFormat": {
-			"type": "string",
-			"enum": [
-				"%Y",
-				"%B/%Y",
-				"%b/%Y",
-				"%-m/%Y",
-				"%-m/%y",
-				"%-m/%-d/%Y",
-				"%-d/%-m/%y",
-				"%B %d, %Y",
-				"%B %Y",
-				"%b %Y",
-				"%b %d, %Y",
-				"%d %b %Y",
-				"%d %b %y",
-				"%d %b",
-				"%d %B %Y",
-				"%d %B ’%y",
-				"%d %b ’%y",
-				"%b ’%y",
-				"’%y",
-				"%d %B",
-				"%d %b, %Y"
-			],
-			"default": "%Y"
-		},
-		"xAxisStroke": {
-			"type": "string",
-			"default": "#756f6a"
-		},
-		"xGridStroke": {
-			"type": "string",
-			"default": ""
-		},
-		"xGridStrokeDasharray": {
-			"type": "string",
-			"default": ""
-		},
-		"xGridOpacity": {
-			"type": "number",
-			"default": 0.2
-		},
-		"yAxisStroke": {
-			"type": "string",
-			"default": "#756f6a"
-		},
-		"yGridStroke": {
-			"type": "string",
-			"default": ""
-		},
-		"yGridStrokeDasharray": {
-			"type": "string",
-			"default": ""
-		},
-		"yGridOpacity": {
-			"type": "number",
-			"default": 0.2
-		},
-		"yAxisActive": {
-			"type": "boolean",
-			"default": true
-		},
-		"yLabel": {
-			"type": "string",
-			"default": null
-		},
-		"yLabelFontSize": {
-			"type": "number",
-			"default": 12
-		},
-		"yLabelTextFill": {
-			"type": "string",
-			"default": "#231F20"
-		},
-		"yLabelPadding": {
-			"type": "number",
-			"default": 30
-		},
-		"yLabelMaxWidth": {
-			"type": "number",
-			"default": 100
-		},
-		"yScale": {
-			"type": "string",
-			"enum": ["linear", "time", "log", "sqrt"],
-			"default": "linear"
-		},
-		"yScaleFormat": {
-			"type": "string",
-			"default": ""
-		},
-		"yMinDomain": {
-			"type": "number",
-			"default": 0
-		},
-		"yMaxDomain": {
-			"type": "number",
-			"default": 100
-		},
-		"showYMinDomainLabel": {
-			"type": "boolean",
-			"default": false
-		},
-		"yTickMarksActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"yTickNum": {
-			"type": "integer",
-			"default": 5
-		},
-		"yTickExact": {
-			"type": "string",
-			"default": ""
-		},
-		"yTickUnit": {
-			"type": "string",
-			"default": ""
-		},
-		"yTickUnitPosition": {
-			"type": "string",
-			"enum": ["start", "end"],
-			"default": "end"
-		},
-		"yTickLabelAngle": {
-			"type": "integer",
-			"default": 0
-		},
-		"yTickLabelMaxWidth": {
-			"type": "integer",
-			"default": 50
-		},
-		"yTickLabelTextAnchor": {
-			"type": "string",
-			"enum": ["start", "middle", "end"],
-			"default": "end"
-		},
-		"yTickLabelVerticalAnchor": {
-			"type": "string",
-			"enum": ["start", "middle", "end"],
-			"default": "middle"
-		},
-		"yTickLabelDY": {
-			"type": "integer",
-			"default": 0
-		},
-		"yTickLabelDX": {
-			"type": "integer",
-			"default": 0
-		},
-		"yAbbreviateTicks": {
-			"type": "boolean",
-			"default": true
-		},
-		"yAbbreviateTicksDecimals": {
-			"type": "integer",
-			"default": 0
-		},
-		"yTicksToLocaleString": {
-			"type": "boolean",
-			"default": false
-		},
-		"yMultiLineTickLabels": {
-			"type": "boolean",
-			"default": false
-		},
-		"yMultiLineTickLabelsBreak": {
-			"type": "integer",
-			"default": 1
-		},
-		"plotBandsActive": {
-			"type": "boolean",
-			"default": false
+			"default": [
+				"#436983",
+				"#bf3927",
+				"#756a7e",
+				"#ea9e2c",
+				"#bc7b2b",
+				"#eeece4"
+			]
 		},
 		"plotBands": {
-			"type": "array",
-			"default": []
-		},
-		"annotationsActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"annotations": {
-			"type": "array",
-			"default": []
-		},
-		"barLabelPosition": {
-			"type": "string",
-			"enum": ["inside", "outside", "center"],
-			"default": "inside"
-		},
-		"barLabelCutoff": {
-			"type": "number",
-			"default": 10
-		},
-		"barLabelCutoffMobile": {
-			"type": "number",
-			"default": 5
-		},
-		"barPadding": {
-			"type": "number",
-			"default": 0.2
-		},
-		"barGroupPadding": {
-			"type": "number",
-			"default": 0.2
-		},
-		"groupBreaksActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"groupBreaksCategory": {
-			"type": "string",
-			"default": ""
-		},
-		"groupBreaksCategoryValues": {
-			"type": "array",
-			"default": []
-		},
-		"groupBreaksStyleVariation": {
-			"type": "string",
-			"enum": ["empty", "solid", "dotted", "dashed", "heartbeat"],
-			"default": "empty"
-		},
-		"groupBreaksHeight": {
-			"type": "number",
-			"default": 30
-		},
-		"groupBreaks": {
-			"type": "object",
-			"default": {}
-		},
-		"lineInterpolation": {
-			"type": "string",
-			"enum": [
-				"curveBasis",
-				"curveBasisClosed",
-				"curveBasisOpen",
-				"curveStep",
-				"curveStepAfter",
-				"curveStepBefore",
-				"curveBundle",
-				"curveLinear",
-				"curveLinearClosed",
-				"curveCardinal",
-				"curveCardinalClosed",
-				"curveCardinalOpen",
-				"curveCatmullRom",
-				"curveCatmullRomClosed",
-				"curveCatmullRomOpen",
-				"curveMonotoneX",
-				"curveMonotoneY",
-				"curveNatural"
-			],
-			"default": "curveLinear"
-		},
-		"lineStrokeWidth": {
-			"type": "integer",
-			"default": 3
-		},
-		"lineStrokeDashArray": {
-			"type": "string",
-			"default": ""
-		},
-		"lineNodes": {
-			"type": "boolean",
-			"default": true
-		},
-		"nodeSize": {
-			"type": "integer",
-			"default": 3
-		},
-		"nodeFill": {
-			"type": "string",
-			"default": "inherit"
-		},
-		"nodeStrokeWidth": {
-			"type": "integer",
-			"default": 3
-		},
-		"areaFillOpacity": {
-			"type": "number",
-			"default": 0.4
-		},
-		"tooltipActive": {
-			"type": "boolean",
-			"default": true
-		},
-		"tooltipActiveOnMobile": {
-			"type": "boolean",
-			"default": true
-		},
-		"deemphasizeSiblings": {
-			"type": "boolean",
-			"default": false
-		},
-		"deemphasizeOpacity": {
-			"type": "number",
-			"default": 0.5
-		},
-		"emphasizeStrokeActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"emphasizeStrokeColor": {
-			"type": "string",
-			"default": "#000000"
-		},
-		"emphasizeStrokeWidth": {
-			"type": "number",
-			"default": 1
-		},
-		"tooltipMaxHeight": {
-			"type": "integer",
-			"default": 100
-		},
-		"tooltipMaxWidth": {
-			"type": "integer",
-			"default": 200
-		},
-		"tooltipMinHeight": {
-			"type": "integer",
-			"default": 20
-		},
-		"tooltipMinWidth": {
-			"type": "integer",
-			"default": 50
-		},
-		"tooltipFontSize": {
-			"type": "integer",
-			"default": 13
-		},
-		"tooltipHeaderActive": {
-			"type": "boolean",
-			"default": true
-		},
-		"tooltipHeaderValue": {
-			"type": "string",
-			"enum": ["independentValue", "categoryValue"],
-			"default": "categoryValue"
-		},
-		"tooltipOffsetX": {
-			"type": "integer",
-			"default": 10
-		},
-		"tooltipOffsetY": {
-			"type": "integer",
-			"default": 10
-		},
-		"tooltipCaretPosition": {
-			"type": "string",
-			"enum": ["top", "bottom", "left", "right"]
-		},
-		"tooltipFormat": {
-			"type": "string",
-			"default": "{{row}}: {{value}}"
-		},
-		"tooltipFormatValue": {
-			"type": "boolean",
-			"default": true
-		},
-		"tooltipAbsoluteValue": {
-			"type": "boolean",
-			"default": false
-		},
-		"tooltipDateFormat": {
-			"type": "string",
-			"enum": [
-				"%Y",
-				"%B/%Y",
-				"%b/%Y",
-				"%-m/%Y",
-				"%-m/%y",
-				"%-m/%-d/%Y",
-				"%-d/%-m/%y",
-				"%B %d, %Y",
-				"%B %Y",
-				"%b %Y",
-				"%b %d, %Y",
-				"%d %b %Y",
-				"%d %b %y",
-				"%d %b",
-				"%d %B %Y",
-				"%d %B '%y",
-				"%d %b '%y",
-				"%b '%y",
-				"'%y",
-				"%d %B",
-				"%d %b, %Y"
-			],
-			"default": "%Y"
-		},
-		"labelsActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"showFirstLastPointsOnly": {
-			"type": "boolean",
-			"default": false
-		},
-		"labelPositionDX": {
-			"type": "integer",
-			"default": 0
-		},
-		"labelPositionDY": {
-			"type": "integer",
-			"default": 0
-		},
-		"labelCutoff": {
-			"type": "number",
-			"default": 10
-		},
-		"labelAbsoluteValue": {
-			"type": "boolean",
-			"default": false
-		},
-		"labelFormatValue": {
-			"type": "boolean",
-			"default": true
-		},
-		"labelTruncateDecimal": {
-			"type": "boolean",
-			"default": true
-		},
-		"labelToFixedDecimal": {
-			"type": "integer",
-			"default": 3
-		},
-		"labelUnit": {
-			"type": "string",
-			"default": ""
-		},
-		"labelUnitPosition": {
-			"type": "string",
-			"enum": ["start", "end"],
-			"default": "end"
-		},
-		"labelColor": {
-			"type": "string",
-			"enum": ["contrast", "inherit", "black", "white"]
-		},
-		"labelFontSize": {
-			"type": "integer",
-			"default": 10
-		},
-		"labelFontWeight": {
-			"type": "integer",
-			"default": 200
-		},
-		"legendActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"legendCategories": {
-			"type": "array",
-			"default": []
-		},
-		"legendOrientation": {
-			"type": "string",
-			"enum": ["row", "column", "row-reverse", "column-reverse"],
-			"default": "row"
-		},
-		"legendTitle": {
-			"type": "string",
-			"default": ""
-		},
-		"legendAlignment": {
-			"type": "string",
-			"enum": ["flex-start", "center", "flex-end", "none"],
-			"default": "center"
-		},
-		"legendOffsetX": {
-			"type": "integer",
-			"default": 0
-		},
-		"legendOffsetY": {
-			"type": "integer",
-			"default": 0
-		},
-		"legendMarkerStyle": {
-			"type": "string",
-			"enum": ["circle", "rect", "line"],
-			"default": "rect"
-		},
-		"legendBorderStroke": {
-			"type": "string"
-		},
-		"legendFill": {
-			"type": "string"
-		},
-		"legendFontSize": {
-			"type": "integer",
-			"default": 12
-		},
-		"legendMargin": {
 			"type": "object",
 			"default": {
-				"top": 0,
-				"right": 5,
-				"bottom": 0,
-				"left": 0
+				"active": false,
+				"allowDrag": false,
+				"allowResize": false,
+				"dimension": "x",
+				"bands": []
 			}
 		},
-		"legendLabelDelimiter": {
-			"type": "string",
-			"default": " - "
+		"independentAxis": {
+			"type": "object",
+			"default": {
+				"active": true,
+				"label": "",
+				"scale": "linear",
+				"dateFormat": "%Y",
+				"domain": [0, 100],
+				"domainPadding": 20,
+				"showZero": true,
+				"padding": 30,
+				"tickMarksActive": false,
+				"tickCount": 5,
+				"tickValues": null,
+				"tickFormat": null,
+				"ticksToLocaleString": false,
+				"abbreviateTicks": false,
+				"abbreviateTicksDecimals": 0,
+				"tickUnit": "",
+				"tickUnitPosition": "end",
+				"tickLabels": {
+					"fontSize": 12,
+					"padding": 0,
+					"angle": 0,
+					"dx": 0,
+					"dy": 0,
+					"textAnchor": "middle",
+					"verticalAnchor": "end",
+					"fill": "#231F20",
+					"fontFamily": "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+					"maxWidth": 50
+				},
+				"axisLabel": {
+					"fontSize": 12,
+					"fill": "#231F20",
+					"padding": 15,
+					"angle": 0,
+					"dx": 0,
+					"dy": 0,
+					"textAnchor": "end",
+					"verticalAnchor": "middle",
+					"fontFamily": "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+					"maxWidth": 100
+				},
+				"axis": {
+					"stroke": "#756f6a",
+					"strokeWidth": 1
+				},
+				"ticks": {
+					"stroke": "#756f6a",
+					"size": 5,
+					"strokeWidth": 0
+				},
+				"grid": {
+					"stroke": "",
+					"strokeOpacity": 0.2,
+					"strokeWidth": 2,
+					"strokeDasharray": ""
+				}
+			}
 		},
-		"legendLabelLower": {
-			"type": "string",
-			"default": "Less than "
+		"dependentAxis": {
+			"type": "object",
+			"default": {
+				"active": true,
+				"label": "",
+				"scale": "linear",
+				"domain": [0, 100],
+				"showZero": false,
+				"tickMarksActive": true,
+				"tickCount": 5,
+				"tickValues": null,
+				"tickFormat": null,
+				"tickAngle": 0,
+				"ticksToLocaleString": false,
+				"abbreviateTicks": true,
+				"abbreviateTicksDecimals": 0,
+				"tickUnit": "",
+				"tickUnitPosition": "end",
+				"tickLabels": {
+					"fontSize": 12,
+					"padding": 15,
+					"angle": 0,
+					"dx": 0,
+					"dy": 0,
+					"textAnchor": "end",
+					"verticalAnchor": "middle",
+					"fill": "rgba(35, 31, 32, 0.7)",
+					"fontFamily": "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+					"maxWidth": 50
+				},
+				"axisLabel": {
+					"fontSize": 12,
+					"fill": "rgba(35, 31, 32, 0.7)",
+					"padding": 30,
+					"angle": 270,
+					"dx": 0,
+					"dy": 0,
+					"textAnchor": "middle",
+					"verticalAnchor": "middle",
+					"fontFamily": "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+					"maxWidth": 200
+				},
+				"axis": {
+					"stroke": "#756f6a",
+					"strokeWidth": 1
+				},
+				"ticks": {
+					"stroke": "#756f6a",
+					"size": 5,
+					"strokeWidth": 0
+				},
+				"grid": {
+					"stroke": "",
+					"strokeOpacity": 0.2,
+					"strokeWidth": 1,
+					"strokeDasharray": ""
+				}
+			}
 		},
-		"legendLabelUpper": {
-			"type": "string",
-			"default": "More than "
+		"tooltip": {
+			"type": "object",
+			"default": {
+				"active": true,
+				"activeOnMobile": true,
+				"headerActive": true,
+				"headerValue": "categoryValue",
+				"format": "{{row}}: {{value}}",
+				"offsetX": 10,
+				"offsetY": 10,
+				"abbreviateValue": false,
+				"absoluteValue": false,
+				"toFixedDecimal": 0,
+				"toLocaleString": true,
+				"customFormat": null,
+				"rlsFormat": false,
+				"dateFormat": "%-m/%Y",
+				"caretPosition": "bottom",
+				"deemphasizeSiblings": false,
+				"deemphasizeOpacity": 0.5,
+				"emphasizeStrokeActive": false,
+				"emphasizeStrokeColor": "black",
+				"emphasizeStrokeWidth": 1,
+				"style": {
+					"minWidth": 50,
+					"maxWidth": 200,
+					"maxHeight": 100,
+					"minHeight": 20,
+					"width": "auto",
+					"height": "auto",
+					"fontSize": 13,
+					"fontFamily": "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+					"background": "white",
+					"border": "1px solid #CBCBCB",
+					"padding": "10px",
+					"borderRadius": "0px",
+					"color": "black"
+				}
+			}
 		},
-		"metaTextActive": {
-			"type": "boolean",
-			"default": true
+		"legend": {
+			"type": "object",
+			"default": {
+				"active": false,
+				"orientation": "row",
+				"title": "",
+				"alignment": "center",
+				"offsetX": 0,
+				"offsetY": 0,
+				"markerStyle": "rect",
+				"borderStroke": "",
+				"fill": "",
+				"categories": [],
+				"labelDelimiter": "to",
+				"labelLower": "Less than ",
+				"labelUpper": "More than ",
+				"fontSize": 12,
+				"margin": {
+					"top": 0,
+					"right": 5,
+					"bottom": 0,
+					"left": 0
+				}
+			}
 		},
-		"metaTitle": {
-			"type": "string",
-			"default": "Title"
+		"labels": {
+			"type": "object",
+			"default": {
+				"active": false,
+				"showFirstLastPointsOnly": false,
+				"color": "inherit",
+				"fontWeight": 200,
+				"fontSize": 10,
+				"fontFamily": "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+				"labelPositionBar": "inside",
+				"labelCutoff": 10,
+				"labelCutoffMobile": 5,
+				"labelPositionDX": 0,
+				"labelPositionDY": 0,
+				"pieLabelRadius": 60,
+				"abbreviateValue": false,
+				"absoluteValue": false,
+				"toLocaleString": true,
+				"truncateDecimal": true,
+				"toFixedDecimal": 3,
+				"labelUnit": "",
+				"labelUnitPosition": "end",
+				"textAnchor": "middle",
+				"customLabelFormat": null,
+				"customPositions": {}
+			}
 		},
-		"metaSubtitle": {
-			"type": "string",
-			"default": "Subtitle"
+		"bar": {
+			"type": "object",
+			"default": {
+				"barPadding": 0.2,
+				"barGroupPadding": 0.2,
+				"hasRectStroke": false,
+				"stackOffset": "none"
+			}
 		},
-		"metaQuestionWordingActive": {
-			"type": "boolean",
-			"default": false
+		"line": {
+			"type": "object",
+			"default": {
+				"interpolation": "curveLinear",
+				"strokeDasharray": "",
+				"strokeWidth": 3,
+				"showPoints": true,
+				"showArea": false,
+				"areaFillOpacity": 0.4
+			}
 		},
-		"metaQuestionWording": {
-			"type": "string"
+		"dotPlot": {
+			"type": "object",
+			"default": {
+				"connectPoints": true,
+				"connectingLine": {
+					"stroke": "#E6E7E8",
+					"strokeWidth": 6,
+					"strokeDasharray": "",
+					"strokeOpacity": 1
+				}
+			}
 		},
-		"metaNote": {
-			"type": "string",
-			"default": "Note: This is a note."
+		"explodedBar": {
+			"type": "object",
+			"default": {
+				"columnGap": 16
+			}
 		},
-		"metaSource": {
-			"type": "string",
-			"default": "Source: This is your source."
+		"pie": {
+			"type": "object",
+			"default": {
+				"hasPathStroke": false,
+				"pathStrokeColor": "white",
+				"pathStrokeWidth": 1,
+				"showCategoryLabels": true,
+				"innerRadius": 0,
+				"padAngle": 0,
+				"cornerRadius": 0,
+				"sortByValue": false
+			}
 		},
-		"metaTag": {
-			"type": "string",
-			"default": "PEW RESEARCH CENTER"
+		"nodes": {
+			"type": "object",
+			"default": {
+				"pointSize": 3,
+				"pointFill": "inherit",
+				"pointStrokeWidth": 1,
+				"pointStroke": "inherit"
+			}
 		},
-		"metaAlt": {
-			"type": "string",
-			"default": ""
+		"map": {
+			"type": "object",
+			"default": {
+				"ignoreSmallStateLabels": false,
+				"ignoredLabels": [],
+				"abbreviateLabels": true,
+				"blockRectSize": 44,
+				"pathBackgroundFill": "#f7f7f7",
+				"pathStroke": "#d3d3d3",
+				"pathStrokeWidth": 0.5,
+				"showCountyBoundaries": true,
+				"showStateBoundaries": true,
+				"zoomActive": false,
+				"projectionPreset": "default",
+				"topologyRegion": "default",
+				"centerLongitude": 0,
+				"centerLatitude": 0,
+				"rotateLambda": 0,
+				"rotatePhi": 0,
+				"rotateGamma": 0,
+				"customScale": 1
+			}
 		},
-		"svgUrl": {
-			"type": "string",
-			"default": ""
+		"divergingBar": {
+			"type": "object",
+			"default": {
+				"positiveCategories": [],
+				"negativeCategories": [],
+				"netPositiveCategory": "",
+				"netNegativeCategory": "",
+				"percentOfInnerWidth": 0.7,
+				"neutralBar": {
+					"active": true,
+					"category": "",
+					"offsetX": 0,
+					"separator": true,
+					"separatorOffsetX": -1
+				}
+			}
 		},
-		"svgId": {
-			"type": "integer"
+		"diffColumn": {
+			"type": "object",
+			"default": {
+				"active": false,
+				"category": "",
+				"columnHeader": "Diff",
+				"dx": 0,
+				"dy": 0,
+				"style": {
+					"rectStrokeWidth": 0,
+					"rectStrokeColor": "white",
+					"rectFill": "none",
+					"fontWeight": "normal",
+					"fontStyle": "normal",
+					"fontAppearance": "default",
+					"fontSize": "10px",
+					"headerFontSize": "12px",
+					"marginLeft": 10,
+					"width": 30,
+					"heightOffset": 0
+				}
+			}
 		},
-		"pngUrl": {
-			"type": "string",
-			"default": ""
+		"annotations": {
+			"type": "object",
+			"default": {
+				"active": false,
+				"activeOnMobile": false,
+				"items": []
+			}
 		},
-		"pngId": {
-			"type": "integer"
+		"dataRender": {
+			"type": "object",
+			"default": {
+				"x": "x",
+				"y": "y",
+				"sortKey": "x",
+				"sortOrder": "none",
+				"categories": [],
+				"xScale": "linear",
+				"yScale": "linear",
+				"xFormat": null,
+				"yFormat": null,
+				"numberFormat": "en-US",
+				"isHighlightedColor": "#ECDBAC",
+				"mapScale": "threshold",
+				"mapScaleDomain": [10, 20, 30, 40, 50],
+				"groupBreaksActive": false,
+				"groupBreaksCategory": "Continent",
+				"groupBreaksCategoryValues": [],
+				"groupBreaks": {
+					"breakStyles": {
+						"variation": "empty",
+						"stroke": "#A4A4A4",
+						"strokeWidth": 1.4,
+						"height": 30,
+						"strokeDasharray": "none"
+					},
+					"labelStyles": {
+						"fill": "black",
+						"fontStyle": "normal"
+					}
+				}
+			}
 		},
-		"independentVariable": {
-			"type": "string",
-			"default": "x"
+		"animate": {
+			"type": "object",
+			"default": {
+				"active": false,
+				"animationWhitelist": [],
+				"duration": 2000
+			}
 		},
-		"categories": {
-			"type": "array",
-			"default": []
+		"io": {
+			"type": "object",
+			"default": {
+				"isConvertedChart": false,
+				"isStaticChart": false,
+				"isFreeformChart": false,
+				"staticImageId": "",
+				"staticImageUrl": "",
+				"staticImageInnerHTML": "",
+				"staticImageAltText": "",
+				"chartConverted": {
+					"converted": false,
+					"requester": "",
+					"timestamp": ""
+				},
+				"defaultShouldRender": true,
+				"pngUrl": "",
+				"pngId": "",
+				"colorValue": "general",
+				"customColors": [],
+				"chartFamily": "chart",
+				"chartData": [],
+				"tableData": "",
+				"availableCategories": [],
+				"independentVariable": "",
+				"hasPreformattedData": false,
+				"preformattedData": [],
+				"questionWordingActive": false,
+				"questionWording": "",
+				"tabsActive": false,
+				"allowDataDownload": true,
+				"elementHasStroke": false,
+				"isCustomChart": false,
+				"customAttributes": {}
+			}
 		},
-		"positiveCategories": {
-			"type": "array",
-			"default": []
-		},
-		"negativeCategories": {
-			"type": "array",
-			"default": []
-		},
-		"neutralCategory": {
-			"type": "string",
-			"default": ""
-		},
-		"neutralBarActive": {
-			"type": "boolean",
-			"default": true
-		},
-		"neutralBarOffsetX": {
-			"type": "integer",
-			"default": 0
-		},
-		"neutralBarSeparator": {
-			"type": "boolean",
-			"default": true
-		},
-		"neutralBarSeparatorOffsetX": {
-			"type": "integer",
-			"default": -1
-		},
-		"divergingBarPercentOfInnerWidth": {
-			"type": "number",
-			"default": 70
-		},
-		"dotPlotConnectPoints": {
-			"type": "boolean",
-			"default": true
-		},
-		"dotPlotConnectPointsStroke": {
-			"type": "string",
-			"default": "#E6E7E8"
-		},
-		"dotPlotConnectPointsStrokeWidth": {
-			"type": "integer",
-			"default": 6
-		},
-		"dotPlotConnectPointsStrokeDasharray": {
-			"type": "string",
-			"default": ""
-		},
-		"explodedBarColumnGap": {
-			"type": "number",
-			"default": 16
-		},
-		"availableCategories": {
-			"type": "array",
-			"default": ["y"]
-		},
-		"diffColumnActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"diffColumnCategory": {
-			"type": "string",
-			"default": ""
-		},
-		"diffColumnHeader": {
-			"type": "string",
-			"default": ""
-		},
-		"diffColumnWidth": {
-			"type": "integer",
-			"default": 30
-		},
-		"diffColumnBackgroundColor": {
-			"type": "string",
-			"default": ""
-		},
-		"diffColumnMarginLeft": {
-			"type": "integer",
-			"default": 10
-		},
-		"diffColumnHeightOffset": {
-			"type": "integer",
-			"default": 0
-		},
-		"diffColumnAppearance": {
-			"type": "string",
-			"default": "default"
-		},
-		"mapScale": {
-			"type": "string",
-			"enum": ["threshold", "ordinal", "linear"],
-			"default": "threshold"
-		},
-		"mapScaleDomain": {
-			"type": "array",
-			"default": [10, 20, 30, 40, 50]
-		},
-		"mapAbbreviateLabels": {
-			"type": "boolean",
-			"default": true
-		},
-		"mapIgnoreSmallStateLabels": {
-			"type": "boolean",
-			"default": true
-		},
-		"mapIgnoredLabels": {
-			"type": "array",
-			"default": []
-		},
-		"showCountyBoundaries": {
-			"type": "boolean",
-			"default": true
-		},
-		"mapShowStateBoundaries": {
-			"type": "boolean",
-			"default": true
-		},
-		"mapPathBackgroundFill": {
-			"type": "string",
-			"default": "#f7f7f7"
-		},
-		"mapPathStroke": {
-			"type": "string",
-			"default": "#d3d3d3"
-		},
-		"mapBlockRectSize": {
-			"type": "integer",
-			"default": 44
-		},
-		"mapProjectionPreset": {
-			"type": "string",
-			"enum": [
-				"default",
-				"europe",
-				"asia",
-				"east-asia",
-				"south-asia",
-				"southeast-asia",
-				"middle-east",
-				"africa",
-				"north-africa",
-				"sub-saharan-africa",
-				"north-america",
-				"central-america",
-				"south-america",
-				"oceania",
-				"custom"
-			],
-			"default": "default"
-		},
-		"mapTopologyRegion": {
-			"type": "string",
-			"enum": [
-				"default",
-				"europe",
-				"asia",
-				"east-asia",
-				"south-asia",
-				"southeast-asia",
-				"middle-east",
-				"africa",
-				"north-africa",
-				"sub-saharan-africa",
-				"north-america",
-				"central-america",
-				"south-america",
-				"oceania",
-				"custom"
-			],
-			"default": "default"
-		},
-		"mapCenterLongitude": {
-			"type": "number",
-			"default": 0
-		},
-		"mapCenterLatitude": {
-			"type": "number",
-			"default": 0
-		},
-		"mapRotateLambda": {
-			"type": "number",
-			"default": 0
-		},
-		"mapRotatePhi": {
-			"type": "number",
-			"default": 0
-		},
-		"mapRotateGamma": {
-			"type": "number",
-			"default": 0
-		},
-		"mapCustomScale": {
-			"type": "number",
-			"default": 1
-		},
-		"mapZoomActive": {
-			"type": "boolean",
-			"default": false
-		},
-		"allowDataDownload": {
-			"type": "boolean",
-			"default": true
-		},
-		"isCustomChart": {
-			"type": "boolean",
-			"default": false
-		},
-		"customAttributes": {
+		"_legacy": {
 			"type": "object",
 			"default": {}
 		},
-		"defaultShouldRender": {
-			"type": "boolean",
-			"default": true
+		"_v1Original": {
+			"type": "object",
+			"default": {}
 		},
-		"lock": {
+		"_migrationMeta": {
 			"type": "object",
 			"default": {
-				"move": true,
-				"remove": false
+				"migratedAt": "",
+				"migrationVersion": "1.0.0",
+				"forceRemigrate": false
 			}
 		}
 	},
 	"example": {
 		"attributes": {
-			"chartType": "bar",
-			"className": "is-style-bar"
+			"_version": "v2",
+			"layout": {
+				"type": "bar"
+			},
+			"metadata": {
+				"title": "Chart Title",
+				"subtitle": "Chart Subtitle",
+				"note": "Chart Note",
+				"source": "Chart Source"
+			},
+			"io": {
+				"chartData": [
+					{
+						"x": "Category 1",
+						"y": 100
+					},
+					{
+						"x": "Category 2",
+						"y": 200
+					}
+				]
+			}
 		}
 	},
-	"usesContext": ["refId", "prc-chart-builder/id"],
+	"usesContext": [
+		"refId",
+		"prc-chart-builder/id",
+		"prc-chart-builder/syncedTableData"
+	],
 	"supports": {
 		"html": false,
 		"inserter": false,
-		"interactivity": true
+		"interactivity": true,
+		"lock": false
 	},
 	"editorScript": "file:./index.js",
 	"viewScriptModule": "file:./view.js"

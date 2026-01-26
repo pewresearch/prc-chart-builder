@@ -17,11 +17,13 @@ import {
 	SelectControl,
 	ToggleControl,
 	FormTokenField,
+	TextareaControl,
 	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
 
 import Sorter from './sorter';
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -40,34 +42,31 @@ const StyledLabel = styled.div`
 `;
 
 function DataControls({ attributes, setAttributes, clientId }) {
-	const {
-		sortOrder,
-		availableCategories,
-		chartType,
-		chartFamily,
-		categories,
-		diffColumnActive,
-		positiveCategories,
-		negativeCategories,
-		diffColumnCategory,
-		neutralCategory,
-		xScale,
-		mapScale,
-		mapScaleDomain,
-		dateInputFormat,
-		sortKey,
-		independentVariable,
-		groupBreaksActive,
-		groupBreaksCategory,
-		groupBreaksStyleVariation,
-		groupBreaksHeight,
-		groupBreaksCategoryValues,
-		chartData,
-	} = attributes;
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
+
+	// Content attributes - NOT viewport-aware (same data across all viewports)
+	const io = attributes.io || {};
+	const dataRender = attributes.dataRender || {};
+	const divergingBar = attributes.divergingBar || {};
+
+	// Presentation attributes - viewport-aware
+	const layout = getCurrentValue('layout') || {};
+
+	const { availableCategories, independentVariable, chartFamily, chartData } =
+		io;
+	const { type: chartType } = layout;
+	const categories = dataRender.categories || [];
+	const positiveCategories = divergingBar.positiveCategories || [];
+	const negativeCategories = divergingBar.negativeCategories || [];
+	const groupBreaksActive = dataRender.groupBreaksActive || false;
+	const groupBreaksCategory = dataRender.groupBreaksCategory || '';
 
 	const availableOptions = useMemo(
 		() =>
-			availableCategories.map((category) => {
+			(availableCategories || []).map((category) => {
 				return {
 					label: category,
 					disabled:
@@ -144,7 +143,33 @@ function DataControls({ attributes, setAttributes, clientId }) {
 				<PanelDescription>
 					<StyledLabel>1. Data Accessors</StyledLabel>
 				</PanelDescription>
-				{'time' === xScale && (
+				{'line' === chartType ||
+					('area' === chartType && (
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('X Scale')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<SelectControl
+								label={__('X Scale')}
+								value={dataRender.xScale}
+								onChange={(value) =>
+									setAttributes({
+										dataRender: {
+											...dataRender,
+											xScale: value,
+										},
+									})
+								}
+								options={[
+									{ value: 'time', label: 'Time' },
+									{ value: 'linear', label: 'Linear' },
+								]}
+							/>
+						</WidePanelItem>
+					))}
+				{'time' === dataRender.xScale && (
 					<WidePanelItem
 						hasValue={() => true}
 						label={__('Time Series Input Format')}
@@ -153,12 +178,17 @@ function DataControls({ attributes, setAttributes, clientId }) {
 					>
 						<SelectControl
 							label={__('Time series input format')}
-							value={dateInputFormat}
+							value={dataRender.xFormat}
 							help={__(
 								`Choose the format of your table's time series data. This will be used to parse the data into a date object. If you do not see your format here, you must change your data to match one of the formats below.`
 							)}
 							onChange={(value) =>
-								setAttributes({ dateInputFormat: value })
+								setAttributes({
+									dataRender: {
+										...dataRender,
+										xFormat: value,
+									},
+								})
 							}
 							options={[
 								{
@@ -213,13 +243,18 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						>
 							<PanelDescription>
 								Select the category you would like chart builder
-								to use to render your map's data.
+								to use to render your map’s data.
 							</PanelDescription>
 							<SelectControl
 								label={__('Map Data Category')}
-								value={categories[0]}
+								value={dataRender.categories?.[0]}
 								onChange={(value) =>
-									setAttributes({ categories: [value] })
+									setAttributes({
+										dataRender: {
+											...dataRender,
+											categories: [value],
+										},
+									})
 								}
 								options={availableSelectableOptions}
 							/>
@@ -232,11 +267,13 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						>
 							<SelectControl
 								label={__('Map Scale')}
-								value={mapScale}
+								value={dataRender.mapScale}
 								onChange={(value) =>
 									setAttributes({
-										mapScale: value,
-										mapScaleDomain: [],
+										dataRender: {
+											...dataRender,
+											mapScale: value,
+										},
 									})
 								}
 								options={[
@@ -261,29 +298,75 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							isShownByDefault
 							panelId={clientId}
 						>
-							<PanelDescription>
-								Domain for the color scale. If oridinal, enter
-								the categories in the order you would like them
-								to appear. If threshold, enter the thresholds
-								for each color. If linear, enter the min and max
-								values for the scale.
-							</PanelDescription>
-							<FormTokenField
-								label={__('Map Color Scale Domain')}
-								value={mapScaleDomain || []}
-								onChange={(c) => {
-									if (mapScale !== 'ordinal') {
-										c = c
-											.map((v) => parseFloat(v))
-											.filter((v) => !isNaN(v))
-											.sort((a, b) => a - b);
-									}
-									setAttributes({ mapScaleDomain: c });
-								}}
-								help={__(
-									'Separate with commas or the Enter key.'
-								)}
-							/>
+							{dataRender.mapScale === 'ordinal' ? (
+								<>
+									<PanelDescription>
+										Enter the categories in the order you
+										would like them to appear, one per line.
+									</PanelDescription>
+									<TextareaControl
+										label={__('Map Color Scale Domain')}
+										value={(
+											dataRender.mapScaleDomain || []
+										).join('\n')}
+										onChange={(value) => {
+											// Keep all lines during editing (including empty)
+											const mapScaleCategories =
+												value.split('\n');
+											setAttributes({
+												dataRender: {
+													...dataRender,
+													mapScaleDomain:
+														mapScaleCategories,
+												},
+											});
+										}}
+										onBlur={() => {
+											// Clean up empty lines when user leaves field
+											const cleaned = (
+												dataRender.mapScaleDomain || []
+											).filter(
+												(line) => line.trim() !== ''
+											);
+											setAttributes({
+												dataRender: {
+													...dataRender,
+													mapScaleDomain: cleaned,
+												},
+											});
+										}}
+										help={__('One category per line.')}
+										rows={5}
+									/>
+								</>
+							) : (
+								<>
+									<PanelDescription>
+										{dataRender.mapScale === 'threshold'
+											? 'Enter the thresholds for each color.'
+											: 'Enter the min and max values for the scale.'}
+									</PanelDescription>
+									<FormTokenField
+										label={__('Map Color Scale Domain')}
+										value={dataRender.mapScaleDomain || []}
+										onChange={(c) => {
+											c = c
+												.map((v) => parseFloat(v))
+												.filter((v) => !isNaN(v))
+												.sort((a, b) => a - b);
+											setAttributes({
+												dataRender: {
+													...dataRender,
+													mapScaleDomain: c,
+												},
+											});
+										}}
+										help={__(
+											'Separate with commas or the Enter key.'
+										)}
+									/>
+								</>
+							)}
 						</WidePanelItem>
 					</>
 				)}
@@ -306,23 +389,57 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						</PanelDescription>
 						<Sorter
 							options={availablePositiveOptions}
-							setAttributes={setAttributes}
+							setAttributes={(updates) => {
+								// Wrap Sorter's setAttributes to be viewport-aware
+								if (updates.divergingBar) {
+									updateAttributeForDevice(
+										'divergingBar',
+										updates.divergingBar
+									);
+								} else {
+									setAttributes(updates);
+								}
+							}}
 							attribute="positiveCategories"
+							parentObject="divergingBar"
+							parentObjectValue={divergingBar}
 						/>
 						<PanelDescription>
 							<StyledLabel>Negative Categories</StyledLabel>
 						</PanelDescription>
 						<Sorter
 							options={availableNegativeOptions}
-							setAttributes={setAttributes}
+							setAttributes={(updates) => {
+								// Wrap Sorter's setAttributes to be viewport-aware
+								if (updates.divergingBar) {
+									updateAttributeForDevice(
+										'divergingBar',
+										updates.divergingBar
+									);
+								} else {
+									setAttributes(updates);
+								}
+							}}
 							attribute="negativeCategories"
+							parentObject="divergingBar"
+							parentObjectValue={divergingBar}
 						/>
 						<SelectControl
 							label={__('Neutral Category')}
-							value={neutralCategory}
-							onChange={(value) =>
-								setAttributes({ neutralCategory: value })
-							}
+							value={divergingBar.neutralBar?.category}
+							onChange={(value) => {
+								const neutralBar =
+									divergingBar.neutralBar || {};
+								setAttributes({
+									divergingBar: {
+										...divergingBar,
+										neutralBar: {
+											...neutralBar,
+											category: value,
+										},
+									},
+								});
+							}}
 							options={availableSelectableOptions}
 						/>
 					</WidePanelItem>
@@ -335,13 +452,15 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<PanelDescription>
-							Select the catogories you would like chart builder
+							Select the categories you would like chart builder
 							to use to render your data.
 						</PanelDescription>
 						<Sorter
 							options={availableOptions}
 							setAttributes={setAttributes}
 							attribute="categories"
+							parentObject="dataRender"
+							parentObjectValue={dataRender}
 						/>
 					</WidePanelItem>
 				)}
@@ -358,10 +477,14 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						>
 							<ToggleControl
 								label={__('Enable Group Breaks')}
-								checked={groupBreaksActive}
+								checked={dataRender.groupBreaksActive || false}
 								onChange={() =>
 									setAttributes({
-										groupBreaksActive: !groupBreaksActive,
+										dataRender: {
+											...dataRender,
+											groupBreaksActive:
+												!dataRender.groupBreaksActive,
+										},
 									})
 								}
 							/>
@@ -371,14 +494,17 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								in that column will become a separate group with
 								visual breaks in between.
 							</PanelDescription>
-							{groupBreaksActive && (
+							{dataRender.groupBreaksActive && (
 								<>
 									<SelectControl
 										label={__('Group By Category')}
-										value={groupBreaksCategory}
+										value={dataRender.groupBreaksCategory}
 										onChange={(value) =>
 											setAttributes({
-												groupBreaksCategory: value,
+												dataRender: {
+													...dataRender,
+													groupBreaksCategory: value,
+												},
 											})
 										}
 										options={availableCategories.map(
@@ -390,13 +516,31 @@ function DataControls({ attributes, setAttributes, clientId }) {
 									/>
 									<SelectControl
 										label={__('Break Line Style')}
-										value={groupBreaksStyleVariation}
-										onChange={(value) =>
-											setAttributes({
-												groupBreaksStyleVariation:
-													value,
-											})
+										value={
+											dataRender.groupBreaks?.breakStyles
+												?.variation
 										}
+										onChange={(value) => {
+											const groupBreaks =
+												getCurrentValue(
+													'dataRender',
+													'groupBreaks'
+												) || {};
+											const breakStyles =
+												groupBreaks.breakStyles || {};
+											updateAttributeForDevice(
+												'dataRender',
+												{
+													groupBreaks: {
+														...groupBreaks,
+														breakStyles: {
+															...breakStyles,
+															variation: value,
+														},
+													},
+												}
+											);
+										}}
 										options={[
 											{ value: 'empty', label: 'Empty' },
 											{ value: 'solid', label: 'Solid' },
@@ -418,14 +562,36 @@ function DataControls({ attributes, setAttributes, clientId }) {
 										label={__('Break Height')}
 										withInputField
 										step={1}
-										value={parseInt(groupBreaksHeight, 10)}
+										value={parseInt(
+											getCurrentValue(
+												'dataRender',
+												'groupBreaks'
+											)?.breakStyles?.height || 0,
+											10
+										)}
 										onChange={(value) => {
-											setAttributes({
-												groupBreaksHeight: formatNum(
-													value,
-													'integer'
-												),
-											});
+											const groupBreaks =
+												getCurrentValue(
+													'dataRender',
+													'groupBreaks'
+												) || {};
+											const breakStyles =
+												groupBreaks.breakStyles || {};
+											updateAttributeForDevice(
+												'dataRender',
+												{
+													groupBreaks: {
+														...groupBreaks,
+														breakStyles: {
+															...breakStyles,
+															height: formatNum(
+																value,
+																'integer'
+															),
+														},
+													},
+												}
+											);
 										}}
 									/>
 								</>
@@ -451,6 +617,8 @@ function DataControls({ attributes, setAttributes, clientId }) {
 										options={groupOrderOptions}
 										setAttributes={setAttributes}
 										attribute="groupBreaksCategoryValues"
+										parentObject="dataRender"
+										parentObjectValue={dataRender}
 										allowDisabled={false}
 									/>
 								</WidePanelItem>
@@ -469,12 +637,17 @@ function DataControls({ attributes, setAttributes, clientId }) {
 					>
 						<SelectControl
 							label={__('Sort Key')}
-							value={sortKey}
+							value={dataRender.sortKey}
 							help={__(
 								'Choose the column you would like to sort your data by.'
 							)}
 							onChange={(value) =>
-								setAttributes({ sortKey: value })
+								setAttributes({
+									dataRender: {
+										...dataRender,
+										sortKey: value,
+									},
+								})
 							}
 							options={[
 								...availableSelectableOptions,
@@ -486,7 +659,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						/>
 						<SelectControl
 							label={__('Sort Order')}
-							value={sortOrder}
+							value={dataRender.sortOrder}
 							options={[
 								{
 									value: 'ascending',
@@ -501,9 +674,12 @@ function DataControls({ attributes, setAttributes, clientId }) {
 									label: 'No Sort',
 								},
 							]}
-							onChange={(type) => {
+							onChange={(sort) => {
 								setAttributes({
-									sortOrder: type,
+									dataRender: {
+										...dataRender,
+										sortOrder: sort,
+									},
 								});
 							}}
 						/>
@@ -521,11 +697,17 @@ function DataControls({ attributes, setAttributes, clientId }) {
 					>
 						<ToggleControl
 							label={
-								diffColumnActive ? __('Active') : __('Inactive')
+								getCurrentValue('diffColumn', 'active')
+									? __('Active')
+									: __('Inactive')
 							}
-							checked={diffColumnActive}
+							checked={
+								getCurrentValue('diffColumn', 'active') || false
+							}
 							onChange={(value) =>
-								setAttributes({ diffColumnActive: value })
+								updateAttributeForDevice('diffColumn', {
+									active: value,
+								})
 							}
 						/>
 						<PanelDescription>
@@ -533,13 +715,16 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							shows the total/difference/or any other data column
 							to the right of the chart (optional).
 						</PanelDescription>
-						{diffColumnActive && (
+						{getCurrentValue('diffColumn', 'active') && (
 							<SelectControl
 								label={__('Diff Column Category')}
-								value={diffColumnCategory}
+								value={getCurrentValue(
+									'diffColumn',
+									'category'
+								)}
 								onChange={(value) =>
-									setAttributes({
-										diffColumnCategory: value,
+									updateAttributeForDevice('diffColumn', {
+										category: value,
 									})
 								}
 								options={availableOptions.map((option) => ({

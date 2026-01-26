@@ -1,0 +1,57 @@
+{
+	"name": "v1-maximal-config",
+	"description": "Kitchen sink - all major features enabled",
+	"blockVersion": "v1",
+	"chartType": "bar",
+	"featureTags": [
+		"maximal-config",
+		"tooltip",
+		"legend",
+		"data-labels",
+		"axis-configuration"
+	],
+	"serializedContent": "<!-- wp:prc-chart-builder/chart {\"chartType\":\"bar\",\"chartOrientation\":\"horizontal\",\"width\":800,\"height\":600,\"paddingTop\":30,\"paddingRight\":20,\"paddingBottom\":40,\"paddingLeft\":80,\"xAxisActive\":true,\"xLabel\":\"Values\",\"yAxisActive\":true,\"yLabel\":\"Categories\",\"tooltipActive\":true,\"tooltipFormat\":\"{{row}}: {{value}}\",\"legendActive\":true,\"legendOrientation\":\"row\",\"labelsActive\":true,\"labelColor\":\"contrast\",\"metaTextActive\":true,\"metaTitle\":\"Comprehensive Test Chart\",\"metaSubtitle\":\"All Features Enabled\",\"metaNote\":\"Note: Test data\",\"metaSource\":\"Source: Test Suite\",\"customColors\":[\"#436983\",\"#bf3927\",\"#756a7e\"]} -->\n<div class=\"wp-block-prc-chart-builder-chart\"></div>\n<!-- /wp:prc-chart-builder/chart -->",
+	"expectedMigratedAttributes": {
+		"_version": "v2",
+		"layout": {
+			"type": "bar",
+			"orientation": "horizontal",
+			"width": 800,
+			"height": 600,
+			"padding": {
+				"top": 30,
+				"right": 20,
+				"bottom": 40,
+				"left": 80
+			}
+		},
+		"independentAxis": {
+			"active": true,
+			"label": "Values"
+		},
+		"dependentAxis": {
+			"active": true,
+			"label": "Categories"
+		},
+		"tooltip": {
+			"active": true,
+			"format": "{{row}}: {{value}}"
+		},
+		"legend": {
+			"active": true,
+			"orientation": "row"
+		},
+		"labels": {
+			"active": true,
+			"color": "contrast"
+		},
+		"metadata": {
+			"active": true,
+			"title": "Comprehensive Test Chart",
+			"subtitle": "All Features Enabled",
+			"note": "Note: Test data",
+			"source": "Source: Test Suite"
+		},
+		"colors": ["#436983", "#bf3927", "#756a7e"]
+	}
+}

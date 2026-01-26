@@ -1,3 +1,4 @@
+// V2
 /**
  * WordPress dependencies
  */
@@ -11,28 +12,38 @@ import {
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const NodeControls = ({ attributes, setAttributes }) => {
-	const { nodeSize, nodeStrokeWidth, nodeFill } = attributes;
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
 	return (
 		<PanelBody title={__('Node Styles')} initialOpen={false}>
 			<NumberControl
 				min={1}
 				label={__('Node Size')}
-				value={nodeSize}
-				onChange={(value) =>
-					setAttributes({ nodeSize: formatNum(value, 'integer') })
-				}
+				value={getCurrentValue('nodes', 'pointSize')}
+				onChange={(value) => {
+					const currentNodes = getCurrentValue('nodes') || {};
+					updateAttributeForDevice('nodes', {
+						...currentNodes,
+						pointSize: formatNum(value, 'integer'),
+					});
+				}}
 			/>
 			<NumberControl
 				min={1}
 				label={__('Node Stroke Width')}
-				value={nodeStrokeWidth}
-				onChange={(value) =>
-					setAttributes({
-						nodeStrokeWidth: formatNum(value, 'integer'),
-					})
-				}
+				value={getCurrentValue('nodes', 'pointStrokeWidth')}
+				onChange={(value) => {
+					const currentNodes = getCurrentValue('nodes') || {};
+					updateAttributeForDevice('nodes', {
+						...currentNodes,
+						pointStrokeWidth: formatNum(value, 'integer'),
+					});
+				}}
 			/>
 			<SelectControl
 				label={__('Node Fill')}
@@ -40,8 +51,14 @@ const NodeControls = ({ attributes, setAttributes }) => {
 					{ label: 'Inherit', value: 'inherit' },
 					{ label: 'White', value: 'white' },
 				]}
-				value={nodeFill}
-				onChange={(value) => setAttributes({ nodeFill: value })}
+				value={getCurrentValue('nodes', 'pointFill')}
+				onChange={(value) => {
+					const currentNodes = getCurrentValue('nodes') || {};
+					updateAttributeForDevice('nodes', {
+						...currentNodes,
+						pointFill: value,
+					});
+				}}
 			/>
 		</PanelBody>
 	);

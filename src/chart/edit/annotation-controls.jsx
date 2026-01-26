@@ -1,3 +1,6 @@
+// V2
+/* eslint-disable @wordpress/i18n-no-flanking-whitespace */
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @wordpress/i18n-no-variables */
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
@@ -22,7 +25,6 @@ import {
 	CardBody,
 	CardFooter,
 	TextControl,
-	__experimentalText as Text,
 	__experimentalNumberControl as NumberControl,
 	__experimentalHeading as Heading,
 	__experimentalSpacer as Spacer,
@@ -40,9 +42,16 @@ import {
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 function AnnotationControls({ attributes, setAttributes }) {
-	const { annotationsActive, annotations, mobileBreakpoint } = attributes;
+	// Viewport-aware attribute management
+	const { deviceType, getCurrentValue, updateAttributeForDevice } =
+		useViewportAttributes(attributes, setAttributes);
+
+	const annotationsActive = getCurrentValue('annotations', 'active');
+	const items = getCurrentValue('annotations', 'items') || [];
+
 	const [blockLevelFontFamilies] = useSettings('typography.fontFamilies');
 
 	const fontFamilyOptions = useMemo(() => {
@@ -52,21 +61,18 @@ function AnnotationControls({ attributes, setAttributes }) {
 		}));
 	}, [blockLevelFontFamilies]);
 	const updateAnnotation = (index, key, value) => {
-		setAttributes({
-			annotations: annotations.map((annotation, i) =>
-				i === index
-					? {
-							...annotation,
-							[key]: value,
-						}
-					: annotation
+		const currentItems = getCurrentValue('annotations', 'items') || [];
+		updateAttributeForDevice('annotations', {
+			items: currentItems.map((annotation, i) =>
+				i === index ? { ...annotation, [key]: value } : annotation
 			),
 		});
 	};
 
 	const deleteAnnotation = (index) => {
-		setAttributes({
-			annotations: annotations.filter((annotation, i) => i !== index),
+		const currentItems = getCurrentValue('annotations', 'items') || [];
+		updateAttributeForDevice('annotations', {
+			items: currentItems.filter((annotation, i) => i !== index),
 		});
 	};
 
@@ -93,8 +99,9 @@ function AnnotationControls({ attributes, setAttributes }) {
 			positioningContext: 'chart',
 		};
 
-		setAttributes({
-			annotations: [...annotations, newAnnotation],
+		const currentItems = getCurrentValue('annotations', 'items') || [];
+		updateAttributeForDevice('annotations', {
+			items: [...currentItems, newAnnotation],
 		});
 	};
 
@@ -102,16 +109,18 @@ function AnnotationControls({ attributes, setAttributes }) {
 		<PanelBody title={__('Text Annotations')} initialOpen={false}>
 			<ToggleControl
 				label={__('Annotations Active')}
-				checked={annotationsActive}
-				onChange={() =>
-					setAttributes({ annotationsActive: !annotationsActive })
+				checked={annotationsActive || false}
+				onChange={(newValue) =>
+					updateAttributeForDevice('annotations', {
+						active: newValue,
+					})
 				}
 			/>
 
 			<Spacer height={20} />
 
-			{annotations.map((annotation, index) => (
-				<div key={index}>
+			{items.map((annotation, index) => (
+				<div key={`${deviceType}-annotation-${index}`}>
 					<Card>
 						<CardHeader>
 							<TextControl
@@ -179,12 +188,13 @@ function AnnotationControls({ attributes, setAttributes }) {
 						</CardBody>
 						<CardBody>
 							<Heading level={2}>Text Properties</Heading>
-							<ToggleControl
+							{/* TODO: potentially irrelevant now that we have viewport-aware attributes */}
+							{/* <ToggleControl
 								label={__('Active on Mobile')}
 								help={__(
 									`If enabled, the annotation will be active on mobile devices that are smaller than the mobile breakpoint of ${mobileBreakpoint}px.`
 								)}
-								checked={annotation.activeOnMobile}
+								checked={annotation?.activeOnMobile || false}
 								onChange={() =>
 									updateAnnotation(
 										index,
@@ -192,7 +202,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 										!annotation.activeOnMobile
 									)
 								}
-							/>
+							/> */}
 							<FontSizePicker
 								value={annotation.fontSize}
 								fontSizes={[

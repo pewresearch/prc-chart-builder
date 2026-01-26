@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /**
  * External dependencies
@@ -9,7 +10,6 @@ import styled from '@emotion/styled';
 import { __ } from '@wordpress/i18n';
 import {
 	PanelBody,
-	TextControl,
 	SelectControl,
 	__experimentalNumberControl as NumberControl,
 	__experimentalToolsPanel as ToolsPanel,
@@ -22,6 +22,7 @@ import { PanelColorSettings } from '@wordpress/block-editor';
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const WidePanelItem = styled(ToolsPanelItem)`
 	grid-column: span 2;
@@ -167,22 +168,14 @@ const MAP_PROJECTION_PRESETS = {
 };
 
 function MapControls({ attributes, setAttributes, clientId }) {
-	const {
-		chartType,
-		mapShowCountyBoundaries,
-		mapShowStateBoundaries,
-		mapPathBackgroundFill,
-		mapPathStroke,
-		mapBlockRectSize,
-		mapProjectionPreset,
-		mapCenterLongitude,
-		mapCenterLatitude,
-		mapRotateLambda,
-		mapRotatePhi,
-		mapRotateGamma,
-		mapCustomScale,
-		mapZoomActive,
-	} = attributes;
+	// Viewport-aware attribute management
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
+
+	const layout = getCurrentValue('layout') || {};
+	const { type: chartType } = layout;
 
 	// Handler for preset selection
 	const handlePresetChange = (presetKey) => {
@@ -191,20 +184,22 @@ function MapControls({ attributes, setAttributes, clientId }) {
 
 		// If custom is selected, don't change the projection values
 		if (presetKey === 'custom') {
-			setAttributes({ mapProjectionPreset: 'custom' });
+			updateAttributeForDevice('map', {
+				projectionPreset: 'custom',
+			});
 			return;
 		}
 
-		// Apply preset values AND set topology region to match
-		setAttributes({
-			mapProjectionPreset: presetKey,
-			mapTopologyRegion: presetKey, // Keep topology region in sync
-			mapCenterLongitude: preset.centerLongitude,
-			mapCenterLatitude: preset.centerLatitude,
-			mapRotateLambda: preset.rotateLambda,
-			mapRotatePhi: preset.rotatePhi,
-			mapRotateGamma: preset.rotateGamma,
-			mapCustomScale: preset.customScale,
+		// Apply preset values AND set topology region to match (viewport-aware)
+		updateAttributeForDevice('map', {
+			projectionPreset: presetKey,
+			topologyRegion: presetKey,
+			centerLongitude: preset.centerLongitude,
+			centerLatitude: preset.centerLatitude,
+			rotateLambda: preset.rotateLambda,
+			rotatePhi: preset.rotatePhi,
+			rotateGamma: preset.rotateGamma,
+			customScale: preset.customScale,
 		});
 	};
 	return (
@@ -223,15 +218,17 @@ function MapControls({ attributes, setAttributes, clientId }) {
 					isShownByDefault
 					panelId={clientId}
 				>
-					{'map-usa-county' === chartType && (
+					{'map-usa-counties' === chartType && (
 						<>
 							<ToggleControl
 								label={__('Show State Boundaries')}
-								checked={mapShowStateBoundaries}
-								onChange={() =>
-									setAttributes({
-										mapShowStateBoundaries:
-											!mapShowStateBoundaries,
+								checked={getCurrentValue(
+									'map',
+									'showStateBoundaries'
+								)}
+								onChange={(newValue) =>
+									updateAttributeForDevice('map', {
+										showStateBoundaries: newValue,
 									})
 								}
 								help={__(
@@ -240,11 +237,13 @@ function MapControls({ attributes, setAttributes, clientId }) {
 							/>
 							<ToggleControl
 								label={__('Show County Boundaries')}
-								checked={mapShowCountyBoundaries}
-								onChange={() =>
-									setAttributes({
-										mapShowCountyBoundaries:
-											!mapShowCountyBoundaries,
+								checked={getCurrentValue(
+									'map',
+									'showCountyBoundaries'
+								)}
+								onChange={(newValue) =>
+									updateAttributeForDevice('map', {
+										showCountyBoundaries: newValue,
 									})
 								}
 								help={__(
@@ -260,22 +259,37 @@ function MapControls({ attributes, setAttributes, clientId }) {
 						initialOpen
 						colorSettings={[
 							{
-								value: mapPathBackgroundFill,
+								value: getCurrentValue(
+									'map',
+									'pathBackgroundFill'
+								),
 								onChange: (value) =>
-									setAttributes({
-										mapPathBackgroundFill: value,
+									updateAttributeForDevice('map', {
+										pathBackgroundFill: value,
 									}),
 								label: __('Background Fill'),
 							},
 							{
-								value: mapPathStroke,
+								value: getCurrentValue('map', 'pathStroke'),
 								onChange: (value) =>
-									setAttributes({
-										mapPathStroke: value,
+									updateAttributeForDevice('map', {
+										pathStroke: value,
 									}),
 								label: __('Stroke'),
 							},
 						]}
+					/>
+					<NumberControl
+						label={__('Stroke Width')}
+						value={getCurrentValue('map', 'pathStrokeWidth')}
+						onChange={(value) =>
+							updateAttributeForDevice('map', {
+								pathStrokeWidth: formatNum(value, 'float'),
+							})
+						}
+						min={0.1}
+						max={10}
+						step={0.1}
 					/>
 				</WidePanelItem>
 				{/* Projection Controls - for World Map */}
@@ -289,13 +303,18 @@ function MapControls({ attributes, setAttributes, clientId }) {
 						>
 							<SelectControl
 								label={__('Select Region')}
-								value={mapProjectionPreset || 'default'}
-								options={Object.entries(MAP_PROJECTION_PRESETS).map(
-									([key, value]) => ({
-										label: value.label,
-										value: key,
-									})
-								)}
+								value={
+									getCurrentValue(
+										'map',
+										'projectionPreset'
+									) || 'default'
+								}
+								options={Object.entries(
+									MAP_PROJECTION_PRESETS
+								).map(([key, value]) => ({
+									label: value.label,
+									value: key,
+								}))}
 								onChange={handlePresetChange}
 								help={__(
 									'Choose a region preset or select "Custom" to manually adjust projection settings.'
@@ -308,18 +327,27 @@ function MapControls({ attributes, setAttributes, clientId }) {
 							isShownByDefault={false}
 							panelId={clientId}
 						>
-							<p style={{ fontSize: '12px', marginBottom: '12px', color: '#757575' }}>
+							<p
+								style={{
+									fontSize: '12px',
+									marginBottom: '12px',
+									color: '#757575',
+								}}
+							>
 								{__(
 									'Adjust the map view to focus on specific regions. Use center to position, rotate to orient, and scale to zoom.'
 								)}
 							</p>
 							<NumberControl
 								label={__('Center Longitude')}
-								value={mapCenterLongitude}
+								value={getCurrentValue(
+									'map',
+									'centerLongitude'
+								)}
 								onChange={(value) =>
-									setAttributes({
-										mapProjectionPreset: 'custom',
-										mapCenterLongitude: formatNum(
+									updateAttributeForDevice('map', {
+										projectionPreset: 'custom',
+										centerLongitude: formatNum(
 											value,
 											'float'
 										),
@@ -328,15 +356,17 @@ function MapControls({ attributes, setAttributes, clientId }) {
 								min={-180}
 								max={180}
 								step={1}
-								help={__('Longitude: -180 to 180 (0 = Prime Meridian)')}
+								help={__(
+									'Longitude: -180 to 180 (0 = Prime Meridian)'
+								)}
 							/>
 							<NumberControl
 								label={__('Center Latitude')}
-								value={mapCenterLatitude}
+								value={getCurrentValue('map', 'centerLatitude')}
 								onChange={(value) =>
-									setAttributes({
-										mapProjectionPreset: 'custom',
-										mapCenterLatitude: formatNum(
+									updateAttributeForDevice('map', {
+										projectionPreset: 'custom',
+										centerLatitude: formatNum(
 											value,
 											'float'
 										),
@@ -356,48 +386,43 @@ function MapControls({ attributes, setAttributes, clientId }) {
 						>
 							<NumberControl
 								label={__('Rotate Lambda (Yaw)')}
-								value={mapRotateLambda}
+								value={getCurrentValue('map', 'rotateLambda')}
 								onChange={(value) =>
-									setAttributes({
-										mapProjectionPreset: 'custom',
-										mapRotateLambda: formatNum(
-											value,
-											'float'
-										),
+									updateAttributeForDevice('map', {
+										projectionPreset: 'custom',
+										rotateLambda: formatNum(value, 'float'),
 									})
 								}
 								min={-180}
 								max={180}
 								step={1}
-								help={__('Horizontal rotation around vertical axis')}
+								help={__(
+									'Horizontal rotation around vertical axis'
+								)}
 							/>
 							<NumberControl
 								label={__('Rotate Phi (Pitch)')}
-								value={mapRotatePhi}
+								value={getCurrentValue('map', 'rotatePhi')}
 								onChange={(value) =>
-									setAttributes({
-										mapProjectionPreset: 'custom',
-										mapRotatePhi: formatNum(
-											value,
-											'float'
-										),
+									updateAttributeForDevice('map', {
+										projectionPreset: 'custom',
+										rotatePhi: formatNum(value, 'float'),
 									})
 								}
 								min={-180}
 								max={180}
 								step={1}
-								help={__('Vertical rotation around horizontal axis')}
+								help={__(
+									'Vertical rotation around horizontal axis'
+								)}
 							/>
 							<NumberControl
 								label={__('Rotate Gamma (Roll)')}
-								value={mapRotateGamma}
+								value={getCurrentValue('map', 'rotateGamma')}
 								onChange={(value) =>
-									setAttributes({
-										mapProjectionPreset: 'custom',
-										mapRotateGamma: formatNum(
-											value,
-											'float'
-										),
+									updateAttributeForDevice('map', {
+										projectionPreset: 'custom',
+										rotateGamma: formatNum(value, 'float'),
 									})
 								}
 								min={-180}
@@ -414,14 +439,11 @@ function MapControls({ attributes, setAttributes, clientId }) {
 						>
 							<NumberControl
 								label={__('Custom Scale Multiplier')}
-								value={mapCustomScale}
+								value={getCurrentValue('map', 'customScale')}
 								onChange={(value) =>
-									setAttributes({
-										mapProjectionPreset: 'custom',
-										mapCustomScale: formatNum(
-											value,
-											'float'
-										),
+									updateAttributeForDevice('map', {
+										projectionPreset: 'custom',
+										customScale: formatNum(value, 'float'),
 									})
 								}
 								min={0.1}
@@ -440,10 +462,10 @@ function MapControls({ attributes, setAttributes, clientId }) {
 						>
 							<ToggleControl
 								label={__('Enable Interactive Zoom')}
-								checked={mapZoomActive}
-								onChange={() =>
-									setAttributes({
-										mapZoomActive: !mapZoomActive,
+								checked={getCurrentValue('map', 'zoomActive')}
+								onChange={(newValue) =>
+									updateAttributeForDevice('map', {
+										zoomActive: newValue,
 									})
 								}
 								help={__(

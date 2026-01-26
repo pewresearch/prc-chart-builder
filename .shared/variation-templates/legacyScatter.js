@@ -45,32 +45,63 @@ const legacyScatterTemplate = [
 	[
 		'prc-chart-builder/chart',
 		{
-			isConvertedChart: true,
+			_version: 'v2',
 			chartType: 'scatter',
-			paddingLeft: 30,
-			paddingBottom: 20,
-			paddingRight: 20,
-			width: 640,
-			height: 300,
-			metaTag: 'PEW RESEARCH CENTER',
-			xMinDomain: 2000,
-			xMaxDomain: 2020,
-			xTickMarksActive: true,
-			xScale: 'time',
-			showYMinDomainLabel: true,
-			yTickMarksActive: true,
-			yTickLabelTextAnchor: 'end',
-			yTickLabelVerticalAnchor: 'middle',
-			lineStrokeWidth: 4,
-			nodeSize: 4,
-			nodeFill: 'white',
-			nodeStroke: 1,
-			legendActive: true,
-			legendOffsetX: 200,
-			legendOffsetY: 10,
-			tooltipActive: true,
-			tooltipHeaderValue: 'categoryValue',
-			tooltipFormat: '{{row}}: {{value}}',
+			layout: {
+				type: 'scatter',
+				width: 640,
+				height: 300,
+				padding: {
+					left: 30,
+					bottom: 20,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				tag: 'PEW RESEARCH CENTER',
+			},
+			independentAxis: {
+				domain: {
+					min: 2000,
+					max: 2020,
+				},
+				tickMarks: {
+					active: true,
+				},
+				scale: 'time',
+			},
+			dependentAxis: {
+				showMinLabel: true,
+				tickMarks: {
+					active: true,
+				},
+				tickLabels: {
+					textAnchor: 'end',
+					verticalAnchor: 'middle',
+				},
+			},
+			tooltip: {
+				active: true,
+				headerValue: 'categoryValue',
+				format: '{{row}}: {{value}}',
+			},
+			line: {
+				strokeWidth: 4,
+			},
+			nodes: {
+				size: 4,
+				fill: 'white',
+				stroke: 1,
+			},
+			legend: {
+				active: true,
+				offsetX: 200,
+				offsetY: 10,
+			},
+			io: {
+				isConvertedChart: true,
+			},
 		},
 	],
 ];

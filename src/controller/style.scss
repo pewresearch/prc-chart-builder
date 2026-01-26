@@ -52,6 +52,12 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 			align-items: center;
 		}
 	}
+	.cb__hr {
+		height: 1px;
+		background-color: $gray-very-dark;
+		border: none;
+		width: 100%;
+	}
 	.cb__title {
 		font-size: 18px !important;
 		line-height: 110%;

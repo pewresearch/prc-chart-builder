@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const explodedBarTemplate = [
 	[
 		'prc-block/table',
@@ -40,7 +42,7 @@ const explodedBarTemplate = [
 						{ content: 'France', tag: 'td' },
 						{ content: '60', tag: 'td' },
 						{ content: '40', tag: 'td' },
-						{ content: '20', tag: 'td' },
+						{ content: '30', tag: 'td' },
 					],
 				},
 			],
@@ -48,44 +50,78 @@ const explodedBarTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
-			chartType: 'exploded-bar',
-			metaTitle: 'Exploded Bar Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-			width: 420,
-			height: 160,
-			paddingLeft: 100,
-			sortOrder: 'reverse',
-			colorValue: 'orange-spectrum',
-			customColors: [
-				'#EA9E2C',
-				'#F1C37F',
-				'#F9EAD4',
-				'#F5D6A9',
-				'#BB792A',
-				'#7C5220',
-			],
-			xDomainPadding: 16,
-			xAxisStroke: '#fff',
-			xTickLabelTextAnchor: 'end',
-			xTickLabelDX: -5,
-			yAxisActive: false,
-			barWidth: 24,
-			barGroupOffset: 28,
-			barLabelPosition: 'center',
-			barLabelCutoff: 11,
-			labelColor: 'contrast',
-			labelsActive: true,
-			labelPositionDY: 4,
-			tooltipHeaderValue: 'independentValue',
-			tooltipFormat: '{{column}}: {{value}}',
-			legendActive: true,
-			legendMarkerStyle: 'rect',
-		},
+		mergeWithDefaults({
+			_version: 'v2',
+			layout: {
+				type: 'exploded-bar',
+				width: 420,
+				height: 160,
+				padding: {
+					left: 100,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'Exploded Bar Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'orange-spectrum',
+				custom: [
+					'#EA9E2C',
+					'#F1C37F',
+					'#F9EAD4',
+					'#F5D6A9',
+					'#BB792A',
+					'#7C5220',
+				],
+			},
+			independentAxis: {
+				domainPadding: 16,
+				axis: {
+					stroke: '#fff',
+				},
+				tickLabels: {
+					textAnchor: 'end',
+					verticalAnchor: 'middle',
+					dx: -5,
+				},
+			},
+			dependentAxis: {
+				active: false,
+			},
+			tooltip: {
+				active: true,
+				headerValue: 'independentValue',
+				format: '{{column}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				color: 'contrast',
+				labelPositionDY: 2,
+				labelPositionDX: 5,
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			bar: {
+				barWidth: 24,
+				barGroupOffset: 28,
+				labelPosition: 'center',
+				labelCutoff: 11,
+			},
+			dataRender: {
+				sortOrder: 'reverse',
+			},
+			io: {
+				isConvertedChart: false,
+				colorValue: 'orange-spectrum',
+			},
+		}),
 	],
 ];
 

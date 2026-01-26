@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const scatterTemplate = [
 	[
 		'prc-block/table',
@@ -51,36 +53,65 @@ const scatterTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
+		mergeWithDefaults({
+			_version: 'v2',
 			chartType: 'scatter',
-			metaTitle: 'Scatterplot Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-
-			width: 420,
-			height: 356,
-			paddingLeft: 30,
-			paddingBottom: 30,
-			paddingRight: 20,
-			xTickMarksActive: true,
-			showYMinDomainLabel: true,
-			yTickMarksActive: true,
-			lineStrokeWidth: 4,
-			lineNodes: true,
-			labelPositionDY: -5,
-			nodeSize: 4,
-			nodeStroke: 1,
-			nodeFill: 'inherit',
-			tooltipOffsetX: 30,
-			tooltipOffsetY: 70,
-			tooltipHeaderValue: 'categoryValue',
-			tooltipFormat: '{{row}}: {{value}}',
-			legendActive: true,
-			legendMarkerStyle: 'circle',
-		},
+			layout: {
+				type: 'scatter',
+				width: 420,
+				height: 356,
+				padding: {
+					left: 30,
+					bottom: 30,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'Scatterplot Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			independentAxis: {
+				tickMarks: {
+					active: true,
+				},
+			},
+			dependentAxis: {
+				showMinLabel: true,
+				tickMarks: {
+					active: true,
+				},
+			},
+			tooltip: {
+				active: true,
+				offsetX: 30,
+				offsetY: 70,
+				headerValue: 'categoryValue',
+				format: '{{row}}: {{value}}',
+			},
+			labels: {
+				labelPositionDY: -5,
+			},
+			line: {
+				strokeWidth: 4,
+				showNodes: true,
+			},
+			nodes: {
+				size: 4,
+				fill: 'inherit',
+				stroke: 1,
+			},
+			legend: {
+				active: true,
+				markerStyle: 'circle',
+			},
+			io: {
+				isConvertedChart: false,
+			},
+		}),
 	],
 ];
 

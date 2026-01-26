@@ -45,10 +45,15 @@ const freeformTemplate = [
 	[
 		'prc-chart-builder/chart',
 		{
-			isConvertedChart: false,
-			isStaticChart: false,
-			isFreeformChart: true,
-			metaTextActive: false,
+			_version: 'v2',
+			metadata: {
+				active: false,
+			},
+			io: {
+				isConvertedChart: false,
+				isStaticChart: false,
+				isFreeformChart: true,
+			},
 		},
 		[
 			[

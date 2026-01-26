@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const USABlockMapTemplate = [
 	[
 		'prc-block/table',
@@ -380,36 +382,61 @@ const USABlockMapTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
+		mergeWithDefaults({
+			_version: 'v2',
 			chartType: 'map-usa-block',
-			chartFamily: 'map',
-			metaTitle: 'USA States Block Map',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-			width: 640,
-			height: 400,
-			paddingLeft: 20,
-			paddingBottom: 30,
-			paddingRight: 20,
-			tooltipOffsetX: 30,
-			tooltipOffsetY: 30,
-			tooltipHeaderValue: 'categoryValue',
-			tooltipFormat: '{{row}}: {{value}}',
-			colorValue: 'blue-spectrum',
-			mapScale: 'ordinal',
-			mapScaleDomain: ['yes', 'maybe', 'no'],
-			categories: ['Response'],
-			labelsActive: true,
-			labelFontSize: 16,
-			labelPositionDX: 22,
-			labelPositionDY: 30,
-			labelColor: 'contrast',
-			legendActive: true,
-			legendMarkerStyle: 'rect',
-		},
+			layout: {
+				type: 'map-usa-block',
+				width: 640,
+				height: 400,
+				padding: {
+					left: 20,
+					bottom: 30,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'USA States Block Map',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: About the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'blue-spectrum',
+			},
+			tooltip: {
+				active: true,
+				offsetX: 30,
+				offsetY: 30,
+				headerValue: 'categoryValue',
+				format: '{{row}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				fontSize: 16,
+				labelPositionDX: 22,
+				labelPositionDY: 30,
+				color: 'contrast',
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			map: {
+				scale: 'ordinal',
+				scaleDomain: ['yes', 'maybe', 'no'],
+			},
+			dataRender: {
+				categories: ['Response'],
+			},
+			io: {
+				isConvertedChart: false,
+				chartFamily: 'map',
+				colorValue: 'blue-spectrum',
+			},
+		}),
 	],
 ];
 

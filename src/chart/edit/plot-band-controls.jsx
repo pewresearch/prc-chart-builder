@@ -1,3 +1,4 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable @wordpress/i18n-no-variables */
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
@@ -22,8 +23,6 @@ import {
 	__experimentalNumberControl as NumberControl,
 	__experimentalHeading as Heading,
 	__experimentalSpacer as Spacer,
-	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
 	FontSizePicker,
 	FlexBlock,
 	FlexItem,
@@ -40,44 +39,25 @@ import { getDate, dateI18n } from '@wordpress/date';
  */
 import { formatNum } from '../utils/helpers';
 import presidentPlotBands from '../utils/president-plot-bands';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 function PlotBandControls({ attributes, setAttributes }) {
-	const { plotBandsActive, plotBands, xScale } = attributes;
+	// Viewport-aware attribute management
+	const { getCurrentValue, updateAttributeForDevice } =
+		useViewportAttributes(attributes, setAttributes);
 
-	const setLabelStyle = (plotBands, index, key, value) => {
-		setAttributes({
-			plotBands: plotBands.map((band, i) =>
-				i === index
-					? {
-							...band,
-							style: {
-								...band.style,
-								label: {
-									...band.style.label,
-									[key]: value,
-								},
-							},
-						}
-					: band
-			),
-		});
-	};
+	const plotBands = getCurrentValue('plotBands') || {};
+	const bands = plotBands.bands || [];
+	const active = plotBands.active;
+	const independentAxis = getCurrentValue('independentAxis') || {};
+	const scale = independentAxis.scale;
 
-	const SetBandStyle = (plotBands, index, key, value) => {
-		setAttributes({
-			plotBands: plotBands.map((band, i) =>
-				i === index
-					? {
-							...band,
-							style: {
-								...band.style,
-								band: {
-									...band.style.band,
-									[key]: value,
-								},
-							},
-						}
-					: band
+	// Helper function to update a specific band
+	const updateBand = (index, updater) => {
+		const currentBands = getCurrentValue('plotBands', 'bands') || [];
+		updateAttributeForDevice('plotBands', {
+			bands: currentBands.map((band, i) =>
+				i === index ? updater(band) : band
 			),
 		});
 	};
@@ -86,17 +66,19 @@ function PlotBandControls({ attributes, setAttributes }) {
 		<PanelBody title={__('Plot Bands')} initialOpen={false}>
 			<ToggleControl
 				label={__('Plot Bands Active')}
-				checked={plotBandsActive}
-				onChange={() =>
-					setAttributes({ plotBandsActive: !plotBandsActive })
+				checked={active}
+				onChange={(newValue) =>
+					updateAttributeForDevice('plotBands', {
+						active: newValue,
+					})
 				}
 			/>
 			<Spacer height={10} />
 			<Button
 				variant="secondary"
 				onClick={() => {
-					setAttributes({
-						plotBands: presidentPlotBands,
+					updateAttributeForDevice('plotBands', {
+						bands: presidentPlotBands,
 					});
 				}}
 			>
@@ -109,24 +91,18 @@ function PlotBandControls({ attributes, setAttributes }) {
 				August 16, 2023.
 			</Tip>
 			<Spacer height={20} />
-			{plotBands.map((plotBand, index) => (
+			{bands.map((plotBand, index) => (
 				<>
 					<Card>
 						<CardHeader>
 							<TextControl
-								placeholder={__(`Plot Band ${index + 1}`)}
+								placeholder={__('Plot Band') + ` ${index + 1}`}
 								value={plotBand.label}
 								onChange={(value) => {
-									setAttributes({
-										plotBands: plotBands.map((band, i) =>
-											i === index
-												? {
-														...band,
-														label: value,
-													}
-												: band
-										),
-									});
+									updateBand(index, (band) => ({
+										...band,
+										label: value,
+									}));
 								}}
 							/>
 						</CardHeader>
@@ -135,35 +111,23 @@ function PlotBandControls({ attributes, setAttributes }) {
 							<Text>From:</Text>
 							<RangePicker
 								value={plotBand.x[0]}
-								scale={xScale}
+								scale={scale}
 								onChange={(value) => {
-									setAttributes({
-										plotBands: plotBands.map((band, i) =>
-											i === index
-												? {
-														...band,
-														x: [value, band.x[1]],
-													}
-												: band
-										),
-									});
+									updateBand(index, (band) => ({
+										...band,
+										x: [value, band.x[1]],
+									}));
 								}}
 							/>
 							<Text>To:</Text>
 							<RangePicker
 								value={plotBand.x[1]}
-								scale={xScale}
+								scale={scale}
 								onChange={(value) => {
-									setAttributes({
-										plotBands: plotBands.map((band, i) =>
-											i === index
-												? {
-														...band,
-														x: [band.x[0], value],
-													}
-												: band
-										),
-									});
+									updateBand(index, (band) => ({
+										...band,
+										x: [band.x[0], value],
+									}));
 								}}
 							/>
 						</CardBody>
@@ -171,8 +135,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 							<StyleOptions
 								index={index}
 								style={plotBand.style}
-								plotBands={plotBands}
-								setAttributes={setAttributes}
+								updateBand={updateBand}
 							/>
 						</CardBody>
 						<CardBody>
@@ -191,24 +154,16 @@ function PlotBandControls({ attributes, setAttributes }) {
 									},
 								]}
 								onChange={(value) => {
-									setAttributes({
-										plotBands: plotBands.map((band, i) =>
-											i === index
-												? {
-														...band,
-														style: {
-															...band.style,
-															label: {
-																...band.style
-																	.label,
-																orientation:
-																	value,
-															},
-														},
-													}
-												: band
-										),
-									});
+									updateBand(index, (band) => ({
+										...band,
+										style: {
+											...band.style,
+											label: {
+												...band.style.label,
+												orientation: value,
+											},
+										},
+									}));
 								}}
 							/>
 							<SelectControl
@@ -225,23 +180,16 @@ function PlotBandControls({ attributes, setAttributes }) {
 									},
 								]}
 								onChange={(value) => {
-									setAttributes({
-										plotBands: plotBands.map((band, i) =>
-											i === index
-												? {
-														...band,
-														style: {
-															...band.style,
-															label: {
-																...band.style
-																	.label,
-																align: value,
-															},
-														},
-													}
-												: band
-										),
-									});
+									updateBand(index, (band) => ({
+										...band,
+										style: {
+											...band.style,
+											label: {
+												...band.style.label,
+												align: value,
+											},
+										},
+									}));
 								}}
 							/>
 							<FlexBlock>
@@ -250,28 +198,16 @@ function PlotBandControls({ attributes, setAttributes }) {
 										label={__('X Offset')}
 										value={plotBand.style.label.dx}
 										onChange={(value) => {
-											setAttributes({
-												plotBands: plotBands.map(
-													(band, i) =>
-														i === index
-															? {
-																	...band,
-																	style: {
-																		...band.style,
-																		label: {
-																			...band
-																				.style
-																				.label,
-																			dx: formatNum(
-																				value,
-																				'integer'
-																			),
-																		},
-																	},
-																}
-															: band
-												),
-											});
+											updateBand(index, (band) => ({
+												...band,
+												style: {
+													...band.style,
+													label: {
+														...band.style.label,
+														dx: formatNum(value, 'integer'),
+													},
+												},
+											}));
 										}}
 									/>
 								</FlexItem>
@@ -280,28 +216,16 @@ function PlotBandControls({ attributes, setAttributes }) {
 										label={__('Y Offset')}
 										value={plotBand.style.label.dy}
 										onChange={(value) => {
-											setAttributes({
-												plotBands: plotBands.map(
-													(band, i) =>
-														i === index
-															? {
-																	...band,
-																	style: {
-																		...band.style,
-																		label: {
-																			...band
-																				.style
-																				.label,
-																			dy: formatNum(
-																				value,
-																				'integer'
-																			),
-																		},
-																	},
-																}
-															: band
-												),
-											});
+											updateBand(index, (band) => ({
+												...band,
+												style: {
+													...band.style,
+													label: {
+														...band.style.label,
+														dy: formatNum(value, 'integer'),
+													},
+												},
+											}));
 										}}
 									/>
 								</FlexItem>
@@ -312,8 +236,10 @@ function PlotBandControls({ attributes, setAttributes }) {
 							<Button
 								isDestructive
 								onClick={() => {
-									setAttributes({
-										plotBands: plotBands.filter(
+									const currentBands =
+										getCurrentValue('plotBands', 'bands') || [];
+									updateAttributeForDevice('plotBands', {
+										bands: currentBands.filter(
 											(band, i) => i !== index
 										),
 									});
@@ -328,9 +254,10 @@ function PlotBandControls({ attributes, setAttributes }) {
 			))}
 			<Button
 				onClick={() => {
-					setAttributes({
-						plotBands: [
-							...plotBands,
+					const currentBands = getCurrentValue('plotBands', 'bands') || [];
+					updateAttributeForDevice('plotBands', {
+						bands: [
+							...currentBands,
 							{
 								x: [null, null],
 								y: [0, 100],
@@ -361,7 +288,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 	);
 }
 
-const StyleOptions = ({ style, plotBands, setAttributes, index }) => {
+const StyleOptions = ({ style, updateBand, index }) => {
 	const { band, label } = style;
 	return (
 		<>
@@ -397,22 +324,16 @@ const StyleOptions = ({ style, plotBands, setAttributes, index }) => {
 					},
 				]}
 				onChange={(newFontSize) => {
-					setAttributes({
-						plotBands: plotBands.map((band, i) =>
-							i === index
-								? {
-										...band,
-										style: {
-											...band.style,
-											label: {
-												...band.style.label,
-												fontSize: newFontSize,
-											},
-										},
-									}
-								: band
-						),
-					});
+					updateBand(index, (b) => ({
+						...b,
+						style: {
+							...b.style,
+							label: {
+								...b.style.label,
+								fontSize: newFontSize,
+							},
+						},
+					}));
 				}}
 			/>
 			<PanelColorSettings
@@ -424,43 +345,31 @@ const StyleOptions = ({ style, plotBands, setAttributes, index }) => {
 					{
 						value: band.fill,
 						onChange: (val) =>
-							setAttributes({
-								plotBands: plotBands.map((band, i) =>
-									i === index
-										? {
-												...band,
-												style: {
-													...band.style,
-													band: {
-														...band.style.band,
-														fill: val,
-													},
-												},
-											}
-										: band
-								),
-							}),
+							updateBand(index, (b) => ({
+								...b,
+								style: {
+									...b.style,
+									band: {
+										...b.style.band,
+										fill: val,
+									},
+								},
+							})),
 						label: __('Band Fill'),
 					},
 					{
 						value: label.fill,
 						onChange: (val) =>
-							setAttributes({
-								plotBands: plotBands.map((band, i) =>
-									i === index
-										? {
-												...band,
-												style: {
-													...band.style,
-													label: {
-														...band.style.label,
-														fill: val,
-													},
-												},
-											}
-										: band
-								),
-							}),
+							updateBand(index, (b) => ({
+								...b,
+								style: {
+									...b.style,
+									label: {
+										...b.style.label,
+										fill: val,
+									},
+								},
+							})),
 						label: __('Label Fill'),
 					},
 				]}
@@ -469,22 +378,16 @@ const StyleOptions = ({ style, plotBands, setAttributes, index }) => {
 				label={__('Band Opacity')}
 				value={band.fillOpacity}
 				onChange={(val) =>
-					setAttributes({
-						plotBands: plotBands.map((band, i) =>
-							i === index
-								? {
-										...band,
-										style: {
-											...band.style,
-											band: {
-												...band.style.band,
-												fillOpacity: val,
-											},
-										},
-									}
-								: band
-						),
-					})
+					updateBand(index, (b) => ({
+						...b,
+						style: {
+							...b.style,
+							band: {
+								...b.style.band,
+								fillOpacity: val,
+							},
+						},
+					}))
 				}
 				min={0}
 				max={1}
@@ -495,13 +398,14 @@ const StyleOptions = ({ style, plotBands, setAttributes, index }) => {
 };
 
 const RangePicker = ({ value, onChange, scale }) => {
+	const [popoverAnchor, setPopoverAnchor] = useState(null);
+	// Memoize popoverProps to avoid returning a new object every time.
+	const popoverProps = useMemo(
+		() => ({ anchor: popoverAnchor, placement: 'bottom-end' }),
+		[popoverAnchor]
+	);
+
 	if (scale === 'time') {
-		const [popoverAnchor, setPopoverAnchor] = useState(null);
-		// Memoize popoverProps to avoid returning a new object every time.
-		const popoverProps = useMemo(
-			() => ({ anchor: popoverAnchor, placement: 'bottom-end' }),
-			[popoverAnchor]
-		);
 		return (
 			<div ref={setPopoverAnchor}>
 				<Dropdown

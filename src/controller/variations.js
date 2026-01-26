@@ -32,7 +32,7 @@ import {
 	pieTemplate,
 	explodedBarTemplate,
 	divergingBarTemplate,
-	imageTemplate,
+	// imageTemplate,
 	USAMapTemplate,
 	USACountyMapTemplate,
 	USABlockMapTemplate,
@@ -158,7 +158,7 @@ const variations = [
 		keywords: [__('column'), __('chart'), __('stacked column')],
 		description: __('Create a stacked column chart.'),
 		icon: stackedColumnIcon,
-		attributes: { chartType: 'stacked-bar' },
+		attributes: { chartType: 'stacked-column' },
 		innerBlocks: stackedColumnTemplate,
 		scope: ['block', 'transform'],
 	},
@@ -172,24 +172,24 @@ const variations = [
 		innerBlocks: pieTemplate,
 		scope: ['block', 'transform'],
 	},
-	{
-		name: 'cbstatic',
-		title: __('Image with Data Table'),
-		keywords: [
-			__('chart'),
-			__('image'),
-			__('data table'),
-			__('static'),
-			__('static chart'),
-		],
-		description: __(
-			'Create a static chart image with a data table and share tabs.'
-		),
-		icon: barIcon,
-		attributes: { chartType: 'static', isStatic: true },
-		innerBlocks: imageTemplate,
-		scope: ['block', 'transform'],
-	},
+	// {
+	// 	name: 'cbstatic',
+	// 	title: __('Image with Data Table'),
+	// 	keywords: [
+	// 		__('chart'),
+	// 		__('image'),
+	// 		__('data table'),
+	// 		__('static'),
+	// 		__('static chart'),
+	// 	],
+	// 	description: __(
+	// 		'Create a static chart image with a data table and share tabs.'
+	// 	),
+	// 	icon: barIcon,
+	// 	attributes: { chartType: 'static', isStatic: true },
+	// 	innerBlocks: imageTemplate,
+	// 	scope: ['block', 'transform'],
+	// },
 	{
 		name: 'cbUSAMap',
 		title: __('USA Map'),
@@ -249,10 +249,45 @@ const variations = [
 	},
 ];
 
+/**
+ * Map variation names to their corresponding chart layout.type values.
+ * This is used to determine which variation is active by checking the inner chart block's layout.type.
+ */
+const VARIATION_TO_LAYOUT_TYPE = {
+	cbarea: 'area',
+	cbBar: 'bar',
+	cbColumn: 'bar', // Column uses bar layout with vertical orientation
+	cbDotPlot: 'dot-plot',
+	cbExplodedBar: 'exploded-bar',
+	cbDivergingBar: 'diverging-bar',
+	cbLine: 'line',
+	cbScatter: 'scatter',
+	cbStackedArea: 'stacked-area',
+	cbStackedBar: 'stacked-bar',
+	cbStackedColumn: 'stacked-bar', // Uses stacked-bar layout with vertical orientation
+	cbPie: 'pie',
+	cbUSAMap: 'map-usa',
+	cbUSACountyMap: 'map-usa',
+	cbUSABlockMap: 'map-usa-block',
+	cbWorldMap: 'map-world',
+	freeform: 'freeform',
+};
+
+/**
+ * Determine if a variation is active by checking the controller's chartType attribute.
+ * The chartType is set when a variation is selected, and then synced to the chart block's
+ * layout.type via useEffect in the Edit component.
+ *
+ * This approach:
+ * 1. Variation selection sets chartType on controller (WordPress handles this)
+ * 2. isActive checks chartType (simple and reliable)
+ * 3. Edit component's useEffect syncs chartType to chart block's layout.type (actual rendering)
+ */
 variations.forEach((variation) => {
 	if (variation.isActive) return;
 	// eslint-disable-next-line no-param-reassign, consistent-return
 	variation.isActive = (blockAttributes, variationAttributes) => {
+		// Check if controller has chartType matching this variation's chartType
 		if (blockAttributes.chartType) {
 			return blockAttributes.chartType === variationAttributes.chartType;
 		}

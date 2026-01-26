@@ -41,27 +41,56 @@ const legacyBarTemplate = [
 	[
 		'prc-chart-builder/chart',
 		{
-			isConvertedChart: true,
+			_version: 'v2',
 			chartType: 'bar',
 			chartOrientation: 'horizontal',
-			width: 640,
-			height: 400,
-			paddingLeft: 100,
-			xDomainPadding: 16,
-			xTickNum: null,
-			metaTag: 'PEW RESEARCH CENTER',
-			xTickLabelTextAnchor: 'end',
-			xTickLabelVerticalAnchor: 'middle',
-			yAxisActive: false,
-			barWidth: 24,
-			barGroupOffset: 28,
-			labelsActive: true,
-			labelPositionDX: 0,
-			sortOrder: 'reverse',
-			colorValue: 'journalism-main',
-			tooltipActive: true,
-			tooltipHeaderValue: 'independentValue',
-			tooltipFormat: '{{column}}: {{value}}',
+			layout: {
+				type: 'bar',
+				orientation: 'horizontal',
+				width: 640,
+				height: 400,
+				padding: {
+					left: 100,
+				},
+			},
+			metadata: {
+				active: true,
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'journalism-main',
+			},
+			independentAxis: {
+				tickCount: null,
+				domainPadding: 16,
+				tickLabels: {
+					textAnchor: 'end',
+					verticalAnchor: 'middle',
+				},
+			},
+			dependentAxis: {
+				active: false,
+			},
+			tooltip: {
+				active: true,
+				headerValue: 'independentValue',
+				format: '{{column}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				labelPositionDX: 0,
+			},
+			bar: {
+				barWidth: 24,
+				barGroupOffset: 28,
+			},
+			dataRender: {
+				sortOrder: 'reverse',
+			},
+			io: {
+				isConvertedChart: true,
+				colorValue: 'journalism-main',
+			},
 		},
 	],
 ];

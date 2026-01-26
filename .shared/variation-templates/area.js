@@ -1,3 +1,4 @@
+import { mergeWithDefaults } from './helpers';
 const areaTemplate = [
 	[
 		'prc-block/table',
@@ -53,38 +54,78 @@ const areaTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
-			chartType: 'area',
-			metaTitle: 'Area Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-			width: 420,
-			height: 356,
-			paddingLeft: 30,
-			paddingBottom: 30,
-			paddingRight: 20,
-			xMinDomain: 2000,
-			xMaxDomain: 2020,
-			xTickMarksActive: true,
-			xScale: 'time',
-			sortOrder: 'ascending',
-			showYMinDomainLabel: true,
-			yTickMarksActive: true,
-			lineStrokeWidth: 4,
-			labelColor: 'inherit',
-			nodeSize: 4,
-			nodeFill: 'white',
-			nodeStroke: 1,
-			tooltipOffsetX: 30,
-			tooltipOffsetY: 30,
-			tooltipHeaderValue: 'categoryValue',
-			tooltipFormat: '{{row}}: {{value}}',
-			legendActive: true,
-			legendMarkerStyle: 'line',
-		},
+		mergeWithDefaults({
+			_version: 'v2',
+			lock: {
+				move: true,
+				remove: true,
+			},
+			layout: {
+				type: 'area',
+				width: 420,
+				height: 356,
+				padding: {
+					left: 30,
+					bottom: 30,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'Area Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			independentAxis: {
+				domain: {
+					min: 2000,
+					max: 2020,
+				},
+				tickMarks: {
+					active: true,
+				},
+				scale: 'time',
+			},
+			dependentAxis: {
+				showMinLabel: true,
+				tickMarks: {
+					active: true,
+				},
+			},
+			tooltip: {
+				active: true,
+				offsetX: 30,
+				offsetY: 30,
+				headerValue: 'categoryValue',
+				format: '{{row}}: {{value}}',
+			},
+			labels: {
+				color: 'inherit',
+			},
+			line: {
+				strokeWidth: 4,
+			},
+			nodes: {
+				pointSize: 4,
+				pointFill: 'white',
+				pointStrokeWidth: 1,
+				pointStroke: 'white',
+			},
+			legend: {
+				active: true,
+				markerStyle: 'line',
+			},
+			dataRender: {
+				sortOrder: 'ascending',
+				xScale: 'time',
+				xFormat: 'YYYY',
+			},
+			io: {
+				isConvertedChart: false,
+			},
+		}),
 	],
 ];
 

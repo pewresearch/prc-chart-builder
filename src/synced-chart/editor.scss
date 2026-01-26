@@ -32,7 +32,7 @@ $chart_highlight_color: #b8236d;
 .wp-block-prc-chart-builder-synced-chart:not(.is-selected):not(
 		.has-child-selected
 	) {
-	.chart-builder-data-table {
+	.chart-builder-data-table table {
 		display: none !important;
 	}
 }

@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const pieTemplate = [
 	[
 		'prc-block/table',
@@ -40,32 +42,55 @@ const pieTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
+		mergeWithDefaults({
+			_version: 'v2',
 			chartType: 'pie',
-			metaTitle: 'Pie Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-
-			width: 420,
-			height: 350,
-			paddingLeft: 20,
-			paddingBottom: 20,
-			paddingRight: 20,
-			xDomainPadding: 16,
-			xTickNum: null,
-			yAxisActive: false,
-			labelsActive: true,
-			labelPositionDX: -20,
-			labelColor: 'contrast',
-			sortOrder: 'reverse',
-			tooltipHeaderValue: 'independentValue',
-			tooltipFormat: '{{column}}: {{value}}',
-			legendActive: true,
-			legendMarkerStyle: 'circle',
-		},
+			layout: {
+				type: 'pie',
+				width: 420,
+				height: 350,
+				padding: {
+					left: 20,
+					bottom: 20,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'Pie Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			independentAxis: {
+				tickCount: null,
+				domainPadding: 16,
+			},
+			dependentAxis: {
+				active: false,
+			},
+			tooltip: {
+				active: true,
+				headerValue: 'independentValue',
+				format: '{{column}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				labelPositionDX: -20,
+				color: 'contrast',
+			},
+			legend: {
+				active: true,
+				markerStyle: 'circle',
+			},
+			dataRender: {
+				sortOrder: 'reverse',
+			},
+			io: {
+				isConvertedChart: false,
+			},
+		}),
 	],
 ];
 

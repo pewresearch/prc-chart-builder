@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const WorldMapTemplate = [
 	[
 		'prc-block/table',
@@ -408,32 +410,58 @@ const WorldMapTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
+		mergeWithDefaults({
+			_version: 'v2',
 			chartType: 'map-world',
-			chartFamily: 'map',
-			metaTitle: 'World Countries Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-			width: 640,
-			height: 350,
-			paddingLeft: 20,
-			paddingBottom: 30,
-			paddingRight: 20,
-			tooltipOffsetX: 30,
-			tooltipOffsetY: 30,
-			tooltipHeaderValue: 'countryValue',
-			tooltipFormat: '{{row}}: {{value}} million',
-			colorValue: 'blue-spectrum',
-			categories: ['Population (millions)'],
-			mapScale: 'threshold',
-			mapScaleDomain: [20, 100, 200, 500],
-			labelColor: 'contrast',
-			legendActive: true,
-			legendMarkerStyle: 'rect',
-		},
+			layout: {
+				type: 'map-world',
+				width: 640,
+				height: 350,
+				padding: {
+					top: 20,
+					left: 20,
+					bottom: 30,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'World Countries Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'blue-spectrum',
+			},
+			tooltip: {
+				active: true,
+				offsetX: 30,
+				offsetY: 30,
+				headerValue: 'countryValue',
+				format: '{{row}}: {{value}} million',
+			},
+			labels: {
+				color: 'contrast',
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			map: {
+				scale: 'threshold',
+				scaleDomain: [20, 100, 200, 500],
+			},
+			dataRender: {
+				categories: ['Population (millions)'],
+			},
+			io: {
+				isConvertedChart: false,
+				chartFamily: 'map',
+				colorValue: 'blue-spectrum',
+			},
+		}),
 	],
 ];
 

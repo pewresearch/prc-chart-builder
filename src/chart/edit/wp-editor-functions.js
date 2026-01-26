@@ -11,42 +11,66 @@ import { findAlignments, generateLabelId } from './alignment-utils';
 /**
  * Create wpEditorFunctions object for chart interactions
  *
- * @param {Object} params
- * @param {Object} params.attrs - Block attributes
- * @param {Array} params.chartData - Chart data array
- * @param {Function} params.setAttributes - Function to update block attributes
- * @param {Function} params.toggleSelection - Function to enable/disable block selection
- * @returns {Object} wpEditorFunctions object with annotations and labels handlers
+ * @param {Object}   params
+ * @param {Object}   params.attrs                    - Block attributes
+ * @param {string}   params.deviceType               - Current device type ('desktop', 'tablet', 'mobile')
+ * @param {Function} params.getCurrentValue          - Function to get viewport-aware attribute values
+ * @param {Function} params.updateAttributeForDevice - Function to update viewport-aware attributes
+ * @param {Function} params.toggleSelection          - Function to enable/disable block selection
+ * @param {Function} params.setAlignments            - Function to update alignment overlay state
+ * @param {Function} params.setIsDragging            - Function to update drag state (for disabling tooltips)
+ * @return {Object} wpEditorFunctions object with annotations and labels handlers
  */
 export function createWpEditorFunctions({
 	attrs,
-	chartData,
-	setAttributes,
+	deviceType,
+	getCurrentValue,
+	updateAttributeForDevice,
 	toggleSelection,
 	setAlignments,
+	setIsDragging,
 }) {
 	// Label position registry for alignment detection
 	const labelRegistry = new Map();
-
 	return {
 		annotations: {
-			onDragStart: (annotationId) => {
+			onDragStart: () => {
 				// Disable block selection to prevent block dragging
 				if (toggleSelection) {
 					toggleSelection(false);
 				}
+				// Disable tooltips during drag
+				if (setIsDragging) {
+					setIsDragging(true);
+				}
 			},
-			onDrag: (annotationId, x, y, isDragging) => {
+			onDrag: () => {
 				// Could show preview or update UI during drag
 			},
 			onDragEnd: (annotationId, finalX, finalY) => {
 				const annotationIndex = parseInt(annotationId, 10);
-				const { annotations } = attrs;
+
+				// Get current viewport's annotations items
+				// Check viewport-specific override first, then fall back to base
+				let currentItems;
+				if (
+					deviceType !== 'desktop' &&
+					attrs[deviceType]?.annotations?.items
+				) {
+					currentItems = attrs[deviceType].annotations.items;
+				} else {
+					currentItems = attrs.annotations?.items || [];
+				}
+
+				// Re-enable tooltips
+				if (setIsDragging) {
+					setIsDragging(false);
+				}
 
 				if (
-					!annotations ||
+					!currentItems ||
 					annotationIndex < 0 ||
-					annotationIndex >= annotations.length
+					annotationIndex >= currentItems.length
 				) {
 					// Re-enable block selection
 					if (toggleSelection) {
@@ -55,8 +79,8 @@ export function createWpEditorFunctions({
 					return;
 				}
 
-				// Update state with final position
-				const updatedAnnotations = annotations.map((annotation, i) =>
+				// Update state with final position (viewport-aware)
+				const updatedAnnotations = currentItems.map((annotation, i) =>
 					i === annotationIndex
 						? {
 								...annotation,
@@ -66,7 +90,9 @@ export function createWpEditorFunctions({
 						: annotation
 				);
 
-				setAttributes({ annotations: updatedAnnotations });
+				updateAttributeForDevice('annotations', {
+					items: updatedAnnotations,
+				});
 
 				// Re-enable block selection
 				if (toggleSelection) {
@@ -85,10 +111,14 @@ export function createWpEditorFunctions({
 				labelRegistry.delete(id);
 			},
 
-			onDragStart: (x, category) => {
+			onDragStart: () => {
 				// Disable block selection to prevent block dragging
 				if (toggleSelection) {
 					toggleSelection(false);
+				}
+				// Disable tooltips during drag
+				if (setIsDragging) {
+					setIsDragging(true);
 				}
 			},
 			onDrag: (x, category, dx, dy, isDragging, absoluteX, absoluteY) => {
@@ -108,28 +138,37 @@ export function createWpEditorFunctions({
 				}
 			},
 			onDragEnd: (x, category, finalDx, finalDy) => {
+				// Re-enable tooltips
+				if (setIsDragging) {
+					setIsDragging(false);
+				}
 				// Clear alignments when drag ends
 				setAlignments({
 					vertical: [],
 					horizontal: [],
 				});
-				const updatedData = chartData.map((d) => {
-					if (d.x === x) {
-						return {
-							...d,
-							__labelPositions: {
-								...d.__labelPositions,
-								[category]: {
-									dx: Math.round(finalDx),
-									dy: Math.round(finalDy),
-								},
-							},
-						};
-					}
-					return d;
-				});
 
-				setAttributes({ chartData: updatedData });
+				// Store custom label positions in viewport-aware labels.customPositions
+				// Format: { "xValue::category": { dx, dy } }
+				// Get current viewport's customPositions
+				const currentCustomPositions =
+					getCurrentValue('labels', 'customPositions') || {};
+
+				// Build unique key for this label (x value + category)
+				const labelKey = `${x}::${category}`;
+
+				const newPosition = {
+					dx: Math.round(finalDx),
+					dy: Math.round(finalDy),
+				};
+
+				// Update custom positions with viewport awareness
+				updateAttributeForDevice('labels', {
+					customPositions: {
+						...currentCustomPositions,
+						[labelKey]: newPosition,
+					},
+				});
 
 				// Re-enable block selection
 				if (toggleSelection) {
@@ -143,18 +182,28 @@ export function createWpEditorFunctions({
 				if (toggleSelection) {
 					toggleSelection(false);
 				}
-				// immediately set the legend alignment to none
-				setAttributes({ legendAlignment: 'none' });
+				// Disable tooltips during drag
+				if (setIsDragging) {
+					setIsDragging(true);
+				}
+				// Immediately set the legend alignment to none (viewport-aware)
+				updateAttributeForDevice('legend', {
+					alignment: 'none',
+				});
 			},
-			onDrag: (x, y, isDragging) => {
+			onDrag: () => {
 				// Could show preview or update UI during drag
 			},
 			onDragEnd: (finalX, finalY) => {
-				// When manually positioned, set alignment to 'none'
-				setAttributes({
-					legendOffsetX: Math.round(finalX),
-					legendOffsetY: Math.round(finalY),
-					legendAlignment: 'none', // sanity check to ensure the legend alignment is set to none
+				// Re-enable tooltips
+				if (setIsDragging) {
+					setIsDragging(false);
+				}
+				// When manually positioned, set alignment to 'none' (viewport-aware)
+				updateAttributeForDevice('legend', {
+					offsetX: Math.round(finalX),
+					offsetY: Math.round(finalY),
+					alignment: 'none', // sanity check to ensure the legend alignment is set to none
 				});
 
 				// Re-enable block selection

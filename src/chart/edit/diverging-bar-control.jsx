@@ -1,3 +1,4 @@
+// V2
 /* eslint-disable max-lines-per-function */
 /**
  * External dependencies
@@ -19,6 +20,7 @@ import {
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -36,14 +38,15 @@ const StyledLabel = styled.div`
 	padding: 0px;
 `;
 function DivergingBarControls({ attributes, setAttributes, clientId }) {
-	const {
-		barPadding,
-		neutralBarActive,
-		neutralBarOffsetX,
-		neutralBarSeparator,
-		divergingBarPercentOfInnerWidth,
-		neutralBarSeparatorOffsetX,
-	} = attributes;
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
+
+	// Content attribute - NOT viewport-aware (defines what data categories to use)
+	const divergingBar = attributes.divergingBar || {};
+	const neutralBar = divergingBar.neutralBar || {};
+
 	return (
 		<PanelBody title={__('Diverging Bar')} initialOpen>
 			<ToolsPanel
@@ -66,9 +69,14 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						min={0}
 						max={10}
 						step={0.05}
-						value={parseFloat(barPadding, 10)}
+						value={parseFloat(
+							getCurrentValue('bar', 'barPadding'),
+							10
+						)}
 						onChange={(value) => {
-							setAttributes({
+							const currentBar = getCurrentValue('bar') || {};
+							updateAttributeForDevice('bar', {
+								...currentBar,
 								barPadding: formatNum(value, 'float'),
 							});
 						}}
@@ -82,31 +90,43 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 				>
 					<ToggleControl
 						label={__('Neutral Bar Active')}
-						checked={neutralBarActive}
-						onChange={() =>
+						checked={neutralBar.active || false}
+						onChange={(newValue) => {
 							setAttributes({
-								neutralBarActive: !neutralBarActive,
-							})
-						}
+								divergingBar: {
+									...divergingBar,
+									neutralBar: {
+										...neutralBar,
+										active: newValue,
+									},
+								},
+							});
+						}}
 						help={__(
 							'If active, a neutral bar will be added to the chart. This bar will be positioned to the right of the main graphic.'
 						)}
 					/>
 					<ToggleControl
 						label={__('Neutral Bar Separator')}
-						checked={neutralBarSeparator}
-						onChange={() =>
+						checked={neutralBar.separator || false}
+						onChange={(newValue) => {
 							setAttributes({
-								neutralBarSeparator: !neutralBarSeparator,
-							})
-						}
+								divergingBar: {
+									...divergingBar,
+									neutralBar: {
+										...neutralBar,
+										separator: newValue,
+									},
+								},
+							});
+						}}
 						help={__(
 							'If active, a separator will be added to the neutral bar.'
 						)}
 					/>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => neutralBarOffsetX}
+					hasValue={() => neutralBar.offsetX}
 					label={__('Neutral Bar Positioning')}
 					panelId={clientId}
 				>
@@ -115,17 +135,23 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 					</PanelDescription>
 					<NumberControl
 						label={__('DX')}
-						value={neutralBarOffsetX}
-						disabled={!neutralBarActive}
-						onChange={(value) =>
+						value={neutralBar.offsetX}
+						disabled={!neutralBar.active}
+						onChange={(value) => {
 							setAttributes({
-								neutralBarOffsetX: formatNum(value, 'integer'),
-							})
-						}
+								divergingBar: {
+									...divergingBar,
+									neutralBar: {
+										...neutralBar,
+										offsetX: formatNum(value, 'integer'),
+									},
+								},
+							});
+						}}
 					/>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => neutralBarSeparatorOffsetX}
+					hasValue={() => neutralBar.separatorOffsetX}
 					label={__('Neutral Bar Positioning')}
 					panelId={clientId}
 				>
@@ -134,38 +160,44 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 					</PanelDescription>
 					<NumberControl
 						label={__('DX')}
-						value={neutralBarSeparatorOffsetX}
-						disabled={!neutralBarSeparator}
-						onChange={(value) =>
+						value={neutralBar.separatorOffsetX}
+						disabled={!neutralBar.separator}
+						onChange={(value) => {
 							setAttributes({
-								neutralBarSeparatorOffsetX: formatNum(
-									value,
-									'integer'
-								),
-							})
-						}
+								divergingBar: {
+									...divergingBar,
+									neutralBar: {
+										...neutralBar,
+										separatorOffsetX: formatNum(
+											value,
+											'integer'
+										),
+									},
+								},
+							});
+						}}
 					/>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => divergingBarPercentOfInnerWidth}
+					hasValue={() => divergingBar.percentOfInnerWidth}
 					label={__('Diverging Bar Width')}
 					panelId={clientId}
 				>
 					<RangeControl
 						label={__('Percent of Inner Width')}
 						withInputField
-						disabled={!neutralBarActive}
+						disabled={!neutralBar.active}
 						min={0}
 						max={100}
-						value={divergingBarPercentOfInnerWidth}
-						onChange={(w) =>
+						value={divergingBar.percentOfInnerWidth}
+						onChange={(w) => {
 							setAttributes({
-								divergingBarPercentOfInnerWidth: formatNum(
-									w,
-									'integer'
-								),
-							})
-						}
+								divergingBar: {
+									...divergingBar,
+									percentOfInnerWidth: formatNum(w, 'integer'),
+								},
+							});
+						}}
 					/>
 				</WidePanelItem>
 			</ToolsPanel>

@@ -31,8 +31,14 @@ class Content_Type {
 	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'register_types' );
+		$loader->add_action( 'init', $this, 'register_chart_meta' );
 		$loader->add_filter( 'prc_platform__datasets_enabled_post_types', $this, 'enable_datasets_support' );
 		$loader->add_filter( 'oembed_response_data', $this, 'modify_oembed_response', 10, 4 );
+		$loader->add_filter( 'manage_' . self::$post_type . '_posts_columns', $this, 'add_design_slug_column' );
+		$loader->add_action( 'manage_' . self::$post_type . '_posts_custom_column', $this, 'render_design_slug_column', 10, 2 );
+		$loader->add_filter( 'manage_edit-' . self::$post_type . '_sortable_columns', $this, 'make_design_slug_sortable' );
+		$loader->add_action( 'pre_get_posts', $this, 'make_design_slug_searchable' );
+		$loader->add_filter( 'rest_' . self::$post_type . '_query', $this, 'make_design_slug_rest_searchable', 10, 2 );
 	}
 
 	/**
@@ -103,6 +109,158 @@ class Content_Type {
 		);
 
 		register_post_type( self::$post_type, $args );
+	}
+
+	/**
+	 * Register custom meta fields for the chart post type.
+	 */
+	public function register_chart_meta() {
+		register_post_meta(
+			self::$post_type,
+			'design_slug',
+			array(
+				'type'              => 'string',
+				'description'       => __( 'Design slug used by the design team for chart naming conventions.', 'prc-chart-builder' ),
+				'single'            => true,
+				'show_in_rest'      => true,
+				'sanitize_callback' => 'sanitize_text_field',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+	}
+
+	/**
+	 * Add Design Slug column to the admin list table.
+	 *
+	 * @hook manage_chart_posts_columns
+	 *
+	 * @param array $columns The existing columns.
+	 * @return array The modified columns.
+	 */
+	public function add_design_slug_column( $columns ) {
+		// Insert the Design Slug column after the title column.
+		$new_columns = array();
+		foreach ( $columns as $key => $value ) {
+			$new_columns[ $key ] = $value;
+			if ( 'title' === $key ) {
+				$new_columns['design_slug'] = __( 'Design Slug', 'prc-chart-builder' );
+			}
+		}
+		return $new_columns;
+	}
+
+	/**
+	 * Render the Design Slug column content.
+	 *
+	 * @hook manage_chart_posts_custom_column
+	 *
+	 * @param string $column The column name.
+	 * @param int    $post_id The post ID.
+	 */
+	public function render_design_slug_column( $column, $post_id ) {
+		if ( 'design_slug' === $column ) {
+			$design_slug = get_post_meta( $post_id, 'design_slug', true );
+			if ( ! empty( $design_slug ) ) {
+				echo esc_html( $design_slug );
+			} else {
+				echo '<span style="color: #999;">—</span>';
+			}
+		}
+	}
+
+	/**
+	 * Make the Design Slug column sortable.
+	 *
+	 * @hook manage_edit-chart_sortable_columns
+	 *
+	 * @param array $columns The sortable columns.
+	 * @return array The modified sortable columns.
+	 */
+	public function make_design_slug_sortable( $columns ) {
+		$columns['design_slug'] = 'design_slug';
+		return $columns;
+	}
+
+	/**
+	 * Make the design slug meta field searchable in the admin and REST API.
+	 *
+	 * @hook pre_get_posts
+	 *
+	 * @param WP_Query $query The WordPress query object.
+	 */
+	public function make_design_slug_searchable( $query ) {
+		// Only apply to searches for the chart post type.
+		// Allow both admin searches and REST API searches.
+		$is_admin_search = is_admin() && $query->is_search() && $query->is_main_query();
+		$is_rest_search  = defined( 'REST_REQUEST' ) && REST_REQUEST && $query->is_search();
+
+		if ( ! $is_admin_search && ! $is_rest_search ) {
+			return;
+		}
+
+		// Only apply to chart post type queries.
+		$post_type = $query->get( 'post_type' );
+		if ( self::$post_type !== $post_type ) {
+			return;
+		}
+
+		// Get the search term.
+		$search_term = $query->get( 's' );
+		if ( empty( $search_term ) ) {
+			return;
+		}
+
+		// Add meta query to search design_slug field.
+		$meta_query = $query->get( 'meta_query' ) ?: array();
+
+		// Add design slug to the search.
+		$meta_query[] = array(
+			'key'     => 'design_slug',
+			'value'   => $search_term,
+			'compare' => 'LIKE',
+		);
+
+		$query->set( 'meta_query', $meta_query );
+
+		$query->set( 's', '' );
+	}
+
+	/**
+	 * Make the design slug meta field searchable via REST API.
+	 *
+	 * This enables searching by design_slug when using WPEntitySearch component
+	 * or any REST API query that searches for charts.
+	 *
+	 * @hook rest_chart_query
+	 *
+	 * @param array            $args    Array of arguments for WP_Query.
+	 * @param \WP_REST_Request $request The REST API request.
+	 * @return array Modified query arguments.
+	 */
+	public function make_design_slug_rest_searchable( $args, $request ) {
+		// Only apply if there's a search parameter.
+		$search = $request->get_param( 's' );
+		if ( empty( $search ) ) {
+			return $args;
+		}
+
+		// Add meta query to search design_slug field.
+		if ( ! isset( $args['meta_query'] ) ) {
+			$args['meta_query'] = array();
+		}
+
+		$args['meta_query'][] = array(
+			'key'     => 'design_slug',
+			'value'   => $search,
+			'compare' => 'LIKE',
+		);
+
+		// Clear the standard search to only search meta.
+		$args['s'] = '';
+
+		return $args;
 	}
 
 	/**

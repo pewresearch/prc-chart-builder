@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const dotPlotTemplate = [
 	[
 		'prc-block/table',
@@ -44,46 +46,85 @@ const dotPlotTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
-			chartType: 'dot-plot',
-			metaTitle: 'Dot Plot Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-			width: 420,
-			height: 200,
-			paddingTop: 36,
-			paddingLeft: 100,
-			paddingBottom: 36,
-			paddingRight: 20,
-			xDomainPadding: 28,
-			xAxisStroke: '#756f6b00',
-			xTickLabelTextAnchor: 'end',
-			xTickLabelDX: -5,
-			xGridStroke: '#d1d1d1',
-			yAxisStroke: '#756f6b',
-			yGridStroke: '#00000000',
-			showYMinDomainLabel: true,
-			yTickMarksActive: true,
-			yTickExact: '0,50,100',
-			yMultiLineTickLabelsBreak: 3,
-			lineStrokeWidth: 4,
-			lineNodes: true,
-			nodeSize: 4,
-			nodeStroke: 1,
-			tooltipActive: false,
-			tooltipCategoryActive: false,
-			labelsActive: true,
-			labelPositionDX: 0,
-			labelPositionDY: -8,
-			labelColor: 'inherit',
-			legendActive: true,
-			legendMarkerStyle: 'circle',
-			tooltipHeaderValue: 'categoryValue',
-			tooltipFormat: '{{row}}: {{value}}',
-		},
+		mergeWithDefaults({
+			_version: 'v2',
+			layout: {
+				type: 'dot-plot',
+				width: 420,
+				height: 200,
+				padding: {
+					top: 36,
+					left: 100,
+					bottom: 36,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'Dot Plot Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			independentAxis: {
+				domainPadding: 28,
+				stroke: '#756f6b00',
+				tickLabels: {
+					textAnchor: 'end',
+					verticalAnchor:"middle",
+					dx: -5,
+				},
+				grid: {
+					stroke: '#d1d1d1',
+					strokeDasharray: '3,1',
+				},
+				axis: {
+					stroke: '#fff',
+				},
+			},
+			dependentAxis: {
+				stroke: '#756f6b',
+				showZero: true,
+				tickMarksActive: true,
+				tickLabels: {
+					verticalAnchor: "end",
+					textAnchor: "middle",
+				},
+				tickValues: '0,50,100',
+				multiLineTickLabelsBreak: 3,
+				grid: {
+					stroke: '#00000000',
+				},
+			},
+			tooltip: {
+				active: false,
+				categoryActive: false,
+				headerValue: 'categoryValue',
+				format: '{{row}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				labelPositionDX: 0,
+				labelPositionDY: -8,
+				color: 'inherit',
+			},
+			line: {
+				strokeWidth: 4,
+				showNodes: true,
+			},
+			nodes: {
+				size: 4,
+				stroke: 1,
+			},
+			legend: {
+				active: true,
+				markerStyle: 'circle',
+			},
+			io: {
+				isConvertedChart: false,
+			},
+		}),
 	],
 ];
 

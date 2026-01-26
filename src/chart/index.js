@@ -11,9 +11,12 @@ import { addFilter, addAction } from '@wordpress/hooks';
 import edit from './edit';
 import save from './save';
 import metadata from './block.json';
+import deprecated from './deprecations';
 // import './styles.scss';
 import store from './edit/store';
-import { createPNG, createSVG } from './utils/image-exports';
+// Image export utilities available for auto-save hooks:
+// import { createPNG, createSVG, createPNGsForMultipleCharts } from './utils/image-exports';
+// New API uses object params: createPNG({ clientId, onStart, onComplete, onError })
 
 const { name } = metadata;
 const settings = {
@@ -25,6 +28,10 @@ const settings = {
 	 * @see ./Save.jsx
 	 */
 	save,
+	/**
+	 * @see ./deprecations/
+	 */
+	deprecated,
 };
 
 register(store);

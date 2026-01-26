@@ -25,7 +25,6 @@ export function handleLegacyConversion(postId) {
 				postId,
 			}),
 		}).then((data) => {
-			console.log(data);
 			resolve(data);
 		});
 	});

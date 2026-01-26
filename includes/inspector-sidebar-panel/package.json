@@ -10,6 +10,7 @@
 		"start": "wp-scripts start src/index.js"
 	},
 	"dependencies": {
-		"@wordpress/icons": "^10.22.0"
+		"@wordpress/icons": "^10.22.0",
+		"html2canvas": "^1.4.1"
 	}
 }

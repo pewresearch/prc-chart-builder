@@ -1,0 +1,99 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Migration Function Contract (v2 → v3)",
+	"description": "Contract for transformation function that migrates chart attributes from v2 to v3",
+	"type": "object",
+	"properties": {
+		"isEligible": {
+			"description": "Function to check if attributes need migration",
+			"type": "function",
+			"signature": "(attributes: ChartBlockAttributesV2) => boolean",
+			"implementation": {
+				"checks": [
+					"attributes._version === 'v2'",
+					"attributes.io?.id exists",
+					"attributes.id does NOT exist or is empty"
+				],
+				"returns": "true if migration needed, false otherwise"
+			}
+		},
+		"migrate": {
+			"description": "Function to transform v2 attributes to v3",
+			"type": "function",
+			"signature": "(attributes: ChartBlockAttributesV2) => ChartBlockAttributesV3",
+			"implementation": {
+				"steps": [
+					"Extract io.id to root level as id",
+					"Remove id from io object",
+					"Update _version to 'v3'",
+					"Preserve original as _v2Original",
+					"Return transformed attributes"
+				],
+				"preserves": [
+					"All layout properties",
+					"All metadata properties",
+					"All other io properties except id",
+					"All nested objects unchanged"
+				],
+				"modifies": [
+					"_version: 'v2' → 'v3'",
+					"id: undefined → io.id value",
+					"io.id: value → undefined"
+				]
+			}
+		}
+	},
+	"examples": [
+		{
+			"description": "Basic chart migration",
+			"input": {
+				"_version": "v2",
+				"layout": { "type": "bar" },
+				"io": {
+					"id": "abc-123-chart",
+					"chartData": []
+				}
+			},
+			"output": {
+				"_version": "v3",
+				"id": "abc-123-chart",
+				"layout": { "type": "bar" },
+				"io": {
+					"chartData": []
+				},
+				"_v2Original": { "$ref": "#/examples/0/input" }
+			}
+		},
+		{
+			"description": "Static chart migration",
+			"input": {
+				"_version": "v2",
+				"io": {
+					"id": "xyz-789-chart",
+					"isStaticChart": true,
+					"staticImageId": "456"
+				}
+			},
+			"output": {
+				"_version": "v3",
+				"id": "xyz-789-chart",
+				"io": {
+					"isStaticChart": true,
+					"staticImageId": "456"
+				},
+				"_v2Original": { "$ref": "#/examples/1/input" }
+			}
+		}
+	],
+	"validation": {
+		"postconditions": [
+			"output._version === 'v3'",
+			"output.id === input.io.id",
+			"output.io.id === undefined",
+			"Object.keys(output.io).includes('id') === false",
+			"All other properties preserved exactly"
+		],
+		"idempotency": "Running migration on v3 attributes returns unchanged v3 attributes",
+		"reversibility": "v3 attributes can be loaded with v2 code (backward compatible)"
+	}
+}

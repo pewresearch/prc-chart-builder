@@ -1,7 +1,17 @@
 /**
  * WordPress Dependencies
  */
-import { store, getElement, getContext } from '@wordpress/interactivity';
+import {
+	store,
+	getElement,
+	getContext,
+	getServerState,
+} from '@wordpress/interactivity';
+
+/**
+ * Internal Dependencies
+ */
+import { logMigrationComparison } from './utils/log-migration';
 
 const { addQueryArgs } = window.wp.url;
 const { innerWidth, innerHeight } = window;
@@ -73,6 +83,55 @@ const { state, actions } = store('prc-chart-builder/controller', {
 				state.webShareSupported = true;
 			}
 		},
+		logMigrationAttributes() {
+			const context = getContext();
+			const { id } = context;
+
+			// Wait a bit for chart server state to be available
+			setTimeout(() => {
+				// Try to get chart attributes from chart block's server state
+				// The chart block uses namespace 'prc-chart-builder/chart'
+				try {
+					const chartServerState = getServerState(
+						'prc-chart-builder/chart'
+					);
+					if (
+						chartServerState &&
+						Object.keys(chartServerState).length > 0
+					) {
+						// Find the chart block that belongs to this controller
+						// Chart blocks have IDs that may match or be related to controller ID
+						const chartIds = Object.keys(chartServerState);
+
+						chartIds.forEach((chartId) => {
+							const chartState = chartServerState[chartId];
+							if (chartState && chartState.attributes) {
+								const migratedAttrs = chartState.attributes;
+								const originalAttrs =
+									migratedAttrs._v1Original || migratedAttrs;
+
+								logMigrationComparison(
+									originalAttrs,
+									migratedAttrs,
+									chartId
+								);
+							}
+						});
+					} else {
+						// eslint-disable-next-line no-console
+						console.log(
+							`[Migration Log] No chart server state found for controller ${id}`
+						);
+					}
+				} catch (error) {
+					// eslint-disable-next-line no-console
+					console.warn(
+						`[Migration Log] Error accessing chart server state:`,
+						error
+					);
+				}
+			}, 200); // Small delay to ensure chart state is initialized
+		},
 		syncTableHeight() {
 			const context = getContext();
 			const { id } = context;
@@ -83,24 +142,33 @@ const { state, actions } = store('prc-chart-builder/controller', {
 					return;
 				}
 
-				const chartContainer = controllerEl.querySelector('.cb__chart');
-				const tableContainer = controllerEl.querySelector(
+				const isFreeform = controllerEl.classList.contains(
+					'wp-block-prc-chart-builder-controller--freeform'
+				);
+				// get the shallowest table container
+				const tableContainer = document.getElementById(`${id}-table`);
+				const tableInnerContainer = tableContainer.querySelector(
 					'.wp-chart-builder-table__inner'
 				);
+				const chartContainer = isFreeform
+					? controllerEl.querySelector(
+							'.wp-chart-builder-freeform-chart'
+						)
+					: controllerEl.querySelector('.cb__chart');
+
 				const imgContainer =
 					controllerEl.querySelector('.wp-block-image');
 
-				if ((chartContainer || imgContainer) && tableContainer) {
+				if ((chartContainer || imgContainer) && tableInnerContainer) {
 					const chartHeight =
 						chartContainer?.offsetHeight ||
 						imgContainer?.offsetHeight;
-
 					if (chartHeight) {
 						// Set min-height instead of fixed height to allow table to be taller if needed
 						// -65px is the height of the download data button and the margin bottom of the table
-						tableContainer.style.height = '100%';
-						tableContainer.style.minHeight = `${chartHeight - 37}px`;
-						tableContainer.style.maxHeight = `${chartHeight - 37}px`;
+						tableInnerContainer.style.height = '100%';
+						tableInnerContainer.style.minHeight = `${chartHeight - 37}px`;
+						tableInnerContainer.style.maxHeight = `${chartHeight - 37}px`;
 					}
 				}
 			}, 100);
@@ -144,7 +212,7 @@ const { state, actions } = store('prc-chart-builder/controller', {
 			if (true === state.webShareSupported) {
 				window.navigator.share({
 					title: title + ' | Pew Research Center',
-					url: url,
+					url,
 				});
 			}
 		},

@@ -1,17 +1,16 @@
+/* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable max-lines */
 /* eslint-disable react-hooks/rules-of-hooks */
 /* eslint-disable max-lines-per-function */
 /**
  * WordPress Dependencies
  */
-import { ResizableBox, Spinner } from '@wordpress/components';
+// import { ResizableBox, Spinner } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
 import {
-	RichText,
 	useBlockProps,
 	useInnerBlocksProps,
 	store as blockEditorStore,
-	Warning,
 } from '@wordpress/block-editor';
 import { store as editorStore } from '@wordpress/editor';
 
@@ -23,18 +22,22 @@ import {
 	ChartBuilderTextWrapper,
 } from '@prc/charting-library';
 // eslint-disable-next-line
-import { Fragment, memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState } from 'react';
 
 /**
  * Internal Dependencies
  */
 import { formatCellContent } from '../utils/helpers';
+import { mergeCustomLabelPositions } from '../utils/merge-custom-label-positions';
 import ChartControls from './chart-controls';
 import getConfig from '../utils/get-config';
-import CopyPasteStylesHandler from './copy-paste-styles-handler';
+// import CopyPasteStylesHandler from './copy-paste-styles-handler';
 import { TitleSubtitle, Footer } from './meta-text-fields';
 import { createWpEditorFunctions } from './wp-editor-functions';
 import { AlignmentOverlay } from './alignment-overlay';
+import { DrawingOverlay } from './drawing-overlay';
+import { DrawingLayer } from './drawing-layer';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const getCellContent = (cell) => {
 	return (
@@ -68,51 +71,96 @@ export default function Edit({
 	isSelected,
 	context,
 }) {
-	const {
-		id,
-		isStaticChart,
-		isFreeformChart,
-		height,
-		width,
-		metaTextActive,
-		metaTitle,
-		metaSubtitle,
-		metaQuestionWordingActive,
-		metaQuestionWording,
-		metaNote,
-		metaSource,
-		metaTag,
-		chartData,
-		mapScale,
-		groupBreaksCategory,
-	} = attrs;
+	const { id, io, metadata, dataRender, drawings = [] } = attrs;
+
+	const { chartData, isStaticChart, isFreeformChart } = io;
+	const { groupBreaksCategory, mapScale } = dataRender || {};
 
 	// Use the controller id to create a unique id for the chart.
 	const controllerId = context['prc-chart-builder/id'];
+
+	// Viewport-aware attribute management
+	const { deviceType, getCurrentValue, updateAttributeForDevice } =
+		useViewportAttributes(attrs, setAttributes);
+
+	// Get viewport-aware layout dimensions
+	const width = getCurrentValue('layout', 'width');
+	const height = getCurrentValue('layout', 'height');
+
+	// Get viewport-aware custom label positions
+	const customLabelPositions = getCurrentValue('labels', 'customPositions');
+
+	// Memoized chartData with custom positions merged in
+	// This merges labels.customPositions into chartData as __labelPositions
+	const chartDataWithCustomPositions = useMemo(
+		() => mergeCustomLabelPositions(chartData, customLabelPositions),
+		[chartData, customLabelPositions]
+	);
+
+	// Set chart ID based on controller ID (v2: nested in io.id)
 	useEffect(() => {
 		if (controllerId) {
-			setAttributes({ id: `${controllerId}-chart` });
+			const expectedChartId = `${controllerId}-chart`;
+			// Only update if different to avoid unnecessary renders
+			if (id !== expectedChartId) {
+				setAttributes({
+					id: expectedChartId,
+				});
+			}
 		}
-	}, [controllerId]);
+	}, [controllerId, id, setAttributes]);
 
+	// Get table data from parent controller's innerBlocks
 	const { tableData, parentBlockId, refId } = useSelect(
 		(select) => {
-			const { getBlockParentsByBlockName, getBlocks } =
-				select(blockEditorStore);
+			const { getBlock, getBlockParents } = select(blockEditorStore);
 			const { getCurrentPostId, getCurrentPostType } =
 				select(editorStore);
 
-			const rootBlockId = getBlockParentsByBlockName(
-				clientId,
-				'prc-chart-builder/controller'
-			)?.[0];
-			const tableBlock = getBlocks(rootBlockId).find(
-				(block) =>
-					'core/table' === block.name ||
-					'prc-block/table' === block.name
-			);
-			const { attributes: tableAttributes } = tableBlock;
-			// Debug table data:
+			// If we're in a synced chart context and have synced table data, use it
+			const syncedTableData =
+				context['prc-chart-builder/syncedTableData'];
+			if (syncedTableData) {
+				const editorContextPostType = getCurrentPostType();
+				let postId = null;
+				if (context && context.refId) {
+					postId = context.refId;
+				} else if ('chart' === editorContextPostType) {
+					postId = getCurrentPostId();
+				}
+
+				return {
+					tableData: syncedTableData,
+					parentBlockId: controllerId,
+					refId: postId,
+				};
+			}
+
+			// Use the actual parent from the block tree
+			// Context ID might be stale after migration, so we use the actual parent
+			const chartParents = getBlockParents(clientId);
+			const actualParentId =
+				chartParents.length > 0 ? chartParents[0] : null;
+			const parentControllerId = actualParentId || controllerId;
+
+			// Find the table block among the parent controller's children
+			let tableAttributes = null;
+			if (parentControllerId) {
+				const controllerBlock = getBlock(parentControllerId);
+				const innerBlocks = controllerBlock?.innerBlocks || [];
+
+				const tableBlock = innerBlocks.find(
+					(block) =>
+						'core/table' === block.name ||
+						'prc-block/table' === block.name
+				);
+
+				if (tableBlock) {
+					const freshTableBlock = getBlock(tableBlock.clientId);
+					tableAttributes = freshTableBlock?.attributes;
+				}
+			}
+
 			const editorContextPostType = getCurrentPostType();
 
 			let postId = null;
@@ -124,15 +172,14 @@ export default function Edit({
 
 			return {
 				tableData: tableAttributes,
-				parentBlockId: rootBlockId,
+				parentBlockId: parentControllerId,
 				refId: postId,
-				editorPostType: editorContextPostType,
 			};
 		},
-		[context]
+		[context, controllerId, clientId]
 	);
 	const editorClickEvent = () => {
-		console.log('editorClickEvent...');
+		// Editor click handler for chart interactions
 	};
 
 	// Alignment state for visual guides during drag
@@ -141,22 +188,41 @@ export default function Edit({
 		horizontal: [],
 	});
 
+	// Track drag state to disable tooltips during drag
+	const [isDragging, setIsDragging] = useState(false);
+
 	// Editor functions for chart interactions
-	// IMPORTANT: setAlignments is NOT in dependencies to avoid recreating on every alignment change
+	// IMPORTANT: setAlignments and setIsDragging are NOT in dependencies to avoid recreating on every state change
 	const wpEditorFunctions = useMemo(
 		() =>
 			createWpEditorFunctions({
 				attrs,
-				chartData,
-				setAttributes,
+				deviceType,
+				getCurrentValue,
+				updateAttributeForDevice,
 				toggleSelection,
 				setAlignments, // Pass alignment setter (stable reference)
+				setIsDragging, // Pass drag state setter (stable reference)
 			}),
-		[attrs, chartData, setAttributes, toggleSelection] // setAlignments intentionally excluded
+		[
+			attrs,
+			deviceType,
+			getCurrentValue,
+			updateAttributeForDevice,
+			toggleSelection,
+		] // setAlignments and setIsDragging intentionally excluded
 	);
 
 	const config = useMemo(() => {
-		const baseConfig = getConfig(attrs, clientId, editorClickEvent);
+		const baseConfig = getConfig(
+			attrs,
+			clientId,
+			editorClickEvent,
+			deviceType
+		);
+
+		// set the parent class to the chart builder chart for the editor
+		baseConfig.layout.parentClass = 'wp-block-prc-chart-builder-chart';
 
 		// Add IDs to annotations
 		if (baseConfig.annotations?.items) {
@@ -168,8 +234,17 @@ export default function Edit({
 			);
 		}
 
+		// Disable tooltips during drag to prevent conflicts
+		if (isDragging) {
+			baseConfig.tooltip = {
+				...baseConfig.tooltip,
+				active: false,
+				activeOnMobile: false,
+			};
+		}
+
 		return baseConfig;
-	}, [attrs, clientId]);
+	}, [attrs, clientId, deviceType, isDragging]);
 
 	const headers = useMemo(
 		() =>
@@ -192,65 +267,92 @@ export default function Edit({
 							getCellContent(cell),
 							key,
 							mapScale,
-							groupBreaksCategory
+							groupBreaksCategory,
+							dataRender?.xScale,
+							dataRender?.xFormat
 						),
 					};
 				}, {})
 			),
-		[body, headers, mapScale, groupBreaksCategory]
+		[
+			body,
+			headers,
+			mapScale,
+			groupBreaksCategory,
+			dataRender?.xScale,
+			dataRender?.xFormat,
+		]
 	);
 
 	useEffect(() => {
-		const [, ...rest] = headers;
-		setAttributes({
-			availableCategories: rest,
-			independentVariable: headers[0],
-		});
-	}, [headers, setAttributes]);
-
-	useEffect(() => {
+		if (!headers || headers.length === 0) {
+			return;
+		}
 		if (!memoizedChartData || memoizedChartData.length === 0) {
 			return;
 		}
 
-		// Check if we have custom positions to preserve in the current chartData
-		// Note: We read from chartData but don't include it in dependencies to avoid infinite loop
-		const hasCustomPositions = chartData?.some(
-			(d) =>
-				d.__labelPositions && Object.keys(d.__labelPositions).length > 0
-		);
+		const [, ...rest] = headers;
 
-		if (hasCustomPositions) {
-			// Create lookup map of old positions by x-value
-			const positionsMap = new Map();
-			chartData.forEach((d) => {
-				if (d.__labelPositions) {
-					positionsMap.set(d.x, d.__labelPositions);
-				}
+		// Note: We no longer preserve __labelPositions from old chartData here.
+		// Custom label positions are now managed via labels.customPositions (viewport-aware)
+		// and merged into chartData at render time by mergeCustomLabelPositions utility.
+		const newChartData = memoizedChartData;
+
+		// Check if the data actually changed (deep comparison of data values)
+		const dataChanged =
+			!chartData ||
+			chartData.length !== newChartData.length ||
+			newChartData.some((newRow, index) => {
+				const oldRow = chartData[index];
+				if (!oldRow) return true;
+				// Compare all keys
+				return Object.keys(newRow).some((key) => {
+					return newRow[key] !== oldRow[key];
+				});
 			});
 
-			// Merge positions into new data where x-values match
-			const mergedData = memoizedChartData.map((d) => {
-				const existingPositions = positionsMap.get(d.x);
-				if (existingPositions) {
-					return { ...d, __labelPositions: existingPositions };
-				}
-				return d;
-			});
-
-			setAttributes({ chartData: mergedData });
-		} else {
-			// No custom positions to preserve, use new data directly
-			setAttributes({ chartData: memoizedChartData });
+		// Only update if data actually changed or if required metadata is missing
+		if (!dataChanged && attrs.io?.availableCategories?.length > 0) {
+			return;
 		}
+
+		setAttributes({
+			io: {
+				...(attrs.io || {}),
+				availableCategories: rest,
+				independentVariable: headers[0],
+				chartData: newChartData,
+			},
+		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [memoizedChartData, setAttributes]);
+	}, [headers, memoizedChartData, setAttributes, controllerId]);
 
 	const blockProps = useBlockProps({
 		className: 'active',
 	});
 
 	const innerBlocksProps = useInnerBlocksProps();
+
+	// Drawing state
+	const [isDrawingMode, setIsDrawingMode] = useState(false);
+	const [drawingTool, setDrawingTool] = useState('pen');
+	const [strokeColor, setStrokeColor] = useState('#000000');
+	const [strokeWidth, setStrokeWidth] = useState(2);
+
+	function handleDrawingComplete(drawingData) {
+		setAttributes({
+			drawings: [...(drawings || []), drawingData],
+		});
+	}
+
+	function handleDrawingModeChange(mode) {
+		setIsDrawingMode(mode);
+	}
+
+	function handleToolChange(tool) {
+		setDrawingTool(tool);
+	}
 
 	return (
 		<>
@@ -259,114 +361,97 @@ export default function Edit({
 				setAttributes={setAttributes}
 				parentBlock={parentBlockId}
 				clientId={clientId}
+				isDrawingMode={isDrawingMode}
+				drawingTool={drawingTool}
+				onDrawingModeChange={handleDrawingModeChange}
+				onToolChange={handleToolChange}
+				strokeColor={strokeColor}
+				strokeWidth={strokeWidth}
+				onStrokeColorChange={setStrokeColor}
+				onStrokeWidthChange={setStrokeWidth}
 			/>
-			<CopyPasteStylesHandler
+			{/* <CopyPasteStylesHandler
 				id={id}
 				attributes={attrs}
 				setAttributes={setAttributes}
-			>
-				<div {...blockProps}>
-					<figure>
-						<ChartBuilderTextWrapper
-							active={config.metadata.active}
-							width={width}
-							horizontalRules={config.layout.horizontalRules}
-						>
-							{metaTextActive && (
-								<TitleSubtitle
-									metaTitle={metaTitle}
-									metaSubtitle={metaSubtitle}
-									setAttributes={setAttributes}
-								/>
-							)}
-							{/* <ResizableBox
-								size={{
-									height,
-									width,
-								}}
-								minHeight="50"
-								minWidth="50"
-								enable={{
-									top: false,
-									right: false,
-									bottom: false,
-									left: false,
-									topRight: false,
-									bottomRight: !!isSelected,
-									bottomLeft: false,
-									topLeft: false,
-								}}
-								onResizeStop={(
-									event,
-									direction,
-									elt,
-									delta
-								) => {
-									setAttributes({
-										height: parseInt(
-											parseInt(height, 10) +
-												parseInt(delta.height, 10),
-											10
-										),
-										width: parseInt(
-											parseInt(width, 10) +
-												parseInt(delta.width, 10),
-											10
-										),
-									});
-									toggleSelection(true);
-								}}
-								onResizeStart={() => {
-									toggleSelection(false);
-								}}
-							> */}
-							{(isStaticChart || isFreeformChart) && (
-								<div
-									className="cb__chart"
-									{...innerBlocksProps}
-								/>
-							)}
-							{!isStaticChart &&
-								!isFreeformChart &&
-								memoizedChartData && (
-									<div style={{ position: 'relative' }}>
-										<MemoizedChartBuilder
-											className="cb__chart"
-											config={config}
-											data={
-												chartData || memoizedChartData
+			> */}
+			<div {...blockProps}>
+				<figure>
+					<ChartBuilderTextWrapper
+						active={config.metadata.active}
+						width={width}
+						horizontalRules={config.layout.horizontalRules}
+					>
+						{metadata.active && (
+							<TitleSubtitle
+								attributes={attrs}
+								setAttributes={setAttributes}
+							/>
+						)}
+						{(isStaticChart || isFreeformChart) && (
+							<div className="cb__chart" {...innerBlocksProps} />
+						)}
+						{!isStaticChart &&
+							!isFreeformChart &&
+							memoizedChartData && (
+								<div style={{ position: 'relative' }}>
+									<MemoizedChartBuilder
+										className="cb__chart"
+										config={config}
+										data={
+											chartDataWithCustomPositions ||
+											memoizedChartData
+										}
+										wpEditorFunctions={wpEditorFunctions}
+									/>
+									<DrawingLayer
+										drawings={drawings}
+										chartDimensions={{
+											width,
+											height,
+											padding: config.layout.padding,
+										}}
+										chartWidth={width}
+										chartHeight={height}
+									/>
+									<AlignmentOverlay
+										alignments={alignments}
+										chartDimensions={{
+											width,
+											height,
+											padding: config.layout.padding,
+										}}
+									/>
+									{isSelected && (
+										<DrawingOverlay
+											isActive={isDrawingMode}
+											tool={drawingTool}
+											onDrawingComplete={
+												handleDrawingComplete
 											}
-											wpEditorFunctions={
-												wpEditorFunctions
-											}
-										/>
-										<AlignmentOverlay
-											alignments={alignments}
 											chartDimensions={{
 												width,
 												height,
 												padding: config.layout.padding,
 											}}
+											chartWidth={width}
+											chartHeight={height}
+											strokeColor={strokeColor}
+											strokeWidth={strokeWidth}
 										/>
-									</div>
-								)}
-							{/* </ResizableBox> */}
-							{metaTextActive && (
-								<Footer
-									metaQuestionWordingActive={
-										metaQuestionWordingActive
-									}
-									metaQuestionWording={metaQuestionWording}
-									metaNote={metaNote}
-									metaSource={metaSource}
-									metaTag={metaTag}
-									setAttributes={setAttributes}
-								/>
+									)}
+								</div>
 							)}
-						</ChartBuilderTextWrapper>
-					</figure>
-				</div>
-			</CopyPasteStylesHandler>
+						{metadata.active && (
+							<Footer
+								attributes={attrs}
+								setAttributes={setAttributes}
+							/>
+						)}
+					</ChartBuilderTextWrapper>
+				</figure>
+			</div>
+			{/* </CopyPasteStylesHandler> */}
 		</>
 	);
 }

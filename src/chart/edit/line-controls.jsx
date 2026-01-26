@@ -22,6 +22,7 @@ import {
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -39,16 +40,14 @@ const StyledLabel = styled.div`
 	padding: 0px;
 `;
 
-function LineControls({ attributes, setAttributes, chartType, clientId }) {
-	const {
-		lineInterpolation,
-		lineStrokeWidth,
-		lineNodes,
-		nodeSize,
-		nodeStrokeWidth,
-		areaFillOpacity,
-		lineStrokeDashArray,
-	} = attributes;
+function LineControls({ attributes, setAttributes, clientId }) {
+	// Viewport-aware attribute management
+	const { getCurrentValue, updateAttributeForDevice } =
+		useViewportAttributes(attributes, setAttributes);
+
+	const layout = getCurrentValue('layout') || {};
+	const { type: chartType } = layout;
+
 	return (
 		<PanelBody title={__('Line/Area Chart Configuration')}>
 			<ToolsPanel
@@ -104,9 +103,11 @@ function LineControls({ attributes, setAttributes, chartType, clientId }) {
 							{ label: 'Monotone Y', value: 'curvemonotoneY' },
 							{ label: 'Natural', value: 'curvenatural' },
 						]}
-						value={lineInterpolation}
+						value={getCurrentValue('line', 'interpolation')}
 						onChange={(value) =>
-							setAttributes({ lineInterpolation: value })
+							updateAttributeForDevice('line', {
+								interpolation: value,
+							})
 						}
 					/>
 					<PanelDescription>
@@ -123,10 +124,10 @@ function LineControls({ attributes, setAttributes, chartType, clientId }) {
 					<NumberControl
 						min={1}
 						label={__('Line Stroke Width')}
-						value={lineStrokeWidth}
+						value={getCurrentValue('line', 'strokeWidth')}
 						onChange={(value) =>
-							setAttributes({
-								lineStrokeWidth: formatNum(value, 'integer'),
+							updateAttributeForDevice('line', {
+								strokeWidth: formatNum(value, 'integer'),
 							})
 						}
 					/>
@@ -135,10 +136,12 @@ function LineControls({ attributes, setAttributes, chartType, clientId }) {
 						help={__(
 							'A list of comma and/or white space separated <length>s and <percentage>s that specify the lengths of alternating dashes and gaps. If an odd number of values is provided, then the list of values is repeated to yield an even number of values. Thus, 5,3,2 is equivalent to 5,3,2,5,3,2.'
 						)}
-						value={lineStrokeDashArray}
+						value={getCurrentValue('line', 'strokeDasharray')}
 						placeholder=""
 						onChange={(val) =>
-							setAttributes({ lineStrokeDashArray: val })
+							updateAttributeForDevice('line', {
+								strokeDasharray: val,
+							})
 						}
 					/>
 				</WidePanelItem>
@@ -151,34 +154,36 @@ function LineControls({ attributes, setAttributes, chartType, clientId }) {
 					<ToggleControl
 						label="Line nodes"
 						help={
-							lineNodes
+							getCurrentValue('line', 'showPoints')
 								? 'Shows data point nodes on chart.'
 								: 'No data point nodes.'
 						}
-						checked={lineNodes}
-						onChange={() =>
-							setAttributes({ lineNodes: !lineNodes })
-						}
-					/>
-					<NumberControl
-						disabled={!lineNodes}
-						min={1}
-						label={__('Line Node Size')}
-						value={nodeSize}
-						onChange={(value) =>
-							setAttributes({
-								nodeSize: formatNum(value, 'integer'),
+						checked={getCurrentValue('line', 'showPoints')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('line', {
+								showPoints: newValue,
 							})
 						}
 					/>
 					<NumberControl
-						disabled={!lineNodes}
+						disabled={!getCurrentValue('line', 'showPoints')}
+						min={1}
+						label={__('Line Node Size')}
+						value={getCurrentValue('nodes', 'pointSize')}
+						onChange={(value) =>
+							updateAttributeForDevice('nodes', {
+								pointSize: formatNum(value, 'integer'),
+							})
+						}
+					/>
+					<NumberControl
+						disabled={!getCurrentValue('line', 'showPoints')}
 						min={1}
 						label={__('Line Node Stroke Width')}
-						value={nodeStrokeWidth}
+						value={getCurrentValue('nodes', 'pointStrokeWidth')}
 						onChange={(value) =>
-							setAttributes({
-								nodeStrokeWidth: formatNum(value, 'integer'),
+							updateAttributeForDevice('nodes', {
+								pointStrokeWidth: formatNum(value, 'integer'),
 							})
 						}
 					/>
@@ -189,7 +194,7 @@ function LineControls({ attributes, setAttributes, chartType, clientId }) {
 					panelId={clientId}
 				>
 					<StyledLabel>Area</StyledLabel>
-					{!chartType === 'stacked-area' && (
+					{chartType !== 'stacked-area' && (
 						<ToggleControl
 							label="Show area"
 							help={
@@ -197,11 +202,10 @@ function LineControls({ attributes, setAttributes, chartType, clientId }) {
 									? 'Shows area under line.'
 									: 'No area.'
 							}
-							checked={'area' === chartType}
-							onChange={() =>
-								setAttributes({
-									chartType:
-										'area' === chartType ? 'line' : 'area',
+							checked={getCurrentValue('line', 'showArea')}
+							onChange={(newValue) =>
+								updateAttributeForDevice('line', {
+									showArea: newValue,
 								})
 							}
 						/>
@@ -212,9 +216,9 @@ function LineControls({ attributes, setAttributes, chartType, clientId }) {
 						}
 						label={__('Fill Opacity')}
 						step={0.1}
-						value={areaFillOpacity}
+						value={getCurrentValue('line', 'areaFillOpacity')}
 						onChange={(value) =>
-							setAttributes({
+							updateAttributeForDevice('line', {
 								areaFillOpacity: formatNum(value, 'float'),
 							})
 						}

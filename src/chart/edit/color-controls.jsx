@@ -1,3 +1,4 @@
+// V2
 /**
  * External dependencies
  */
@@ -26,7 +27,9 @@ const PanelDescription = styled.div`
 `;
 
 function ColorControls({ attributes, setAttributes, clientId, chartType }) {
-	const { colorValue, customColors, elementHasStroke } = attributes;
+	// Content attribute - NOT viewport-aware (colors are consistent across all viewports)
+	const io = attributes.io || {};
+
 	return (
 		<PanelBody title={__('Colors')} initialOpen={false}>
 			<ToolsPanel
@@ -43,46 +46,60 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 					)}
 				</PanelDescription>
 				<ToolsPanelItem
-					hasValue={() => colorValue}
+					hasValue={() => io.colorValue}
 					label={__('Color Pallette')}
 					isShownByDefault
 					panelId={clientId}
 				>
 					<SelectControl
 						label={__('Color Palette')}
-						value={colorValue}
+						value={io.colorValue}
 						options={colorNames}
 						onChange={(c) => {
-							setAttributes({ colorValue: c, customColors: [] });
+							setAttributes({
+								io: {
+									...io,
+									colorValue: c,
+									customColors: [],
+								},
+							});
 						}}
 					/>
 				</ToolsPanelItem>
 				<ToolsPanelItem
-					hasValue={() => customColors}
+					hasValue={() => io.customColors}
 					label={__('Custom Colors')}
 					panelId={clientId}
 				>
 					<FormTokenField
 						label={__('Custom Colors')}
-						value={customColors || []}
+						value={io.customColors || []}
 						placeholder="#000000"
-						onChange={(c) => setAttributes({ customColors: c })}
+						onChange={(c) => {
+							setAttributes({
+								io: {
+									...io,
+									customColors: c,
+								},
+							});
+						}}
 						help={__('Separate with commas or the Enter key.')}
 					/>
 				</ToolsPanelItem>
 				<ToolsPanelItem
-					hasValue={() => customColors}
+					hasValue={() => io.customColors}
 					label={__('Color Sorter')}
 					panelId={clientId}
 					isShownByDefault
 				>
 					<ColorSorter
 						colors={
-							0 < customColors.length
-								? customColors
-								: colors[colorValue]
+							0 < (io.customColors || []).length
+								? io.customColors
+								: colors[io.colorValue]
 						}
 						setAttributes={setAttributes}
+						io={io}
 					/>
 				</ToolsPanelItem>
 				<PanelDescription>
@@ -104,20 +121,23 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 					}}
 				>
 					<ToolsPanelItem
-						hasValue={() => elementHasStroke}
+						hasValue={() => io.elementHasStroke}
 						label={__('Stroke')}
 						panelId={clientId}
 						isShownByDefault
 					>
 						<ToggleControl
 							label={__('Stroke')}
-							checked={elementHasStroke}
+							checked={io.elementHasStroke || false}
 							help="If selected, the slices of a pie or bar segements will have a stroke applied."
-							onChange={() =>
+							onChange={(newValue) => {
 								setAttributes({
-									elementHasStroke: !elementHasStroke,
-								})
-							}
+									io: {
+										...io,
+										elementHasStroke: newValue,
+									},
+								});
+							}}
 						/>
 					</ToolsPanelItem>
 				</ToolsPanel>

@@ -8,13 +8,54 @@ import { List, arrayMove } from 'react-movable';
 import { useState, useEffect } from 'react';
 import { Icon } from '@wordpress/components';
 
-function Sorter({ options, setAttributes, attribute, allowDisabled = true }) {
+function Sorter({
+	options,
+	setAttributes,
+	attribute,
+	parentObject = null,
+	parentObjectValue = null,
+	allowDisabled = true,
+}) {
 	const [items, setItems] = useState(options);
 
-	// Update items when options prop changes
+	// Update items when options prop changes, but only if the set of items changed
 	useEffect(() => {
-		setItems(options);
+		setItems((currentItems) => {
+			const currentLabels = new Set(currentItems.map((i) => i.label));
+			const newLabels = new Set(options.map((o) => o.label));
+
+			// Only update if items were added or removed, not if just order changed
+			const labelsChanged =
+				currentLabels.size !== newLabels.size ||
+				[...currentLabels].some((label) => !newLabels.has(label)) ||
+				[...newLabels].some((label) => !currentLabels.has(label));
+
+			return labelsChanged ? options : currentItems;
+		});
 	}, [options]);
+
+	// Helper function to update attributes (handles both flat and nested)
+	const updateAttribute = (newItems) => {
+		const filteredValues = newItems
+			.filter((i) => !i.disabled)
+			.map((i) => i.label);
+
+		if (parentObject && parentObjectValue) {
+			// Nested attribute update (e.g., divergingBar.positiveCategories)
+			setAttributes({
+				[parentObject]: {
+					...parentObjectValue,
+					[attribute]: filteredValues,
+				},
+			});
+		} else {
+			// Flat attribute update (e.g., categories)
+			setAttributes({
+				[attribute]: filteredValues,
+			});
+		}
+	};
+
 	return (
 		<div style={{ width: '100%' }}>
 			<List
@@ -22,11 +63,7 @@ function Sorter({ options, setAttributes, attribute, allowDisabled = true }) {
 				onChange={({ oldIndex, newIndex }) => {
 					const newItems = arrayMove(items, oldIndex, newIndex);
 					setItems(newItems);
-					setAttributes({
-						[attribute]: newItems
-							.filter((i) => !i.disabled)
-							.map((i) => i.label),
-					});
+					updateAttribute(newItems);
 				}}
 				renderList={({ children, props }) => (
 					<ul {...props}>{children}</ul>
@@ -66,20 +103,18 @@ function Sorter({ options, setAttributes, attribute, allowDisabled = true }) {
 							{allowDisabled && (
 								<button
 									type="button"
-									onClick={({ oldIndex, newIndex }) => {
-										items[index].disabled =
-											!items[index].disabled;
-										const newItems = arrayMove(
-											items,
-											oldIndex,
-											newIndex
+									onClick={() => {
+										const newItems = items.map((item, i) =>
+											i === index
+												? {
+														...item,
+														disabled:
+															!item.disabled,
+													}
+												: item
 										);
 										setItems(newItems);
-										setAttributes({
-											[attribute]: newItems
-												.filter((i) => !i.disabled)
-												.map((i) => i.label),
-										});
+										updateAttribute(newItems);
 									}}
 									style={{
 										border: 'none',

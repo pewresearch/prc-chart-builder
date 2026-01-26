@@ -21,18 +21,18 @@ import { PanelColorSettings } from '@wordpress/block-editor';
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const WidePanelItem = styled(ToolsPanelItem)`
 	grid-column: span 2;
 `;
 
 function DotPlotControls({ attributes, setAttributes, clientId }) {
-	const {
-		dotPlotConnectPoints,
-		dotPlotConnectPointsStroke,
-		dotPlotConnectPointsStrokeWidth,
-		dotPlotConnectPointsStrokeDasharray,
-	} = attributes;
+	// Viewport-aware attribute management
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
 	return (
 		<PanelBody title={__('Dot Plot')} initialOpen>
 			<ToolsPanel
@@ -51,10 +51,10 @@ function DotPlotControls({ attributes, setAttributes, clientId }) {
 				>
 					<ToggleControl
 						label={__('Connect Points')}
-						checked={dotPlotConnectPoints}
-						onChange={() =>
-							setAttributes({
-								dotPlotConnectPoints: !dotPlotConnectPoints,
+						checked={getCurrentValue('dotPlot', 'connectPoints')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('dotPlot', {
+								connectPoints: newValue,
 							})
 						}
 						help={__(
@@ -68,11 +68,23 @@ function DotPlotControls({ attributes, setAttributes, clientId }) {
 						initialOpen
 						colorSettings={[
 							{
-								value: dotPlotConnectPointsStroke,
-								onChange: (value) =>
-									setAttributes({
-										dotPlotConnectPointsStroke: value,
-									}),
+								value: getCurrentValue(
+									'dotPlot',
+									'connectingLine'
+								)?.stroke,
+								onChange: (value) => {
+									const currentConnectingLine =
+										getCurrentValue(
+											'dotPlot',
+											'connectingLine'
+										) || {};
+									updateAttributeForDevice('dotPlot', {
+										connectingLine: {
+											...currentConnectingLine,
+											stroke: value,
+										},
+									});
+								},
 								label: __('Connecting line stroke'),
 							},
 						]}
@@ -80,28 +92,43 @@ function DotPlotControls({ attributes, setAttributes, clientId }) {
 					<NumberControl
 						min={1}
 						label={__('Line Stroke Width')}
-						value={dotPlotConnectPointsStrokeWidth}
-						onChange={(value) =>
-							setAttributes({
-								dotPlotConnectPointsStrokeWidth: formatNum(
-									value,
-									'integer'
-								),
-							})
+						value={
+							getCurrentValue('dotPlot', 'connectingLine')
+								?.strokeWidth
 						}
+						onChange={(value) => {
+							const currentConnectingLine =
+								getCurrentValue('dotPlot', 'connectingLine') ||
+								{};
+							updateAttributeForDevice('dotPlot', {
+								connectingLine: {
+									...currentConnectingLine,
+									strokeWidth: formatNum(value, 'integer'),
+								},
+							});
+						}}
 					/>
 					<TextControl
 						label={__('Line Stroke Dash Array')}
 						help={__(
 							'A list of comma and/or white space separated <length>s and <percentage>s that specify the lengths of alternating dashes and gaps. If an odd number of values is provided, then the list of values is repeated to yield an even number of values. Thus, 5,3,2 is equivalent to 5,3,2,5,3,2.'
 						)}
-						value={dotPlotConnectPointsStrokeDasharray}
-						placeholder=""
-						onChange={(val) =>
-							setAttributes({
-								dotPlotConnectPointsStrokeDasharray: val,
-							})
+						value={
+							getCurrentValue('dotPlot', 'connectingLine')
+								?.strokeDasharray
 						}
+						placeholder=""
+						onChange={(val) => {
+							const currentConnectingLine =
+								getCurrentValue('dotPlot', 'connectingLine') ||
+								{};
+							updateAttributeForDevice('dotPlot', {
+								connectingLine: {
+									...currentConnectingLine,
+									strokeDasharray: val,
+								},
+							});
+						}}
 					/>
 				</WidePanelItem>
 			</ToolsPanel>

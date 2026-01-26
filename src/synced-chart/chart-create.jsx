@@ -1,11 +1,8 @@
 /* eslint-disable max-lines-per-function */
 /**
- * External Dependencies
- */
-import { useState, useEffect } from 'react';
-/**
  * WordPress Dependencies
  */
+import { useState, useEffect } from '@wordpress/element';
 import {
 	BaseControl,
 	Button,
@@ -35,9 +32,6 @@ export default function ChartCreate({ setAttributes }) {
 	const [chartOptions, setChartOptions] = useState([]);
 	const [title, setTitle] = useState('');
 	const [type, setType] = useState(null);
-	const [chartId, setChartId] = useState(null);
-	const [chartContent, setChartContent] = useState(null);
-	// title, set title, go create a new chart post type with the title, return the id and drop.
 
 	const { variations } = useSelect((select) => {
 		const { getBlockVariations } = select(blocksStore);
@@ -46,34 +40,80 @@ export default function ChartCreate({ setAttributes }) {
 		};
 	});
 
-	const processNewChartContent = (newType) => {
-		const matchedVariation = variations.find(
-			(variation) => variation.name === newType
-		);
-		const { attributes, innerBlocks } = matchedVariation;
-		const newChartControllerBlock = createBlock(
-			BLOCK_TO_CREATE,
-			attributes,
-			createBlocksFromInnerBlocksTemplate(innerBlocks)
-		);
-		const newChartContent = serialize(newChartControllerBlock);
-		setChartContent(newChartContent);
-	};
-
 	const createChart = async () => {
 		setProcessing(true);
 		const newTitle = title || 'Untitled Chart';
+
+		// Get the matched variation for the selected chart type
+		const matchedVariation = variations.find(
+			(variation) => variation.name === type
+		);
+		const { attributes, innerBlocks } = matchedVariation;
+
+		// Create the controller block with inner blocks
+		const innerBlocksFromTemplate =
+			createBlocksFromInnerBlocksTemplate(innerBlocks);
+
+		// Find the chart block and update its metadata.title with the user's custom title
+		const chartBlockIndex = innerBlocksFromTemplate.findIndex(
+			(block) => block.name === 'prc-chart-builder/chart'
+		);
+
+		if (
+			chartBlockIndex !== -1 &&
+			innerBlocksFromTemplate[chartBlockIndex].attributes
+		) {
+			// Create a new chart block with updated metadata to avoid mutation
+			const chartBlock = innerBlocksFromTemplate[chartBlockIndex];
+
+			// Ensure we have the full nested structure from the variation template
+			const updatedAttributes = {
+				...chartBlock.attributes,
+				_version: 'v2', // Explicitly set v2
+				metadata: {
+					...(chartBlock.attributes.metadata || {}),
+					title: newTitle,
+				},
+			};
+
+			const updatedChartBlock = createBlock(
+				chartBlock.name,
+				updatedAttributes,
+				chartBlock.innerBlocks
+			);
+
+			// Replace the chart block with the updated one
+			innerBlocksFromTemplate[chartBlockIndex] = updatedChartBlock;
+		}
+
+		const newChartControllerBlock = createBlock(
+			BLOCK_TO_CREATE,
+			attributes,
+			innerBlocksFromTemplate
+		);
+		const newChartContent = serialize(newChartControllerBlock);
+
+		// Create the chart with both title and content in a single API call
 		apiFetch({
 			path: '/wp/v2/chart',
 			method: 'POST',
 			data: {
 				title: newTitle,
+				content: newChartContent,
 				status: 'publish',
 			},
 		})
 			.then((chart) => {
 				if (chart.id) {
-					setChartId(parseInt(chart.id));
+					setAttributes({
+						ref: parseInt(chart.id),
+					});
+					createSuccessNotice(
+						`Chart ${chart.title.rendered} created successfully!`,
+						{
+							type: 'snackbar',
+						}
+					);
 				}
 			})
 			.catch((error) => {
@@ -102,41 +142,6 @@ export default function ChartCreate({ setAttributes }) {
 		});
 		setChartOptions(newChartOptions);
 	}, [variations]);
-
-	useEffect(() => {
-		if (!processing && null !== chartId && null !== type) {
-			processNewChartContent(type);
-		}
-	}, [processing, chartId, type]);
-
-	useEffect(() => {
-		if (!processing && null !== chartId && null !== chartContent) {
-			setProcessing(true);
-			apiFetch({
-				path: `/wp/v2/chart/${chartId}`,
-				method: 'POST',
-				data: {
-					content: chartContent,
-				},
-			})
-				.then((chart) => {
-					if (chart.id) {
-						setAttributes({
-							ref: chartId,
-						});
-						createSuccessNotice(
-							`Chart ${chart.title.rendered} created successfully!`,
-							{
-								type: 'snackbar',
-							}
-						);
-					}
-				})
-				.finally(() => {
-					setProcessing(false);
-				});
-		}
-	}, [processing, chartId, chartContent]);
 
 	const textControlDisabled = processing;
 	const selectControlDisabled =

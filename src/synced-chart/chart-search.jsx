@@ -3,7 +3,7 @@
  */
 import { WPEntitySearch } from '@prc/components';
 
-export default function ChartSearch({ clientId, attributes, setAttributes }) {
+export default function ChartSearch({ setAttributes }) {
 	return (
 		<WPEntitySearch
 			placeholder="Search for charts"

@@ -3,10 +3,9 @@
 /**
  * WordPress Dependencies
  */
-import { useEffect, useMemo } from '@wordpress/element';
+import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { withNotices, KeyboardShortcuts } from '@wordpress/components';
-import { createBlock } from '@wordpress/blocks';
 import { useEntityBlockEditor, useEntityRecord } from '@wordpress/core-data';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useCommand } from '@wordpress/commands';
@@ -17,6 +16,7 @@ import {
 	InnerBlocks,
 	useBlockProps,
 	Warning,
+	BlockContextProvider,
 } from '@wordpress/block-editor';
 
 /**
@@ -26,52 +26,7 @@ import Controls from './controls';
 import Placeholder from './placeholder';
 import controllerStore from '../controller/store';
 
-function parseTable(tableString) {
-	// check that tableString is a string
-	if (typeof tableString !== 'string') {
-		return false;
-	}
-	// eslint-disable-next-line no-undef
-	const parser = new DOMParser();
-	const doc = parser.parseFromString(tableString, 'text/html');
-	const table = doc.querySelector('table');
-	const head = [];
-	const body = [];
-	let isHead = true;
-	for (const row of table.rows) {
-		const cells = [];
-		for (const cell of row.cells) {
-			cells.push({
-				content: cell.textContent.trim(),
-				tag: cell.tagName.toLowerCase(),
-			});
-		}
-		if (isHead) {
-			head.push({ cells });
-			isHead = false;
-		} else {
-			body.push({ cells });
-		}
-	}
-	return { head, body };
-}
-
-function convertTableToBlock(tableMarkup) {
-	const { head, body } = parseTable(tableMarkup);
-	return createBlock('prc-block/table', {
-		head,
-		body,
-	});
-}
-
-function SyncedChartEdit({
-	attributes,
-	setAttributes,
-	clientId,
-	noticeOperations,
-	noticeUI,
-	isSelected,
-}) {
+function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
 	const { ref } = attributes;
 	const isNew = !ref;
 	const hasAlreadyRendered = useHasRecursion(ref); // @TODO: Could this be an issue for realtime collab?
@@ -79,17 +34,40 @@ function SyncedChartEdit({
 	const isResolving = !hasResolved;
 	const isMissing = hasResolved && !record && !isNew;
 
-	console.log("SyncedChartEdit render:");
-	console.log('hasAlreadyRendered:', hasAlreadyRendered);
-	console.log('isMissing:', isMissing);
-	console.log('isResolving:', isResolving);
-	console.log('isNew:', isNew);
-	console.log('---');
-
 	const [blocks, onInput, onChange] = useEntityBlockEditor(
 		'postType',
 		'chart',
 		{ id: ref }
+	);
+
+	// Extract table data from blocks to pass via context
+	const tableDataFromBlocks = useMemo(() => {
+		if (!blocks || blocks.length === 0) {
+			return null;
+		}
+
+		// Find the controller block
+		const controllerBlock = blocks.find(
+			(block) => block.name === 'prc-chart-builder/controller'
+		);
+
+		if (!controllerBlock || !controllerBlock.innerBlocks) {
+			return null;
+		}
+
+		// Find the table block within the controller's inner blocks
+		const tableBlock = controllerBlock.innerBlocks.find(
+			(block) =>
+				block.name === 'core/table' || block.name === 'prc-block/table'
+		);
+
+		return tableBlock?.attributes || null;
+	}, [blocks]);
+
+	// Memoize context value to prevent infinite re-renders
+	const syncedTableContextValue = useMemo(
+		() => ({ 'prc-chart-builder/syncedTableData': tableDataFromBlocks }),
+		[tableDataFromBlocks]
 	);
 
 	// Get the controller block's id attribute for keyboard shortcuts
@@ -157,21 +135,15 @@ function SyncedChartEdit({
 			set('prc-chart-builder/controller', 'persistentHiddenTables', [
 				...newHiddenTables,
 			]);
+		} else if (!persistentHiddenTables) {
+			set('prc-chart-builder/controller', 'persistentHiddenTables', [
+				controllerId,
+			]);
 		} else {
-			// Hide this table
-			if (!persistentHiddenTables) {
-				set('prc-chart-builder/controller', 'persistentHiddenTables', [
-					controllerId,
-				]);
-			} else {
-				const newHiddenTables = [
-					...persistentHiddenTables,
-					controllerId,
-				];
-				set('prc-chart-builder/controller', 'persistentHiddenTables', [
-					...newHiddenTables,
-				]);
-			}
+			const newHiddenTables = [...persistentHiddenTables, controllerId];
+			set('prc-chart-builder/controller', 'persistentHiddenTables', [
+				...newHiddenTables,
+			]);
 		}
 	};
 
@@ -239,18 +211,20 @@ function SyncedChartEdit({
 			: {};
 
 	return (
-		<RecursionProvider uniqueId={ref}>
-			<Controls
-				{...{
-					attributes,
-					clientId,
-					blocks,
-				}}
-			/>
-			<KeyboardShortcuts bindGlobal shortcuts={keyboardShortcuts}>
-				<div {...innerBlocksProps} />
-			</KeyboardShortcuts>
-		</RecursionProvider>
+		<BlockContextProvider value={syncedTableContextValue}>
+			<RecursionProvider uniqueId={ref}>
+				<Controls
+					{...{
+						attributes,
+						clientId,
+						blocks,
+					}}
+				/>
+				<KeyboardShortcuts bindGlobal shortcuts={keyboardShortcuts}>
+					<div {...innerBlocksProps} />
+				</KeyboardShortcuts>
+			</RecursionProvider>
+		</BlockContextProvider>
 	);
 }
 

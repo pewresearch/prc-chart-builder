@@ -1,6 +1,6 @@
 {
 	"name": "@prc/chart-builder",
-	"version": "3.2.2",
+	"version": "3.3.0",
 	"description": "Create interactive D3 charts for your WordPress site.",
 	"author": "Pew Research Center",
 	"contributors": [
@@ -16,7 +16,9 @@
 		"start": "wp-scripts start --webpack-copy-php --experimental-modules",
 		"start:block": "node bin/start-block.js",
 		"package": "node bin/package.js",
-		"build:playground": "node bin/build-playground.js"
+		"build:playground": "node bin/build-playground.js",
+		"test": "wp-scripts test-unit-js",
+		"test:watch": "wp-scripts test-unit-js --watch"
 	},
 	"devDependencies": {
 		"@wordpress/dependency-extraction-webpack-plugin": "^6.10.0",

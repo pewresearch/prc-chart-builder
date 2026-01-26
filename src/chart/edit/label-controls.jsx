@@ -28,6 +28,7 @@ import {
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -55,47 +56,37 @@ const Help = styled.div`
 	margin-bottom: 0px;
 `;
 
-function LabelControls({ attributes, setAttributes, chartType, clientId }) {
-	const {
-		chartOrientation,
-		labelsActive,
-		labelColor,
-		labelFontSize,
-		labelPositionDY,
-		labelPositionDX,
-		labelTruncateDecimal,
-		labelToFixedDecimal,
-		labelUnit,
-		labelUnitPosition,
-		barLabelPosition,
-		barLabelCutoff,
-		barLabelCutoffMobile,
-		labelAbsoluteValue,
-		labelFormatValue,
-		pieCategoryLabelsActive,
-		showFirstLastPointsOnly,
-		mapIgnoreSmallStateLabels,
-		chartData,
-	} = attributes;
-
-	// Check if any data points have custom label positions
-	const hasCustomLabelPositions = chartData?.some(
-		(d) => d.__labelPositions && Object.keys(d.__labelPositions).length > 0
+function LabelControls({ attributes, setAttributes, clientId }) {
+	// Viewport-aware attribute management
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
 	);
 
-	// Reset all custom label positions
+	const layoutObj = getCurrentValue('layout') || {};
+	const { type: chartType, orientation } = layoutObj;
+	// Content attribute - NOT viewport-aware
+	const currentIo = attributes.io || {};
+	const chartData = currentIo.chartData || [];
+
+	// Get viewport-aware custom positions
+	const customPositions = getCurrentValue('labels', 'customPositions') || {};
+
+	// Check if any custom label positions exist
+	// Check both: new customPositions attribute AND legacy __labelPositions in chartData
+	const hasCustomPositions =
+		Object.keys(customPositions).length > 0 ||
+		chartData?.some(
+			(d) =>
+				d.__labelPositions && Object.keys(d.__labelPositions).length > 0
+		);
+
+	// Reset all custom label positions for current viewport
 	const handleResetLabelPositions = () => {
-		if (!chartData) return;
-
-		const updatedData = chartData.map((d) => {
-			if (d.__labelPositions) {
-				const { __labelPositions, ...rest } = d;
-				return rest;
-			}
-			return d;
+		// Clear the viewport-aware customPositions
+		updateAttributeForDevice('labels', {
+			customPositions: {},
 		});
-
-		setAttributes({ chartData: updatedData });
 	};
 	return (
 		<PanelBody title={__('Labels')} initialOpen={false}>
@@ -115,22 +106,30 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 				>
 					<ToggleControl
 						label={__('Labels Active')}
-						checked={labelsActive}
-						onChange={() =>
-							setAttributes({ labelsActive: !labelsActive })
+						checked={getCurrentValue('labels', 'active')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('labels', {
+								active: newValue,
+							})
 						}
 					/>
 					{'map-usa' === chartType && (
 						<ToggleControl
 							label={__('Ignore Small State Labels')}
-							checked={mapIgnoreSmallStateLabels}
-							disabled={!labelsActive}
-							onChange={() =>
-								setAttributes({
-									mapIgnoreSmallStateLabels:
-										!mapIgnoreSmallStateLabels,
-								})
+							checked={
+								getCurrentValue(
+									'map',
+									'ignoreSmallStateLabels'
+								) || false
 							}
+							disabled={!getCurrentValue('labels', 'active')}
+							onChange={(newValue) => {
+								const map = getCurrentValue('map') || {};
+								updateAttributeForDevice('map', {
+									...map,
+									ignoreSmallStateLabels: newValue,
+								});
+							}}
 						/>
 					)}
 
@@ -143,12 +142,14 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 						>
 							<ToggleControl
 								label={__('Display only first and last labels')}
-								checked={showFirstLastPointsOnly}
-								disabled={!labelsActive}
-								onChange={() =>
-									setAttributes({
-										showFirstLastPointsOnly:
-											!showFirstLastPointsOnly,
+								checked={getCurrentValue(
+									'labels',
+									'showFirstLastPointsOnly'
+								)}
+								disabled={!getCurrentValue('labels', 'active')}
+								onChange={(newValue) =>
+									updateAttributeForDevice('labels', {
+										showFirstLastPointsOnly: newValue,
 									})
 								}
 							/>
@@ -163,31 +164,37 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 						>
 							<ToggleControl
 								label={__('Category Labels Active')}
-								checked={pieCategoryLabelsActive}
-								onChange={() =>
-									setAttributes({
-										pieCategoryLabelsActive:
-											!pieCategoryLabelsActive,
-									})
+								checked={
+									getCurrentValue(
+										'pie',
+										'showCategoryLabels'
+									) || false
 								}
+								onChange={(newValue) => {
+									const pie = getCurrentValue('pie') || {};
+									updateAttributeForDevice('pie', {
+										...pie,
+										showCategoryLabels: newValue,
+									});
+								}}
 							/>
 						</ToolsPanelItem>
 					)}
 				</ToolsPanelItem>
 				<WidePanelItem
-					hasValue={() => labelFontSize}
+					hasValue={() => getCurrentValue('labels', 'fontSize')}
 					label={__('Label Font Size')}
 					panelId={clientId}
 				>
 					<ToggleGroupControl
 						__nextHasNoMarginBottom
 						isBlock
-						value={labelFontSize}
+						value={getCurrentValue('labels', 'fontSize')}
 						label={__('Label Font Size')}
-						disabled={!labelsActive}
+						disabled={!getCurrentValue('labels', 'active')}
 						onChange={(value) => {
-							setAttributes({
-								labelFontSize: formatNum(value, 'integer'),
+							updateAttributeForDevice('labels', {
+								fontSize: formatNum(value, 'integer'),
 							});
 						}}
 					>
@@ -205,7 +212,9 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					</PanelDescription>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => labelPositionDX}
+					hasValue={() =>
+						getCurrentValue('labels', 'labelPositionDX')
+					}
 					label={__('Label Positioning')}
 					panelId={clientId}
 					isShownByDefault
@@ -217,10 +226,13 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('DX')}
-								value={labelPositionDX}
-								disabled={!labelsActive}
+								value={getCurrentValue(
+									'labels',
+									'labelPositionDX'
+								)}
+								disabled={!getCurrentValue('labels', 'active')}
 								onChange={(value) =>
-									setAttributes({
+									updateAttributeForDevice('labels', {
 										labelPositionDX: formatNum(
 											value,
 											'integer'
@@ -232,10 +244,13 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 						<FlexItem>
 							<NumberControl
 								label={__('DY')}
-								value={labelPositionDY}
-								disabled={!labelsActive}
+								value={getCurrentValue(
+									'labels',
+									'labelPositionDY'
+								)}
+								disabled={!getCurrentValue('labels', 'active')}
 								onChange={(value) =>
-									setAttributes({
+									updateAttributeForDevice('labels', {
 										labelPositionDY: formatNum(
 											value,
 											'integer'
@@ -253,9 +268,9 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 						</Help>
 					</PanelDescription>
 				</WidePanelItem>
-				{hasCustomLabelPositions && (
+				{hasCustomPositions && (
 					<WidePanelItem
-						hasValue={() => hasCustomLabelPositions}
+						hasValue={() => hasCustomPositions}
 						label={__('Reset Custom Positions')}
 						panelId={clientId}
 					>
@@ -263,7 +278,7 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 							variant="secondary"
 							isDestructive
 							onClick={handleResetLabelPositions}
-							disabled={!labelsActive}
+							disabled={!getCurrentValue('labels', 'active')}
 						>
 							{__('Reset All Label Positions')}
 						</Button>
@@ -277,17 +292,19 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					</WidePanelItem>
 				)}
 				<WidePanelItem
-					hasValue={() => labelAbsoluteValue}
+					hasValue={() => getCurrentValue('labels', 'absoluteValue')}
 					label={__('Absolute Value')}
 					panelId={clientId}
 				>
 					<ToggleControl
 						label={__('Absolute Value')}
-						checked={labelAbsoluteValue}
-						disabled={!labelsActive}
-						onChange={() =>
-							setAttributes({
-								labelAbsoluteValue: !labelAbsoluteValue,
+						checked={
+							getCurrentValue('labels', 'absoluteValue') || false
+						}
+						disabled={!getCurrentValue('labels', 'active')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('labels', {
+								absoluteValue: newValue,
 							})
 						}
 					/>
@@ -300,18 +317,20 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					</PanelDescription>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => labelFormatValue}
+					hasValue={() => getCurrentValue('labels', 'toLocaleString')}
 					label={__('Format Value')}
 					panelId={clientId}
 					isShownByDefault
 				>
 					<ToggleControl
-						label={__('Format Value')}
-						checked={labelFormatValue}
-						disabled={!labelsActive}
-						onChange={() =>
-							setAttributes({
-								labelFormatValue: !labelFormatValue,
+						label={__('Format Value to Locale String')}
+						checked={
+							getCurrentValue('labels', 'toLocaleString') || false
+						}
+						disabled={!getCurrentValue('labels', 'active')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('labels', {
+								toLocaleString: newValue,
 							})
 						}
 					/>
@@ -325,18 +344,23 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 				</WidePanelItem>
 				{/* HERE */}
 				<WidePanelItem
-					hasValue={() => labelTruncateDecimal}
+					hasValue={() =>
+						getCurrentValue('labels', 'truncateDecimal')
+					}
 					label={__('Truncate Trailing Decimals')}
 					panelId={clientId}
 					isShownByDefault
 				>
 					<ToggleControl
 						label={__('Truncate Trailing Decimals')}
-						checked={labelTruncateDecimal}
-						disabled={!labelsActive}
-						onChange={() =>
-							setAttributes({
-								labelTruncateDecimal: !labelTruncateDecimal,
+						checked={
+							getCurrentValue('labels', 'truncateDecimal') ||
+							false
+						}
+						disabled={!getCurrentValue('labels', 'active')}
+						onChange={(newValue) =>
+							updateAttributeForDevice('labels', {
+								truncateDecimal: newValue,
 							})
 						}
 					/>
@@ -349,39 +373,38 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					</PanelDescription>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => labelToFixedDecimal}
+					hasValue={() => getCurrentValue('labels', 'toFixedDecimal')}
 					label={__('Decimal Places')}
 					panelId={clientId}
 					isShownByDefault
 				>
 					<NumberControl
 						label={__('Decimal Places')}
-						value={labelToFixedDecimal}
-						disabled={!labelsActive}
+						value={getCurrentValue('labels', 'toFixedDecimal')}
+						disabled={!getCurrentValue('labels', 'active')}
 						min={0}
 						max={100}
 						onChange={(value) =>
-							setAttributes({
-								labelToFixedDecimal: formatNum(
-									value,
-									'integer'
-								),
+							updateAttributeForDevice('labels', {
+								toFixedDecimal: formatNum(value, 'integer'),
 							})
 						}
 					/>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => labelUnit}
+					hasValue={() => getCurrentValue('labels', 'labelUnit')}
 					label={__('Label Unit')}
 					panelId={clientId}
 					isShownByDefault
 				>
 					<TextControl
 						label={__('Label Unit')}
-						value={labelUnit}
-						disabled={!labelsActive}
+						value={getCurrentValue('labels', 'labelUnit')}
+						disabled={!getCurrentValue('labels', 'active')}
 						onChange={(value) =>
-							setAttributes({ labelUnit: value })
+							updateAttributeForDevice('labels', {
+								labelUnit: value,
+							})
 						}
 					/>
 					<PanelDescription>
@@ -389,17 +412,19 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					</PanelDescription>
 				</WidePanelItem>
 				<WidePanelItem
-					hasValue={() => labelUnitPosition}
+					hasValue={() =>
+						getCurrentValue('labels', 'labelUnitPosition')
+					}
 					label={__('Label Unit Position')}
 					panelId={clientId}
 				>
 					<ToggleGroupControl
 						__nextHasNoMarginBottom
 						isBlock
-						value={labelUnitPosition}
+						value={getCurrentValue('labels', 'labelUnitPosition')}
 						label="Label Unit Position"
 						onChange={(type) => {
-							setAttributes({
+							updateAttributeForDevice('labels', {
 								labelUnitPosition: type,
 							});
 						}}
@@ -421,19 +446,24 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					'exploded-bar' === chartType) && (
 					<>
 						<WidePanelItem
-							hasValue={() => barLabelPosition}
+							hasValue={() =>
+								getCurrentValue('labels', 'labelPositionBar')
+							}
 							label={__('Label Position')}
 							panelId={clientId}
 						>
 							<ToggleGroupControl
 								__nextHasNoMarginBottom
 								isBlock
-								value={barLabelPosition}
-								disabled={!labelsActive}
-								label="Tick Label Vertical Anchor"
+								value={getCurrentValue(
+									'labels',
+									'labelPositionBar'
+								)}
+								disabled={!getCurrentValue('labels', 'active')}
+								label="Bar Label Position"
 								onChange={(type) => {
-									setAttributes({
-										barLabelPosition: type,
+									updateAttributeForDevice('labels', {
+										labelPositionBar: type,
 									});
 								}}
 							>
@@ -459,20 +489,26 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 							</PanelDescription>
 						</WidePanelItem>
 						<SingleColumnItem
-							hasValue={() => barLabelCutoff}
+							hasValue={() =>
+								getCurrentValue('labels', 'labelCutoff')
+							}
 							label={__('Label Cutoff')}
 							panelId={clientId}
 						>
 							<NumberControl
 								label={__('🖥️ Label Cutoff')}
-								value={barLabelCutoff}
+								value={getCurrentValue('labels', 'labelCutoff')}
 								disabled={
-									!labelsActive ||
-									'outside' === barLabelPosition
+									!getCurrentValue('labels', 'active') ||
+									'outside' ===
+										getCurrentValue(
+											'labels',
+											'labelPositionBar'
+										)
 								}
 								onChange={(value) =>
-									setAttributes({
-										barLabelCutoff: formatNum(
+									updateAttributeForDevice('labels', {
+										labelCutoff: formatNum(
 											value,
 											'integer'
 										),
@@ -482,27 +518,36 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 							<PanelDescription>
 								<Help>
 									{__(
-										'Hide labels that are smaller than this value. '
+										'Hide labels that are smaller than this value.'
 									)}
 								</Help>
 							</PanelDescription>
 						</SingleColumnItem>
 						<SingleColumnItem
-							hasValue={() => barLabelCutoffMobile}
+							hasValue={() =>
+								getCurrentValue('labels', 'labelCutoffMobile')
+							}
 							label={__('Label Cutoff Mobile')}
 							panelId={clientId}
 						>
 							<NumberControl
 								label={__('📱 Label Cutoff')}
-								value={barLabelCutoffMobile}
+								value={getCurrentValue(
+									'labels',
+									'labelCutoffMobile'
+								)}
 								disabled={
-									!labelsActive ||
-									'outside' === barLabelPosition ||
-									'vertical' === chartOrientation
+									!getCurrentValue('labels', 'active') ||
+									'outside' ===
+										getCurrentValue(
+											'labels',
+											'labelPositionBar'
+										) ||
+									'vertical' === orientation
 								}
 								onChange={(value) =>
-									setAttributes({
-										barLabelCutoffMobile: formatNum(
+									updateAttributeForDevice('labels', {
+										labelCutoffMobile: formatNum(
 											value,
 											'integer'
 										),
@@ -520,16 +565,16 @@ function LabelControls({ attributes, setAttributes, chartType, clientId }) {
 					</>
 				)}
 				<WidePanelItem
-					hasValue={() => labelColor}
+					hasValue={() => getCurrentValue('labels', 'color')}
 					label={__('Label Color')}
 					panelId={clientId}
 				>
 					<SelectControl
 						label={__('Label Color')}
-						value={labelColor}
-						disabled={!labelsActive}
+						value={getCurrentValue('labels', 'color')}
+						disabled={!getCurrentValue('labels', 'active')}
 						onChange={(value) =>
-							setAttributes({ labelColor: value })
+							updateAttributeForDevice('labels', { color: value })
 						}
 						options={[
 							{ label: __('Contrast'), value: 'contrast' },

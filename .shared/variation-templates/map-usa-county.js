@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const USACountyMapTemplate = [
 	[
 		'prc-block/table',
@@ -352,33 +354,58 @@ const USACountyMapTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
+		mergeWithDefaults({
+			_version: 'v2',
 			chartType: 'map-usa-counties',
-			chartFamily: 'map',
-			metaTitle: 'USA Counties Map',
-			metaSubtitle:
-				'A subtitle for the chart. NOTE: FIPS code required to match data to map.',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-			categories: ['Response'],
-			width: 640,
-			height: 400,
-			paddingLeft: 20,
-			paddingBottom: 30,
-			paddingRight: 20,
-			tooltipOffsetX: 30,
-			tooltipOffsetY: 30,
-			tooltipHeaderValue: 'categoryValue',
-			tooltipFormat: '{{row}}: {{value}}',
-			colorValue: 'blue-spectrum',
-			mapScale: 'threshold',
-			labelColor: 'contrast',
-			mapScaleDomain: [20, 40, 60, 80],
-			legendActive: true,
-			legendMarkerStyle: 'rect',
-		},
+			layout: {
+				type: 'map-usa-counties',
+				width: 640,
+				height: 400,
+				padding: {
+					left: 20,
+					bottom: 30,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'USA Counties Map',
+				subtitle:
+					'A subtitle for the chart. NOTE: FIPS code required to match data to map.',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'blue-spectrum',
+			},
+			tooltip: {
+				active: true,
+				offsetX: 30,
+				offsetY: 30,
+				headerValue: 'categoryValue',
+				format: '{{row}}: {{value}}',
+			},
+			labels: {
+				color: 'contrast',
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			map: {
+				scale: 'threshold',
+				scaleDomain: [20, 40, 60, 80],
+			},
+			dataRender: {
+				categories: ['Response'],
+			},
+			io: {
+				isConvertedChart: false,
+				chartFamily: 'map',
+				colorValue: 'blue-spectrum',
+			},
+		}),
 	],
 ];
 

@@ -192,7 +192,7 @@ const presidentPlotBands = [
 		},
 	},
 	{
-		x: ['2021-01-20T01:00:01', '2023-08-16T01:00:01'],
+		x: ['2021-01-20T01:00:01', '2025-01-20T01:00:01'],
 		y: [0, 100],
 		label: 'Biden',
 		style: {
@@ -200,6 +200,22 @@ const presidentPlotBands = [
 			label: {
 				fontSize: 10,
 				fill: '#436983',
+				orientation: 'vertical',
+				align: 'top',
+				dx: -20,
+				dy: '23',
+			},
+		},
+	},
+	{
+		x: ['2025-01-20T01:00:01', '2025-11-20T01:00:01'],
+		y: [0, 100],
+		label: 'Trump',
+		style: {
+			band: { stroke: 'transparent', fill: '#F0F0E6', fillOpacity: 0.0 },
+			label: {
+				fontSize: 10,
+				fill: '#bf3927',
 				orientation: 'vertical',
 				align: 'top',
 				dx: -20,

@@ -1,0 +1,30 @@
+{
+	"name": "v1-basic-bar-chart",
+	"description": "Simple vertical bar chart with flat v1 attributes",
+	"blockVersion": "v1",
+	"chartType": "bar",
+	"featureTags": ["axis-configuration"],
+	"serializedContent": "<!-- wp:prc-chart-builder/chart {\"chartType\":\"bar\",\"chartOrientation\":\"vertical\",\"width\":640,\"height\":400,\"xAxisActive\":true,\"xLabel\":\"Categories\",\"yAxisActive\":true,\"yLabel\":\"Values\",\"metaTextActive\":true,\"metaTitle\":\"Sample Bar Chart\",\"metaSubtitle\":\"Test Data\"} -->\n<div class=\"wp-block-prc-chart-builder-chart\"></div>\n<!-- /wp:prc-chart-builder/chart -->",
+	"expectedMigratedAttributes": {
+		"_version": "v2",
+		"layout": {
+			"type": "bar",
+			"orientation": "vertical",
+			"width": 640,
+			"height": 400
+		},
+		"independentAxis": {
+			"active": true,
+			"label": "Categories"
+		},
+		"dependentAxis": {
+			"active": true,
+			"label": "Values"
+		},
+		"metadata": {
+			"active": true,
+			"title": "Sample Bar Chart",
+			"subtitle": "Test Data"
+		}
+	}
+}

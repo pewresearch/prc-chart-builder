@@ -1,4 +1,6 @@
-import { colors } from './colors';
+/* eslint-disable max-lines */
+/* eslint-disable max-lines-per-function */
+import { colors as colorPalette } from './colors';
 import {
 	getDomain,
 	getTicks,
@@ -7,462 +9,410 @@ import {
 	generateDefaultAltText,
 } from './helpers';
 
+/**
+ * Deep merge viewport-specific overrides into base attributes
+ *
+ * @param {Object} baseAttributes - The full block attributes object
+ * @param {string} deviceType     - Current device type ('mobile', 'tablet', or 'desktop')
+ * @return {Object} Merged attributes with viewport overrides applied
+ */
+export function mergeViewportOverrides(baseAttributes, deviceType) {
+	// Desktop uses base attributes only (no override)
+	if (!deviceType || deviceType === 'desktop') {
+		return baseAttributes;
+	}
+
+	// Get viewport-specific overrides
+	const viewportOverrides = baseAttributes[deviceType] || {};
+
+	// If no overrides exist, return base attributes
+	if (Object.keys(viewportOverrides).length === 0) {
+		return baseAttributes;
+	}
+
+	// Deep merge: viewport overrides take precedence over base attributes
+	// We create a new object to avoid mutating the original
+	const merged = { ...baseAttributes };
+
+	// Merge each top-level attribute group that has overrides
+	Object.keys(viewportOverrides).forEach((attributeGroup) => {
+		if (
+			merged[attributeGroup] &&
+			typeof merged[attributeGroup] === 'object'
+		) {
+			// Deep merge the attribute group
+			merged[attributeGroup] = {
+				...merged[attributeGroup],
+				...viewportOverrides[attributeGroup],
+			};
+		}
+	});
+
+	return merged;
+}
+
 const { baseConfig } = window.prcCustomCharts || window.prcChartingLibrary;
-const getConfig = (attributes, clientId, editorClickEvent = null) => {
+const getConfig = (
+	attributes,
+	clientId,
+	editorClickEvent = null,
+	deviceType = 'desktop'
+) => {
+	// Merge viewport-specific overrides before extracting attributes
+	const mergedAttributes = mergeViewportOverrides(attributes, deviceType);
+
 	// layout attributes
-
 	const {
-		chartType,
-		chartOrientation,
-		paddingTop,
-		paddingRight,
-		paddingBottom,
-		paddingLeft,
-		height,
-		width,
-		overflowX,
-		mobileBreakpoint,
-		horizontalRules,
-		parentClass,
-	} = attributes;
-	// metadata attributes
+		layout,
+		metadata,
+		io,
+		plotBands,
+		annotations,
+		bar,
+		line,
+		explodedBar,
+		labels,
+		pie,
+		dotPlot,
+		independentAxis,
+		dependentAxis,
+		map,
+		divergingBar,
+		drawings,
+		diffColumn,
+		dataRender,
+		legend,
+		nodes,
+		tooltip,
+	} = mergedAttributes;
 	const {
-		metaTextActive,
-		metaTitle,
-		metaSubtitle,
-		metaNote,
-		metaSource,
-		metaTag,
-		metaAlt,
-	} = attributes;
-	// independent axis attributes
-	const {
-		showXMinDomainLabel,
-		xAbbreviateTicks,
-		xAbbreviateTicksDecimals,
-		xTicksToLocaleString,
-		xAxisActive,
-		xAxisStroke,
-		xGridStroke,
-		xGridStrokeDasharray,
-		xGridOpacity,
-		xLabel,
-		xLabelFontSize,
-		xLabelTextFill,
-		xLabelPadding,
-		xLabelMaxWidth,
-		xMaxDomain,
-		xMinDomain,
-		xScale,
-		xDateFormat,
-		xTickExact,
-		xTickLabelAngle,
-		xTickLabelMaxWidth,
-		xTickLabelDX,
-		xTickLabelDY,
-		xTickLabelTextAnchor,
-		xTickLabelVerticalAnchor,
-		xTickMarksActive,
-		xTickNum,
-		xTickUnit,
-		xTickUnitPosition,
-	} = attributes;
-	// dependent axis attributes
-	const {
-		yAxisStroke,
-		yGridStroke,
-		yGridStrokeDasharray,
-		yGridOpacity,
-		yAxisActive,
-		yScale,
-		yScaleFormat,
-		yLabel,
-		yLabelFontSize,
-		yLabelTextFill,
-		yLabelPadding,
-		yLabelMaxWidth,
-		yMinDomain,
-		yMaxDomain,
-		showYMinDomainLabel,
-		yTickMarksActive,
-		yTickNum,
-		yTickExact,
-		yTickUnit,
-		yTickUnitPosition,
-		yTickLabelAngle,
-		yTickLabelMaxWidth,
-		yTickLabelVerticalAnchor,
-		yTickLabelTextAnchor,
-		yTickLabelDY,
-		yTickLabelDX,
-		yAbbreviateTicks,
-		yAbbreviateTicksDecimals,
-		yTicksToLocaleString,
-	} = attributes;
-	// label attributes
-	const {
-		labelsActive,
-		showFirstLastPointsOnly,
-		labelPositionDX,
-		labelPositionDY,
-		labelAbsoluteValue,
-		labelFormatValue,
-		labelUnit,
-		labelUnitPosition,
-		barLabelPosition,
-		barLabelCutoff,
-		barLabelCutoffMobile,
-		labelColor,
-		labelFontSize,
-		labelFontWeight,
-		labelTruncateDecimal,
-		labelToFixedDecimal,
-	} = attributes;
-	// legend attributes
-	const {
-		legendActive,
-		legendOrientation,
-		legendCategories,
-		legendTitle,
-		legendOffsetX,
-		legendOffsetY,
-		legendAlignment,
-		legendMarkerStyle,
-		legendBorderStroke,
-		legendFill,
-		legendFontSize,
-		legendMargin,
-		legendLabelDelimiter,
-		legendLabelLower,
-		legendLabelUpper,
-	} = attributes;
-	// tooltip attributes
-	const {
-		tooltipActive,
-		tooltipActiveOnMobile,
-		tooltipHeaderActive,
-		tooltipHeaderValue,
-		tooltipMaxHeight,
-		tooltipMaxWidth,
-		tooltipMinWidth,
-		tooltipMinHeight,
-		tooltipOffsetX,
-		tooltipOffsetY,
-		tooltipFormat,
-		tooltipDateFormat,
-		tooltipFormatValue,
-		tooltipAbsoluteValue,
-		tooltipFontSize,
-		deemphasizeSiblings,
-		deemphasizeOpacity,
-		emphasizeStrokeActive,
-		emphasizeStrokeColor,
-		emphasizeStrokeWidth,
-	} = attributes;
-	// pie chart attributes
-	const { pieCategoryLabelsActive } = attributes;
-	// bar chart attributes
-	const { barPadding, barGroupPadding } = attributes;
-	// diverging bar attributes
-	const {
-		positiveCategories,
-		negativeCategories,
-		neutralCategory,
-		divergingBarPercentOfInnerWidth,
-		neutralBarSeparator,
-		neutralBarActive,
-		neutralBarOffsetX,
-		neutralBarSeparatorOffsetX,
-	} = attributes;
-	// dot plot attributes
-	const {
-		dotPlotConnectPoints,
-		dotPlotConnectPointsStroke,
-		dotPlotConnectPointsStrokeWidth,
-		dotPlotConnectPointsStrokeDasharray,
-	} = attributes;
-	// line attributes
-	const {
-		lineStrokeDashArray,
-		lineInterpolation,
-		lineStrokeWidth,
-		lineNodes,
-		nodeSize,
-		nodeStrokeWidth,
-		nodeFill,
-		areaFillOpacity,
-	} = attributes;
-	// explded bar attributes
-	const { explodedBarColumnGap } = attributes;
-	// plot band attributes
-	const { plotBandsActive, plotBands } = attributes;
-	// diff column attributes
-	const {
-		diffColumnActive,
-		diffColumnCategory,
-		diffColumnHeader,
-		diffColumnMarginLeft,
-		diffColumnBackgroundColor,
-		diffColumnHeightOffset,
-		diffColumnWidth,
-		diffColumnAppearance,
-	} = attributes;
-	// color attributes
-	const { colorValue, customColors, elementHasStroke } = attributes;
-	// data render attributes
-	const {
-		sortOrder,
-		categories,
+		customColors,
+		colorValue,
+		elementHasStroke,
+		isCustomChart,
+		customAttributes,
 		availableCategories,
-		dateInputFormat,
-		sortKey,
-		dataRenderX,
-		dataRenderY,
-		groupBreaksActive,
-		groupBreaksCategory,
-		groupBreaksCategoryValues,
-		groupBreaksStyleVariation,
-		groupBreaksHeight,
-	} = attributes;
+	} = io;
+	const { type: chartType } = layout;
+	const { alt, title } = metadata;
+	const { scale: iScale, domain: iDomain } = independentAxis;
+	const { scale: dScale, domain: dDomain } = dependentAxis;
+	const { neutralBar } = divergingBar;
+	// independent axis attributes
+	// const {
+	// 	showXMinDomainLabel,
+	// 	xAbbreviateTicks,
+	// 	xAbbreviateTicksDecimals,
+	// 	xTicksToLocaleString,
+	// 	xAxisActive,
+	// 	xAxisStroke,
+	// 	xGridStroke,
+	// 	xGridStrokeDasharray,
+	// 	xGridOpacity,
+	// 	xLabel,
+	// 	xLabelFontSize,
+	// 	xLabelTextFill,
+	// 	xLabelPadding,
+	// 	xLabelMaxWidth,
+	// 	xMaxDomain,
+	// 	xMinDomain,
+	// 	xScale,
+	// 	xDateFormat,
+	// 	xTickExact,
+	// 	xTickLabelAngle,
+	// 	xTickLabelMaxWidth,
+	// 	xTickLabelDX,
+	// 	xTickLabelDY,
+	// 	xTickLabelTextAnchor,
+	// 	xTickLabelVerticalAnchor,
+	// 	xTickMarksActive,
+	// 	xTickNum,
+	// 	xTickUnit,
+	// 	xTickUnitPosition,
+	// } = attributes;
+	// dependent axis attributes
+	// const {
+	// 	yAxisStroke,
+	// 	yGridStroke,
+	// 	yGridStrokeDasharray,
+	// 	yGridOpacity,
+	// 	yAxisActive,
+	// 	yScale,
+	// 	yScaleFormat,
+	// 	yLabel,
+	// 	yLabelFontSize,
+	// 	yLabelTextFill,
+	// 	yLabelPadding,
+	// 	yLabelMaxWidth,
+	// 	yMinDomain,
+	// 	yMaxDomain,
+	// 	showYMinDomainLabel,
+	// 	yTickMarksActive,
+	// 	yTickNum,
+	// 	yTickExact,
+	// 	yTickUnit,
+	// 	yTickUnitPosition,
+	// 	yTickLabelAngle,
+	// 	yTickLabelMaxWidth,
+	// 	yTickLabelVerticalAnchor,
+	// 	yTickLabelTextAnchor,
+	// 	yTickLabelDY,
+	// 	yTickLabelDX,
+	// 	yAbbreviateTicks,
+	// 	yAbbreviateTicksDecimals,
+	// 	yTicksToLocaleString,
+	// } = attributes;
+	// label attributes
+	// const {
+	// 	labelsActive,
+	// 	showFirstLastPointsOnly,
+	// 	labelPositionDX,
+	// 	labelPositionDY,
+	// 	labelAbsoluteValue,
+	// 	labelFormatValue,
+	// 	labelUnit,
+	// 	labelUnitPosition,
+	// 	barLabelPosition,
+	// 	barLabelCutoff,
+	// 	barLabelCutoffMobile,
+	// 	labelColor,
+	// 	labelFontSize,
+	// 	labelFontWeight,
+	// 	labelTruncateDecimal,
+	// 	labelToFixedDecimal,
+	// } = attributes;
+	// legend attributes
+	// const {
+	// 	legendActive,
+	// 	legendOrientation,
+	// 	legendCategories,
+	// 	legendTitle,
+	// 	legendOffsetX,
+	// 	legendOffsetY,
+	// 	legendAlignment,
+	// 	legendMarkerStyle,
+	// 	legendBorderStroke,
+	// 	legendFill,
+	// 	legendFontSize,
+	// 	legendMargin,
+	// 	legendLabelDelimiter,
+	// 	legendLabelLower,
+	// 	legendLabelUpper,
+	// } = attributes;
+	// tooltip attributes
+	// const {
+	// 	tooltipActive,
+	// 	tooltipActiveOnMobile,
+	// 	tooltipHeaderActive,
+	// 	tooltipHeaderValue,
+	// 	tooltipMaxHeight,
+	// 	tooltipMaxWidth,
+	// 	tooltipMinWidth,
+	// 	tooltipMinHeight,
+	// 	tooltipOffsetX,
+	// 	tooltipOffsetY,
+	// 	tooltipFormat,
+	// 	tooltipDateFormat,
+	// 	tooltipFormatValue,
+	// 	tooltipAbsoluteValue,
+	// 	deemphasizeSiblings,
+	// 	deemphasizeOpacity,
+	// } = attributes;
+	// pie chart attributes
+	// const { pieCategoryLabelsActive } = attributes;
+	// bar chart attributes
+	// const { barPadding, barGroupPadding } = attributes;
+	// diverging bar attributes
+	// const {
+	// 	positiveCategories,
+	// 	negativeCategories,
+	// 	neutralCategory,
+	// 	divergingBarPercentOfInnerWidth,
+	// 	neutralBarSeparator,
+	// 	neutralBarActive,
+	// 	neutralBarOffsetX,
+	// 	neutralBarSeparatorOffsetX,
+	// } = attributes;
+	// dot plot attributes
+	// const {
+	// 	dotPlotConnectPoints,
+	// 	dotPlotConnectPointsStroke,
+	// 	dotPlotConnectPointsStrokeWidth,
+	// 	dotPlotConnectPointsStrokeDasharray,
+	// } = attributes;
+	// line attributes
+	// const {
+	// 	lineStrokeDashArray,
+	// 	lineInterpolation,
+	// 	lineStrokeWidth,
+	// 	lineNodes,
+	// 	nodeSize,
+	// 	nodeStrokeWidth,
+	// 	nodeFill,
+	// 	areaFillOpacity,
+	// } = attributes;
+	// explded bar attributes
+	// const { explodedBarColumnGap } = attributes;
+	// // plot band attributes
+	// const { plotBandsActive } = attributes;
+	// diff column attributes
+	// const {
+	// 	diffColumnActive,
+	// 	diffColumnCategory,
+	// 	diffColumnHeader,
+	// 	diffColumnMarginLeft,
+	// 	diffColumnBackgroundColor,
+	// 	diffColumnHeightOffset,
+	// 	diffColumnWidth,
+	// 	diffColumnAppearance,
+	// } = attributes;
+	// data render attributes
+	// const {
+	// 	sortOrder,
+	// 	// categories,
+	// 	// availableCategories,
+	// 	dateInputFormat,
+	// 	sortKey,
+	// 	dataRenderX,
+	// 	dataRenderY,
+	// 	groupBreaksActive,
+	// 	groupBreaksCategory,
+	// 	groupBreaksCategoryValues,
+	// 	groupBreaksStyleVariation,
+	// 	groupBreaksHeight,
+	// 	mapScale,
+	// 	mapScaleDomain,
+	// } = attributes;
 	// annotations
-	const { annotationsActive, annotations } = attributes;
+	// const { annotationsActive, annotations } = attributes;
 	// map attributes
-	const {
-		mapShowCountyBoundaries,
-		mapShowStateBoundaries,
-		mapPathBackgroundFill,
-		mapPathStroke,
-		mapBlockRectSize,
-		// mapAbbreviateLabels,
-		mapIgnoreSmallStateLabels,
-		// mapIgnoredLabels,
-		mapScale,
-		mapScaleDomain,
-		mapProjectionPreset,
-		mapTopologyRegion,
-		mapCenterLongitude,
-		mapCenterLatitude,
-		mapRotateLambda,
-		mapRotatePhi,
-		mapRotateGamma,
-		mapCustomScale,
-		mapZoomActive,
-	} = attributes;
+	// const {
+	// 	mapShowCountyBoundaries,
+	// 	mapShowStateBoundaries,
+	// 	mapPathBackgroundFill,
+	// 	mapPathStroke,
+	// 	mapBlockRectSize,
+	// 	// mapAbbreviateLabels,
+	// 	mapIgnoreSmallStateLabels,
+	// 	// mapIgnoredLabels,
+	// 	mapProjectionPreset,
+	// 	mapTopologyRegion,
+	// 	mapCenterLongitude,
+	// 	mapCenterLatitude,
+	// 	mapRotateLambda,
+	// 	mapRotatePhi,
+	// 	mapRotateGamma,
+	// 	mapCustomScale,
+	// 	mapZoomActive,
+	// } = attributes;
 
-	const { isCustomChart, customAttributes } = attributes;
+	// const { isCustomChart, customAttributes } = attributes;
 	// Use stringToArray for time scales to preserve date strings, stringToArrayOfNums for numeric scales
-	const xTicks =
-		xScale === 'time'
-			? stringToArray(xTickExact)
-			: stringToArrayOfNums(xTickExact);
-	const yTicks =
-		yScale === 'time'
-			? stringToArray(yTickExact)
-			: stringToArrayOfNums(yTickExact);
+	const independentAxisTickValues =
+		independentAxis.scale === 'time'
+			? stringToArray(independentAxis.tickValues)
+			: stringToArrayOfNums(independentAxis.tickValues);
+	const dependentAxisTickValues =
+		dScale === 'time'
+			? stringToArray(dependentAxis.tickValues)
+			: stringToArrayOfNums(dependentAxis.tickValues);
 
 	return {
 		...baseConfig,
 		layout: {
 			...baseConfig.layout,
+			...layout,
 			name: `chart-builder-chart-${clientId}`,
-			parentClass,
 			type: 'area' === chartType ? 'line' : chartType,
-			orientation: chartOrientation,
-			width,
-			height,
-			overflowX,
-			padding: {
-				top: paddingTop,
-				bottom: paddingBottom,
-				left: paddingLeft,
-				right: paddingRight,
-			},
-			horizontalRules,
-			mobileBreakpoint,
 		},
 		metadata: {
 			...baseConfig.metadata,
-			active: metaTextActive,
-			title: metaTitle,
-			subtitle: metaSubtitle,
-			note: metaNote,
-			source: metaSource,
-			tag: metaTag,
+			...metadata,
 			alt:
-				metaAlt.length > 0
-					? metaAlt
-					: generateDefaultAltText(chartType, metaTitle),
+				alt && alt.length > 0
+					? alt
+					: generateDefaultAltText(chartType, title),
 		},
-		colors: 0 < customColors.length ? customColors : colors[colorValue],
+		colors:
+			customColors && customColors.length > 0
+				? customColors
+				: colorPalette[colorValue],
 		plotBands: {
 			...baseConfig.plotBands,
-			active: plotBandsActive,
-			bands: plotBands,
+			...plotBands,
 		},
 		independentAxis: {
 			...baseConfig.independentAxis,
-			active: xAxisActive,
-			label: xLabel,
-			scale: xScale,
-			dateFormat: xDateFormat,
-			domain: getDomain(xMinDomain, xMaxDomain, chartType, xScale, 'x'),
-			showZero: showXMinDomainLabel,
-			tickCount: xTickNum,
-			tickValues: 0 >= xTicks.length ? null : getTicks(xTicks),
-			tickUnit: xTickUnit,
-			tickUnitPosition: xTickUnitPosition,
-			tickFormat: null,
-			abbreviateTicks: xAbbreviateTicks,
-			abbreviateTicksDecimals: xAbbreviateTicksDecimals,
-			ticksToLocaleString: xTicksToLocaleString,
+			...independentAxis,
+			domain: getDomain(iDomain[0], iDomain[1], chartType, iScale, 'x'),
+			tickValues:
+				0 >= independentAxisTickValues.length
+					? null
+					: getTicks(independentAxisTickValues),
 			tickLabels: {
 				...baseConfig.independentAxis.tickLabels,
-				angle: xTickLabelAngle,
-				verticalAnchor: xTickLabelVerticalAnchor,
-				textAnchor: xTickLabelTextAnchor,
-				dy: xTickLabelDY,
-				dx: xTickLabelDX,
-				fontSize: xLabelFontSize,
-				padding: 0,
-				fill: xLabelTextFill,
-				fontFamily:
-					"'franklin-gothic-urw', Verdana, Geneva, sans-serif",
-				maxWidth: xTickLabelMaxWidth,
+				...independentAxis.tickLabels,
 			},
 			axisLabel: {
 				...baseConfig.independentAxis.axisLabel,
-				fontSize: xLabelFontSize,
-				fill: xLabelTextFill,
-				padding: xLabelPadding,
-				angle: 0,
-				dx: 0,
-				dy: 0,
-				textAnchor: 'middle',
-				verticalAnchor: 'middle',
-				fontFamily:
-					"'franklin-gothic-urw', Verdana, Geneva, sans-serif",
-				maxWidth: xLabelMaxWidth,
+				...independentAxis.axisLabel,
 			},
 			axis: {
 				...baseConfig.independentAxis.axis,
-				stroke: xAxisStroke,
-				strokeWidth: 1,
+				...independentAxis.axis,
 			},
 			ticks: {
 				...baseConfig.independentAxis.ticks,
-				stroke: xAxisStroke,
-				size: xTickMarksActive ? 5 : 0,
-				strokeWidth: 1,
+				...independentAxis.ticks,
+				size: independentAxis.tickMarksActive ? 5 : 0,
 			},
 			grid: {
 				...baseConfig.independentAxis.grid,
-				stroke: xGridStroke,
-				strokeOpacity: xGridOpacity,
-				strokeWidth: 1,
-				strokeDasharray: xGridStrokeDasharray,
+				...independentAxis.grid,
 			},
 		},
 		dependentAxis: {
 			...baseConfig.dependentAxis,
-			active: yAxisActive,
-			label: yLabel,
-			scale: yScale,
-			domain: getDomain(yMinDomain, yMaxDomain, chartType, yScale, 'y'),
-			showZero: showYMinDomainLabel,
-			tickCount: yTickNum,
-			tickValues: 0 >= yTicks.length ? null : getTicks(yTicks),
-			tickUnit: yTickUnit,
-			tickUnitPosition: yTickUnitPosition,
-			tickAngle: yTickLabelAngle,
-			tickFormat: null,
-			abbreviateTicks: yAbbreviateTicks,
-			abbreviateTicksDecimals: yAbbreviateTicksDecimals,
-			ticksToLocaleString: yTicksToLocaleString,
-			customTickFormat: null, // function(d) { return d; },
+			...dependentAxis,
+			domain: getDomain(dDomain[0], dDomain[1], chartType, dScale, 'y'),
+			tickValues:
+				0 >= dependentAxisTickValues.length
+					? null
+					: getTicks(dependentAxisTickValues),
 			tickLabels: {
 				...baseConfig.dependentAxis.tickLabels,
-				angle: yTickLabelAngle,
-				verticalAnchor: yTickLabelVerticalAnchor,
-				textAnchor: yTickLabelTextAnchor,
-				dy: yTickLabelDY,
-				dx: yTickLabelDX,
-				fontSize: yLabelFontSize,
-				fill: yLabelTextFill,
-				padding: 15,
-				fontFamily:
-					"'franklin-gothic-urw', Verdana, Geneva, sans-serif",
-				maxWidth: yTickLabelMaxWidth,
+				...dependentAxis.tickLabels,
 			},
 			axisLabel: {
 				...baseConfig.dependentAxis.axisLabel,
-				fontSize: yLabelFontSize,
-				fill: yLabelTextFill,
-				padding: yLabelPadding,
-				angle: 270,
-				dx: 0,
-				dy: 0,
-				textAnchor: 'middle',
-				verticalAnchor: 'middle',
-				fontFamily:
-					"'franklin-gothic-urw', Verdana, Geneva, sans-serif",
-				maxWidth: yLabelMaxWidth,
-			},
-			ticks: {
-				...baseConfig.dependentAxis.ticks,
-				stroke: yAxisStroke,
-				size: yTickMarksActive ? 5 : 0,
-				strokeWidth: 1,
+				...dependentAxis.axisLabel,
 			},
 			axis: {
 				...baseConfig.dependentAxis.axis,
-				stroke: yAxisStroke,
-				strokeWidth: 1,
+				...dependentAxis.axis,
+			},
+			ticks: {
+				...baseConfig.dependentAxis.ticks,
+				...dependentAxis.ticks,
+				size: dependentAxis.tickMarksActive ? 5 : 0,
 			},
 			grid: {
 				...baseConfig.dependentAxis.grid,
-				stroke: yGridStroke,
-				strokeOpacity: yGridOpacity,
-				strokeWidth: 1,
-				strokeDasharray: yGridStrokeDasharray,
+				...dependentAxis.grid,
 			},
 		},
 		dataRender: {
 			...baseConfig.dataRender,
-			x: dataRenderX,
-			y: dataRenderY,
-			x2: null,
-			y2: null,
-			sortKey,
-			sortOrder,
+			...dataRender,
 			categories:
-				0 < categories.length ? categories : availableCategories,
-			xScale,
-			yScale,
-			mapScale,
-			mapScaleDomain,
-			xFormat: dateInputFormat,
-			yFormat: yScaleFormat,
-			numberFormat: 'en-US',
-			isHighlightedColor: '#ECDBAC',
-			groupBreaksActive,
-			groupBreaksCategory,
-			groupBreaksCategoryValues,
-			groupBreaks: {
-				...baseConfig.dataRender.groupBreaks,
-				breakStyles: {
-					...baseConfig.dataRender.groupBreaks.breakStyles,
-					variation: groupBreaksStyleVariation,
-					height: groupBreaksHeight,
-				},
-				labelStyles: {
-					...baseConfig.dataRender.groupBreaks.labelStyles,
-				},
-			},
+				0 < dataRender?.categories?.length
+					? dataRender.categories
+					: availableCategories,
+			xScale: iScale,
+			yScale: dScale,
 		},
 		animate: {
-			active: false,
-			animationWhitelist: [],
-			duration: 2000, // time in ms
+			...baseConfig.animate,
 		},
 		events: {
 			...baseConfig.events,
@@ -470,234 +420,103 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 		},
 		tooltip: {
 			...baseConfig.tooltip,
-			active: tooltipActive,
-			activeOnMobile: tooltipActiveOnMobile,
-			deemphasizeSiblings,
-			deemphasizeOpacity,
-			emphasizeStrokeActive,
-			emphasizeStrokeColor,
-			emphasizeStrokeWidth,
-			headerActive: tooltipHeaderActive,
-			headerValue: tooltipHeaderValue,
-			format: tooltipFormat,
-			offsetX: tooltipOffsetX,
-			offsetY: tooltipOffsetY,
-			abbreviateValue: false,
-			absoluteValue: tooltipAbsoluteValue,
-			toFixedDecimal: 0,
-			toLocaleString: tooltipFormatValue,
+			...tooltip,
 			customFormat: null, // function(d) { return d; },
 			rlsFormat: false,
-			dateFormat: tooltipDateFormat,
 			style: {
 				...baseConfig.tooltip.style,
-				maxWidth: tooltipMaxWidth,
-				maxHeight: tooltipMaxHeight,
-				minHeight: tooltipMinHeight,
-				minWidth: tooltipMinWidth,
-				width: 'auto',
-				height: 'auto',
-				fontSize: `${tooltipFontSize}px`,
-				fontFamily:
-					"'franklin-gothic-urw', Verdana, Geneva, sans-serif",
-				background: 'white',
-				border: '1px solid #CBCBCB',
-				padding: '10px',
-				borderRadius: '0px',
-				color: 'black',
+				...tooltip.style,
 			},
 		},
 		legend: {
 			...baseConfig.legend,
-			active: legendActive,
-			orientation: legendOrientation,
+			...legend,
 			categories: (() => {
 				// If legendCategories is set, use it (custom user-defined order)
-				if (legendCategories && legendCategories.length > 0) {
-					return legendCategories;
+				if (legend.categories && legend.categories.length > 0) {
+					return legend.categories;
 				}
 				// Otherwise determine categories based on chart type and data source
 				if (chartType === 'diverging-bar') {
 					// For diverging bar charts, combine negative, positive, and neutral categories
-					const divergingCategories = neutralBarActive
+					const divergingCategories = neutralBar.active
 						? [
-								...negativeCategories,
-								...positiveCategories,
-								neutralCategory,
+								...divergingBar.negativeCategories,
+								...divergingBar.positiveCategories,
+								neutralBar.category,
 							]
-						: [...negativeCategories, ...positiveCategories];
+						: [
+								...divergingBar.negativeCategories,
+								...divergingBar.positiveCategories,
+							];
 					return divergingCategories;
 				}
-				if (mapScale === 'ordinal') {
+				if (dataRender.mapScale === 'ordinal') {
 					// For maps with ordinal scale, use the mapScaleDomain
-					return mapScaleDomain;
+					return dataRender.mapScaleDomain;
 				}
-				// For all other charts, use the categories array
-				return categories;
+				// For all other charts, use the categories array from dataRender
+				return dataRender.categories || [];
 			})(),
-			title: legendTitle,
-			offsetX: legendOffsetX,
-			offsetY: legendOffsetY,
-			alignment: legendAlignment,
-			markerStyle: legendMarkerStyle,
-			borderStroke: legendBorderStroke,
-			fill: legendFill,
-			fontSize: legendFontSize,
-			margin: legendMargin,
-			labelDelimiter: legendLabelDelimiter,
-			labelLower: legendLabelLower,
-			labelUpper: legendLabelUpper,
 		},
 		bar: {
 			...baseConfig.bar,
+			...bar,
 			hasRectStroke: elementHasStroke,
-			barPadding,
-			barGroupPadding,
 		},
 		line: {
 			...baseConfig.line,
-			interpolation: lineInterpolation,
-			strokeDasharray: lineStrokeDashArray,
-			strokeWidth: lineStrokeWidth,
-			showPoints: lineNodes,
-			showArea: 'area' === chartType,
-			areaFillOpacity,
+			...line,
+			showArea: 'area' === chartType || line.showArea,
 		},
 		dotPlot: {
 			...baseConfig.dotPlot,
-			connectPoints: dotPlotConnectPoints,
-			connectingLine: {
-				...baseConfig.dotPlot.connectingLine,
-				stroke: dotPlotConnectPointsStroke,
-				strokeWidth: dotPlotConnectPointsStrokeWidth,
-				strokeDasharray: dotPlotConnectPointsStrokeDasharray,
-				strokeOpacity: 1,
-			},
+			...dotPlot,
 		},
 		pie: {
 			...baseConfig.pie,
+			...pie,
 			hasPathStroke: elementHasStroke,
 			pathStrokeColor: 'white',
 			pathStrokeWidth: 1,
-			showCategoryLabels: pieCategoryLabelsActive,
 		},
 		explodedBar: {
 			...baseConfig.explodedBar,
-			columnGap: explodedBarColumnGap,
+			...explodedBar,
 		},
 		map: {
 			...baseConfig.map,
-			// abbreviateLabels: mapAbbreviateLabels,
-			ignoreSmallStateLabels: mapIgnoreSmallStateLabels,
-			// ignoredLabels: mapIgnoredLabels,
-			showCountyBoundaries: mapShowCountyBoundaries,
-			showStateBoundaries: mapShowStateBoundaries,
-			pathBackgroundFill: mapPathBackgroundFill,
-			pathStroke: mapPathStroke,
-			blockRectSize: mapBlockRectSize,
-			// Projection controls
-			projectionPreset: mapProjectionPreset,
-			topologyRegion: mapTopologyRegion,
-			mapTopologyRegion,
-			centerLongitude: mapCenterLongitude,
-			centerLatitude: mapCenterLatitude,
-			rotateLambda: mapRotateLambda,
-			rotatePhi: mapRotatePhi,
-			rotateGamma: mapRotateGamma,
-			customScale: mapCustomScale,
-			zoomActive: mapZoomActive,
+			...map,
 		},
 		nodes: {
 			...baseConfig.nodes,
-			pointSize: nodeSize,
-			pointFill: nodeFill,
-			pointStrokeWidth: nodeStrokeWidth,
+			...nodes,
 			pointCustomSize: null, // function(d) { return d; },
 		},
 		labels: {
 			...baseConfig.labels,
-			active: labelsActive,
-			showFirstLastPointsOnly,
-			color: labelColor,
-			// altColor: 'white',
-			fontWeight: labelFontWeight,
-			fontSize: labelFontSize,
-			fontFamily: "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
-			labelPositionBar: barLabelPosition,
-			labelCutoff: barLabelCutoff,
-			labelCutoffMobile: barLabelCutoffMobile,
-			labelPositionDX,
-			labelPositionDY,
-			pieLabelRadius: 60,
-			abbreviateValue: false,
-			toLocaleString: labelFormatValue,
-			absoluteValue: labelAbsoluteValue,
-			truncateDecimal: labelTruncateDecimal,
-			toFixedDecimal: labelToFixedDecimal,
-			labelUnit, // '%', '$', '€', '£', '¥'
-			labelUnitPosition,
-			textAnchor: 'middle',
-			customLabelFormat: null, // function({datum}) { return datum; },
+			...labels,
 		},
 		voronoi: {
 			...baseConfig.voronoi,
-			active: false,
-			fill: '#756a7e',
-			stroke: '#ccc',
-			strokeWidth: 1,
-			strokeOpacity: 0.5,
 		},
 		regression: {
 			...baseConfig.regression,
-			active: false,
-			type: 'linear',
-			stroke: '#2a2a2a',
-			strokeWidth: 2,
-			strokeDasharray: '1',
 		},
 		divergingBar: {
 			...baseConfig.divergingBar,
-			positiveCategories,
-			negativeCategories,
-			netPositiveCategory: 'y4',
-			netNegativeCategory: 'y5',
-			percentOfInnerWidth: divergingBarPercentOfInnerWidth / 100,
+			...divergingBar,
 			neutralBar: {
 				...baseConfig.divergingBar.neutralBar,
-				category: neutralCategory,
-				offsetX: neutralBarOffsetX,
-				active:
-					neutralBarActive &&
-					!!neutralCategory &&
-					0 < neutralCategory.length,
-				separator: neutralBarSeparator,
-				separatorOffsetX: neutralBarSeparatorOffsetX,
+				...divergingBar.neutralBar,
 			},
 		},
 		diffColumn: {
 			...baseConfig.diffColumn,
-			active: diffColumnActive,
-			category: diffColumnCategory,
-			columnHeader: diffColumnHeader,
+			...diffColumn,
 			style: {
 				...baseConfig.diffColumn.style,
-				rectStrokeWidth: 0,
-				rectStrokeColor: 'white',
-				rectFill: diffColumnBackgroundColor,
-				fontWeight:
-					diffColumnAppearance === 'bold' ||
-					diffColumnAppearance === 'bold-italic'
-						? 'bold'
-						: 'normal',
-				fontStyle:
-					diffColumnAppearance === 'italic' ||
-					diffColumnAppearance === 'bold-italic'
-						? 'italic'
-						: 'normal',
-				headerFontSize: '12px',
-				marginLeft: diffColumnMarginLeft,
-				width: diffColumnWidth,
-				heightOffset: diffColumnHeightOffset,
+				...diffColumn.style,
 			},
 		},
 		custom: {
@@ -708,9 +527,9 @@ const getConfig = (attributes, clientId, editorClickEvent = null) => {
 		},
 		annotations: {
 			...baseConfig.annotations,
-			active: annotationsActive && annotations.length > 0,
-			items: annotations || [],
+			...annotations,
 		},
+		drawings: drawings || [],
 	};
 };
 

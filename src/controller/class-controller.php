@@ -63,7 +63,7 @@ class Controller {
 		$align                 = $controller_attributes['align'];
 		$tabs_active           = $controller_attributes['tabsActive'];
 		$share_active          = $controller_attributes['shareActive'];
-		$is_static_chart       = $controller_attributes['isStatic'] || 'static' === $controller_attributes['chartType'];
+		$is_static_chart       = $controller_attributes['isStatic'];
 		$is_freeform_chart     = $controller_attributes['isFreeform'];
 
 		// TODO: This is a way to retrieve the datasets for the chart. Not sure yet if we want to surface this in the chart builder block.
@@ -125,16 +125,6 @@ class Controller {
 			$blocks['freeform'] = null;
 		}
 
-		if ( $is_static_chart ) {
-			// Find image block within chart block if it exists.
-			foreach ( $blocks['chart']['innerBlocks'] as $chart_inner_block ) {
-				if ( 'core/image' === ( $chart_inner_block['blockName'] ?? '' ) ) {
-					$blocks['image'] = $chart_inner_block;
-					break;
-				}
-			}
-		}
-
 		/**
 		 * Process chart block attributes.
 		 */
@@ -144,34 +134,65 @@ class Controller {
 		$featured_image_url = null;
 
 		if ( $blocks['chart'] ) {
-			$chart_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes(
-				'prc-chart-builder/chart',
-				$blocks['chart']['attrs'] ?? array()
-			);
-			do_action( 'qm/debug', print_r( $chart_attributes, true ) );
+			// Migrate v1 attributes to v2 if needed (server-side migration)
+			$raw_chart_attrs = $blocks['chart']['attrs'] ?? array();
+			if ( ! isset( $raw_chart_attrs['_version'] ) || 'v2' !== $raw_chart_attrs['_version'] ) {
+				$raw_chart_attrs = \PRC\Platform\Chart_Builder\Block_Migration::migrate_attributes_v1_to_v2( $raw_chart_attrs );
+			}
 
-			$width = ( $chart_attributes['width'] ?? 640 ) . 'px';
+			// IMPORTANT: Update the block's attrs with migrated version so render_block() passes correct attributes
+			// This prevents the chart block from re-running migration and losing controller modifications
+			$blocks['chart']['attrs'] = $raw_chart_attrs;
+
+			// After migration, use nested structure directly (no need for get_block_attributes)
+			$chart_attributes = $raw_chart_attrs;
+
+			$width = ( $chart_attributes['layout']['width'] ?? 640 ) . 'px';
+
+			// Check if chart is static - either from controller attribute or chart's io.isStaticChart
+			$chart_is_static = $is_static_chart || ( $chart_attributes['io']['isStaticChart'] ?? false );
+			// Update $is_static_chart to reflect the actual chart status for use later in the function
+			$is_static_chart = $chart_is_static;
+
+			// Find image block within chart block if it's a static chart.
+			if ( $chart_is_static ) {
+				foreach ( $blocks['chart']['innerBlocks'] as $chart_inner_block ) {
+					if ( 'core/image' === ( $chart_inner_block['blockName'] ?? '' ) ) {
+						$blocks['image'] = $chart_inner_block;
+						break;
+					}
+				}
+			}
 
 			// Handle preformatted data.
 			$preformatted_data = $attributes['chartPreformattedData'] ?? null;
 			if ( $preformatted_data ) {
-				$blocks['chart']['attrs']['hasPreformattedData'] = true;
-				$blocks['chart']['attrs']['preformattedData']    = $preformatted_data;
+				$blocks['chart']['attrs']['io']['hasPreformattedData'] = true;
+				$blocks['chart']['attrs']['io']['preformattedData']    = $preformatted_data;
 			}
 
 			// Process static image if present.
 			if ( $blocks['image'] ) {
 				$static_chart_img                                 = wp_get_attachment_image_src( $blocks['image']['attrs']['id'], 'full' );
-				$blocks['chart']['attrs']['isStaticChart']        = true;
-				$blocks['chart']['attrs']['staticImageId']        = $blocks['image']['attrs']['id'];
-				$blocks['chart']['attrs']['staticImageUrl']       = $static_chart_img[0];
-				$blocks['chart']['attrs']['staticImageInnerHTML'] = $blocks['image']['innerHTML'];
+				$blocks['chart']['attrs']['io']['isStaticChart']        = true;
+				$blocks['chart']['attrs']['io']['staticImageId']        = $blocks['image']['attrs']['id'];
+				$blocks['chart']['attrs']['io']['staticImageUrl']       = $static_chart_img[0];
+				$blocks['chart']['attrs']['io']['staticImageInnerHTML'] = $blocks['image']['innerHTML'];
 
 				$featured_image_id  = $blocks['image']['attrs']['id'];
 				$featured_image_url = $static_chart_img[0];
+			} elseif ( $chart_is_static && ! empty( $chart_attributes['io']['staticImageId'] ) ) {
+				// Handle case where static chart data is already in attributes (no image block found)
+				$static_chart_img = wp_get_attachment_image_src( $chart_attributes['io']['staticImageId'], 'full' );
+				if ( $static_chart_img ) {
+					$blocks['chart']['attrs']['io']['isStaticChart']  = true;
+					$blocks['chart']['attrs']['io']['staticImageUrl'] = $static_chart_img[0];
+					$featured_image_id                                = $chart_attributes['io']['staticImageId'];
+					$featured_image_url                               = $static_chart_img[0];
+				}
 			} else {
-				$featured_image_id  = $chart_attributes['pngId'] ?? null;
-				$featured_image_url = $chart_attributes['pngUrl'] ?? null;
+				$featured_image_id  = $chart_attributes['io']['pngId'] ?? null;
+				$featured_image_url = $chart_attributes['io']['pngUrl'] ?? null;
 			}
 		}
 
@@ -188,15 +209,15 @@ class Controller {
 				$table_array = \PRC\Platform\Core\WP_HTML_Sub_Processors\parse_table_block_into_array( $blocks['table']['innerHTML'] );
 			}
 
-			$table_height = ( $chart_attributes['height'] ?? 400 ) - 65 . 'px';
+			$table_height = ( $chart_attributes['layout']['height'] ?? 400 ) - 65 . 'px';
 
-			$meta_title                   = $chart_attributes['metaTitle'] ?? '';
-			$meta_subtitle                = $chart_attributes['metaSubtitle'] ?? '';
-			$meta_source                  = $chart_attributes['metaSource'] ?? '';
-			$meta_note                    = $chart_attributes['metaNote'] ?? '';
-			$meta_tag                     = $chart_attributes['metaTag'] ?? '';
-			$meta_question_wording        = $chart_attributes['metaQuestionWording'] ?? '';
-			$meta_question_wording_active = $chart_attributes['metaQuestionWordingActive'] ?? false;
+			$meta_title                   = $chart_attributes['metadata']['title'] ?? '';
+			$meta_subtitle                = $chart_attributes['metadata']['subtitle'] ?? '';
+			$meta_source                  = $chart_attributes['metadata']['source'] ?? '';
+			$meta_note                    = $chart_attributes['metadata']['note'] ?? '';
+			$meta_tag                     = $chart_attributes['metadata']['tag'] ?? '';
+			$meta_question_wording        = $chart_attributes['io']['questionWording'] ?? '';
+			$meta_question_wording_active = $chart_attributes['io']['questionWordingActive'] ?? false;
 			ob_start();
 			?>
 			<hr style="margin: 0px 0px 10px; max-width: <?php echo esc_attr( $width ); ?>;">
@@ -242,6 +263,75 @@ class Controller {
 
 		if ( $blocks['chart'] ) {
 			$blocks['chart']['attrs']['tableData'] = wp_json_encode( $table_array );
+		}
+
+		/**
+		 * Process freeform chart and wrap with metadata if active.
+		 */
+		$freeform_with_meta = '';
+		if ( $blocks['freeform'] ) {
+			$blocks_to_render = is_array( $blocks['freeform'] ) && isset( $blocks['freeform'][0]['blockName'] ) ? $blocks['freeform'] : array( $blocks['freeform'] );
+			$rendered_freeform = '';
+			foreach ( $blocks_to_render as $block_to_render ) {
+				$rendered_freeform .= render_block( $block_to_render );
+			}
+
+			$meta_text_active = $chart_attributes['metadata']['active'] ?? false;
+			if ( $meta_text_active ) {
+				$meta_title                   = $chart_attributes['metadata']['title'] ?? '';
+				$meta_subtitle                = $chart_attributes['metadata']['subtitle'] ?? '';
+				$meta_source                  = $chart_attributes['metadata']['source'] ?? '';
+				$meta_note                    = $chart_attributes['metadata']['note'] ?? '';
+				$meta_tag                     = $chart_attributes['metadata']['tag'] ?? '';
+				$meta_question_wording        = $chart_attributes['io']['questionWording'] ?? '';
+				$meta_question_wording_active = $chart_attributes['io']['questionWordingActive'] ?? false;
+				$top_rule                     = $chart_attributes['layout']['horizontalRules'] ? wp_sprintf(
+					'<hr class="cb__hr" style="margin: 0 0 10px; max-width:%1$s;" />',
+					esc_attr( $width )
+				) : '';
+				$bottom_rule                  = $chart_attributes['layout']['horizontalRules'] ? wp_sprintf(
+					'<hr class="cb__hr" style="margin: 10px 0 0px; max-width:%1$s;" />',
+					esc_attr( $width )
+				) : '';
+
+				$question_wording_html = '';
+				if ( $meta_question_wording_active ) {
+					$plus_icon  = \PRC\Platform\Icons\render( 'regular', 'circle-plus', 1 );
+					$minus_icon = \PRC\Platform\Icons\render( 'regular', 'circle-minus', 1 );
+
+					ob_start();
+					?>
+					<div class="cb__note cb__note--question-wording-button" role="button" data-wp-on--click="actions.toggleQuestionWordingExpanded">
+						<span data-wp-bind--hidden="state.isQuestionExpanded"><?php echo $plus_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Icons\render returns trusted SVG markup ?></span>
+						<span data-wp-bind--hidden="state.isQuestionExpanded">Expand to find question wording</span>
+						<span data-wp-bind--hidden="!state.isQuestionExpanded"><?php echo $minus_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Icons\render returns trusted SVG markup ?></span>
+						<span data-wp-bind--hidden="!state.isQuestionExpanded">Collapse question wording</span>
+					</div>
+					<div class="cb__note cb__note--question-wording" data-wp-bind--hidden="!state.isQuestionExpanded">
+						<?php echo wp_kses_post( $meta_question_wording ); ?>
+					</div>
+					<?php
+					$question_wording_html = ob_get_clean();
+				}
+
+				ob_start();
+				?>
+				<div class="cb__text-wrapper" style="max-width:<?php echo esc_attr( $width ); ?>;">
+					<?php echo $top_rule; // phpcs:ignore ?>
+					<div class="cb__title"><?php echo wp_kses_post( $meta_title ); ?></div>
+					<div class="cb__subtitle"><?php echo wp_kses_post( $meta_subtitle ); ?></div>
+					<?php echo $rendered_freeform; // phpcs:ignore ?>
+					<?php echo $question_wording_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean. ?>
+					<div class="cb__note"><?php echo wp_kses_post( $meta_note ); ?></div>
+					<div class="cb__note"><?php echo wp_kses_post( $meta_source ); ?></div>
+					<div class="cb__tag"><?php echo wp_kses_post( $meta_tag ); ?></div>
+					<?php echo $bottom_rule; // phpcs:ignore ?>
+				</div>
+				<?php
+				$freeform_with_meta = ob_get_clean();
+			} else {
+				$freeform_with_meta = $rendered_freeform;
+			}
 		}
 
 			/**
@@ -326,11 +416,11 @@ class Controller {
 				'rootUrl'          => $root_url,
 				'featuredImageId'  => $featured_image_id,
 				'featuredImageUrl' => $featured_image_url,
-				'title'            => $chart_attributes['metaTitle'] ?? '',
-				'subtitle'         => $chart_attributes['metaSubtitle'] ?? '',
-				'note'             => $chart_attributes['metaNote'] ?? '',
-				'source'           => $chart_attributes['metaSource'] ?? '',
-				'tag'              => $chart_attributes['metaTag'] ?? '',
+				'title'            => $chart_attributes['metadata']['title'] ?? '',
+				'subtitle'         => $chart_attributes['metadata']['subtitle'] ?? '',
+				'note'             => $chart_attributes['metadata']['note'] ?? '',
+				'source'           => $chart_attributes['metadata']['source'] ?? '',
+				'tag'              => $chart_attributes['metadata']['tag'] ?? '',
 				'tableData'        => $table_array,
 			);
 
@@ -339,10 +429,12 @@ class Controller {
 					'id'                                     => $block_id,
 					'data-wp-interactive'                    => $target_namespace,
 					'data-wp-context'                        => wp_json_encode( $context ),
-					'class'                                  => 'wp-chart-builder-wrapper align' . $align,
+					// add is freeform chart class if it is a freeform chart
+					'class'                                  => 'wp-chart-builder-wrapper align' . $align . ($is_freeform_chart ? ' wp-block-prc-chart-builder-controller--freeform' : ''),
 					'style'                                  => 'max-width:' . $width . ';',
 					'data-wp-init--detect-web-share-support' => 'callbacks.detectWebShareSupport',
 					'data-wp-init--sync-table-height'        => 'callbacks.syncTableHeight',
+					// 'data-wp-init--log-migration-attributes' => 'callbacks.logMigrationAttributes',
 				)
 			);
 
@@ -354,29 +446,19 @@ class Controller {
 		<div <?php echo wp_kses_post( $block_attrs ); ?>>
 			<?php
 			// If the chart is a freeform chart, and the share tabs are active, render the freeform chart in the tabbed interface.
-			if ( $tabs_active && $blocks['freeform'] && $blocks['table'] ) {
-				// Handle array of blocks or single block.
-				$blocks_to_render = is_array( $blocks['freeform'] ) && isset( $blocks['freeform'][0]['blockName'] ) ? $blocks['freeform'] : array( $blocks['freeform'] );
-				$rendered_blocks  = '';
-				foreach ( $blocks_to_render as $block_to_render ) {
-					$rendered_blocks .= render_block( $block_to_render );
-				}
-
+			if ( $tabs_active && $is_freeform_chart && $blocks['freeform'] && $blocks['table'] ) {
 					echo wp_sprintf(
 						'<div class="wp-chart-builder-chart active" data-chart-view="chart" data-allow-overlay="true" data-wp-class--active="state.isActive">%s%s</div>
 					<div class="wp-chart-builder-table" data-chart-view="table" data-wp-class--active="state.isActive" id="%s-table" style="max-width:%s;">%s</div>',
-						$rendered_blocks, //phpcs:ignore
+						$freeform_with_meta, //phpcs:ignore
 						$share_modal, //phpcs:ignore
 						esc_attr( $block_id ),
 						esc_attr( $width ),
 						$table_with_meta //phpcs:ignore
 					);
 				// If the chart is a freeform chart, and the share tabs are not active, render the freeform chart.
-			} elseif ( $blocks['freeform'] ) {
-				$blocks_to_render = is_array( $blocks['freeform'] ) && isset( $blocks['freeform'][0]['blockName'] ) ? $blocks['freeform'] : array( $blocks['freeform'] );
-				foreach ( $blocks_to_render as $block_to_render ) {
-					echo render_block( $block_to_render ); //phpcs:ignore
-				}
+			} elseif ( $is_freeform_chart && $blocks['freeform'] ) {
+				echo $freeform_with_meta; //phpcs:ignore
 				// If the chart is a regular chart, and the share tabs are active, render the chart in the tabbed interface.
 			} elseif ( $tabs_active && $blocks['chart'] && $blocks['table'] ) {
 				echo wp_sprintf(

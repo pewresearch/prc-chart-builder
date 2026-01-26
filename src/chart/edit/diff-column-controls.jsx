@@ -21,6 +21,7 @@ import {
  */
 import { PanelColorSettings } from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 // const PanelDescription = styled.div`
 // 	grid-column: span 2;
@@ -30,14 +31,9 @@ const WidePanelItem = styled(ToolsPanelItem)`
 `;
 
 function DiffColumnControls({ attributes, setAttributes, clientId }) {
-	const {
-		diffColumnHeader,
-		diffColumnWidth,
-		diffColumnMarginLeft,
-		diffColumnBackgroundColor,
-		diffColumnHeightOffset,
-		diffColumnAppearance,
-	} = attributes;
+	// Viewport-aware attribute management
+	const { getCurrentValue, updateAttributeForDevice } =
+		useViewportAttributes(attributes, setAttributes);
 	return (
 		<PanelBody
 			title={__('Difference Column Configuration')}
@@ -59,10 +55,10 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 				>
 					<TextControl
 						label={__('Column Header')}
-						value={diffColumnHeader}
+						value={getCurrentValue('diffColumn', 'columnHeader')}
 						onChange={(value) => {
-							setAttributes({
-								diffColumnHeader: value,
+							updateAttributeForDevice('diffColumn', {
+								columnHeader: value,
 							});
 						}}
 					/>
@@ -77,10 +73,18 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						label={__('Column Width')}
 						withInputField
 						min={0}
-						value={parseInt(diffColumnWidth, 10)}
+						value={parseInt(
+							getCurrentValue('diffColumn', 'style')?.width || 0,
+							10
+						)}
 						onChange={(value) => {
-							setAttributes({
-								diffColumnWidth: formatNum(value, 'integer'),
+							const currentStyle =
+								getCurrentValue('diffColumn', 'style') || {};
+							updateAttributeForDevice('diffColumn', {
+								style: {
+									...currentStyle,
+									width: formatNum(value, 'integer'),
+								},
 							});
 						}}
 					/>
@@ -95,13 +99,18 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						label={__('Column Gap')}
 						withInputField
 						step={1}
-						value={parseInt(diffColumnMarginLeft, 10)}
+						value={parseInt(
+							getCurrentValue('diffColumn', 'style')?.marginLeft || 0,
+							10
+						)}
 						onChange={(value) => {
-							setAttributes({
-								diffColumnMarginLeft: formatNum(
-									value,
-									'integer'
-								),
+							const currentStyle =
+								getCurrentValue('diffColumn', 'style') || {};
+							updateAttributeForDevice('diffColumn', {
+								style: {
+									...currentStyle,
+									marginLeft: formatNum(value, 'integer'),
+								},
 							});
 						}}
 					/>
@@ -116,13 +125,18 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						label={__('Height Offset')}
 						withInputField
 						min={0}
-						value={parseInt(diffColumnHeightOffset, 10)}
+						value={parseInt(
+							getCurrentValue('diffColumn', 'style')?.heightOffset || 0,
+							10
+						)}
 						onChange={(value) => {
-							setAttributes({
-								diffColumnHeightOffset: formatNum(
-									value,
-									'integer'
-								),
+							const currentStyle =
+								getCurrentValue('diffColumn', 'style') || {};
+							updateAttributeForDevice('diffColumn', {
+								style: {
+									...currentStyle,
+									heightOffset: formatNum(value, 'integer'),
+								},
 							});
 						}}
 					/>
@@ -135,7 +149,7 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 				>
 					<SelectControl
 						label={__('Column Appearance')}
-						value={diffColumnAppearance}
+						value={getCurrentValue('diffColumn', 'style')?.fontAppearance}
 						options={[
 							{
 								label: __('Default'),
@@ -155,8 +169,21 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 							},
 						]}
 						onChange={(value) => {
-							setAttributes({
-								diffColumnAppearance: value,
+							const currentStyle =
+								getCurrentValue('diffColumn', 'style') || {};
+							updateAttributeForDevice('diffColumn', {
+								style: {
+									...currentStyle,
+									fontAppearance: value,
+									fontWeight:
+										value === 'bold' || value === 'bold-italic'
+											? 'bold'
+											: 'normal',
+									fontStyle:
+										value === 'italic' || value === 'bold-italic'
+											? 'italic'
+											: 'normal',
+								},
 							});
 						}}
 					/>
@@ -174,11 +201,17 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						initialOpen
 						colorSettings={[
 							{
-								value: diffColumnBackgroundColor,
-								onChange: (value) =>
-									setAttributes({
-										diffColumnBackgroundColor: value,
-									}),
+								value: getCurrentValue('diffColumn', 'style')?.rectFill,
+								onChange: (value) => {
+									const currentStyle =
+										getCurrentValue('diffColumn', 'style') || {};
+									updateAttributeForDevice('diffColumn', {
+										style: {
+											...currentStyle,
+											rectFill: value,
+										},
+									});
+								},
 								label: __('Background Color'),
 							},
 						]}

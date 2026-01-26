@@ -30,10 +30,31 @@ const CopyPasteStylesHandler = ({
 	const pasteStyles = () => {
 		const { getCopiedStyles } = select(store);
 		const styles = getCopiedStyles();
-		setAttributes({
+		// Deep merge nested objects instead of shallow spread
+		const mergedAttributes = {
 			...attributes,
-			...styles,
-		});
+			...Object.keys(styles).reduce((acc, key) => {
+				// If both source and target are objects, merge them
+				if (
+					styles[key] &&
+					typeof styles[key] === 'object' &&
+					!Array.isArray(styles[key]) &&
+					attributes[key] &&
+					typeof attributes[key] === 'object' &&
+					!Array.isArray(attributes[key])
+				) {
+					acc[key] = {
+						...attributes[key],
+						...styles[key],
+					};
+				} else {
+					// For arrays or primitives, replace entirely
+					acc[key] = styles[key];
+				}
+				return acc;
+			}, {}),
+		};
+		setAttributes(mergedAttributes);
 	};
 
 	return (

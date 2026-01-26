@@ -1,3 +1,4 @@
+// V2
 /**
  * External dependencies
  */
@@ -17,6 +18,7 @@ import {
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 // const PanelDescription = styled.div`
 // 	grid-column: span 2;
@@ -26,8 +28,14 @@ const WidePanelItem = styled(ToolsPanelItem)`
 `;
 
 function BarControls({ attributes, setAttributes, clientId }) {
-	const { chartType, barPadding, barGroupPadding, explodedBarColumnGap } =
-		attributes;
+	// Viewport-aware attribute management
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
+
+	const layout = getCurrentValue('layout') || {};
+	const { type: chartType } = layout;
 
 	return (
 		<PanelBody title={__('Bar Configuration')} initialOpen={false}>
@@ -52,9 +60,12 @@ function BarControls({ attributes, setAttributes, clientId }) {
 							min={0}
 							max={10}
 							step={0.05}
-							value={parseFloat(barGroupPadding, 10)}
+							value={parseFloat(
+								getCurrentValue('bar', 'barGroupPadding') || 0,
+								10
+							)}
 							onChange={(value) => {
-								setAttributes({
+								updateAttributeForDevice('bar', {
 									barGroupPadding: formatNum(value, 'float'),
 								});
 							}}
@@ -73,9 +84,12 @@ function BarControls({ attributes, setAttributes, clientId }) {
 						min={0}
 						max={10}
 						step={0.05}
-						value={parseFloat(barPadding, 10)}
+						value={parseFloat(
+							getCurrentValue('bar', 'barPadding') || 0,
+							10
+						)}
 						onChange={(value) => {
-							setAttributes({
+							updateAttributeForDevice('bar', {
 								barPadding: formatNum(value, 'float'),
 							});
 						}}
@@ -92,13 +106,14 @@ function BarControls({ attributes, setAttributes, clientId }) {
 							label={__('Exploded Bar Column Gap')}
 							withInputField
 							step={1}
-							value={parseInt(explodedBarColumnGap, 10)}
+							value={parseInt(
+								getCurrentValue('explodedBar', 'columnGap') ||
+									0,
+								10
+							)}
 							onChange={(value) => {
-								setAttributes({
-									explodedBarColumnGap: formatNum(
-										value,
-										'integer'
-									),
+								updateAttributeForDevice('explodedBar', {
+									columnGap: formatNum(value, 'integer'),
 								});
 							}}
 						/>

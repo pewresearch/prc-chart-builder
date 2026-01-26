@@ -1,0 +1,23 @@
+{
+	"name": "v1-pie-with-labels",
+	"description": "Pie chart with data labels active",
+	"blockVersion": "v1",
+	"chartType": "pie",
+	"featureTags": ["data-labels"],
+	"serializedContent": "<!-- wp:prc-chart-builder/chart {\"chartType\":\"pie\",\"width\":400,\"height\":400,\"labelsActive\":true,\"labelFormatValue\":true,\"pieCategoryLabelsActive\":true} -->\n<div class=\"wp-block-prc-chart-builder-chart\"></div>\n<!-- /wp:prc-chart-builder/chart -->",
+	"expectedMigratedAttributes": {
+		"_version": "v2",
+		"layout": {
+			"type": "pie",
+			"width": 400,
+			"height": 400
+		},
+		"labels": {
+			"active": true,
+			"toLocaleString": true
+		},
+		"pie": {
+			"showCategoryLabels": true
+		}
+	}
+}

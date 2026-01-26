@@ -1,0 +1,23 @@
+{
+	"name": "v1-wordpress-metadata",
+	"description": "Chart with WordPress-specific io attributes",
+	"blockVersion": "v1",
+	"chartType": "bar",
+	"featureTags": ["wordpress-metadata"],
+	"serializedContent": "<!-- wp:prc-chart-builder/chart {\"chartType\":\"bar\",\"width\":640,\"height\":400,\"id\":\"chart-123\",\"isStaticChart\":false,\"isFreeformChart\":false,\"staticImageUrl\":\"\",\"defaultShouldRender\":true} -->\n<div class=\"wp-block-prc-chart-builder-chart\"></div>\n<!-- /wp:prc-chart-builder/chart -->",
+	"expectedMigratedAttributes": {
+		"_version": "v2",
+		"layout": {
+			"type": "bar",
+			"width": 640,
+			"height": 400
+		},
+		"io": {
+			"id": "chart-123",
+			"isStaticChart": false,
+			"isFreeformChart": false,
+			"staticImageUrl": "",
+			"defaultShouldRender": true
+		}
+	}
+}

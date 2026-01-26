@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const stackedBarTemplate = [
 	[
 		'prc-block/table',
@@ -44,35 +46,62 @@ const stackedBarTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
+		mergeWithDefaults({
+			_version: 'v2',
 			chartType: 'stacked-bar',
 			chartOrientation: 'vertical',
-			metaTitle: 'Stacked Column Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-
-			width: 240,
-			height: 320,
-			paddingLeft: 20,
-			paddingRight: 20,
-			paddingBottom: 30,
-			paddingTop: 10,
-			colorValue: 'social-trends-main',
-			xDomainPadding: 30,
-			yAxisActive: false,
-			barWidth: 24,
-			barGroupOffset: 28,
-			labelsActive: true,
-			labelColor: 'contrast',
-			labelPositionDY: 3,
-			tooltipHeaderValue: 'independentValue',
-			tooltipFormat: '{{row}}: {{value}}',
-			legendActive: true,
-			legendMarkerStyle: 'rect',
-		},
+			layout: {
+				type: 'stacked-bar',
+				orientation: 'vertical',
+				width: 240,
+				height: 320,
+				padding: {
+					top: 10,
+					left: 20,
+					right: 20,
+					bottom: 30,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'Stacked Column Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'social-trends-main',
+			},
+			independentAxis: {
+				domainPadding: 30,
+			},
+			dependentAxis: {
+				active: false,
+			},
+			tooltip: {
+				active: true,
+				headerValue: 'independentValue',
+				format: '{{row}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				color: 'contrast',
+				labelPositionDY: 3,
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			bar: {
+				barWidth: 24,
+				barGroupOffset: 28,
+			},
+			io: {
+				isConvertedChart: false,
+				colorValue: 'social-trends-main',
+			},
+		}),
 	],
 ];
 

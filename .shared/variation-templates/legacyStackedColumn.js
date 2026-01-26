@@ -45,28 +45,57 @@ const stackedBarTemplate = [
 	[
 		'prc-chart-builder/chart',
 		{
-			isConvertedChart: true,
+			_version: 'v2',
 			chartType: 'stacked-bar',
 			chartOrientation: 'vertical',
-			width: 640,
-			height: 400,
-			paddingLeft: 20,
-			paddingRight: 20,
-			metaTag: 'PEW RESEARCH CENTER',
-			colorValue: 'social-trends-main',
-			labelsActive: true,
-			xDomainPadding: 20,
-			xTickNum: null,
-			yAxisActive: true,
-			yTickLabelTextAnchor: 'end',
-			yTickLabelVerticalAnchor: 'middle',
-			yMaxDomain: '100',
-			barWidth: 24,
-			barGroupOffset: 28,
-			labelPositionDX: -20,
-			tooltipActive: true,
-			tooltipHeaderValue: 'independentValue',
-			tooltipFormat: '{{row}}: {{value}}',
+			layout: {
+				type: 'stacked-bar',
+				orientation: 'vertical',
+				width: 640,
+				height: 400,
+				padding: {
+					left: 20,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'social-trends-main',
+			},
+			independentAxis: {
+				tickCount: null,
+				domainPadding: 20,
+			},
+			dependentAxis: {
+				active: true,
+				domain: {
+					max: '100',
+				},
+				tickLabels: {
+					textAnchor: 'end',
+					verticalAnchor: 'middle',
+				},
+			},
+			tooltip: {
+				active: true,
+				headerValue: 'independentValue',
+				format: '{{row}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				labelPositionDX: -20,
+			},
+			bar: {
+				barWidth: 24,
+				barGroupOffset: 28,
+			},
+			io: {
+				isConvertedChart: true,
+				colorValue: 'social-trends-main',
+			},
 		},
 	],
 ];

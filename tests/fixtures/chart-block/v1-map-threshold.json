@@ -1,0 +1,21 @@
+{
+	"name": "v1-map-threshold",
+	"description": "USA map with threshold scale",
+	"blockVersion": "v1",
+	"chartType": "map-usa",
+	"featureTags": ["map"],
+	"serializedContent": "<!-- wp:prc-chart-builder/chart {\"chartType\":\"map-usa\",\"chartFamily\":\"map\",\"width\":640,\"height\":400,\"mapScale\":\"threshold\",\"mapScaleDomain\":[10,20,30,40,50],\"mapIgnoreSmallStateLabels\":true} -->\n<div class=\"wp-block-prc-chart-builder-chart\"></div>\n<!-- /wp:prc-chart-builder/chart -->",
+	"expectedMigratedAttributes": {
+		"_version": "v2",
+		"layout": {
+			"type": "map-usa",
+			"width": 640,
+			"height": 400
+		},
+		"map": {
+			"scale": "threshold",
+			"scaleDomain": [10, 20, 30, 40, 50],
+			"ignoreSmallStateLabels": true
+		}
+	}
+}

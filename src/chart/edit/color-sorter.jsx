@@ -1,3 +1,4 @@
+// V2
 /**
  * External Dependencies
  */
@@ -34,7 +35,7 @@ function labelFill(hex = '#000000') {
 	return fill;
 }
 
-const ColorSorter = function ({ colors, setAttributes }) {
+const ColorSorter = function ({ colors, setAttributes, io }) {
 	const [items, setItems] = useState(colors);
 	useEffect(() => {
 		setItems(colors);
@@ -60,7 +61,7 @@ const ColorSorter = function ({ colors, setAttributes }) {
 					const newItems = arrayMove(items, oldIndex, newIndex);
 					setItems(newItems);
 					setAttributes({
-						customColors: newItems,
+						io: { ...io, customColors: newItems },
 					});
 				}}
 				renderList={({ children, props }) => (

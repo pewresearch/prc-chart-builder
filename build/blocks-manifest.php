@@ -13,1224 +13,601 @@ return array(
 			'prc-chart-builder/controller'
 		),
 		'attributes' => array(
-			'test' => array(
+			'_version' => array(
 				'type' => 'string',
-				'default' => 'test'
+				'enum' => array(
+					'v1',
+					'v2'
+				)
 			),
 			'id' => array(
 				'type' => 'string'
 			),
-			'parentClass' => array(
-				'type' => 'string',
-				'default' => 'wp-chart-builder-wrapper'
-			),
-			'isConvertedChart' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'isStaticChart' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'isFreeformChart' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'staticImageId' => array(
-				'type' => 'string'
-			),
-			'staticImageUrl' => array(
-				'type' => 'string'
-			),
-			'staticImageInnerHTML' => array(
-				'type' => 'string'
-			),
-			'chartConverted' => array(
+			'mobile' => array(
 				'type' => 'object',
-				'default' => array(
-					'converted' => false,
-					'requester' => '',
-					'timestamp' => ''
-				)
-			),
-			'chartData' => array(
-				'type' => 'array'
-			),
-			'tableData' => array(
-				'type' => 'string'
-			),
-			'hasPreformattedData' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'preformattedData' => array(
-				'type' => 'array'
-			),
-			'chartType' => array(
-				'type' => 'string',
-				'enum' => array(
-					'bar',
-					'diverging-bar',
-					'line',
-					'area',
-					'stacked-area',
-					'scatter',
-					'pie',
-					'dot-plot',
-					'stacked-bar',
-					'grouped-bar',
-					'exploded-bar',
-					'static',
-					'map-usa',
-					'map-usa-counties',
-					'map-usa-block',
-					'map-world',
-					'freeform'
-				),
-				'default' => 'bar'
-			),
-			'chartFamily' => array(
-				'type' => 'string',
-				'enum' => array(
-					'chart',
-					'map'
-				),
-				'default' => 'chart'
-			),
-			'chartOrientation' => array(
-				'type' => 'string',
-				'enum' => array(
-					'vertical',
-					'horizontal'
-				),
-				'default' => 'horizontal'
-			),
-			'width' => array(
-				'type' => 'integer',
-				'default' => 640
-			),
-			'height' => array(
-				'type' => 'integer',
-				'default' => 400
-			),
-			'overflowX' => array(
-				'type' => 'string',
-				'enum' => array(
-					'scroll',
-					'responsive',
-					'scroll-fixed-y-axis',
-					'preserve-aspect-ratio'
-				),
-				'default' => 'responsive'
-			),
-			'mobileBreakpoint' => array(
-				'type' => 'integer',
-				'default' => 480
-			),
-			'horizontalRules' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'paddingTop' => array(
-				'type' => 'integer',
-				'default' => 20
-			),
-			'paddingLeft' => array(
-				'type' => 'integer',
-				'default' => 60
-			),
-			'paddingBottom' => array(
-				'type' => 'integer',
-				'default' => 25
-			),
-			'paddingRight' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'pieCategoryLabelsActive' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'dataRenderX' => array(
-				'type' => 'string',
-				'default' => 'x'
-			),
-			'dataRenderY' => array(
-				'type' => 'string',
-				'default' => 'y'
-			),
-			'dateInputFormat' => array(
-				'type' => 'string',
-				'enum' => array(
-					'YYYY',
-					'YYYY-MM',
-					'YYYY-MM-DD',
-					'MM-YYYY',
-					'MM-DD-YYYY',
-					'DD-MM-YYYY',
-					'MM/DD/YYYY',
-					'MM/YYYY',
-					'DD/MM/YYYY',
-					'MM/DD',
-					'DD/MM',
-					'MM'
-				),
-				'default' => 'YYYY'
-			),
-			'sortOrder' => array(
-				'type' => 'string',
-				'enum' => array(
-					'ascending',
-					'descending',
-					'none',
-					'reverse'
-				),
-				'default' => 'none'
-			),
-			'sortKey' => array(
-				'type' => 'string',
-				'default' => 'x'
-			),
-			'colorValue' => array(
-				'type' => 'string',
-				'default' => 'general'
-			),
-			'customColors' => array(
-				'type' => 'array',
 				'default' => array(
 					
 				)
 			),
-			'elementHasStroke' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'tabsActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'xAxisActive' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'xLabel' => array(
-				'type' => 'string',
-				'default' => null
-			),
-			'xLabelMaxWidth' => array(
-				'type' => 'number',
-				'default' => 100
-			),
-			'xLabelFontSize' => array(
-				'type' => 'number',
-				'default' => 12
-			),
-			'xLabelPadding' => array(
-				'type' => 'number',
-				'default' => 30
-			),
-			'xLabelTextFill' => array(
-				'type' => 'string',
-				'default' => '#231F20'
-			),
-			'xMinDomain' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'xMaxDomain' => array(
-				'type' => 'number',
-				'default' => 100
-			),
-			'showXMinDomainLabel' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'xTickMarksActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'xTickNum' => array(
-				'type' => 'integer',
-				'default' => 5
-			),
-			'xTickExact' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'xTickUnit' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'xTickUnitPosition' => array(
-				'type' => 'string',
-				'enum' => array(
-					'start',
-					'end'
-				),
-				'default' => 'end'
-			),
-			'xTickLabelAngle' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'xTickLabelMaxWidth' => array(
-				'type' => 'integer',
-				'default' => 50
-			),
-			'xTickLabelTextAnchor' => array(
-				'type' => 'string',
-				'enum' => array(
-					'start',
-					'middle',
-					'end'
-				),
-				'default' => 'middle'
-			),
-			'xTickLabelVerticalAnchor' => array(
-				'type' => 'string',
-				'enum' => array(
-					'start',
-					'middle',
-					'end'
-				),
-				'default' => 'end'
-			),
-			'xTickLabelDY' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'xTickLabelDX' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'xAbbreviateTicks' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'xAbbreviateTicksDecimals' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'xTicksToLocaleString' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'xMultiLineTickLabels' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'xMultiLineTickLabelsBreak' => array(
-				'type' => 'integer',
-				'default' => 1
-			),
-			'xScale' => array(
-				'type' => 'string',
-				'enum' => array(
-					'linear',
-					'time',
-					'log',
-					'sqrt'
-				),
-				'default' => 'linear'
-			),
-			'xDateFormat' => array(
-				'type' => 'string',
-				'enum' => array(
-					'%Y',
-					'%B/%Y',
-					'%b/%Y',
-					'%-m/%Y',
-					'%-m/%y',
-					'%-m/%-d/%Y',
-					'%-d/%-m/%y',
-					'%B %d, %Y',
-					'%B %Y',
-					'%b %Y',
-					'%b %d, %Y',
-					'%d %b %Y',
-					'%d %b %y',
-					'%d %b',
-					'%d %B %Y',
-					'%d %B ’%y',
-					'%d %b ’%y',
-					'%b ’%y',
-					'’%y',
-					'%d %B',
-					'%d %b, %Y'
-				),
-				'default' => '%Y'
-			),
-			'xAxisStroke' => array(
-				'type' => 'string',
-				'default' => '#756f6a'
-			),
-			'xGridStroke' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'xGridStrokeDasharray' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'xGridOpacity' => array(
-				'type' => 'number',
-				'default' => 0.2
-			),
-			'yAxisStroke' => array(
-				'type' => 'string',
-				'default' => '#756f6a'
-			),
-			'yGridStroke' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'yGridStrokeDasharray' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'yGridOpacity' => array(
-				'type' => 'number',
-				'default' => 0.2
-			),
-			'yAxisActive' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'yLabel' => array(
-				'type' => 'string',
-				'default' => null
-			),
-			'yLabelFontSize' => array(
-				'type' => 'number',
-				'default' => 12
-			),
-			'yLabelTextFill' => array(
-				'type' => 'string',
-				'default' => '#231F20'
-			),
-			'yLabelPadding' => array(
-				'type' => 'number',
-				'default' => 30
-			),
-			'yLabelMaxWidth' => array(
-				'type' => 'number',
-				'default' => 100
-			),
-			'yScale' => array(
-				'type' => 'string',
-				'enum' => array(
-					'linear',
-					'time',
-					'log',
-					'sqrt'
-				),
-				'default' => 'linear'
-			),
-			'yScaleFormat' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'yMinDomain' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'yMaxDomain' => array(
-				'type' => 'number',
-				'default' => 100
-			),
-			'showYMinDomainLabel' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'yTickMarksActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'yTickNum' => array(
-				'type' => 'integer',
-				'default' => 5
-			),
-			'yTickExact' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'yTickUnit' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'yTickUnitPosition' => array(
-				'type' => 'string',
-				'enum' => array(
-					'start',
-					'end'
-				),
-				'default' => 'end'
-			),
-			'yTickLabelAngle' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'yTickLabelMaxWidth' => array(
-				'type' => 'integer',
-				'default' => 50
-			),
-			'yTickLabelTextAnchor' => array(
-				'type' => 'string',
-				'enum' => array(
-					'start',
-					'middle',
-					'end'
-				),
-				'default' => 'end'
-			),
-			'yTickLabelVerticalAnchor' => array(
-				'type' => 'string',
-				'enum' => array(
-					'start',
-					'middle',
-					'end'
-				),
-				'default' => 'middle'
-			),
-			'yTickLabelDY' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'yTickLabelDX' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'yAbbreviateTicks' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'yAbbreviateTicksDecimals' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'yTicksToLocaleString' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'yMultiLineTickLabels' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'yMultiLineTickLabelsBreak' => array(
-				'type' => 'integer',
-				'default' => 1
-			),
-			'plotBandsActive' => array(
-				'type' => 'boolean',
-				'default' => false
+			'tablet' => array(
+				'type' => 'object',
+				'default' => array(
+					
+				)
+			),
+			'layout' => array(
+				'type' => 'object',
+				'default' => array(
+					'name' => 'wp-block-prc-block-chart-builder-controller',
+					'type' => 'bar',
+					'orientation' => 'horizontal',
+					'width' => 640,
+					'height' => 400,
+					'padding' => array(
+						'top' => 20,
+						'bottom' => 25,
+						'left' => 60,
+						'right' => 0
+					),
+					'overflowX' => 'responsive',
+					'horizontalRules' => true,
+					'mobileBreakpoint' => 480,
+					'parentClass' => 'wp-chart-builder-wrapper'
+				)
+			),
+			'metadata' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => true,
+					'title' => 'Title',
+					'subtitle' => 'Subtitle',
+					'note' => 'Note: This is a note.',
+					'source' => 'Source: This is your source.',
+					'tag' => 'PEW RESEARCH CENTER',
+					'alt' => ''
+				)
+			),
+			'colors' => array(
+				'type' => 'array',
+				'default' => array(
+					'#436983',
+					'#bf3927',
+					'#756a7e',
+					'#ea9e2c',
+					'#bc7b2b',
+					'#eeece4'
+				)
 			),
 			'plotBands' => array(
-				'type' => 'array',
+				'type' => 'object',
 				'default' => array(
-					
+					'active' => false,
+					'allowDrag' => false,
+					'allowResize' => false,
+					'dimension' => 'x',
+					'bands' => array(
+						
+					)
 				)
 			),
-			'annotationsActive' => array(
-				'type' => 'boolean',
-				'default' => false
+			'independentAxis' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => true,
+					'label' => '',
+					'scale' => 'linear',
+					'dateFormat' => '%Y',
+					'domain' => array(
+						0,
+						100
+					),
+					'domainPadding' => 20,
+					'showZero' => true,
+					'padding' => 30,
+					'tickMarksActive' => false,
+					'tickCount' => 5,
+					'tickValues' => null,
+					'tickFormat' => null,
+					'ticksToLocaleString' => false,
+					'abbreviateTicks' => false,
+					'abbreviateTicksDecimals' => 0,
+					'tickUnit' => '',
+					'tickUnitPosition' => 'end',
+					'tickLabels' => array(
+						'fontSize' => 12,
+						'padding' => 0,
+						'angle' => 0,
+						'dx' => 0,
+						'dy' => 0,
+						'textAnchor' => 'middle',
+						'verticalAnchor' => 'end',
+						'fill' => '#231F20',
+						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'maxWidth' => 50
+					),
+					'axisLabel' => array(
+						'fontSize' => 12,
+						'fill' => '#231F20',
+						'padding' => 15,
+						'angle' => 0,
+						'dx' => 0,
+						'dy' => 0,
+						'textAnchor' => 'end',
+						'verticalAnchor' => 'middle',
+						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'maxWidth' => 100
+					),
+					'axis' => array(
+						'stroke' => '#756f6a',
+						'strokeWidth' => 1
+					),
+					'ticks' => array(
+						'stroke' => '#756f6a',
+						'size' => 5,
+						'strokeWidth' => 0
+					),
+					'grid' => array(
+						'stroke' => '',
+						'strokeOpacity' => 0.2,
+						'strokeWidth' => 2,
+						'strokeDasharray' => ''
+					)
+				)
+			),
+			'dependentAxis' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => true,
+					'label' => '',
+					'scale' => 'linear',
+					'domain' => array(
+						0,
+						100
+					),
+					'showZero' => false,
+					'tickMarksActive' => true,
+					'tickCount' => 5,
+					'tickValues' => null,
+					'tickFormat' => null,
+					'tickAngle' => 0,
+					'ticksToLocaleString' => false,
+					'abbreviateTicks' => true,
+					'abbreviateTicksDecimals' => 0,
+					'tickUnit' => '',
+					'tickUnitPosition' => 'end',
+					'tickLabels' => array(
+						'fontSize' => 12,
+						'padding' => 15,
+						'angle' => 0,
+						'dx' => 0,
+						'dy' => 0,
+						'textAnchor' => 'end',
+						'verticalAnchor' => 'middle',
+						'fill' => 'rgba(35, 31, 32, 0.7)',
+						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'maxWidth' => 50
+					),
+					'axisLabel' => array(
+						'fontSize' => 12,
+						'fill' => 'rgba(35, 31, 32, 0.7)',
+						'padding' => 30,
+						'angle' => 270,
+						'dx' => 0,
+						'dy' => 0,
+						'textAnchor' => 'middle',
+						'verticalAnchor' => 'middle',
+						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'maxWidth' => 200
+					),
+					'axis' => array(
+						'stroke' => '#756f6a',
+						'strokeWidth' => 1
+					),
+					'ticks' => array(
+						'stroke' => '#756f6a',
+						'size' => 5,
+						'strokeWidth' => 0
+					),
+					'grid' => array(
+						'stroke' => '',
+						'strokeOpacity' => 0.2,
+						'strokeWidth' => 1,
+						'strokeDasharray' => ''
+					)
+				)
+			),
+			'tooltip' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => true,
+					'activeOnMobile' => true,
+					'headerActive' => true,
+					'headerValue' => 'categoryValue',
+					'format' => '{{row}}: {{value}}',
+					'offsetX' => 10,
+					'offsetY' => 10,
+					'abbreviateValue' => false,
+					'absoluteValue' => false,
+					'toFixedDecimal' => 0,
+					'toLocaleString' => true,
+					'customFormat' => null,
+					'rlsFormat' => false,
+					'dateFormat' => '%-m/%Y',
+					'caretPosition' => 'bottom',
+					'deemphasizeSiblings' => false,
+					'deemphasizeOpacity' => 0.5,
+					'emphasizeStrokeActive' => false,
+					'emphasizeStrokeColor' => 'black',
+					'emphasizeStrokeWidth' => 1,
+					'style' => array(
+						'minWidth' => 50,
+						'maxWidth' => 200,
+						'maxHeight' => 100,
+						'minHeight' => 20,
+						'width' => 'auto',
+						'height' => 'auto',
+						'fontSize' => 13,
+						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'background' => 'white',
+						'border' => '1px solid #CBCBCB',
+						'padding' => '10px',
+						'borderRadius' => '0px',
+						'color' => 'black'
+					)
+				)
+			),
+			'legend' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => false,
+					'orientation' => 'row',
+					'title' => '',
+					'alignment' => 'center',
+					'offsetX' => 0,
+					'offsetY' => 0,
+					'markerStyle' => 'rect',
+					'borderStroke' => '',
+					'fill' => '',
+					'categories' => array(
+						
+					),
+					'labelDelimiter' => 'to',
+					'labelLower' => 'Less than ',
+					'labelUpper' => 'More than ',
+					'fontSize' => 12,
+					'margin' => array(
+						'top' => 0,
+						'right' => 5,
+						'bottom' => 0,
+						'left' => 0
+					)
+				)
+			),
+			'labels' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => false,
+					'showFirstLastPointsOnly' => false,
+					'color' => 'inherit',
+					'fontWeight' => 200,
+					'fontSize' => 10,
+					'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+					'labelPositionBar' => 'inside',
+					'labelCutoff' => 10,
+					'labelCutoffMobile' => 5,
+					'labelPositionDX' => 0,
+					'labelPositionDY' => 0,
+					'pieLabelRadius' => 60,
+					'abbreviateValue' => false,
+					'absoluteValue' => false,
+					'toLocaleString' => true,
+					'truncateDecimal' => true,
+					'toFixedDecimal' => 3,
+					'labelUnit' => '',
+					'labelUnitPosition' => 'end',
+					'textAnchor' => 'middle',
+					'customLabelFormat' => null,
+					'customPositions' => array(
+						
+					)
+				)
+			),
+			'bar' => array(
+				'type' => 'object',
+				'default' => array(
+					'barPadding' => 0.2,
+					'barGroupPadding' => 0.2,
+					'hasRectStroke' => false,
+					'stackOffset' => 'none'
+				)
+			),
+			'line' => array(
+				'type' => 'object',
+				'default' => array(
+					'interpolation' => 'curveLinear',
+					'strokeDasharray' => '',
+					'strokeWidth' => 3,
+					'showPoints' => true,
+					'showArea' => false,
+					'areaFillOpacity' => 0.4
+				)
+			),
+			'dotPlot' => array(
+				'type' => 'object',
+				'default' => array(
+					'connectPoints' => true,
+					'connectingLine' => array(
+						'stroke' => '#E6E7E8',
+						'strokeWidth' => 6,
+						'strokeDasharray' => '',
+						'strokeOpacity' => 1
+					)
+				)
+			),
+			'explodedBar' => array(
+				'type' => 'object',
+				'default' => array(
+					'columnGap' => 16
+				)
+			),
+			'pie' => array(
+				'type' => 'object',
+				'default' => array(
+					'hasPathStroke' => false,
+					'pathStrokeColor' => 'white',
+					'pathStrokeWidth' => 1,
+					'showCategoryLabels' => true,
+					'innerRadius' => 0,
+					'padAngle' => 0,
+					'cornerRadius' => 0,
+					'sortByValue' => false
+				)
+			),
+			'nodes' => array(
+				'type' => 'object',
+				'default' => array(
+					'pointSize' => 3,
+					'pointFill' => 'inherit',
+					'pointStrokeWidth' => 1,
+					'pointStroke' => 'inherit'
+				)
+			),
+			'map' => array(
+				'type' => 'object',
+				'default' => array(
+					'ignoreSmallStateLabels' => false,
+					'ignoredLabels' => array(
+						
+					),
+					'abbreviateLabels' => true,
+					'blockRectSize' => 44,
+					'pathBackgroundFill' => '#f7f7f7',
+					'pathStroke' => '#d3d3d3',
+					'pathStrokeWidth' => 0.5,
+					'showCountyBoundaries' => true,
+					'showStateBoundaries' => true,
+					'zoomActive' => false,
+					'projectionPreset' => 'default',
+					'topologyRegion' => 'default',
+					'centerLongitude' => 0,
+					'centerLatitude' => 0,
+					'rotateLambda' => 0,
+					'rotatePhi' => 0,
+					'rotateGamma' => 0,
+					'customScale' => 1
+				)
+			),
+			'divergingBar' => array(
+				'type' => 'object',
+				'default' => array(
+					'positiveCategories' => array(
+						
+					),
+					'negativeCategories' => array(
+						
+					),
+					'netPositiveCategory' => '',
+					'netNegativeCategory' => '',
+					'percentOfInnerWidth' => 0.7,
+					'neutralBar' => array(
+						'active' => true,
+						'category' => '',
+						'offsetX' => 0,
+						'separator' => true,
+						'separatorOffsetX' => -1
+					)
+				)
+			),
+			'diffColumn' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => false,
+					'category' => '',
+					'columnHeader' => 'Diff',
+					'dx' => 0,
+					'dy' => 0,
+					'style' => array(
+						'rectStrokeWidth' => 0,
+						'rectStrokeColor' => 'white',
+						'rectFill' => 'none',
+						'fontWeight' => 'normal',
+						'fontStyle' => 'normal',
+						'fontAppearance' => 'default',
+						'fontSize' => '10px',
+						'headerFontSize' => '12px',
+						'marginLeft' => 10,
+						'width' => 30,
+						'heightOffset' => 0
+					)
+				)
 			),
 			'annotations' => array(
-				'type' => 'array',
+				'type' => 'object',
 				'default' => array(
-					
+					'active' => false,
+					'activeOnMobile' => false,
+					'items' => array(
+						
+					)
 				)
 			),
-			'barLabelPosition' => array(
-				'type' => 'string',
-				'enum' => array(
-					'inside',
-					'outside',
-					'center'
-				),
-				'default' => 'inside'
-			),
-			'barLabelCutoff' => array(
-				'type' => 'number',
-				'default' => 10
-			),
-			'barLabelCutoffMobile' => array(
-				'type' => 'number',
-				'default' => 5
-			),
-			'barPadding' => array(
-				'type' => 'number',
-				'default' => 0.2
-			),
-			'barGroupPadding' => array(
-				'type' => 'number',
-				'default' => 0.2
-			),
-			'groupBreaksActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'groupBreaksCategory' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'groupBreaksCategoryValues' => array(
-				'type' => 'array',
+			'dataRender' => array(
+				'type' => 'object',
 				'default' => array(
-					
+					'x' => 'x',
+					'y' => 'y',
+					'sortKey' => 'x',
+					'sortOrder' => 'none',
+					'categories' => array(
+						
+					),
+					'xScale' => 'linear',
+					'yScale' => 'linear',
+					'xFormat' => null,
+					'yFormat' => null,
+					'numberFormat' => 'en-US',
+					'isHighlightedColor' => '#ECDBAC',
+					'mapScale' => 'threshold',
+					'mapScaleDomain' => array(
+						10,
+						20,
+						30,
+						40,
+						50
+					),
+					'groupBreaksActive' => false,
+					'groupBreaksCategory' => 'Continent',
+					'groupBreaksCategoryValues' => array(
+						
+					),
+					'groupBreaks' => array(
+						'breakStyles' => array(
+							'variation' => 'empty',
+							'stroke' => '#A4A4A4',
+							'strokeWidth' => 1.4,
+							'height' => 30,
+							'strokeDasharray' => 'none'
+						),
+						'labelStyles' => array(
+							'fill' => 'black',
+							'fontStyle' => 'normal'
+						)
+					)
 				)
 			),
-			'groupBreaksStyleVariation' => array(
-				'type' => 'string',
-				'enum' => array(
-					'empty',
-					'solid',
-					'dotted',
-					'dashed',
-					'heartbeat'
-				),
-				'default' => 'empty'
+			'animate' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => false,
+					'animationWhitelist' => array(
+						
+					),
+					'duration' => 2000
+				)
 			),
-			'groupBreaksHeight' => array(
-				'type' => 'number',
-				'default' => 30
+			'io' => array(
+				'type' => 'object',
+				'default' => array(
+					'isConvertedChart' => false,
+					'isStaticChart' => false,
+					'isFreeformChart' => false,
+					'staticImageId' => '',
+					'staticImageUrl' => '',
+					'staticImageInnerHTML' => '',
+					'staticImageAltText' => '',
+					'chartConverted' => array(
+						'converted' => false,
+						'requester' => '',
+						'timestamp' => ''
+					),
+					'defaultShouldRender' => true,
+					'pngUrl' => '',
+					'pngId' => '',
+					'colorValue' => 'general',
+					'customColors' => array(
+						
+					),
+					'chartFamily' => 'chart',
+					'chartData' => array(
+						
+					),
+					'tableData' => '',
+					'availableCategories' => array(
+						
+					),
+					'independentVariable' => '',
+					'hasPreformattedData' => false,
+					'preformattedData' => array(
+						
+					),
+					'questionWordingActive' => false,
+					'questionWording' => '',
+					'tabsActive' => false,
+					'allowDataDownload' => true,
+					'elementHasStroke' => false,
+					'isCustomChart' => false,
+					'customAttributes' => array(
+						
+					)
+				)
 			),
-			'groupBreaks' => array(
+			'_legacy' => array(
 				'type' => 'object',
 				'default' => array(
 					
 				)
 			),
-			'lineInterpolation' => array(
-				'type' => 'string',
-				'enum' => array(
-					'curveBasis',
-					'curveBasisClosed',
-					'curveBasisOpen',
-					'curveStep',
-					'curveStepAfter',
-					'curveStepBefore',
-					'curveBundle',
-					'curveLinear',
-					'curveLinearClosed',
-					'curveCardinal',
-					'curveCardinalClosed',
-					'curveCardinalOpen',
-					'curveCatmullRom',
-					'curveCatmullRomClosed',
-					'curveCatmullRomOpen',
-					'curveMonotoneX',
-					'curveMonotoneY',
-					'curveNatural'
-				),
-				'default' => 'curveLinear'
-			),
-			'lineStrokeWidth' => array(
-				'type' => 'integer',
-				'default' => 3
-			),
-			'lineStrokeDashArray' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'lineNodes' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'nodeSize' => array(
-				'type' => 'integer',
-				'default' => 3
-			),
-			'nodeFill' => array(
-				'type' => 'string',
-				'default' => 'inherit'
-			),
-			'nodeStrokeWidth' => array(
-				'type' => 'integer',
-				'default' => 3
-			),
-			'areaFillOpacity' => array(
-				'type' => 'number',
-				'default' => 0.4
-			),
-			'tooltipActive' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'tooltipActiveOnMobile' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'deemphasizeSiblings' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'deemphasizeOpacity' => array(
-				'type' => 'number',
-				'default' => 0.5
-			),
-			'emphasizeStrokeActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'emphasizeStrokeColor' => array(
-				'type' => 'string',
-				'default' => '#000000'
-			),
-			'emphasizeStrokeWidth' => array(
-				'type' => 'number',
-				'default' => 1
-			),
-			'tooltipMaxHeight' => array(
-				'type' => 'integer',
-				'default' => 100
-			),
-			'tooltipMaxWidth' => array(
-				'type' => 'integer',
-				'default' => 200
-			),
-			'tooltipMinHeight' => array(
-				'type' => 'integer',
-				'default' => 20
-			),
-			'tooltipMinWidth' => array(
-				'type' => 'integer',
-				'default' => 50
-			),
-			'tooltipFontSize' => array(
-				'type' => 'integer',
-				'default' => 13
-			),
-			'tooltipHeaderActive' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'tooltipHeaderValue' => array(
-				'type' => 'string',
-				'enum' => array(
-					'independentValue',
-					'categoryValue'
-				),
-				'default' => 'categoryValue'
-			),
-			'tooltipOffsetX' => array(
-				'type' => 'integer',
-				'default' => 10
-			),
-			'tooltipOffsetY' => array(
-				'type' => 'integer',
-				'default' => 10
-			),
-			'tooltipCaretPosition' => array(
-				'type' => 'string',
-				'enum' => array(
-					'top',
-					'bottom',
-					'left',
-					'right'
-				)
-			),
-			'tooltipFormat' => array(
-				'type' => 'string',
-				'default' => '{{row}}: {{value}}'
-			),
-			'tooltipFormatValue' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'tooltipAbsoluteValue' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'tooltipDateFormat' => array(
-				'type' => 'string',
-				'enum' => array(
-					'%Y',
-					'%B/%Y',
-					'%b/%Y',
-					'%-m/%Y',
-					'%-m/%y',
-					'%-m/%-d/%Y',
-					'%-d/%-m/%y',
-					'%B %d, %Y',
-					'%B %Y',
-					'%b %Y',
-					'%b %d, %Y',
-					'%d %b %Y',
-					'%d %b %y',
-					'%d %b',
-					'%d %B %Y',
-					'%d %B \'%y',
-					'%d %b \'%y',
-					'%b \'%y',
-					'\'%y',
-					'%d %B',
-					'%d %b, %Y'
-				),
-				'default' => '%Y'
-			),
-			'labelsActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'showFirstLastPointsOnly' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'labelPositionDX' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'labelPositionDY' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'labelCutoff' => array(
-				'type' => 'number',
-				'default' => 10
-			),
-			'labelAbsoluteValue' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'labelFormatValue' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'labelTruncateDecimal' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'labelToFixedDecimal' => array(
-				'type' => 'integer',
-				'default' => 3
-			),
-			'labelUnit' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'labelUnitPosition' => array(
-				'type' => 'string',
-				'enum' => array(
-					'start',
-					'end'
-				),
-				'default' => 'end'
-			),
-			'labelColor' => array(
-				'type' => 'string',
-				'enum' => array(
-					'contrast',
-					'inherit',
-					'black',
-					'white'
-				)
-			),
-			'labelFontSize' => array(
-				'type' => 'integer',
-				'default' => 10
-			),
-			'labelFontWeight' => array(
-				'type' => 'integer',
-				'default' => 200
-			),
-			'legendActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'legendCategories' => array(
-				'type' => 'array',
-				'default' => array(
-					
-				)
-			),
-			'legendOrientation' => array(
-				'type' => 'string',
-				'enum' => array(
-					'row',
-					'column',
-					'row-reverse',
-					'column-reverse'
-				),
-				'default' => 'row'
-			),
-			'legendTitle' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'legendAlignment' => array(
-				'type' => 'string',
-				'enum' => array(
-					'flex-start',
-					'center',
-					'flex-end',
-					'none'
-				),
-				'default' => 'center'
-			),
-			'legendOffsetX' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'legendOffsetY' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'legendMarkerStyle' => array(
-				'type' => 'string',
-				'enum' => array(
-					'circle',
-					'rect',
-					'line'
-				),
-				'default' => 'rect'
-			),
-			'legendBorderStroke' => array(
-				'type' => 'string'
-			),
-			'legendFill' => array(
-				'type' => 'string'
-			),
-			'legendFontSize' => array(
-				'type' => 'integer',
-				'default' => 12
-			),
-			'legendMargin' => array(
-				'type' => 'object',
-				'default' => array(
-					'top' => 0,
-					'right' => 5,
-					'bottom' => 0,
-					'left' => 0
-				)
-			),
-			'legendLabelDelimiter' => array(
-				'type' => 'string',
-				'default' => ' - '
-			),
-			'legendLabelLower' => array(
-				'type' => 'string',
-				'default' => 'Less than '
-			),
-			'legendLabelUpper' => array(
-				'type' => 'string',
-				'default' => 'More than '
-			),
-			'metaTextActive' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'metaTitle' => array(
-				'type' => 'string',
-				'default' => 'Title'
-			),
-			'metaSubtitle' => array(
-				'type' => 'string',
-				'default' => 'Subtitle'
-			),
-			'metaQuestionWordingActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'metaQuestionWording' => array(
-				'type' => 'string'
-			),
-			'metaNote' => array(
-				'type' => 'string',
-				'default' => 'Note: This is a note.'
-			),
-			'metaSource' => array(
-				'type' => 'string',
-				'default' => 'Source: This is your source.'
-			),
-			'metaTag' => array(
-				'type' => 'string',
-				'default' => 'PEW RESEARCH CENTER'
-			),
-			'metaAlt' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'svgUrl' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'svgId' => array(
-				'type' => 'integer'
-			),
-			'pngUrl' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'pngId' => array(
-				'type' => 'integer'
-			),
-			'independentVariable' => array(
-				'type' => 'string',
-				'default' => 'x'
-			),
-			'categories' => array(
-				'type' => 'array',
-				'default' => array(
-					
-				)
-			),
-			'positiveCategories' => array(
-				'type' => 'array',
-				'default' => array(
-					
-				)
-			),
-			'negativeCategories' => array(
-				'type' => 'array',
-				'default' => array(
-					
-				)
-			),
-			'neutralCategory' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'neutralBarActive' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'neutralBarOffsetX' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'neutralBarSeparator' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'neutralBarSeparatorOffsetX' => array(
-				'type' => 'integer',
-				'default' => -1
-			),
-			'divergingBarPercentOfInnerWidth' => array(
-				'type' => 'number',
-				'default' => 70
-			),
-			'dotPlotConnectPoints' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'dotPlotConnectPointsStroke' => array(
-				'type' => 'string',
-				'default' => '#E6E7E8'
-			),
-			'dotPlotConnectPointsStrokeWidth' => array(
-				'type' => 'integer',
-				'default' => 6
-			),
-			'dotPlotConnectPointsStrokeDasharray' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'explodedBarColumnGap' => array(
-				'type' => 'number',
-				'default' => 16
-			),
-			'availableCategories' => array(
-				'type' => 'array',
-				'default' => array(
-					'y'
-				)
-			),
-			'diffColumnActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'diffColumnCategory' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'diffColumnHeader' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'diffColumnWidth' => array(
-				'type' => 'integer',
-				'default' => 30
-			),
-			'diffColumnBackgroundColor' => array(
-				'type' => 'string',
-				'default' => ''
-			),
-			'diffColumnMarginLeft' => array(
-				'type' => 'integer',
-				'default' => 10
-			),
-			'diffColumnHeightOffset' => array(
-				'type' => 'integer',
-				'default' => 0
-			),
-			'diffColumnAppearance' => array(
-				'type' => 'string',
-				'default' => 'default'
-			),
-			'mapScale' => array(
-				'type' => 'string',
-				'enum' => array(
-					'threshold',
-					'ordinal',
-					'linear'
-				),
-				'default' => 'threshold'
-			),
-			'mapScaleDomain' => array(
-				'type' => 'array',
-				'default' => array(
-					10,
-					20,
-					30,
-					40,
-					50
-				)
-			),
-			'mapAbbreviateLabels' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'mapIgnoreSmallStateLabels' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'mapIgnoredLabels' => array(
-				'type' => 'array',
-				'default' => array(
-					
-				)
-			),
-			'showCountyBoundaries' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'mapShowStateBoundaries' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'mapPathBackgroundFill' => array(
-				'type' => 'string',
-				'default' => '#f7f7f7'
-			),
-			'mapPathStroke' => array(
-				'type' => 'string',
-				'default' => '#d3d3d3'
-			),
-			'mapBlockRectSize' => array(
-				'type' => 'integer',
-				'default' => 44
-			),
-			'mapProjectionPreset' => array(
-				'type' => 'string',
-				'enum' => array(
-					'default',
-					'europe',
-					'asia',
-					'east-asia',
-					'south-asia',
-					'southeast-asia',
-					'middle-east',
-					'africa',
-					'north-africa',
-					'sub-saharan-africa',
-					'north-america',
-					'central-america',
-					'south-america',
-					'oceania',
-					'custom'
-				),
-				'default' => 'default'
-			),
-			'mapTopologyRegion' => array(
-				'type' => 'string',
-				'enum' => array(
-					'default',
-					'europe',
-					'asia',
-					'east-asia',
-					'south-asia',
-					'southeast-asia',
-					'middle-east',
-					'africa',
-					'north-africa',
-					'sub-saharan-africa',
-					'north-america',
-					'central-america',
-					'south-america',
-					'oceania',
-					'custom'
-				),
-				'default' => 'default'
-			),
-			'mapCenterLongitude' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'mapCenterLatitude' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'mapRotateLambda' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'mapRotatePhi' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'mapRotateGamma' => array(
-				'type' => 'number',
-				'default' => 0
-			),
-			'mapCustomScale' => array(
-				'type' => 'number',
-				'default' => 1
-			),
-			'mapZoomActive' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'allowDataDownload' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'isCustomChart' => array(
-				'type' => 'boolean',
-				'default' => false
-			),
-			'customAttributes' => array(
+			'_v1Original' => array(
 				'type' => 'object',
 				'default' => array(
 					
 				)
 			),
-			'defaultShouldRender' => array(
-				'type' => 'boolean',
-				'default' => true
-			),
-			'lock' => array(
+			'_migrationMeta' => array(
 				'type' => 'object',
 				'default' => array(
-					'move' => true,
-					'remove' => false
+					'migratedAt' => '',
+					'migrationVersion' => '1.0.0',
+					'forceRemigrate' => false
 				)
 			)
 		),
 		'example' => array(
 			'attributes' => array(
-				'chartType' => 'bar',
-				'className' => 'is-style-bar'
+				'_version' => 'v2',
+				'layout' => array(
+					'type' => 'bar'
+				),
+				'metadata' => array(
+					'title' => 'Chart Title',
+					'subtitle' => 'Chart Subtitle',
+					'note' => 'Chart Note',
+					'source' => 'Chart Source'
+				),
+				'io' => array(
+					'chartData' => array(
+						array(
+							'x' => 'Category 1',
+							'y' => 100
+						),
+						array(
+							'x' => 'Category 2',
+							'y' => 200
+						)
+					)
+				)
 			)
 		),
 		'usesContext' => array(
 			'refId',
-			'prc-chart-builder/id'
+			'prc-chart-builder/id',
+			'prc-chart-builder/syncedTableData'
 		),
 		'supports' => array(
 			'html' => false,
 			'inserter' => false,
-			'interactivity' => true
+			'interactivity' => true,
+			'lock' => false
 		),
 		'editorScript' => 'file:./index.js',
 		'viewScriptModule' => 'file:./view.js'
@@ -1296,7 +673,6 @@ return array(
 		),
 		'example' => array(
 			'attributes' => array(
-				'chartType' => 'bar',
 				'className' => 'is-style-bar is-example'
 			)
 		),
@@ -1322,7 +698,7 @@ return array(
 		'name' => 'prc-chart-builder/synced-chart',
 		'title' => 'Synced Chart',
 		'category' => 'media',
-		'description' => 'Create, save, and sync charts to reuse across the site. Update the chart, and the changes apply everywhere it’s used.',
+		'description' => 'Create, save, and sync charts to reuse across the site. Update the chart, and the changes apply everywhere it\'s used.',
 		'textdomain' => 'default',
 		'attributes' => array(
 			'ref' => array(

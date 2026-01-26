@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const barTemplate = [
 	[
 		'prc-block/table',
@@ -40,34 +42,61 @@ const barTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
-			chartType: 'bar',
-			metaTitle: 'Bar Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-			chartOrientation: 'horizontal',
-			width: 420,
-			height: 160,
-			paddingLeft: 100,
-			xDomainPadding: 16,
-			xTickNum: null,
-			xTickLabelTextAnchor: 'end',
-			xTickLabelDX: -5,
-			yAxisActive: false,
-			barWidth: 24,
-			barGroupOffset: 28,
-			labelsActive: true,
-			labelPositionDY: 2,
-			labelColor: 'contrast',
-			sortOrder: 'descending',
-			tooltipHeaderValue: 'independentValue',
-			tooltipFormat: '{{column}}: {{value}}',
-			legendActive: true,
-			legendMarkerStyle: 'rect',
-		},
+		mergeWithDefaults({
+			_version: 'v2',
+			layout: {
+				type: 'bar',
+				orientation: 'horizontal',
+				width: 420,
+				height: 160,
+				padding: {
+					left: 100,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'Bar Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			independentAxis: {
+				tickCount: null,
+				domainPadding: 16,
+				tickLabels: {
+					textAnchor: 'end',
+					dx: -5,
+				},
+			},
+			dependentAxis: {
+				active: false,
+			},
+			tooltip: {
+				active: true,
+				headerValue: 'independentValue',
+				format: '{{column}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				labelPositionDY: 2,
+				color: 'contrast',
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			bar: {
+				barWidth: 24,
+				barGroupOffset: 28,
+			},
+			dataRender: {
+				sortOrder: 'descending',
+			},
+			io: {
+				isConvertedChart: false,
+			},
+		}),
 	],
 ];
 

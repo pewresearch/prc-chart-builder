@@ -23,6 +23,41 @@ class Chart {
 	}
 
 	/**
+	 * Merge viewport-specific overrides into base attributes
+	 *
+	 * @param array  $attributes The full block attributes object.
+	 * @param string $device_type Current device type ('mobile', 'tablet', or 'desktop').
+	 * @return array Merged attributes with viewport overrides applied.
+	 */
+	private function merge_viewport_attributes( $attributes, $device_type ) {
+		// Desktop uses base attributes only (no override).
+		if ( ! $device_type || 'desktop' === $device_type ) {
+			return $attributes;
+		}
+
+		// Get viewport-specific overrides.
+		$viewport_overrides = $attributes[ $device_type ] ?? array();
+
+		// If no overrides exist, return base attributes.
+		if ( empty( $viewport_overrides ) ) {
+			return $attributes;
+		}
+
+		// Deep merge: viewport overrides take precedence over base attributes.
+		$merged = $attributes;
+
+		// Merge each top-level attribute group that has overrides.
+		foreach ( $viewport_overrides as $attribute_group => $group_overrides ) {
+			if ( isset( $merged[ $attribute_group ] ) && is_array( $merged[ $attribute_group ] ) && is_array( $group_overrides ) ) {
+				// Deep merge the attribute group.
+				$merged[ $attribute_group ] = array_merge( $merged[ $attribute_group ], $group_overrides );
+			}
+		}
+
+		return $merged;
+	}
+
+	/**
 	 * Render block callback
 	 *
 	 * @param mixed $attributes Attributes.
@@ -35,26 +70,39 @@ class Chart {
 			return $content;
 		}
 
+		// Migrate v1 attributes to v2 if needed (server-side migration)
+		if ( ! isset( $attributes['_version'] ) || 'v2' !== $attributes['_version'] ) {
+			$attributes = \PRC\Platform\Chart_Builder\Block_Migration::migrate_attributes_v1_to_v2( $attributes );
+		}
+
+		// Detect current device type and merge viewport-specific overrides.
+		// Allow client-side viewport override via query param for responsive rehydration.
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only viewport hint, no state change.
+		$viewport_override = isset( $_GET['cb_viewport'] ) ? sanitize_key( $_GET['cb_viewport'] ) : null;
+		$device_type       = $viewport_override && in_array( $viewport_override, array( 'mobile', 'tablet', 'desktop' ), true )
+			? $viewport_override
+			: \PRC\Platform\get_current_device();
+		$attributes        = $this->merge_viewport_attributes( $attributes, $device_type );
+
 		// Prevent double rendering by tracking rendered blocks.
 		static $rendered_blocks = array();
 
-		$block_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes(
-			'prc-chart-builder/chart',
-			isset( $attributes ) ? $attributes : array()
-		);
+		// After migration and viewport merging, $attributes has ALL values (nested + flat for compatibility)
+		// No need for get_block_attributes() since migration sets all defaults
+		$block_attributes = $attributes;
 
 		// Conditionally load prc-custom-charts if the block has a customAttributes property.
-		if ( isset( $block_attributes['customAttributes'] ) && isset( $block_attributes['customAttributes']['chartType'] ) ) {
+		if ( isset( $block_attributes['io']['customAttributes'] ) && isset( $block_attributes['io']['customAttributes']['chartType'] ) ) {
 			wp_enqueue_script( 'prc-custom-charts' );
 		} else {
 			wp_enqueue_script( 'prc-charting-library' );
 		}
 
-		$block_id = $block_attributes['id'];
+		$block_id = $block_attributes['id'] ?? null;
 
 		// Handle missing ID for converted charts.
-		if ( false === $block_id || empty( $block_id ) ) {
-			$chart_converted = $block_attributes['chartConverted'] ?? null;
+		if ( null === $block_id || false === $block_id || empty( $block_id ) ) {
+			$chart_converted = $block_attributes['io']['chartConverted'] ?? null;
 
 			// If this is a converted chart without an ID, generate a unique one.
 			if ( $chart_converted && isset( $chart_converted['converted'] ) && $chart_converted['converted'] ) {
@@ -69,14 +117,14 @@ class Chart {
 		}
 
 		$target_namespace = array_key_exists( 'interactiveNamespace', $attributes ) ? $attributes['interactiveNamespace'] : 'prc-chart-builder/chart';
-		$svg_fallback     = $block_attributes['svgUrl'];
+		$svg_fallback     = $block_attributes['io']['svgUrl'] ?? '';
 
-		$chart_data            = $block_attributes['chartData'];
-		$is_static_chart       = $block_attributes['isStaticChart'];
-		$table_data            = $block_attributes['tableData'];
-		$has_preformatted_data = $block_attributes['hasPreformattedData'];
-		$preformatted_data     = $block_attributes['preformattedData'];
-		$should_render         = $block_attributes['defaultShouldRender'] ?? true;
+		$chart_data            = $block_attributes['io']['chartData'];
+		$is_static_chart       = $block_attributes['io']['isStaticChart'];
+		$table_data            = $block_attributes['io']['tableData'];
+		$has_preformatted_data = $block_attributes['io']['hasPreformattedData'];
+		$preformatted_data     = $block_attributes['io']['preformattedData'];
+		$should_render         = $block_attributes['io']['defaultShouldRender'] ?? true;
 
 		if ( $has_preformatted_data && $preformatted_data ) {
 			$chart_data = $preformatted_data;
@@ -98,23 +146,26 @@ class Chart {
 					'chart-hash'         => $block_id,
 					'iframe-height'      => null,
 					'should-render'      => $should_render,
-					'attributes'         => $block->attributes,
+					'attributes'         => $attributes, // ✅ Use migrated attributes, not $block->attributes
 					'isQuestionExpanded' => false,
+					'currentViewport'    => $device_type,
 				),
 			),
 		);
 
 		$block_attrs = array(
-			'id'                         => wp_unique_id( 'chart-block-' ),
-			'data-wp-key'                => $block_id,
-			'data-wp-interactive'        => $target_namespace,
-			'data-wp-context'            => wp_json_encode(
+			'id'                          => wp_unique_id( 'chart-block-' ),
+			'data-wp-key'                 => $block_id,
+			'data-wp-interactive'         => $target_namespace,
+			'data-wp-router-region'       => 'chart-' . $block_id,
+			'data-wp-context'             => wp_json_encode(
 				array(
 					'id' => $block_id,
 				)
 			),
-			'class'                      => 'wp-chart-builder-inner',
-			'data-wp-watch--init-render' => $is_static_chart ? null : 'callbacks.watchForRender',
+			'class'                       => 'wp-chart-builder-inner',
+			'data-wp-watch--init-render'  => $is_static_chart ? null : 'callbacks.watchForRender',
+			'data-wp-on-window--resize'   => 'callbacks.watchForResize',
 		);
 
 
@@ -130,27 +181,27 @@ class Chart {
 		if ( $is_static_chart ) {
 			$static_chart = wp_sprintf(
 				'<div id="%1$s">%2$s</div>',
-				$block_attributes['staticImageId'],
-				$block_attributes['staticImageInnerHTML']
+				$block_attributes['io']['staticImageId'],
+				$block_attributes['io']['staticImageInnerHTML']
 			);
 		}
 
 		// Scaffold chart text elements.
-		$meta_text_active = $block_attributes['metaTextActive'];
+		$meta_text_active = $block_attributes['metadata']['active'] ?? false;
 		if ( $meta_text_active ) {
-				$max_width = $block_attributes['width'] . 'px';
-			$top_rule      = $block_attributes['horizontalRules'] ? wp_sprintf(
+			$max_width = $block_attributes['layout']['width'] . 'px';
+			$top_rule      = $block_attributes['layout']['horizontalRules'] ? wp_sprintf(
 				'<hr class="cb__hr" style="margin: 0 0 10px; max-width:%1$s;" />',
 				$max_width
 			) : '';
-			$bottom_rule   = $block_attributes['horizontalRules'] ? wp_sprintf(
+			$bottom_rule   = $block_attributes['layout']['horizontalRules'] ? wp_sprintf(
 				'<hr class="cb__hr" style="margin: 10px 0 0; max-width:%1$s;" />',
 				$max_width
 			) : '';
 
 			// Build question wording section if active.
-			$meta_question_wording        = $block_attributes['metaQuestionWording'] ?? '';
-			$meta_question_wording_active = $block_attributes['metaQuestionWordingActive'] ?? false;
+			$meta_question_wording        = $block_attributes['io']['questionWording'] ?? '';
+			$meta_question_wording_active = $block_attributes['io']['questionWordingActive'] ?? false;
 			$question_wording_html        = '';
 
 			if ( $meta_question_wording_active ) {
@@ -190,13 +241,13 @@ class Chart {
 					wp_kses_post( $block_wrapper_attrs ),
 					esc_attr( $max_width ),
 					$top_rule, // phpcs:ignore
-					wp_kses_post( $block_attributes['metaTitle'] ),
-					wp_kses_post( $block_attributes['metaSubtitle'] ),
+					wp_kses_post( $block_attributes['metadata']['title'] ),
+					wp_kses_post( $block_attributes['metadata']['subtitle'] ),
 					$is_static_chart ? $static_chart : $chart, //phpcs:ignore
 					$question_wording_html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean.
-					wp_kses_post( $block_attributes['metaNote'] ),
-					wp_kses_post( $block_attributes['metaSource'] ),
-					wp_kses_post( $block_attributes['metaTag'] ),
+					wp_kses_post( $block_attributes['metadata']['note'] ),
+					wp_kses_post( $block_attributes['metadata']['source'] ),
+					wp_kses_post( $block_attributes['metadata']['tag'] ),
 					$bottom_rule // phpcs:ignore
 				);
 		} else {

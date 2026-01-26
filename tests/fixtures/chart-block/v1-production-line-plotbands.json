@@ -1,0 +1,20 @@
+{
+	"name": "v1-production-line-plotbands",
+	"description": "Real production line chart with plot bands and time scale - tests plotBands with complex styling",
+	"blockVersion": "v1",
+	"chartType": "line",
+	"featureTags": [
+		"line",
+		"plot-bands",
+		"time-scale",
+		"nodes",
+		"custom-styling",
+		"production"
+	],
+	"serializedContent": "<!-- wp:prc-chart-builder/chart {\"id\":\"dbd4186e-2809-4fd0-8f74-f0dbc56df7b4-chart\",\"chartData\":[{\"x\":\"2000\",\"U.S. adults\":\"52\"},{\"x\":\"2001\",\"U.S. adults\":\"55\"},{\"x\":\"2002\",\"U.S. adults\":\"59\"},{\"x\":\"2003\",\"U.S. adults\":\"61\"},{\"x\":\"2004\",\"U.S. adults\":\"63\"},{\"x\":\"2005\",\"U.S. adults\":\"68\"},{\"x\":\"2006\",\"U.S. adults\":\"71\"},{\"x\":\"2007\",\"U.S. adults\":\"74\"},{\"x\":\"2008\",\"U.S. adults\":\"74\"},{\"x\":\"2009\",\"U.S. adults\":\"76\"},{\"x\":\"2010\",\"U.S. adults\":\"76\"},{\"x\":\"2011\",\"U.S. adults\":\"79\"},{\"x\":\"2012\",\"U.S. adults\":\"83\"},{\"x\":\"2013\",\"U.S. adults\":\"84\"},{\"x\":\"2014\",\"U.S. adults\":\"84\"},{\"x\":\"2015\",\"U.S. adults\":\"86\"},{\"x\":\"2016\",\"U.S. adults\":\"88\"},{\"x\":\"2018\",\"U.S. adults\":\"89\"},{\"x\":\"2019\",\"U.S. adults\":\"90\"},{\"x\":\"2021\",\"U.S. adults\":\"93\"},{\"x\":\"2023\",\"U.S. adults\":\"95\"}],\"chartType\":\"line\",\"width\":420,\"height\":356,\"paddingLeft\":30,\"paddingBottom\":30,\"paddingRight\":20,\"sortOrder\":\"ascending\",\"xMinDomain\":2000,\"xMaxDomain\":2020,\"xTickMarksActive\":true,\"xTickLabelDY\":-5,\"xScale\":\"time\",\"showYMinDomainLabel\":true,\"yTickMarksActive\":true,\"yTickLabelTextAnchor\":\"end\",\"yTickLabelVerticalAnchor\":\"middle\",\"yTickLabelDX\":-5,\"plotBandsActive\":true,\"plotBands\":[{\"x\":[\"2022-01-01T14:02:00\",\"2022-01-22T14:03:00\"],\"y\":[0,100],\"label\":\"Change in survey mode\",\"style\":{\"band\":{\"stroke\":\"transparent\",\"fill\":\"#818181\",\"fillOpacity\":\"1\"},\"label\":{\"fontSize\":12,\"fill\":\"#818181\",\"orientation\":\"horizontal\",\"align\":\"bottom\",\"dx\":-128,\"dy\":76}}}],\"lineStrokeWidth\":4,\"nodeSize\":4,\"nodeFill\":\"white\",\"tooltipOffsetX\":30,\"tooltipOffsetY\":30,\"labelPositionDY\":-5,\"metaTitle\":\"Line Chart\",\"metaSubtitle\":\"A subtitle for the chart\",\"metaNote\":\"Note: Add note about the chart\",\"metaSource\":\"Source: Add source note here\",\"independentVariable\":\"Year\",\"availableCategories\":[\"U.S. adults\"]} /-->\n<div class=\"wp-block-prc-chart-builder-chart\"></div>\n<!-- /wp:prc-chart-builder/chart -->",
+	"expectedMigratedAttributes": {
+		"_version": "v2",
+		"chartType": "line",
+		"chartOrientation": "horizontal"
+	}
+}

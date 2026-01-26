@@ -1,3 +1,5 @@
+import { mergeWithDefaults } from './helpers';
+
 const stackedBarTemplate = [
 	[
 		'prc-block/table',
@@ -44,36 +46,67 @@ const stackedBarTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
+		mergeWithDefaults({
+			_version: 'v2',
 			chartType: 'stacked-bar',
 			chartOrientation: 'horizontal',
-			metaTitle: 'Stacked Bar Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-
-			width: 420,
-			height: 160,
-			paddingLeft: 100,
-			sortOrder: 'reverse',
-			colorValue: 'social-trends-main',
-			xDomainPadding: 16,
-			xTickLabelTextAnchor: 'end',
-			xTickLabelDX: -5,
-			yAxisActive: false,
-			barWidth: 24,
-			barGroupOffset: 28,
-			barLabelPosition: 'center',
-			labelColor: 'contrast',
-			labelsActive: true,
-			labelPositionDY: 2,
-			tooltipHeaderValue: 'independentValue',
-			tooltipFormat: '{{column}}: {{value}}',
-			legendActive: true,
-			legendMarkerStyle: 'rect',
-		},
+			layout: {
+				type: 'stacked-bar',
+				orientation: 'horizontal',
+				width: 420,
+				height: 160,
+				padding: {
+					left: 100,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'Stacked Bar Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'social-trends-main',
+			},
+			independentAxis: {
+				domainPadding: 16,
+				tickLabels: {
+					textAnchor: 'end',
+					dx: -5,
+				},
+			},
+			dependentAxis: {
+				active: false,
+			},
+			tooltip: {
+				active: true,
+				headerValue: 'independentValue',
+				format: '{{column}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				color: 'contrast',
+				labelPositionDY: 2,
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			bar: {
+				barWidth: 24,
+				barGroupOffset: 28,
+				labelPosition: 'center',
+			},
+			dataRender: {
+				sortOrder: 'reverse',
+			},
+			io: {
+				isConvertedChart: false,
+				colorValue: 'social-trends-main',
+			},
+		}),
 	],
 ];
 

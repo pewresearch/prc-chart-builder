@@ -123,7 +123,6 @@ class Block_Migration {
 		$resume_offset = get_option( 'prc_chart_builder_migration_offset', 0 );
 		if ( $resume_offset > 0 && $args['offset'] === 0 ) {
 			$paged = floor( $resume_offset / $args['posts_per_page'] ) + 1;
-			error_log( sprintf( 'PRC Chart Builder: Resuming migration from page %d (offset %d)', $paged, $resume_offset ) );
 		} else {
 			$paged = 1;
 		}
@@ -174,22 +173,13 @@ class Block_Migration {
 							array( '%d' )
 						);
 
-						if ( false !== $result ) {
-							$batch_migrated++;
-							$migrated_posts++;
+					if ( false !== $result ) {
+						$batch_migrated++;
+						$migrated_posts++;
 
-							// Clear any caches for this post.
-							clean_post_cache( $post->ID );
-
-							// Log the migration.
-							error_log(
-								sprintf(
-									'PRC Chart Builder: Migrated block names in post ID %d (%s)',
-									$post->ID,
-									$post->post_type
-								)
-							);
-						}
+						// Clear any caches for this post.
+						clean_post_cache( $post->ID );
+					}
 					} else {
 						// Dry run - just count what would be migrated.
 						$batch_migrated++;
@@ -204,20 +194,8 @@ class Block_Migration {
 			$paged++;
 			update_option( 'prc_chart_builder_migration_offset', ($paged - 1) * $args['posts_per_page'] );
 
-			// Log batch progress.
-			error_log(
-				sprintf(
-					'PRC Chart Builder: Batch %d completed. %d posts processed, %d migrated. Total processed: %d',
-					$batch_count,
-					count( $posts ),
-					$batch_migrated,
-					$total_processed
-				)
-			);
-
 			// Pause between batches for cache re-validation and data replication.
 			if ( count( $posts ) === $args['posts_per_page'] ) {
-				error_log( 'PRC Chart Builder: Pausing between batches...' );
 				sleep( 3 );
 			}
 
@@ -228,7 +206,6 @@ class Block_Migration {
 
 			// Check if we've hit our limit.
 			if ( $args['limit'] > 0 && $total_processed >= $args['limit'] ) {
-				error_log( sprintf( 'PRC Chart Builder: Reached processing limit of %d posts', $args['limit'] ) );
 				break;
 			}
 
@@ -265,17 +242,6 @@ class Block_Migration {
 				'current_offset'    => $args['offset'],
 				'dry_run'           => $args['dry_run'],
 				'timestamp'         => current_time( 'mysql' ),
-			)
-		);
-
-		// Log completion.
-		error_log(
-			sprintf(
-				'PRC Chart Builder: Block migration batch completed. %d posts migrated, %d meta entries migrated, %d total processed in %d batches.',
-				$migrated_posts,
-				$meta_results,
-				$total_processed,
-				$batch_count
 			)
 		);
 
@@ -493,9 +459,6 @@ class Block_Migration {
 		delete_option( 'prc_chart_builder_block_migration_status' );
 		delete_option( 'prc_chart_builder_block_migration_stats' );
 
-		// Log the reset.
-		error_log( 'PRC Chart Builder: Migration status reset, ready for re-run.' );
-
 		return true;
 	}
 
@@ -610,16 +573,6 @@ class Block_Migration {
 
 				// Clear any caches for this post.
 				clean_post_cache( $post->ID );
-
-				// Log the migration.
-				error_log(
-					sprintf(
-						'PRC Chart Builder: Migrated block names in single post ID %d (%s) - "%s"',
-						$post->ID,
-						$post->post_type,
-						$post->post_title
-					)
-				);
 			} else {
 				$result['error'] = 'Failed to update post content in database';
 			}
@@ -629,6 +582,721 @@ class Block_Migration {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Migrate chart block attributes from v1 (flat) to v2 (nested) structure.
+	 *
+	 * This migration mirrors the JavaScript migration in src/chart/deprecations/v1.js
+	 * to ensure consistent behavior on both frontend and in the editor.
+	 *
+	 * Uses _version flag as cache: v2 blocks skip migration entirely.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 flat attributes.
+	 * @return array The v2 nested attributes.
+	 */
+	public static function migrate_attributes_v1_to_v2( $attributes ) {
+		// Use isset() instead of !empty() because _v1Original might be an empty array
+		$has_v1_original = isset( $attributes['_v1Original'] );
+
+		// Early return if already migrated and no re-migration needed
+		if ( ! $has_v1_original && isset( $attributes['_version'] ) && 'v2' === $attributes['_version'] ) {
+			return $attributes;
+		}
+
+		// WordPress object cache to prevent double migration in same request
+		// (e.g., when controller and chart block both migrate same attributes)
+		// Uses 'prc-chart-migration' group for request-scoped caching
+		if ( ! $has_v1_original ) {
+			$cache_key = 'v1_to_v2_' . md5( wp_json_encode( $attributes ) );
+			$cached = wp_cache_get( $cache_key, 'prc-chart-migration' );
+
+			if ( false !== $cached ) {
+				return $cached;
+			}
+		}
+
+		try {
+
+			// Preserve original v1 attributes for testing/comparison
+			// Only preserve if not already preserved (to avoid nested copies on re-migration)
+			$v1_original = isset( $attributes['_v1Original'] ) ? $attributes['_v1Original'] : $attributes;
+
+			// Remove migration metadata from original snapshot to avoid recursion
+			unset( $v1_original['_v1Original'] );
+			unset( $v1_original['_migrationMeta'] );
+			unset( $v1_original['_legacy'] );
+
+			// Prepare values for migration
+			$layout_padding = array(
+				'top'    => $attributes['paddingTop'] ?? 20,
+				'right'  => $attributes['paddingRight'] ?? 0,
+				'bottom' => $attributes['paddingBottom'] ?? 25,
+				'left'   => $attributes['paddingLeft'] ?? 60,
+			);
+			$metadata_active = $attributes['metaTextActive'] ?? true;
+
+			$migrated = array(
+				'_version' => 'v2',
+
+				// Preserve original v1 attributes for testing/comparison
+				'_v1Original' => $v1_original,
+
+				// Track migration metadata
+			'_migrationMeta' => array(
+				'migratedAt'      => gmdate( 'c' ), // ISO 8601 format
+				'migrationVersion' => '1.0.0',
+				'forceRemigrate'  => false, // Reset flag after migration
+			),
+
+			'id' => $attributes['id'] ?? '',
+
+			// Layout object
+			'layout' => array(
+				'name'             => 'wp-block-prc-block-chart-builder-controller',
+				'parentClass'      => $attributes['parentClass'] ?? 'wp-chart-builder-wrapper',
+				'type'             => $attributes['chartType'] ?? 'bar',
+				'orientation'      => $attributes['chartOrientation'] ?? 'horizontal', // Match block.json default
+				'width'            => $attributes['width'] ?? 640,
+				'height'           => $attributes['height'] ?? 400,
+				'padding'          => $layout_padding,
+				'overflowX'        => $attributes['overflowX'] ?? 'responsive',
+				'horizontalRules'  => $attributes['horizontalRules'] ?? true,
+			'mobileBreakpoint' => $attributes['mobileBreakpoint'] ?? 480,
+		),
+
+		// Metadata object
+			'metadata' => array(
+					'active'   => $metadata_active,
+					'title'    => $attributes['metaTitle'] ?? 'Title',
+					'subtitle' => $attributes['metaSubtitle'] ?? 'Subtitle',
+					'note'     => $attributes['metaNote'] ?? 'Note: This is a note.',
+					'source'   => $attributes['metaSource'] ?? 'Source: This is your source.',
+					'tag'      => $attributes['metaTag'] ?? 'PEW RESEARCH CENTER',
+					'alt'      => $attributes['metaAlt'] ?? '',
+				),
+
+				// Colors array
+				'colors' => ( isset( $attributes['customColors'] ) && is_array( $attributes['customColors'] ) && count( $attributes['customColors'] ) > 0 )
+					? $attributes['customColors']
+					: array( '#436983', '#bf3927', '#756a7e', '#ea9e2c', '#bc7b2b', '#eeece4' ),
+
+				// Plot bands object
+				'plotBands' => array(
+					'active'      => $attributes['plotBandsActive'] ?? false,
+					'allowDrag'   => false,
+					'allowResize' => false,
+					'dimension'   => 'x',
+					'bands'       => $attributes['plotBands'] ?? array(),
+				),
+
+				// Independent axis (X-axis)
+				'independentAxis' => self::migrate_independent_axis( $attributes ),
+
+				// Dependent axis (Y-axis)
+				'dependentAxis' => self::migrate_dependent_axis( $attributes ),
+
+				// Tooltip object
+				'tooltip' => self::migrate_tooltip( $attributes ),
+
+				// Legend object
+				'legend' => self::migrate_legend( $attributes ),
+
+				// Labels object
+				'labels' => self::migrate_labels( $attributes ),
+
+				// Bar object
+				'bar' => array(
+					'barPadding'      => $attributes['barPadding'] ?? 0.2,
+					'barGroupPadding' => $attributes['barGroupPadding'] ?? 0.2,
+					'hasRectStroke'   => $attributes['elementHasStroke'] ?? false,
+					'stackOffset'     => 'none',
+				),
+
+				// Line object
+				'line' => array(
+					'interpolation'   => $attributes['lineInterpolation'] ?? 'curveLinear',
+					'strokeWidth'     => $attributes['lineStrokeWidth'] ?? 3,
+					'strokeDasharray' => $attributes['lineStrokeDashArray'] ?? '',
+					'showPoints'      => $attributes['lineNodes'] ?? true,
+					'showArea'        => ( isset( $attributes['chartType'] ) && 'area' === $attributes['chartType'] ),
+					'areaFillOpacity' => $attributes['areaFillOpacity'] ?? 0.4,
+				),
+
+				// Dot plot object
+				'dotPlot' => array(
+					'connectPoints'   => $attributes['dotPlotConnectPoints'] ?? true,
+					'connectingLine'  => array(
+						'stroke'          => $attributes['dotPlotConnectPointsStroke'] ?? '#E6E7E8',
+						'strokeWidth'     => $attributes['dotPlotConnectPointsStrokeWidth'] ?? 6,
+						'strokeDasharray' => $attributes['dotPlotConnectPointsStrokeDasharray'] ?? '',
+						'strokeOpacity'   => 1,
+					),
+				),
+
+				// Exploded bar object
+				'explodedBar' => array(
+					'columnGap' => $attributes['explodedBarColumnGap'] ?? 16,
+				),
+
+				// Pie object
+				'pie' => array(
+					'hasPathStroke'      => $attributes['elementHasStroke'] ?? false,
+					'pathStrokeColor'    => 'white',
+					'pathStrokeWidth'    => 1,
+					'showCategoryLabels' => $attributes['pieCategoryLabelsActive'] ?? true,
+					'innerRadius'        => 0,
+					'padAngle'           => 0,
+					'cornerRadius'       => 0,
+					'sortByValue'        => false,
+				),
+
+				// Nodes object
+				'nodes' => array(
+					'pointSize'        => $attributes['nodeSize'] ?? 3,
+					'pointFill'        => $attributes['nodeFill'] ?? 'inherit',
+					'pointStrokeWidth' => $attributes['nodeStrokeWidth'] ?? 3,
+					'pointShape'       => 'circle',
+				),
+
+				// Map object
+				'map' => self::migrate_map( $attributes ),
+
+				// Diverging bar object
+				'divergingBar' => self::migrate_diverging_bar( $attributes ),
+
+				// Diff column object
+				'diffColumn' => self::migrate_diff_column( $attributes ),
+
+				// Annotations object
+				'annotations' => array(
+					'active'         => $attributes['annotationsActive'] ?? false,
+					'activeOnMobile' => true,
+					'items'          => $attributes['annotations'] ?? array(),
+				),
+
+				// Data render object
+				'dataRender' => self::migrate_data_render( $attributes ),
+
+				// Animate object
+				'animate' => array(
+					'active'              => false,
+					'animationWhitelist'  => array(),
+					'duration'            => 2000,
+				),
+
+				// IO object (WordPress-specific)
+				'io' => self::migrate_io( $attributes ),
+
+				// Legacy object for unmapped attributes
+				'_legacy' => array(),
+			);
+
+			// Cache successful migration using WordPress object cache
+			// Request-scoped: prevents double migration when controller and chart block both migrate
+			if ( ! $has_v1_original ) {
+				$cache_key = 'v1_to_v2_' . md5( wp_json_encode( $attributes ) );
+				wp_cache_set( $cache_key, $migrated, 'prc-chart-migration', 0 );
+			}
+
+			return $migrated;
+
+		} catch ( \Exception $e ) {
+			// Show admin notice if user can see it
+			if ( current_user_can( 'manage_options' ) ) {
+				add_action(
+					'admin_notices',
+					function() use ( $e ) {
+						echo '<div class="notice notice-warning"><p>';
+						echo '<strong>Chart Block Migration Warning:</strong> ';
+						echo esc_html( $e->getMessage() );
+						echo '</p></div>';
+					}
+				);
+			}
+
+			// Return original attributes as fallback
+			return $attributes;
+		}
+	}
+
+	/**
+	 * Migrate independent axis (X-axis) attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated independentAxis object.
+	 */
+	private static function migrate_independent_axis( $attributes ) {
+		$tick_marks_active = ( $attributes['xTickMarksActive'] ?? false ) ? true : false;
+		$padding = $attributes['xLabelPadding'] ?? 30;
+		$date_format = $attributes['xDateFormat'] ?? '%Y';
+		$show_zero = $attributes['showXMinDomainLabel'] ?? true;
+
+		return array(
+			'active'              => $attributes['xAxisActive'] ?? true,
+			'label'               => $attributes['xLabel'] ?? '',
+			'scale'               => $attributes['xScale'] ?? 'linear',
+			'dateFormat'          => $date_format,
+			'domain'              => array(
+				$attributes['xMinDomain'] ?? 0,
+				$attributes['xMaxDomain'] ?? 100,
+			),
+			'domainPadding'       => 20,
+			'showZero'            => $show_zero,
+			'padding'             => $padding,
+			'tickMarksActive'     => $tick_marks_active,
+			'tickAngle'           => $attributes['xTickLabelAngle'] ?? 0,
+			'tickCount'           => $attributes['xTickNum'] ?? 5,
+			'tickValues'          => self::parse_tick_values( $attributes['xTickExact'] ?? null ),
+			'tickFormat'          => null,
+			'ticksToLocaleString' => $attributes['xTicksToLocaleString'] ?? false,
+			'abbreviateTicks'     => $attributes['xAbbreviateTicks'] ?? false,
+			'abbreviateTicksDecimals' => $attributes['xAbbreviateTicksDecimals'] ?? 0,
+			'tickUnit'            => $attributes['xTickUnit'] ?? '',
+			'tickUnitPosition'    => $attributes['xTickUnitPosition'] ?? 'end',
+			'tickLabels'          => array(
+				'fontSize'        => $attributes['xLabelFontSize'] ?? 12,
+				'padding'         => 0,
+				'angle'           => $attributes['xTickLabelAngle'] ?? 0,
+				'dx'              => $attributes['xTickLabelDX'] ?? 0,
+				'dy'              => $attributes['xTickLabelDY'] ?? 0,
+				'textAnchor'      => $attributes['xTickLabelTextAnchor'] ?? 'middle',
+				'verticalAnchor'  => $attributes['xTickLabelVerticalAnchor'] ?? 'end',
+				'fill'            => $attributes['xLabelTextFill'] ?? '#231F20',
+				'fontFamily'      => "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+				'maxWidth'        => $attributes['xTickLabelMaxWidth'] ?? 50,
+			),
+			'axisLabel'           => array(
+				'fontSize'        => $attributes['xLabelFontSize'] ?? 12,
+				'fill'            => $attributes['xLabelTextFill'] ?? '#231F20',
+				'padding'         => 15,
+				'angle'           => 0,
+				'dx'              => 0,
+				'dy'              => 0,
+				'textAnchor'      => 'end',
+				'verticalAnchor'  => 'middle',
+				'fontFamily'      => "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+				'maxWidth'        => $attributes['xLabelMaxWidth'] ?? 100,
+			),
+			'axis'                => array(
+				'stroke'      => $attributes['xAxisStroke'] ?? '#756f6a',
+				'strokeWidth' => 1,
+			),
+			'ticks'               => array(
+				'stroke'      => $attributes['xAxisStroke'] ?? '#756f6a',
+				'size'        => $tick_marks_active ? 5 : 0,
+				'strokeWidth' => 0, // Match block.json default
+			),
+			'grid'                => array(
+				// Use empty string as default (old flat default was "")
+				'stroke'          => $attributes['xGridStroke'] ?? '',
+				'strokeOpacity'   => $attributes['xGridOpacity'] ?? 0.2,
+				'strokeWidth'     => 2, // Match block.json default
+				'strokeDasharray' => $attributes['xGridStrokeDasharray'] ?? '',
+			),
+		);
+	}
+
+	/**
+	 * Migrate dependent axis (Y-axis) attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated dependentAxis object.
+	 */
+	private static function migrate_dependent_axis( $attributes ) {
+		$grid_opacity = $attributes['yGridOpacity'] ?? 0.2;
+		$axis_stroke = $attributes['yAxisStroke'] ?? '';
+
+		return array(
+			'active'              => $attributes['yAxisActive'] ?? true,
+			'label'               => $attributes['yLabel'] ?? '',
+			'scale'               => $attributes['yScale'] ?? 'linear',
+			'domain'              => array(
+				$attributes['yMinDomain'] ?? 0,
+				$attributes['yMaxDomain'] ?? 100,
+			),
+			'showZero'            => $attributes['showYMinDomainLabel'] ?? false,
+			'tickMarksActive'     => $attributes['yTickMarksActive'] ?? true,
+			'tickCount'           => $attributes['yTickNum'] ?? 5,
+			'tickValues'          => self::parse_tick_values( $attributes['yTickExact'] ?? null ),
+			'tickFormat'          => null,
+			'tickAngle'           => $attributes['yTickLabelAngle'] ?? 0,
+			'ticksToLocaleString' => $attributes['yTicksToLocaleString'] ?? false,
+			'abbreviateTicks'     => $attributes['yAbbreviateTicks'] ?? true,
+			'abbreviateTicksDecimals' => $attributes['yAbbreviateTicksDecimals'] ?? 0,
+			'tickUnit'            => $attributes['yTickUnit'] ?? '',
+			'tickUnitPosition'    => $attributes['yTickUnitPosition'] ?? 'end',
+			'tickLabels'          => array(
+				'fontSize'        => $attributes['yLabelFontSize'] ?? 12,
+				'padding'         => 15,
+				'angle'           => $attributes['yTickLabelAngle'] ?? 0,
+				'dx'              => $attributes['yTickLabelDX'] ?? 0,
+				'dy'              => $attributes['yTickLabelDY'] ?? 0,
+				'textAnchor'      => $attributes['yTickLabelTextAnchor'] ?? 'end',
+				'verticalAnchor'  => $attributes['yTickLabelVerticalAnchor'] ?? 'middle',
+				'fill'            => $attributes['yLabelTextFill'] ?? 'rgba(35, 31, 32, 0.7)',
+				'fontFamily'      => "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+				'maxWidth'        => $attributes['yTickLabelMaxWidth'] ?? 50,
+			),
+			'axisLabel'           => array(
+				'fontSize'        => $attributes['yLabelFontSize'] ?? 12,
+				'fill'            => $attributes['yLabelTextFill'] ?? 'rgba(35, 31, 32, 0.7)',
+				'padding'         => $attributes['yLabelPadding'] ?? 30,
+				'angle'           => 270,
+				'dx'              => 0,
+				'dy'              => 0,
+				'textAnchor'      => 'middle',
+				'verticalAnchor'  => 'middle',
+				'fontFamily'      => "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+				'maxWidth'        => $attributes['yLabelMaxWidth'] ?? 200,
+			),
+			'axis'                => array(
+				'stroke'      => $axis_stroke,
+				'strokeWidth' => 1,
+			),
+			'ticks'               => array(
+				'stroke'      => $axis_stroke,
+				'size'        => ( $attributes['yTickMarksActive'] ?? true ) ? 5 : 0, // Default to true if not set (match block.json default)
+				'strokeWidth' => 0, // Match block.json default
+			),
+			'grid'                => array(
+				// Use empty string as default (old flat default was "")
+				'stroke'          => $attributes['yGridStroke'] ?? '',
+				'strokeOpacity'   => $grid_opacity,
+				'strokeWidth'     => 1,
+				'strokeDasharray' => $attributes['yGridStrokeDasharray'] ?? '',
+			),
+		);
+	}
+
+	/**
+	 * Parse tick values string or array into array.
+	 * Mirrors JavaScript parseTickValues function in v1.js
+	 *
+	 * @since 3.1.0
+	 * @param mixed $tick_input Comma-separated string or array of tick values.
+	 * @return array|null Array of tick values or null.
+	 */
+	private static function parse_tick_values( $tick_input ) {
+		// Handle null/undefined
+		if ( empty( $tick_input ) ) {
+			return null;
+		}
+
+		// If already an array, return it
+		if ( is_array( $tick_input ) ) {
+			return count( $tick_input ) > 0 ? $tick_input : null;
+		}
+
+		// If it's a string, parse it
+		if ( is_string( $tick_input ) ) {
+			$trimmed = trim( $tick_input );
+			if ( '' === $trimmed ) {
+				return null;
+			}
+
+			// Split by comma and process each value
+			$values = array_map( 'trim', explode( ',', $trimmed ) );
+			$values = array_filter(
+				$values,
+				function( $v ) {
+					return strlen( $v ) > 0;
+				}
+			);
+
+			// Try to convert to numbers
+			$values = array_map(
+				function( $v ) {
+					if ( is_numeric( $v ) ) {
+						return strpos( $v, '.' ) !== false ? (float) $v : (int) $v;
+					}
+					return $v;
+				},
+				$values
+			);
+
+			return count( $values ) > 0 ? array_values( $values ) : null;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Migrate tooltip attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated tooltip object.
+	 */
+	private static function migrate_tooltip( $attributes ) {
+		$font_size = isset( $attributes['tooltipFontSize'] ) ? $attributes['tooltipFontSize'] . 'px' : '13px';
+
+		return array(
+			'active'                => $attributes['tooltipActive'] ?? true,
+			'activeOnMobile'        => $attributes['tooltipActiveOnMobile'] ?? true,
+			'headerActive'          => $attributes['tooltipHeaderActive'] ?? true,
+			'headerValue'           => $attributes['tooltipHeaderValue'] ?? 'independentValue',
+			'format'                => $attributes['tooltipFormat'] ?? '{{row}}: {{value}}',
+			'offsetX'               => $attributes['tooltipOffsetX'] ?? 10,
+			'offsetY'               => $attributes['tooltipOffsetY'] ?? 10,
+			'abbreviateValue'       => false,
+			'absoluteValue'         => $attributes['tooltipAbsoluteValue'] ?? false,
+			'toFixedDecimal'        => 0,
+			'toLocaleString'        => $attributes['tooltipFormatValue'] ?? true,
+			'customFormat'          => null,
+			'rlsFormat'             => false,
+			'dateFormat'            => $attributes['tooltipDateFormat'] ?? '%-m/%Y',
+			'caretPosition'         => $attributes['tooltipCaretPosition'] ?? null, // No default - let charting library decide
+			'deemphasizeSiblings'   => $attributes['deemphasizeSiblings'] ?? false,
+			'deemphasizeOpacity'    => $attributes['deemphasizeOpacity'] ?? 0.5,
+			'emphasizeStrokeActive' => $attributes['emphasizeStrokeActive'] ?? false,
+			'emphasizeStrokeColor'  => $attributes['emphasizeStrokeColor'] ?? 'black',
+			'emphasizeStrokeWidth'  => $attributes['emphasizeStrokeWidth'] ?? 1,
+			'style'                 => array(
+				'minWidth'     => $attributes['tooltipMinWidth'] ?? 50,
+				'maxWidth'     => $attributes['tooltipMaxWidth'] ?? 150,
+				'maxHeight'    => $attributes['tooltipMaxHeight'] ?? 400,
+				'minHeight'    => $attributes['tooltipMinHeight'] ?? 20,
+				'width'        => 'auto',
+				'height'       => 'auto',
+				'fontSize'     => $font_size,
+				'fontFamily'   => "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+				'background'   => 'white',
+				'border'       => '1px solid #CBCBCB',
+				'padding'      => '10px',
+				'borderRadius' => '0px',
+				'color'        => 'black',
+			),
+		);
+	}
+
+	/**
+	 * Migrate legend attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated legend object.
+	 */
+	private static function migrate_legend( $attributes ) {
+		return array(
+			'active'         => $attributes['legendActive'] ?? false,
+			'orientation'    => $attributes['legendOrientation'] ?? 'row',
+			'title'          => $attributes['legendTitle'] ?? '',
+			'alignment'      => $attributes['legendAlignment'] ?? 'center',
+			'offsetX'        => $attributes['legendOffsetX'] ?? 0,
+			'offsetY'        => $attributes['legendOffsetY'] ?? 0,
+			'markerStyle'    => $attributes['legendMarkerStyle'] ?? 'rect',
+			'borderStroke'   => $attributes['legendBorderStroke'] ?? null, // No default - let charting library decide
+			'fill'           => $attributes['legendFill'] ?? null, // No default - let charting library decide
+			'categories'     => $attributes['legendCategories'] ?? array(),
+			'labelDelimiter' => $attributes['legendLabelDelimiter'] ?? 'to',
+			'labelLower'     => $attributes['legendLabelLower'] ?? 'Less than ',
+			'labelUpper'     => $attributes['legendLabelUpper'] ?? 'More than ',
+			'fontSize'       => $attributes['legendFontSize'] ?? 12,
+			'margin'         => $attributes['legendMargin'] ?? array(
+				'top'    => 0,
+				'right'  => 5,
+				'bottom' => 0,
+				'left'   => 0,
+			),
+		);
+	}
+
+	/**
+	 * Migrate labels attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated labels object.
+	 */
+	private static function migrate_labels( $attributes ) {
+			return array(
+			'active'                   => $attributes['labelsActive'] ?? false,
+			'showFirstLastPointsOnly'  => $attributes['showFirstLastPointsOnly'] ?? false,
+			'color'                    => $attributes['labelColor'] ?? null, // No default - let charting library decide
+			'fontWeight'               => $attributes['labelFontWeight'] ?? 200,
+			'fontSize'                 => $attributes['labelFontSize'] ?? 12,
+			'fontFamily'               => "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+			'labelPositionBar'         => $attributes['barLabelPosition'] ?? 'inside',
+			'labelCutoff'              => $attributes['barLabelCutoff'] ?? 5,
+			'labelCutoffMobile'        => $attributes['barLabelCutoffMobile'] ?? 10,
+			'labelPositionDX'          => $attributes['labelPositionDX'] ?? 0,
+			'labelPositionDY'          => $attributes['labelPositionDY'] ?? 0,
+			'pieLabelRadius'           => 60,
+			'abbreviateValue'          => false,
+			'absoluteValue'            => $attributes['labelAbsoluteValue'] ?? false,
+			'toLocaleString'           => $attributes['labelFormatValue'] ?? true,
+			'truncateDecimal'          => $attributes['labelTruncateDecimal'] ?? true,
+			'toFixedDecimal'           => $attributes['labelToFixedDecimal'] ?? 0,
+			'labelUnit'                => $attributes['labelUnit'] ?? '',
+			'labelUnitPosition'        => $attributes['labelUnitPosition'] ?? 'end',
+			'textAnchor'               => 'middle',
+			'customLabelFormat'        => null,
+		);
+	}
+
+	/**
+	 * Migrate map attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated map object.
+	 */
+	private static function migrate_map( $attributes ) {
+		return array(
+			'ignoreSmallStateLabels' => $attributes['mapIgnoreSmallStateLabels'] ?? true,
+			'ignoredLabels'          => $attributes['mapIgnoredLabels'] ?? array(),
+			'abbreviateLabels'       => $attributes['mapAbbreviateLabels'] ?? true,
+			'pathBackgroundFill'     => $attributes['mapPathBackgroundFill'] ?? '#f7f7f7',
+			'pathStroke'             => $attributes['mapPathStroke'] ?? '#d3d3d3',
+			'pathStrokeWidth'        => 0.5,
+			'blockRectSize'          => $attributes['mapBlockRectSize'] ?? 44,
+			'showCountyBoundaries'   => $attributes['showCountyBoundaries'] ?? true,
+			'showStateBoundaries'    => $attributes['mapShowStateBoundaries'] ?? true,
+			'projectionPreset'       => $attributes['mapProjectionPreset'] ?? 'default',
+			'topologyRegion'         => $attributes['mapTopologyRegion'] ?? 'default',
+			'centerLongitude'        => $attributes['mapCenterLongitude'] ?? 0,
+			'centerLatitude'         => $attributes['mapCenterLatitude'] ?? 0,
+			'rotateLambda'           => $attributes['mapRotateLambda'] ?? 0,
+			'rotatePhi'              => $attributes['mapRotatePhi'] ?? 0,
+			'rotateGamma'            => $attributes['mapRotateGamma'] ?? 0,
+			'customScale'            => $attributes['mapCustomScale'] ?? 1,
+			'zoomActive'             => $attributes['mapZoomActive'] ?? false,
+		);
+	}
+
+	/**
+	 * Migrate diverging bar attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated divergingBar object.
+	 */
+	private static function migrate_diverging_bar( $attributes ) {
+		$percent = isset( $attributes['divergingBarPercentOfInnerWidth'] )
+			? $attributes['divergingBarPercentOfInnerWidth'] / 100
+			: 0.7;
+
+		return array(
+			'positiveCategories'  => $attributes['positiveCategories'] ?? array(),
+			'negativeCategories'  => $attributes['negativeCategories'] ?? array(),
+			'percentOfInnerWidth' => $percent,
+			'neutralBar'          => array(
+				'active'           => $attributes['neutralBarActive'] ?? true,
+				'category'         => $attributes['neutralCategory'] ?? '',
+				'offsetX'          => $attributes['neutralBarOffsetX'] ?? 0,
+				'separator'        => $attributes['neutralBarSeparator'] ?? true,
+				'separatorOffsetX' => $attributes['neutralBarSeparatorOffsetX'] ?? -1,
+			),
+		);
+	}
+
+	/**
+	 * Migrate diff column attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated diffColumn object.
+	 */
+	private static function migrate_diff_column( $attributes ) {
+		$appearance  = $attributes['diffColumnAppearance'] ?? 'normal';
+		$font_weight = in_array( $appearance, array( 'bold', 'bold-italic' ), true ) ? 'bold' : 'normal';
+		$font_style  = in_array( $appearance, array( 'italic', 'bold-italic' ), true ) ? 'italic' : 'normal';
+
+		return array(
+			'active'       => $attributes['diffColumnActive'] ?? false,
+			'category'     => $attributes['diffColumnCategory'] ?? '',
+			'columnHeader' => $attributes['diffColumnHeader'] ?? '',
+			'style'        => array(
+				'marginLeft'      => $attributes['diffColumnMarginLeft'] ?? 10,
+				'width'           => $attributes['diffColumnWidth'] ?? 30,
+				'heightOffset'    => $attributes['diffColumnHeightOffset'] ?? 0,
+				'rectStrokeWidth' => 0,
+				'rectStrokeColor' => 'white',
+				'rectFill'        => $attributes['diffColumnBackgroundColor'] ?? '',
+				'fontWeight'      => $font_weight,
+				'fontStyle'       => $font_style,
+				'headerFontSize'  => '12px',
+			),
+		);
+	}
+
+	/**
+	 * Migrate data render attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated dataRender object.
+	 */
+	private static function migrate_data_render( $attributes ) {
+		return array(
+			'x'                        => $attributes['dataRenderX'] ?? 'x',
+			'y'                        => $attributes['dataRenderY'] ?? 'y',
+			'sortKey'                  => $attributes['sortKey'] ?? 'x',
+			'sortOrder'                => $attributes['sortOrder'] ?? 'none',
+			'categories'               => $attributes['categories'] ?? array(),
+			'scales'                   => array(
+				'x' => $attributes['xScale'] ?? 'linear',
+				'y' => $attributes['yScale'] ?? 'linear',
+			),
+			'xFormat'                  => $attributes['dateInputFormat'] ?? null,
+			'yFormat'                  => $attributes['yFormat'] ?? null,
+			'numberFormat'             => $attributes['numberFormat'] ?? 'en-US',
+			'isHighlightedColor'       => $attributes['isHighlightedColor'] ?? '#ECDBAC',
+			'mapScale'                 => $attributes['mapScale'] ?? 'threshold',
+			'mapScaleDomain'           => $attributes['mapScaleDomain'] ?? array( 10, 20, 30, 40, 50 ),
+			'groupBreaksActive'        => $attributes['groupBreaksActive'] ?? false,
+			'groupBreaksCategory'      => $attributes['groupBreaksCategory'] ?? '',
+			'groupBreaksCategoryValues' => $attributes['groupBreaksCategoryValues'] ?? array(),
+			'groupBreaks'              => $attributes['groupBreaks'] ?? false,
+		);
+	}
+
+	/**
+	 * Migrate IO (WordPress-specific) attributes.
+	 *
+	 * @since 3.1.0
+	 * @param array $attributes The v1 attributes.
+	 * @return array The migrated io object.
+	 */
+	private static function migrate_io( $attributes ) {
+		return array(
+			'isConvertedChart'      => $attributes['isConvertedChart'] ?? false,
+			'isStaticChart'         => $attributes['isStaticChart'] ?? false,
+			'isFreeformChart'       => $attributes['isFreeformChart'] ?? false,
+			'staticImageId'         => $attributes['staticImageId'] ?? '',
+			'staticImageUrl'        => $attributes['staticImageUrl'] ?? '',
+			'staticImageInnerHTML'  => $attributes['staticImageInnerHTML'] ?? '',
+			'chartConverted'        => $attributes['chartConverted'] ?? array(
+				'converted' => false,
+				'requester' => '',
+				'timestamp' => '',
+			),
+			'defaultShouldRender'   => $attributes['defaultShouldRender'] ?? true,
+			'lock'                  => $attributes['lock'] ?? array(
+				'move'   => true,
+				'remove' => false,
+			),
+			'colorValue'            => $attributes['colorValue'] ?? 'general',
+			'customColors'          => $attributes['customColors'] ?? array(),
+			'chartFamily'           => $attributes['chartFamily'] ?? 'chart',
+			'chartData'             => $attributes['chartData'] ?? array(),
+			'tableData'             => $attributes['tableData'] ?? '',
+			'hasPreformattedData'   => $attributes['hasPreformattedData'] ?? false,
+			'preformattedData'      => $attributes['preformattedData'] ?? array(),
+			'tabsActive'            => $attributes['tabsActive'] ?? false,
+			'allowDataDownload'     => $attributes['allowDataDownload'] ?? true,
+			'elementHasStroke'      => $attributes['elementHasStroke'] ?? false,
+			'isCustomChart'         => $attributes['isCustomChart'] ?? false,
+			'customAttributes'      => $attributes['customAttributes'] ?? array(),
+			'independentVariable'   => $attributes['independentVariable'] ?? '',
+			'availableCategories'   => $attributes['availableCategories'] ?? array(),
+			'questionWordingActive' => $attributes['questionWordingActive'] ?? false,
+			'questionWording'       => $attributes['questionWording'] ?? '',
+		);
 	}
 }
 
@@ -975,6 +1643,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		}
 
 	}
+
 
 	WP_CLI::add_command( 'prc-chart-builder', '\PRC\Platform\Chart_Builder\PRC_Chart_Builder_Migration_CLI_Command' );
 }

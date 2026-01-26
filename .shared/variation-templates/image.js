@@ -45,8 +45,11 @@ const imageTemplate = [
 	[
 		'prc-chart-builder/chart',
 		{
-			isConvertedChart: false,
-			isStatic: true,
+			_version: 'v2',
+			io: {
+				isConvertedChart: false,
+				isStatic: true,
+			},
 		},
 		[
 			[

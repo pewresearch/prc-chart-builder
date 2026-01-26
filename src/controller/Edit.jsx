@@ -8,7 +8,6 @@ import { Fragment, useEffect } from 'react';
  */
 import { __ } from '@wordpress/i18n';
 import {
-	InnerBlocks,
 	InspectorControls,
 	useInnerBlocksProps,
 	useBlockProps,
@@ -16,12 +15,9 @@ import {
 	BlockControls,
 	BlockAlignmentControl,
 } from '@wordpress/block-editor';
-import {
-	ToggleControl,
-	PanelBody,
-	CheckboxControl,
-} from '@wordpress/components';
-import { useSelect } from '@wordpress/data';
+import { ToggleControl, PanelBody } from '@wordpress/components';
+import { useSelect, useDispatch } from '@wordpress/data';
+import { store as blocksStore } from '@wordpress/blocks';
 
 /**
  * Internal Dependencies
@@ -31,16 +27,7 @@ import HideTableHandler from './hide-table-handler';
 import Placeholder from './placeholder';
 
 export default function Edit({ attributes, setAttributes, clientId }) {
-	const {
-		id,
-		isConvertedChart,
-		tabsActive,
-		shareActive,
-		align,
-		isStatic,
-		isTable,
-		chartType,
-	} = attributes;
+	const { id, tabsActive, shareActive, align, chartType } = attributes;
 
 	// useSelect to check for other chart builders, filter out the current one
 	// get all chart controllers, check to see if any have the same id
@@ -66,12 +53,7 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 				(controller) => controller.attributes.id === id
 			)
 		) {
-			{
-				console.log(
-					`id ${id} already exists. creating new one: ${clientId}`
-				);
-				setAttributes({ id: clientId });
-			}
+			setAttributes({ id: clientId });
 		}
 	}, []);
 
@@ -94,6 +76,119 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		},
 		[id]
 	);
+
+	// Get the inner chart block and its layout type
+	const { layoutType, chartClientId } = useSelect(
+		(select) => {
+			const { getBlock } = select('core/block-editor');
+			const block = getBlock(clientId);
+			const chartBlock = block?.innerBlocks?.find(
+				(innerBlock) => innerBlock.name === 'prc-chart-builder/chart'
+			);
+			return {
+				layoutType: chartBlock?.attributes?.layout?.type,
+				chartClientId: chartBlock?.clientId,
+			};
+		},
+		[clientId]
+	);
+
+	const { updateBlockAttributes } = useDispatch(blockEditorStore);
+	const variations = useSelect((select) => {
+		const { getBlockVariations } = select(blocksStore);
+		return getBlockVariations('prc-chart-builder/controller');
+	}, []);
+
+	// Map chartType to layout.type (matching VARIATION_TO_LAYOUT_TYPE from variations.js)
+	const CHART_TYPE_TO_LAYOUT_TYPE = {
+		bar: 'bar',
+		column: 'bar',
+		'stacked-bar': 'stacked-bar',
+		'stacked-column': 'stacked-bar', // Uses stacked-bar layout with vertical orientation
+		line: 'line',
+		area: 'area',
+		'stacked-area': 'stacked-area',
+		'dot-plot': 'dot-plot',
+		scatter: 'scatter',
+		pie: 'pie',
+		'diverging-bar': 'diverging-bar',
+		'exploded-bar': 'exploded-bar',
+		'us-map': 'map-usa',
+		'us-map-county': 'map-usa',
+		'us-map-block': 'map-usa-block',
+		'world-map': 'map-world',
+		freeform: 'freeform',
+	};
+
+	// Get getBlock selector for use in effect
+	const getBlock = useSelect(
+		(select) => select(blockEditorStore).getBlock,
+		[]
+	);
+
+	// Sync chartType changes to chart block's layout.type and orientation only
+	useEffect(() => {
+		// Only run if we have chartType and chartClientId
+		if (!chartType || !chartClientId || !getBlock) {
+			return;
+		}
+
+		// Get fresh chart block data inside effect to ensure we have latest
+		const currentBlock = getBlock(clientId);
+		const currentChartBlock = currentBlock?.innerBlocks?.find(
+			(innerBlock) => innerBlock.name === 'prc-chart-builder/chart'
+		);
+
+		if (!currentChartBlock || !currentChartBlock.attributes?.layout) {
+			return;
+		}
+
+		const expectedLayoutType = CHART_TYPE_TO_LAYOUT_TYPE[chartType];
+		const currentLayoutType = currentChartBlock.attributes.layout.type;
+		const currentOrientation =
+			currentChartBlock.attributes.layout.orientation;
+
+		// Determine expected orientation - same simple logic as bar/column
+		let expectedOrientation = currentOrientation; // Preserve existing by default
+
+		if (chartType === 'column' || chartType === 'stacked-column') {
+			expectedOrientation = 'vertical';
+		} else if (chartType === 'bar' || chartType === 'stacked-bar') {
+			expectedOrientation = 'horizontal';
+		}
+
+		// Only update if something actually needs to change
+		if (
+			!expectedLayoutType ||
+			(expectedLayoutType === currentLayoutType &&
+				expectedOrientation === currentOrientation)
+		) {
+			return;
+		}
+
+		// Update ONLY layout.type and layout.orientation, preserving everything else
+		const updatedLayout = {
+			...currentChartBlock.attributes.layout,
+			type: expectedLayoutType,
+		};
+
+		// Only set orientation if it needs to change
+		if (expectedOrientation !== currentOrientation) {
+			updatedLayout.orientation = expectedOrientation;
+		}
+
+		// Update only the layout object, preserving all other attributes
+		updateBlockAttributes(chartClientId, {
+			layout: updatedLayout,
+		});
+	}, [
+		chartType,
+		chartClientId,
+		clientId,
+		variations,
+		updateBlockAttributes,
+		getBlock,
+	]);
 
 	const dummyCSVS = [
 		{
@@ -141,8 +236,8 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	return (
 		<Fragment>
 			<InspectorControls>
-				{/* check if chartType has substring of 'map' */}
-				{undefined !== chartType && chartType.includes('map') && (
+				{/* check if layout.type has substring of 'map' */}
+				{layoutType && layoutType.includes('map') && (
 					<PanelBody>
 						<p>
 							<strong>

@@ -1,0 +1,77 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"title": "Chart Block Attributes (v2 - Current)",
+	"description": "Current schema with id nested in io object",
+	"type": "object",
+	"required": ["_version", "io"],
+	"properties": {
+		"_version": {
+			"type": "string",
+			"const": "v2",
+			"description": "Block version identifier"
+		},
+		"layout": {
+			"type": "object",
+			"description": "Chart layout configuration"
+		},
+		"metadata": {
+			"type": "object",
+			"description": "Chart metadata (title, subtitle, etc.)"
+		},
+		"io": {
+			"type": "object",
+			"required": ["id"],
+			"properties": {
+				"id": {
+					"type": "string",
+					"pattern": "^[a-f0-9-]+-chart$",
+					"description": "Chart ID derived from controller (NESTED HERE IN V2)"
+				},
+				"isConvertedChart": {
+					"type": "boolean"
+				},
+				"isStaticChart": {
+					"type": "boolean"
+				},
+				"isFreeformChart": {
+					"type": "boolean"
+				},
+				"chartData": {
+					"type": "array",
+					"items": {
+						"type": "object"
+					}
+				},
+				"availableCategories": {
+					"type": "array",
+					"items": {
+						"type": "string"
+					}
+				},
+				"independentVariable": {
+					"type": "string"
+				}
+			}
+		},
+		"_legacy": {
+			"type": "object",
+			"description": "Preserved legacy attributes"
+		},
+		"_v1Original": {
+			"type": "object",
+			"description": "Original v1 attributes if migrated from v1"
+		},
+		"_migrationMeta": {
+			"type": "object",
+			"properties": {
+				"migratedAt": {
+					"type": "string",
+					"format": "date-time"
+				},
+				"migrationVersion": {
+					"type": "string"
+				}
+			}
+		}
+	}
+}

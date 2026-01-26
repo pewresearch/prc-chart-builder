@@ -2,51 +2,69 @@ import { RichText } from '@wordpress/block-editor';
 import { useState } from '@wordpress/element';
 
 import { Icon } from '@prc/icons';
+import { useViewportAttributes } from './use-viewport-attributes';
 
-const TitleSubtitle = ({ metaTitle, metaSubtitle, setAttributes }) => (
-	<>
-		<RichText
-			className="cb__title"
-			value={metaTitle}
-			onChange={(content) =>
-				setAttributes({
-					metaTitle: content,
-				})
-			}
-			placeholder={metaTitle}
-		/>
-		<RichText
-			className="cb__subtitle"
-			value={metaSubtitle}
-			onChange={(content) =>
-				setAttributes({
-					metaSubtitle: content,
-				})
-			}
-			placeholder={metaSubtitle}
-		/>
-	</>
-);
+const TitleSubtitle = ({ attributes, setAttributes }) => {
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
 
-const Footer = ({
-	metaQuestionWording,
-	metaQuestionWordingActive,
-	metaNote,
-	metaSource,
-	metaTag,
-	setAttributes,
-}) => {
+	const title = getCurrentValue('metadata', 'title');
+	const subtitle = getCurrentValue('metadata', 'subtitle');
+
+	return (
+		<>
+			<RichText
+				className="cb__title"
+				value={title}
+				onChange={(content) =>
+					updateAttributeForDevice('metadata', { title: content })
+				}
+				placeholder={title}
+			/>
+			<RichText
+				className="cb__subtitle"
+				value={subtitle}
+				onChange={(content) =>
+					updateAttributeForDevice('metadata', { subtitle: content })
+				}
+				placeholder={subtitle}
+			/>
+		</>
+	);
+};
+
+const Footer = ({ attributes, setAttributes }) => {
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
+
+	const io = attributes.io || {}; // io is not viewport-aware
+	const { questionWording, questionWordingActive } = io;
+	const note = getCurrentValue('metadata', 'note');
+	const source = getCurrentValue('metadata', 'source');
+	const tag = getCurrentValue('metadata', 'tag');
+
 	const [isOpen, setIsOpen] = useState(false);
 	const toggleQuestionWordingExpanded = () => {
 		setIsOpen(!isOpen);
 	};
 	return (
 		<>
-			{metaQuestionWordingActive && (
+			{questionWordingActive && (
 				<>
 					<div
 						className="cb__note cb__note--question-wording-button"
 						onClick={() => toggleQuestionWordingExpanded()}
+						role="button"
+						tabIndex={0}
+						onKeyDown={(e) => {
+							if (e.key === 'Enter' || e.key === ' ') {
+								toggleQuestionWordingExpanded();
+							}
+						}}
 					>
 						<Icon
 							icon={isOpen ? 'circle-minus' : 'circle-plus'}
@@ -62,13 +80,16 @@ const Footer = ({
 						<>
 							<RichText
 								className="cb__note cb__note--question-wording"
-								value={metaQuestionWording}
+								value={questionWording}
 								onChange={(content) =>
 									setAttributes({
-										metaQuestionWording: content,
+										io: {
+											...io,
+											questionWording: content,
+										},
 									})
 								}
-								placeholder={metaQuestionWording}
+								placeholder={questionWording}
 							/>
 						</>
 					)}
@@ -76,33 +97,27 @@ const Footer = ({
 			)}
 			<RichText
 				className="cb__note"
-				value={metaNote}
+				value={note}
 				onChange={(content) =>
-					setAttributes({
-						metaNote: content,
-					})
+					updateAttributeForDevice('metadata', { note: content })
 				}
-				placeholder={metaNote}
+				placeholder={note}
 			/>
 			<RichText
 				className="cb__note"
-				value={metaSource}
+				value={source}
 				onChange={(content) =>
-					setAttributes({
-						metaSource: content,
-					})
+					updateAttributeForDevice('metadata', { source: content })
 				}
-				placeholder={metaSource}
+				placeholder={source}
 			/>
 			<RichText
 				className="cb__tag"
-				value={metaTag}
+				value={tag}
 				onChange={(content) =>
-					setAttributes({
-						metaTag: content,
-					})
+					updateAttributeForDevice('metadata', { tag: content })
 				}
-				placeholder={metaTag}
+				placeholder={tag}
 			/>
 		</>
 	);

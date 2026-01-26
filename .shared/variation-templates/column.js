@@ -1,3 +1,4 @@
+import { mergeWithDefaults } from './helpers';
 const columnTemplate = [
 	[
 		'prc-block/table',
@@ -40,34 +41,56 @@ const columnTemplate = [
 	],
 	[
 		'prc-chart-builder/chart',
-		{
-			isConvertedChart: false,
-			chartType: 'bar',
-			chartOrientation: 'vertical',
-			metaTitle: 'Column Chart',
-			metaSubtitle: 'A subtitle for the chart',
-			metaSource: 'Source: Add source note here',
-			metaNote: 'Note: Add note about the chart',
-			metaTag: 'PEW RESEARCH CENTER',
-			width: 240,
-			height: 160,
-			paddingLeft: 20,
-			paddingBottom: 30,
-			paddingRight: 20,
-			xDomainPadding: 16,
-			xTickNum: null,
-			yAxisActive: false,
-			barWidth: 24,
-			barGroupOffset: 28,
-			tooltipActive: false,
-			labelsActive: true,
-			labelColor: 'contrast',
-			labelPositionDX: 3,
-			tooltipHeaderValue: 'independentValue',
-			tooltipFormat: '{{column}}: {{value}}',
-			legendActive: true,
-			legendMarkerStyle: 'rect',
-		},
+		mergeWithDefaults({
+			_version: 'v2',
+			layout: {
+				type: 'bar',
+				orientation: 'vertical',
+				width: 240,
+				height: 160,
+				padding: {
+					left: 20,
+					bottom: 30,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'Column Chart',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: Add note about the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			independentAxis: {
+				tickCount: null,
+				domainPadding: 16,
+			},
+			dependentAxis: {
+				active: false,
+			},
+			tooltip: {
+				active: false,
+				headerValue: 'independentValue',
+				format: '{{column}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				color: 'contrast',
+				labelPositionDX: 3,
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			bar: {
+				barWidth: 24,
+				barGroupOffset: 28,
+			},
+			io: {
+				isConvertedChart: false,
+			},
+		}),
 	],
 ];
 

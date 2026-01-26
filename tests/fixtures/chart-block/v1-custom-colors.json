@@ -1,0 +1,17 @@
+{
+	"name": "v1-custom-colors",
+	"description": "Bar chart with custom color palette",
+	"blockVersion": "v1",
+	"chartType": "bar",
+	"featureTags": ["custom-colors"],
+	"serializedContent": "<!-- wp:prc-chart-builder/chart {\"chartType\":\"bar\",\"width\":640,\"height\":400,\"customColors\":[\"#436983\",\"#bf3927\",\"#756a7e\",\"#ea9e2c\"],\"colorValue\":\"general\"} -->\n<div class=\"wp-block-prc-chart-builder-chart\"></div>\n<!-- /wp:prc-chart-builder/chart -->",
+	"expectedMigratedAttributes": {
+		"_version": "v2",
+		"layout": {
+			"type": "bar",
+			"width": 640,
+			"height": 400
+		},
+		"colors": ["#436983", "#bf3927", "#756a7e", "#ea9e2c"]
+	}
+}
