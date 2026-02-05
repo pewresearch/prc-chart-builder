@@ -405,7 +405,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 											updateAnnotation(
 												index,
 												'fill',
-												val
+												val ?? ''
 											);
 										},
 										label: __('Text Color'),
@@ -416,7 +416,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 									// 		updateAnnotation(
 									// 			index,
 									// 			'backgroundColor',
-									// 			val
+									// 			val ?? ''
 									// 		);
 									// 	},
 									// 	label: __('Background Color'),

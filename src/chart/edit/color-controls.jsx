@@ -28,8 +28,7 @@ const PanelDescription = styled.div`
 
 function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 	// Content attribute - NOT viewport-aware (colors are consistent across all viewports)
-	const io = attributes.io || {};
-
+	const { io } = attributes;
 	return (
 		<PanelBody title={__('Colors')} initialOpen={false}>
 			<ToolsPanel

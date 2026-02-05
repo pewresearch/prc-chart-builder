@@ -52,6 +52,10 @@ const explodedBarTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'exploded-bar',
 				width: 420,
@@ -82,7 +86,8 @@ const explodedBarTemplate = [
 			independentAxis: {
 				domainPadding: 16,
 				axis: {
-					stroke: '#fff',
+					stroke: '',
+					strokeWidth: 1,
 				},
 				tickLabels: {
 					textAnchor: 'end',

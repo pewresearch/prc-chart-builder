@@ -81,7 +81,7 @@ function DotPlotControls({ attributes, setAttributes, clientId }) {
 									updateAttributeForDevice('dotPlot', {
 										connectingLine: {
 											...currentConnectingLine,
-											stroke: value,
+											stroke: value ?? '',
 										},
 									});
 								},

@@ -55,7 +55,10 @@ const scatterTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
-			chartType: 'scatter',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'scatter',
 				width: 420,

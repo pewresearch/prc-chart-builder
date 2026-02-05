@@ -48,7 +48,10 @@ const lineTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
-			chartType: 'line',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'line',
 				width: 420,

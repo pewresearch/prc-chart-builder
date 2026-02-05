@@ -43,6 +43,10 @@ const columnTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'bar',
 				orientation: 'vertical',

@@ -309,6 +309,26 @@ return array(
 					'customLabelFormat' => null,
 					'customPositions' => array(
 						
+					),
+					'customLabels' => array(
+						
+					),
+					'customVisibility' => array(
+						
+					),
+					'customStyles' => array(
+						
+					)
+				)
+			),
+			'shapes' => array(
+				'type' => 'object',
+				'default' => array(
+					'customStyles' => array(
+						
+					),
+					'segmentStyles' => array(
+						
 					)
 				)
 			),
@@ -360,7 +380,14 @@ return array(
 					'innerRadius' => 0,
 					'padAngle' => 0,
 					'cornerRadius' => 0,
-					'sortByValue' => false
+					'sortByValue' => false,
+					'groupGapAngle' => 10,
+					'showGroupArcs' => false,
+					'groupArcStyle' => array(
+						'stroke' => '#666666',
+						'strokeWidth' => 1,
+						'strokeDasharray' => '4,4'
+					)
 				)
 			),
 			'nodes' => array(
@@ -449,6 +476,12 @@ return array(
 					'items' => array(
 						
 					)
+				)
+			),
+			'drawings' => array(
+				'type' => 'array',
+				'default' => array(
+					
 				)
 			),
 			'dataRender' => array(
@@ -685,8 +718,7 @@ return array(
 		),
 		'supports' => array(
 			'html' => false,
-			'interactivity' => true,
-			'inserter' => false
+			'interactivity' => true
 		),
 		'viewScriptModule' => 'file:./view.js',
 		'editorScript' => 'file:./index.js',

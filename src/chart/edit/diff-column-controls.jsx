@@ -32,8 +32,10 @@ const WidePanelItem = styled(ToolsPanelItem)`
 
 function DiffColumnControls({ attributes, setAttributes, clientId }) {
 	// Viewport-aware attribute management
-	const { getCurrentValue, updateAttributeForDevice } =
-		useViewportAttributes(attributes, setAttributes);
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
 	return (
 		<PanelBody
 			title={__('Difference Column Configuration')}
@@ -100,7 +102,8 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						withInputField
 						step={1}
 						value={parseInt(
-							getCurrentValue('diffColumn', 'style')?.marginLeft || 0,
+							getCurrentValue('diffColumn', 'style')
+								?.marginLeft || 0,
 							10
 						)}
 						onChange={(value) => {
@@ -126,7 +129,8 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						withInputField
 						min={0}
 						value={parseInt(
-							getCurrentValue('diffColumn', 'style')?.heightOffset || 0,
+							getCurrentValue('diffColumn', 'style')
+								?.heightOffset || 0,
 							10
 						)}
 						onChange={(value) => {
@@ -149,7 +153,10 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 				>
 					<SelectControl
 						label={__('Column Appearance')}
-						value={getCurrentValue('diffColumn', 'style')?.fontAppearance}
+						value={
+							getCurrentValue('diffColumn', 'style')
+								?.fontAppearance
+						}
 						options={[
 							{
 								label: __('Default'),
@@ -176,11 +183,13 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 									...currentStyle,
 									fontAppearance: value,
 									fontWeight:
-										value === 'bold' || value === 'bold-italic'
+										value === 'bold' ||
+										value === 'bold-italic'
 											? 'bold'
 											: 'normal',
 									fontStyle:
-										value === 'italic' || value === 'bold-italic'
+										value === 'italic' ||
+										value === 'bold-italic'
 											? 'italic'
 											: 'normal',
 								},
@@ -201,14 +210,18 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						initialOpen
 						colorSettings={[
 							{
-								value: getCurrentValue('diffColumn', 'style')?.rectFill,
+								value: getCurrentValue('diffColumn', 'style')
+									?.rectFill,
 								onChange: (value) => {
 									const currentStyle =
-										getCurrentValue('diffColumn', 'style') || {};
+										getCurrentValue(
+											'diffColumn',
+											'style'
+										) || {};
 									updateAttributeForDevice('diffColumn', {
 										style: {
 											...currentStyle,
-											rectFill: value,
+											rectFill: value ?? '',
 										},
 									});
 								},

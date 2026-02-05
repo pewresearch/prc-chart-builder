@@ -119,19 +119,21 @@ class Chart {
 		$target_namespace = array_key_exists( 'interactiveNamespace', $attributes ) ? $attributes['interactiveNamespace'] : 'prc-chart-builder/chart';
 		$svg_fallback     = $block_attributes['io']['svgUrl'] ?? '';
 
-		$chart_data            = $block_attributes['io']['chartData'];
-		$is_static_chart       = $block_attributes['io']['isStaticChart'];
-		$table_data            = $block_attributes['io']['tableData'];
-		$has_preformatted_data = $block_attributes['io']['hasPreformattedData'];
-		$preformatted_data     = $block_attributes['io']['preformattedData'];
+		$chart_data            = $block_attributes['io']['chartData'] ?? array();
+		$is_static_chart       = $block_attributes['io']['isStaticChart'] ?? false;
+		$is_freeform_chart     = $block_attributes['io']['isFreeformChart'] ?? false;
+		$table_data            = $block_attributes['io']['tableData'] ?? '';
+		$has_preformatted_data = $block_attributes['io']['hasPreformattedData'] ?? false;
+		$preformatted_data     = $block_attributes['io']['preformattedData'] ?? array();
 		$should_render         = $block_attributes['io']['defaultShouldRender'] ?? true;
 
 		if ( $has_preformatted_data && $preformatted_data ) {
 			$chart_data = $preformatted_data;
 		}
 
-		// chart should always have $chart_data or $is_static_chart. If neither is set, return an error.
-		if ( ! $chart_data && ! $is_static_chart ) {
+		// Chart should always have $chart_data, $is_static_chart, or be a freeform container.
+		// Freeform charts are containers that don't have their own chart data.
+		if ( ! $chart_data && ! $is_static_chart && ! $is_freeform_chart ) {
 			new \WP_Error( 'missing_chart_data', __( 'Chart Block is missing chartData or isStaticChart', 'prc-block-library' ) );
 			return;
 		}
@@ -164,7 +166,7 @@ class Chart {
 				)
 			),
 			'class'                       => 'wp-chart-builder-inner',
-			'data-wp-watch--init-render'  => $is_static_chart ? null : 'callbacks.watchForRender',
+			'data-wp-watch--init-render'  => $is_static_chart || $is_freeform_chart ? null : 'callbacks.watchForRender',
 			'data-wp-on-window--resize'   => 'callbacks.watchForResize',
 		);
 
@@ -183,6 +185,16 @@ class Chart {
 				'<div id="%1$s">%2$s</div>',
 				$block_attributes['io']['staticImageId'],
 				$block_attributes['io']['staticImageInnerHTML']
+			);
+		}
+
+		// Freeform charts render their inner blocks (nested charts) instead of a single chart.
+		$freeform_content = '';
+		if ( $is_freeform_chart ) {
+			$freeform_content = wp_sprintf(
+				'<div id="%1$s" class="wp-chart-builder-freeform-content">%2$s</div>',
+				$block_id,
+				$content
 			);
 		}
 
@@ -243,15 +255,16 @@ class Chart {
 					$top_rule, // phpcs:ignore
 					wp_kses_post( $block_attributes['metadata']['title'] ),
 					wp_kses_post( $block_attributes['metadata']['subtitle'] ),
-					$is_static_chart ? $static_chart : $chart, //phpcs:ignore
+					$is_freeform_chart ? $freeform_content : ( $is_static_chart ? $static_chart : $chart ), //phpcs:ignore
 					$question_wording_html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean.
-					wp_kses_post( $block_attributes['metadata']['note'] ),
-					wp_kses_post( $block_attributes['metadata']['source'] ),
-					wp_kses_post( $block_attributes['metadata']['tag'] ),
+					wp_kses_post( $block_attributes['metadata']['note'] ?? '' ),
+					wp_kses_post( $block_attributes['metadata']['source'] ?? '' ),
+					wp_kses_post( $block_attributes['metadata']['tag'] ?? '' ),
 					$bottom_rule // phpcs:ignore
 				);
 		} else {
-				return wp_sprintf( '<div %1$s>%2$s</div>', wp_kses_post( $block_wrapper_attrs ), $is_static_chart ? $static_chart : $chart ); //phpcs:ignore
+				$chart_content = $is_freeform_chart ? $freeform_content : ( $is_static_chart ? $static_chart : $chart );
+				return wp_sprintf( '<div %1$s>%2$s</div>', wp_kses_post( $block_wrapper_attrs ), $chart_content ); //phpcs:ignore
 		}
 	}
 

@@ -12,7 +12,7 @@ import {
  * Internal  Dependencies
  */
 import getConfig from './utils/get-config';
-import { mergeCustomLabelPositions } from './utils/merge-custom-label-positions';
+import { mergeCustomLabelData } from './utils/merge-custom-label-data';
 
 // import './styles.scss';
 
@@ -80,25 +80,45 @@ const { actions, state } = store('prc-chart-builder/chart', {
 			const currentViewport = state.currentViewport;
 			const config = getConfig(attributes, id, null, currentViewport);
 
-			// Merge custom label positions from attributes into data
-			// Get viewport-aware customPositions based on currentViewport
+			// Merge all custom label data from attributes into data
+			// Get viewport-aware customizations based on currentViewport
 			const labels = attributes.labels || {};
-			const customPositions =
-				currentViewport !== 'desktop' &&
-				attributes[currentViewport]?.labels?.customPositions
-					? attributes[currentViewport].labels.customPositions
-					: labels.customPositions || {};
+			const viewportLabels =
+				currentViewport !== 'desktop'
+					? attributes[currentViewport]?.labels || {}
+					: {};
 
-			const dataWithPositions = mergeCustomLabelPositions(
+			// Build label customizations object with viewport overrides
+			const labelCustomizations = {
+				customPositions:
+					viewportLabels.customPositions ||
+					labels.customPositions ||
+					{},
+				customLabels:
+					viewportLabels.customLabels || labels.customLabels || {},
+				customVisibility:
+					viewportLabels.customVisibility ||
+					labels.customVisibility ||
+					{},
+				customStyles:
+					viewportLabels.customStyles || labels.customStyles || {},
+			};
+
+			const dataWithCustomizations = mergeCustomLabelData(
 				data,
-				customPositions
+				labelCustomizations
 			);
 
 			if (!ChartBuilderRenderer) {
 				// eslint-disable-next-line no-console
 				console.error('ChartBuilderRenderer is not loaded');
 			} else {
-				ChartBuilderRenderer(id, dataWithPositions, config, tableData);
+				ChartBuilderRenderer(
+					id,
+					dataWithCustomizations,
+					config,
+					tableData
+				);
 			}
 		},
 		/**

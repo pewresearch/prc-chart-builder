@@ -265,7 +265,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 								),
 								onChange: (value) =>
 									updateAttributeForDevice('map', {
-										pathBackgroundFill: value,
+										pathBackgroundFill: value ?? '',
 									}),
 								label: __('Background Fill'),
 							},
@@ -273,7 +273,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 								value: getCurrentValue('map', 'pathStroke'),
 								onChange: (value) =>
 									updateAttributeForDevice('map', {
-										pathStroke: value,
+										pathStroke: value ?? '',
 									}),
 								label: __('Stroke'),
 							},

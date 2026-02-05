@@ -118,7 +118,9 @@ class Controller {
 			$blocks['freeform'] = array_filter(
 				$blocks['chart']['innerBlocks'],
 				function ( $chart_inner_block ) {
-					return 'core/group' === ( $chart_inner_block['blockName'] ) && 'wp-chart-builder-freeform-chart' === ( $chart_inner_block['attrs']['className'] ?? '' );
+					$class_name = $chart_inner_block['attrs']['className'] ?? '';
+					// Use str_contains to handle additional classes like 'is-style-default'.
+					return 'core/group' === ( $chart_inner_block['blockName'] ) && str_contains( $class_name, 'wp-chart-builder-freeform-chart' );
 				}
 			) ?? null;
 		} else {

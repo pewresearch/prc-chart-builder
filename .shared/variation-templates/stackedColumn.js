@@ -48,8 +48,10 @@ const stackedBarTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
-			chartType: 'stacked-bar',
-			chartOrientation: 'vertical',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'stacked-bar',
 				orientation: 'vertical',
@@ -75,6 +77,10 @@ const stackedBarTemplate = [
 			},
 			independentAxis: {
 				domainPadding: 30,
+				"axis": {
+					"stroke": "",
+					"strokeWidth": 1
+				},
 			},
 			dependentAxis: {
 				active: false,

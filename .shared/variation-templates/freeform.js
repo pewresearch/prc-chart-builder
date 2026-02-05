@@ -46,6 +46,10 @@ const freeformTemplate = [
 		'prc-chart-builder/chart',
 		{
 			_version: 'v2',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			metadata: {
 				active: false,
 			},

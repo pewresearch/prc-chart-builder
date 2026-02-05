@@ -44,6 +44,10 @@ const barTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'bar',
 				orientation: 'horizontal',
@@ -66,7 +70,12 @@ const barTemplate = [
 				domainPadding: 16,
 				tickLabels: {
 					textAnchor: 'end',
+					verticalAnchor: 'middle',
 					dx: -5,
+				},
+				"axis": {
+					"stroke": "",
+					"strokeWidth": 1
 				},
 			},
 			dependentAxis: {
@@ -79,7 +88,7 @@ const barTemplate = [
 			},
 			labels: {
 				active: true,
-				labelPositionDY: 2,
+				labelPositionDY: 3,
 				color: 'contrast',
 			},
 			legend: {

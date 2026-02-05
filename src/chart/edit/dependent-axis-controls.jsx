@@ -435,7 +435,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 							const currentAxis =
 								getCurrentValue('dependentAxis', 'axis') || {};
 							updateAttributeForDevice('dependentAxis', {
-								axis: { ...currentAxis, stroke: value },
+								axis: { ...currentAxis, stroke: value ?? '' },
 							});
 						},
 						label: __('Axis Stroke'),
@@ -446,7 +446,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 							const currentGrid =
 								getCurrentValue('dependentAxis', 'grid') || {};
 							updateAttributeForDevice('dependentAxis', {
-								grid: { ...currentGrid, stroke: value },
+								grid: { ...currentGrid, stroke: value ?? '' },
 							});
 						},
 						label: __('Grid Stroke'),
@@ -463,7 +463,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 							updateAttributeForDevice('dependentAxis', {
 								tickLabels: {
 									...currentTickLabels,
-									fill: value,
+									fill: value ?? '',
 								},
 							});
 						},

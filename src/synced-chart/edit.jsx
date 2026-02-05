@@ -3,7 +3,7 @@
 /**
  * WordPress Dependencies
  */
-import { useMemo } from '@wordpress/element';
+import { useMemo, useRef } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { withNotices, KeyboardShortcuts } from '@wordpress/components';
 import { useEntityBlockEditor, useEntityRecord } from '@wordpress/core-data';
@@ -18,6 +18,8 @@ import {
 	Warning,
 	BlockContextProvider,
 } from '@wordpress/block-editor';
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { isEqual } from 'lodash';
 
 /**
  * Internal Dependencies
@@ -40,10 +42,15 @@ function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
 		{ id: ref }
 	);
 
+	// Use a ref to store the previous table data for deep comparison
+	// This prevents context updates when data hasn't actually changed
+	const tableDataRef = useRef(null);
+
 	// Extract table data from blocks to pass via context
+	// Uses deep comparison to maintain stable references
 	const tableDataFromBlocks = useMemo(() => {
 		if (!blocks || blocks.length === 0) {
-			return null;
+			return tableDataRef.current; // Return previous value if no blocks
 		}
 
 		// Find the controller block
@@ -52,7 +59,7 @@ function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
 		);
 
 		if (!controllerBlock || !controllerBlock.innerBlocks) {
-			return null;
+			return tableDataRef.current;
 		}
 
 		// Find the table block within the controller's inner blocks
@@ -61,14 +68,38 @@ function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
 				block.name === 'core/table' || block.name === 'prc-block/table'
 		);
 
-		return tableBlock?.attributes || null;
+		const newTableData = tableBlock?.attributes || null;
+
+		// Deep compare to prevent unnecessary context updates
+		// This is crucial for preventing infinite re-render loops in nested entities
+		if (isEqual(tableDataRef.current, newTableData)) {
+			return tableDataRef.current; // Return stable reference
+		}
+
+		// Update ref and return new value only when content actually changes
+		tableDataRef.current = newTableData;
+		return newTableData;
 	}, [blocks]);
 
+	// Use a ref for stable context value reference
+	const contextValueRef = useRef({
+		'prc-chart-builder/syncedTableData': null,
+	});
+
 	// Memoize context value to prevent infinite re-renders
-	const syncedTableContextValue = useMemo(
-		() => ({ 'prc-chart-builder/syncedTableData': tableDataFromBlocks }),
-		[tableDataFromBlocks]
-	);
+	// Only create new object when tableDataFromBlocks reference actually changes
+	const syncedTableContextValue = useMemo(() => {
+		// Only update context if the data reference changed (which means content changed)
+		if (
+			contextValueRef.current['prc-chart-builder/syncedTableData'] !==
+			tableDataFromBlocks
+		) {
+			contextValueRef.current = {
+				'prc-chart-builder/syncedTableData': tableDataFromBlocks,
+			};
+		}
+		return contextValueRef.current;
+	}, [tableDataFromBlocks]);
 
 	// Get the controller block's id attribute for keyboard shortcuts
 	const controllerId = useMemo(() => {

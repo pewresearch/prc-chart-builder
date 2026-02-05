@@ -48,7 +48,10 @@ const areaTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
-			chartType: 'stacked-area',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'stacked-area',
 				width: 420,

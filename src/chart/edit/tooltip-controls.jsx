@@ -553,7 +553,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 									),
 									onChange: (value) =>
 										updateAttributeForDevice('tooltip', {
-											emphasizeStrokeColor: value,
+											emphasizeStrokeColor: value ?? '',
 										}),
 									label: __('Stroke Color'),
 								},

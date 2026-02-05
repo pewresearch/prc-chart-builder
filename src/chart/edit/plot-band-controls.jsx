@@ -351,7 +351,7 @@ const StyleOptions = ({ style, updateBand, index }) => {
 									...b.style,
 									band: {
 										...b.style.band,
-										fill: val,
+										fill: val ?? '',
 									},
 								},
 							})),
@@ -366,7 +366,7 @@ const StyleOptions = ({ style, updateBand, index }) => {
 									...b.style,
 									label: {
 										...b.style.label,
-										fill: val,
+										fill: val ?? '',
 									},
 								},
 							})),

@@ -50,8 +50,8 @@ import PlotBandControls from './plot-band-controls';
 import AnnotationControls from './annotation-controls';
 import DiffColumnControls from './diff-column-controls';
 import MapControls from './map-controls';
-// EXPERIMENTAL: Drawing Tools - Commented out for now, not ready for production
-// import DrawingControls from './drawing-controls';
+import DrawingControls from './drawing-controls';
+import PieControls from './pie-controls';
 
 function ControlSections(props) {
 	const { attributes, limitControls, clientId } = props;
@@ -74,7 +74,7 @@ function ControlSections(props) {
 		<>
 			<TextFieldControls {...props} />
 			<DataControls {...props} />
-			<ColorControls {...props} />
+			<ColorControls {...props} chartType={chartType} />
 			{'map' !== chartFamily && (
 				<>
 					<IndependentAxisControls {...props} />
@@ -94,6 +94,7 @@ function ControlSections(props) {
 				</>
 			)}
 			{'dot-plot' === chartType && <DotPlotControls {...props} />}
+			{'pie' === chartType && <PieControls {...props} />}
 			{nodeTypes.includes(chartType) ||
 				(lineTypes.includes(chartType) && (
 					<NodeControls {...props} chartType={chartType} />
@@ -103,8 +104,7 @@ function ControlSections(props) {
 			<LabelControls {...props} />
 			<TooltipControls {...props} />
 			<LegendControls {...props} />
-			{/* EXPERIMENTAL: Drawing Tools - Commented out for now, not ready for production */}
-			{/* <DrawingControls {...props} /> */}
+			<DrawingControls {...props} />
 		</>
 	);
 }
@@ -121,6 +121,8 @@ function ChartControls({
 	strokeWidth,
 	onStrokeColorChange,
 	onStrokeWidthChange,
+	selectedDrawingId,
+	onSelectedDrawingChange,
 }) {
 	const [imageLoading, setImageLoading] = useState(false);
 	const [svgLoading, setSVGLoading] = useState(false);
@@ -353,6 +355,8 @@ function ChartControls({
 				strokeWidth={strokeWidth}
 				onStrokeColorChange={onStrokeColorChange}
 				onStrokeWidthChange={onStrokeWidthChange}
+				selectedDrawingId={selectedDrawingId}
+				onSelectedDrawingChange={onSelectedDrawingChange}
 			/>
 			<PanelBody title="Image and Data Exports" initialOpen={false}>
 				<ToggleControl

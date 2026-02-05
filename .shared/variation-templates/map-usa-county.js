@@ -356,7 +356,10 @@ const USACountyMapTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
-			chartType: 'map-usa-counties',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'map-usa-counties',
 				width: 640,

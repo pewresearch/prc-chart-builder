@@ -481,7 +481,7 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 								),
 								onChange: (value) =>
 									updateAttributeForDevice('legend', {
-										borderStroke: value,
+										borderStroke: value ?? '',
 									}),
 								label: __('Stroke'),
 							},
@@ -489,7 +489,7 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 								value: getCurrentValue('legend', 'fill'),
 								onChange: (value) =>
 									updateAttributeForDevice('legend', {
-										fill: value,
+										fill: value ?? '',
 									}),
 								label: __('Fill'),
 							},

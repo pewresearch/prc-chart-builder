@@ -22,22 +22,24 @@ import {
 	ChartBuilderTextWrapper,
 } from '@prc/charting-library';
 // eslint-disable-next-line
-import { memo, useEffect, useMemo, useState } from 'react';
+import { memo, useEffect, useMemo, useState, useRef } from 'react';
 
 /**
  * Internal Dependencies
  */
 import { formatCellContent } from '../utils/helpers';
-import { mergeCustomLabelPositions } from '../utils/merge-custom-label-positions';
+import { mergeCustomLabelData } from '../utils/merge-custom-label-data';
 import ChartControls from './chart-controls';
 import getConfig from '../utils/get-config';
-// import CopyPasteStylesHandler from './copy-paste-styles-handler';
+import CopyPasteStylesHandler from './copy-paste-styles-handler';
 import { TitleSubtitle, Footer } from './meta-text-fields';
 import { createWpEditorFunctions } from './wp-editor-functions';
 import { AlignmentOverlay } from './alignment-overlay';
 import { DrawingOverlay } from './drawing-overlay';
 import { DrawingLayer } from './drawing-layer';
+import { DrawingSelectionLayer } from './drawing-selection-layer';
 import { useViewportAttributes } from './use-viewport-attributes';
+import { ChartElementPopover, ELEMENT_TYPES } from './popover';
 
 const getCellContent = (cell) => {
 	return (
@@ -87,25 +89,51 @@ export default function Edit({
 	const width = getCurrentValue('layout', 'width');
 	const height = getCurrentValue('layout', 'height');
 
-	// Get viewport-aware custom label positions
-	const customLabelPositions = getCurrentValue('labels', 'customPositions');
+	// Get viewport-aware label customizations
+	const customPositions = getCurrentValue('labels', 'customPositions');
+	const customLabels = getCurrentValue('labels', 'customLabels');
+	const customVisibility = getCurrentValue('labels', 'customVisibility');
+	const customStyles = getCurrentValue('labels', 'customStyles');
 
-	// Memoized chartData with custom positions merged in
-	// This merges labels.customPositions into chartData as __labelPositions
-	const chartDataWithCustomPositions = useMemo(
-		() => mergeCustomLabelPositions(chartData, customLabelPositions),
-		[chartData, customLabelPositions]
+	// Memoized chartData with all label customizations merged in
+	// This merges labels.custom* attributes into chartData as __label* hidden attributes
+	const chartDataWithCustomizations = useMemo(
+		() =>
+			mergeCustomLabelData(chartData, {
+				customPositions,
+				customLabels,
+				customVisibility,
+				customStyles,
+			}),
+		[chartData, customPositions, customLabels, customVisibility, customStyles]
 	);
 
+	// State for chart element customization popover (labels, shapes, etc.)
+	const [selectedElement, setSelectedElement] = useState(null);
+
+	// Track if we've already initialized the chart ID to prevent loops
+	// in nested entity contexts (synced chart in tabs)
+	const hasInitializedChartId = useRef(false);
+
 	// Set chart ID based on controller ID (v2: nested in io.id)
+	// Uses a ref guard to prevent repeated updates during entity re-parsing
 	useEffect(() => {
+		// Skip if already initialized
+		if (hasInitializedChartId.current) {
+			return;
+		}
+
 		if (controllerId) {
 			const expectedChartId = `${controllerId}-chart`;
 			// Only update if different to avoid unnecessary renders
 			if (id !== expectedChartId) {
+				hasInitializedChartId.current = true;
 				setAttributes({
 					id: expectedChartId,
 				});
+			} else {
+				// ID already matches expected, mark as initialized
+				hasInitializedChartId.current = true;
 			}
 		}
 	}, [controllerId, id, setAttributes]);
@@ -113,7 +141,8 @@ export default function Edit({
 	// Get table data from parent controller's innerBlocks
 	const { tableData, parentBlockId, refId } = useSelect(
 		(select) => {
-			const { getBlock, getBlockParents } = select(blockEditorStore);
+			const { getBlock, getBlockParentsByBlockName } =
+				select(blockEditorStore);
 			const { getCurrentPostId, getCurrentPostType } =
 				select(editorStore);
 
@@ -136,13 +165,25 @@ export default function Edit({
 				};
 			}
 
-			// Use the actual parent from the block tree
-			// Context ID might be stale after migration, so we use the actual parent
-			const chartParents = getBlockParents(clientId);
-			const actualParentId =
-				chartParents.length > 0 ? chartParents[0] : null;
-			const parentControllerId = actualParentId || controllerId;
+			// Use getBlockParentsByBlockName to find controller parents
+			// Returns array ordered from nearest to farthest ancestor
+			const controllerParents = getBlockParentsByBlockName(
+				clientId,
+				'prc-chart-builder/controller'
+			);
 
+			// Find the first NON-freeform controller parent
+			// Freeform charts are containers and should NEVER provide data to nested charts
+			// A chart's data should always come from its own controller, not any freeform ancestor
+			let parentControllerId = null;
+			for (const parentId of controllerParents) {
+				const controllerBlock = getBlock(parentId);
+				// Skip freeform controllers - they don't provide data
+				if (controllerBlock && !controllerBlock.attributes?.isFreeform) {
+					parentControllerId = parentId;
+					break;
+				}
+			}
 			// Find the table block among the parent controller's children
 			let tableAttributes = null;
 			if (parentControllerId) {
@@ -178,9 +219,6 @@ export default function Edit({
 		},
 		[context, controllerId, clientId]
 	);
-	const editorClickEvent = () => {
-		// Editor click handler for chart interactions
-	};
 
 	// Alignment state for visual guides during drag
 	const [alignments, setAlignments] = useState({
@@ -191,7 +229,107 @@ export default function Edit({
 	// Track drag state to disable tooltips during drag
 	const [isDragging, setIsDragging] = useState(false);
 
-	// Editor functions for chart interactions
+	// Handle element click for customization popover (labels, shapes, segments, etc.)
+	const handleElementClick = ({ elementType, dataPoint, startPoint, endPoint, category, defaultLabel, defaultColor, anchorEl }) => {
+		setSelectedElement({
+			elementType,
+			dataPoint,
+			startPoint,
+			endPoint,
+			category,
+			defaultLabel,
+			defaultColor,
+			anchorEl,
+		});
+	};
+
+	// Handle popover close
+	const handlePopoverClose = () => {
+		setSelectedElement(null);
+	};
+
+	// Handle label customization updates from popover
+	const handleLabelCustomizationUpdate = (updates) => {
+		// Merge updates into the labels attribute viewport-aware
+		if (updates.customPositions !== undefined) {
+			updateAttributeForDevice('labels', {
+				customPositions: updates.customPositions,
+			});
+		}
+		if (updates.customLabels !== undefined) {
+			updateAttributeForDevice('labels', {
+				customLabels: updates.customLabels,
+			});
+		}
+		if (updates.customVisibility !== undefined) {
+			updateAttributeForDevice('labels', {
+				customVisibility: updates.customVisibility,
+			});
+		}
+		if (updates.customStyles !== undefined) {
+			updateAttributeForDevice('labels', {
+				customStyles: updates.customStyles,
+			});
+		}
+	};
+
+	// Handle shape customization updates from popover
+	const handleShapeCustomizationUpdate = (updates) => {
+		// Merge updates into the shapes attribute viewport-aware
+		if (updates.customStyles !== undefined) {
+			updateAttributeForDevice('shapes', {
+				customStyles: updates.customStyles,
+			});
+		}
+	};
+
+	// Handle segment customization updates from popover
+	const handleSegmentCustomizationUpdate = (updates) => {
+		// Merge updates into the shapes.segmentStyles attribute viewport-aware
+		if (updates.segmentStyles !== undefined) {
+			updateAttributeForDevice('shapes', {
+				segmentStyles: updates.segmentStyles,
+			});
+		}
+	};
+
+	// Get the appropriate update handler based on element type
+	const getCustomizationUpdateHandler = (elementType) => {
+		if (elementType === ELEMENT_TYPES.SHAPE) {
+			return handleShapeCustomizationUpdate;
+		}
+		if (elementType === ELEMENT_TYPES.SEGMENT) {
+			return handleSegmentCustomizationUpdate;
+		}
+		return handleLabelCustomizationUpdate;
+	};
+
+	// Get the appropriate customizations based on element type
+	const getCustomizationsForElement = (elementType) => {
+		if (elementType === ELEMENT_TYPES.SHAPE) {
+			const shapeCustomStyles = getCurrentValue('shapes', 'customStyles') || {};
+			return {
+				customStyles: shapeCustomStyles,
+			};
+		}
+		if (elementType === ELEMENT_TYPES.SEGMENT) {
+			const segmentStyles = getCurrentValue('shapes', 'segmentStyles') || {};
+			return {
+				segmentStyles,
+			};
+		}
+		return {
+			customPositions: customPositions || {},
+			customLabels: customLabels || {},
+			customVisibility: customVisibility || {},
+			customStyles: customStyles || {},
+		};
+	};
+
+	// WIP Editor functions for chart interactions
+	const editorClickEvent = () => {
+		// Editor click handler for chart interactions
+	};
 	// IMPORTANT: setAlignments and setIsDragging are NOT in dependencies to avoid recreating on every state change
 	const wpEditorFunctions = useMemo(
 		() =>
@@ -203,6 +341,7 @@ export default function Edit({
 				toggleSelection,
 				setAlignments, // Pass alignment setter (stable reference)
 				setIsDragging, // Pass drag state setter (stable reference)
+				onElementClick: handleElementClick, // Pass callback for popover
 			}),
 		[
 			attrs,
@@ -210,7 +349,7 @@ export default function Edit({
 			getCurrentValue,
 			updateAttributeForDevice,
 			toggleSelection,
-		] // setAlignments and setIsDragging intentionally excluded
+		] // setAlignments, setIsDragging, handleElementClick intentionally excluded
 	);
 
 	const config = useMemo(() => {
@@ -284,6 +423,9 @@ export default function Edit({
 		]
 	);
 
+	// Track if initial data sync has completed to prevent loops during entity initialization
+	const hasCompletedInitialDataSync = useRef(false);
+
 	useEffect(() => {
 		if (!headers || headers.length === 0) {
 			return;
@@ -314,8 +456,18 @@ export default function Edit({
 
 		// Only update if data actually changed or if required metadata is missing
 		if (!dataChanged && attrs.io?.availableCategories?.length > 0) {
+			// Mark initial sync as complete even if no update needed
+			hasCompletedInitialDataSync.current = true;
 			return;
 		}
+
+		// Prevent rapid successive updates during entity initialization
+		// by checking if we've already done the initial sync
+		if (hasCompletedInitialDataSync.current && !dataChanged) {
+			return;
+		}
+
+		hasCompletedInitialDataSync.current = true;
 
 		setAttributes({
 			io: {
@@ -325,8 +477,11 @@ export default function Edit({
 				chartData: newChartData,
 			},
 		});
+		// Note: controllerId intentionally NOT in deps - it was causing loops
+		// when controller ID changed during entity initialization.
+		// This effect should only run when actual table data changes.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [headers, memoizedChartData, setAttributes, controllerId]);
+	}, [headers, memoizedChartData, setAttributes]);
 
 	const blockProps = useBlockProps({
 		className: 'active',
@@ -338,7 +493,8 @@ export default function Edit({
 	const [isDrawingMode, setIsDrawingMode] = useState(false);
 	const [drawingTool, setDrawingTool] = useState('pen');
 	const [strokeColor, setStrokeColor] = useState('#000000');
-	const [strokeWidth, setStrokeWidth] = useState(2);
+	const [strokeWidth, setStrokeWidth] = useState(1);
+	const [selectedDrawingId, setSelectedDrawingId] = useState(null);
 
 	function handleDrawingComplete(drawingData) {
 		setAttributes({
@@ -369,12 +525,13 @@ export default function Edit({
 				strokeWidth={strokeWidth}
 				onStrokeColorChange={setStrokeColor}
 				onStrokeWidthChange={setStrokeWidth}
+				selectedDrawingId={selectedDrawingId}
+				onSelectedDrawingChange={setSelectedDrawingId}
 			/>
-			{/* <CopyPasteStylesHandler
-				id={id}
+			<CopyPasteStylesHandler
 				attributes={attrs}
 				setAttributes={setAttributes}
-			> */}
+			/>
 			<div {...blockProps}>
 				<figure>
 					<ChartBuilderTextWrapper
@@ -395,15 +552,31 @@ export default function Edit({
 							!isFreeformChart &&
 							memoizedChartData && (
 								<div style={{ position: 'relative' }}>
-									<MemoizedChartBuilder
-										className="cb__chart"
-										config={config}
-										data={
-											chartDataWithCustomPositions ||
-											memoizedChartData
-										}
-										wpEditorFunctions={wpEditorFunctions}
+								<MemoizedChartBuilder
+									className="cb__chart"
+									config={config}
+									data={
+										chartDataWithCustomizations ||
+										memoizedChartData
+									}
+									wpEditorFunctions={wpEditorFunctions}
+								/>
+								{/* Chart Element Customization Popover (Labels, Shapes, Segments, etc.) */}
+								{selectedElement && (
+									<ChartElementPopover
+										anchorRef={selectedElement.anchorEl}
+										elementType={selectedElement.elementType}
+										dataPoint={selectedElement.dataPoint}
+										startPoint={selectedElement.startPoint}
+										endPoint={selectedElement.endPoint}
+										category={selectedElement.category}
+										defaultLabel={selectedElement.defaultLabel}
+										defaultColor={selectedElement.defaultColor}
+										currentCustomizations={getCustomizationsForElement(selectedElement.elementType)}
+										onUpdate={getCustomizationUpdateHandler(selectedElement.elementType)}
+										onClose={handlePopoverClose}
 									/>
+								)}
 									<DrawingLayer
 										drawings={drawings}
 										chartDimensions={{
@@ -413,7 +586,41 @@ export default function Edit({
 										}}
 										chartWidth={width}
 										chartHeight={height}
+										layoutDimensions={{
+											width: config.layout.width,
+											height: config.layout.height,
+											padding: config.layout.padding,
+										}}
 									/>
+									{isSelected && !isDrawingMode && (
+										<DrawingSelectionLayer
+											drawings={drawings}
+											chartDimensions={{
+												width,
+												height,
+												padding: config.layout.padding,
+											}}
+											chartWidth={width}
+											chartHeight={height}
+											layoutDimensions={{
+												width: config.layout.width,
+												height: config.layout.height,
+												padding: config.layout.padding,
+											}}
+											onDrawingsChange={(
+												newDrawings
+											) =>
+												setAttributes({
+													drawings: newDrawings,
+												})
+											}
+											isDrawingMode={isDrawingMode}
+											selectedDrawingId={selectedDrawingId}
+											onSelectionChange={
+												setSelectedDrawingId
+											}
+										/>
+									)}
 									<AlignmentOverlay
 										alignments={alignments}
 										chartDimensions={{
@@ -438,6 +645,11 @@ export default function Edit({
 											chartHeight={height}
 											strokeColor={strokeColor}
 											strokeWidth={strokeWidth}
+											layoutDimensions={{
+												width: config.layout.width,
+												height: config.layout.height,
+												padding: config.layout.padding,
+											}}
 										/>
 									)}
 								</div>
@@ -451,7 +663,6 @@ export default function Edit({
 					</ChartBuilderTextWrapper>
 				</figure>
 			</div>
-			{/* </CopyPasteStylesHandler> */}
 		</>
 	);
 }

@@ -292,10 +292,10 @@ function migrate(attributes) {
 			emphasizeStrokeWidth: attributes.emphasizeStrokeWidth || 1,
 			style: {
 				minWidth: attributes.tooltipMinWidth || 50,
-				maxWidth: attributes.tooltipMaxWidth || 150,
-				maxHeight: attributes.tooltipMaxHeight || 400,
+				maxWidth: attributes.tooltipMaxWidth || 200,
+				maxHeight: attributes.tooltipMaxHeight || 100,
 				minHeight: attributes.tooltipMinHeight || 20,
-				width: '100%',
+				width: 'auto',
 				height: 'auto',
 				fontSize: attributes.tooltipFontSize
 					? `${attributes.tooltipFontSize}px`
@@ -303,9 +303,9 @@ function migrate(attributes) {
 				fontFamily:
 					"'franklin-gothic-urw', Verdana, Geneva, sans-serif",
 				background: 'white',
-				border: '1px solid black',
+				border: '1px solid #CBCBCB',
 				padding: '10px',
-				borderRadius: '5px',
+				borderRadius: '0px',
 				color: 'black',
 			},
 		},

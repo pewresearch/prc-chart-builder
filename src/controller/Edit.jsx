@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-unresolved */
 /* eslint-disable max-lines-per-function */
-import { Fragment, useEffect } from 'react';
+import { Fragment, useEffect, useRef } from 'react';
 
 /**
  * WordPress Dependencies
@@ -29,33 +29,37 @@ import Placeholder from './placeholder';
 export default function Edit({ attributes, setAttributes, clientId }) {
 	const { id, tabsActive, shareActive, align, chartType } = attributes;
 
-	// useSelect to check for other chart builders, filter out the current one
-	// get all chart controllers, check to see if any have the same id
-	// if so, set the id to a new id
-	const otherChartControllers = useSelect(
-		(select) =>
-			select('core/block-editor')
-				.getBlocks()
-				.filter(
-					(block) => 'prc-chart-builder/controller' === block.name
-				)
-				.filter((block) => block.clientId !== clientId),
-		[]
-	);
+	// Track if we've already initialized the ID in this component lifecycle
+	// This prevents repeated setAttributes calls when the component remounts
+	// due to entity re-parsing in nested entity contexts (e.g., synced chart in tabs)
+	const hasInitializedId = useRef(false);
 
+	// Generate a stable unique ID on first mount that persists across re-renders
+	// This prevents loops caused by clientId changing on entity re-parse
+	const stableIdRef = useRef(null);
+	if (!stableIdRef.current) {
+		// Use existing id if available, otherwise generate a new stable one
+		// We use clientId as the base but store it in a ref so it doesn't change
+		stableIdRef.current = id || clientId;
+	}
+
+	// Initialize the ID attribute only once, and only if not already set
+	// This effect is intentionally minimal to prevent re-render loops
 	useEffect(() => {
-		if (!id) {
-			setAttributes({ id: clientId });
-		} else if (
-			// check if other controllers exist, and if the id is already taken
-			otherChartControllers.length > 0 &&
-			otherChartControllers.some(
-				(controller) => controller.attributes.id === id
-			)
-		) {
-			setAttributes({ id: clientId });
+		// Skip if we've already handled ID initialization in this instance
+		if (hasInitializedId.current) {
+			return;
 		}
-	}, []);
+
+		// Only set ID if it's not already defined
+		if (!id) {
+			hasInitializedId.current = true;
+			setAttributes({ id: stableIdRef.current });
+		} else {
+			// ID already exists, mark as initialized
+			hasInitializedId.current = true;
+		}
+	}, [id, setAttributes]);
 
 	const { hideThisTable } = useSelect(
 		(select) => {

@@ -564,7 +564,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 								getCurrentValue('independentAxis', 'axis') ||
 								{};
 							updateAttributeForDevice('independentAxis', {
-								axis: { ...currentAxis, stroke: value },
+								axis: { ...currentAxis, stroke: value ?? '' },
 							});
 						},
 						label: __('Axis Stroke'),
@@ -577,7 +577,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 								getCurrentValue('independentAxis', 'grid') ||
 								{};
 							updateAttributeForDevice('independentAxis', {
-								grid: { ...currentGrid, stroke: value },
+								grid: { ...currentGrid, stroke: value ?? '' },
 							});
 						},
 						label: __('Grid Stroke'),
@@ -594,7 +594,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 							updateAttributeForDevice('independentAxis', {
 								tickLabels: {
 									...currentTickLabels,
-									fill: value,
+									fill: value ?? '',
 								},
 							});
 						},

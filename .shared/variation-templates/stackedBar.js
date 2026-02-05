@@ -48,8 +48,10 @@ const stackedBarTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
-			chartType: 'stacked-bar',
-			chartOrientation: 'horizontal',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'stacked-bar',
 				orientation: 'horizontal',
@@ -67,45 +69,42 @@ const stackedBarTemplate = [
 				note: 'Note: Add note about the chart',
 				tag: 'PEW RESEARCH CENTER',
 			},
-			colors: {
-				value: 'social-trends-main',
+		independentAxis: {
+			domainPadding: 16,
+			tickLabels: {
+				textAnchor: 'end',
+				verticalAnchor: 'middle',
+				dx: -5,
 			},
-			independentAxis: {
-				domainPadding: 16,
-				tickLabels: {
-					textAnchor: 'end',
-					dx: -5,
-				},
+			"axis": {
+				"stroke": "",
+				"strokeWidth": 1
 			},
-			dependentAxis: {
-				active: false,
-			},
-			tooltip: {
-				active: true,
-				headerValue: 'independentValue',
-				format: '{{column}}: {{value}}',
-			},
-			labels: {
-				active: true,
-				color: 'contrast',
-				labelPositionDY: 2,
-			},
-			legend: {
-				active: true,
-				markerStyle: 'rect',
-			},
-			bar: {
-				barWidth: 24,
-				barGroupOffset: 28,
-				labelPosition: 'center',
-			},
-			dataRender: {
-				sortOrder: 'reverse',
-			},
-			io: {
-				isConvertedChart: false,
-				colorValue: 'social-trends-main',
-			},
+		},
+		dependentAxis: {
+			active: false,
+		},
+		tooltip: {
+			active: true,
+			headerValue: 'independentValue',
+			format: '{{column}}: {{value}}',
+		},
+		labels: {
+			active: true,
+			color: 'contrast',
+			labelPositionDY: 3,
+		},
+		legend: {
+			active: true,
+			markerStyle: 'rect',
+		},
+		dataRender: {
+			sortOrder: 'reverse',
+		},
+		io: {
+			isConvertedChart: false,
+			colorValue: 'social-trends-main',
+		},
 		}),
 	],
 ];

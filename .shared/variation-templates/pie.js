@@ -44,7 +44,10 @@ const pieTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
-			chartType: 'pie',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'pie',
 				width: 420,

@@ -48,6 +48,10 @@ const dotPlotTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'dot-plot',
 				width: 420,
@@ -72,7 +76,7 @@ const dotPlotTemplate = [
 				stroke: '#756f6b00',
 				tickLabels: {
 					textAnchor: 'end',
-					verticalAnchor:"middle",
+					verticalAnchor: 'middle',
 					dx: -5,
 				},
 				grid: {
@@ -80,7 +84,8 @@ const dotPlotTemplate = [
 					strokeDasharray: '3,1',
 				},
 				axis: {
-					stroke: '#fff',
+					stroke: '',
+					strokeWidth: 1,
 				},
 			},
 			dependentAxis: {
@@ -88,8 +93,8 @@ const dotPlotTemplate = [
 				showZero: true,
 				tickMarksActive: true,
 				tickLabels: {
-					verticalAnchor: "end",
-					textAnchor: "middle",
+					verticalAnchor: 'end',
+					textAnchor: 'middle',
 				},
 				tickValues: '0,50,100',
 				multiLineTickLabelsBreak: 3,

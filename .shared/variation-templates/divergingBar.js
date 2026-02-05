@@ -51,6 +51,10 @@ const divergingBarTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'diverging-bar',
 				width: 640,
@@ -68,30 +72,20 @@ const divergingBarTemplate = [
 				note: 'Note: Add note about the chart',
 				tag: 'PEW RESEARCH CENTER',
 			},
-			colors: {
-				value: 'orange-spectrum',
-				custom: [
-					'#EA9E2C',
-					'#F1C37F',
-					'#F9EAD4',
-					'#F5D6A9',
-					'#BB792A',
-					'#7C5220',
-				],
-			},
 			independentAxis: {
 				domainPadding: 16,
-				stroke: '#fff',
+				axis: {
+					stroke: '#fff',
+				},
 				tickLabels: {
 					textAnchor: 'end',
+					verticalAnchor: 'middle',
 					dx: -5,
 				},
 			},
 			dependentAxis: {
 				active: false,
-				domain: {
-					min: -60,
-				},
+				domain: [-60, 100],
 			},
 			tooltip: {
 				active: true,
@@ -102,6 +96,7 @@ const divergingBarTemplate = [
 			labels: {
 				active: true,
 				labelPositionDY: 2,
+				labelCutoff: 11,
 				color: 'contrast',
 				absoluteValue: true,
 			},
@@ -109,18 +104,16 @@ const divergingBarTemplate = [
 				active: true,
 				markerStyle: 'rect',
 			},
-			bar: {
-				barWidth: 24,
-				barGroupOffset: 28,
-				labelPosition: 'center',
-				labelCutoff: 11,
-			},
 			divergingBar: {
 				positiveCategories: ['Agree'],
 				negativeCategories: ['Disagree'],
-				neutralCategory: 'Neither',
-				neutralBarOffsetX: -70,
-				neutralBarSeparatorOffsetX: -10,
+				neutralBar: {
+					active: true,
+					category: 'Neither',
+					offsetX: -70,
+					separator: true,
+					separatorOffsetX: -10,
+				},
 			},
 			dataRender: {
 				sortOrder: 'descending',
@@ -131,6 +124,14 @@ const divergingBarTemplate = [
 				independentVariable: 'Independent variable',
 				availableCategories: ['Agree', 'Disagree', 'Neither'],
 				colorValue: 'orange-spectrum',
+				customColors: [
+					'#EA9E2C',
+					'#F1C37F',
+					'#F9EAD4',
+					'#F5D6A9',
+					'#BB792A',
+					'#7C5220',
+				],
 			},
 		}),
 	],

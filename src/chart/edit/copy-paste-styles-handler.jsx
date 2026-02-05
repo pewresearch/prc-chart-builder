@@ -2,89 +2,134 @@
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { useDispatch, select } from '@wordpress/data';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { BlockControls } from '@wordpress/block-editor';
 import { ToolbarButton, ToolbarGroup } from '@wordpress/components';
+import { useEffect, useCallback } from '@wordpress/element';
+import { copy, brush } from '@wordpress/icons';
+
 /**
  * Internal Dependencies
  */
 import store from './store';
-import getLayoutAttributes from '../utils/get-layout-attributes';
+import getCopyableStyleAttributes from '../utils/get-copyable-style-attributes';
 
-const COPY_STYLES_LABEL = __('Copy Layout Styles');
-const PASTE_STYLES_LABEL = __('Paste Layout Styles');
+const COPY_STYLES_LABEL = __('Copy Chart Styles');
+const PASTE_STYLES_LABEL = __('Paste Chart Styles');
 
-const CopyPasteStylesHandler = ({
-	children,
-	id,
-	attributes,
-	setAttributes,
-}) => {
-	const layoutAttributes = getLayoutAttributes(attributes);
-	const { copyLayoutStyles } = useDispatch(store);
+/**
+ * Deep merge two objects, preserving nested properties.
+ * Arrays are replaced entirely, not merged.
+ *
+ * @param {Object} target - The target object (existing attributes)
+ * @param {Object} source - The source object (copied styles)
+ * @return {Object} - Merged object
+ */
+const deepMerge = (target, source) => {
+	const result = { ...target };
 
-	const hasCopiedLayoutStyles = select(store).getCopiedStylesStatus();
-	const copyStyles = () => {
-		copyLayoutStyles(layoutAttributes);
-	};
-	const pasteStyles = () => {
-		const { getCopiedStyles } = select(store);
-		const styles = getCopiedStyles();
-		// Deep merge nested objects instead of shallow spread
-		const mergedAttributes = {
-			...attributes,
-			...Object.keys(styles).reduce((acc, key) => {
-				// If both source and target are objects, merge them
-				if (
-					styles[key] &&
-					typeof styles[key] === 'object' &&
-					!Array.isArray(styles[key]) &&
-					attributes[key] &&
-					typeof attributes[key] === 'object' &&
-					!Array.isArray(attributes[key])
-				) {
-					acc[key] = {
-						...attributes[key],
-						...styles[key],
-					};
-				} else {
-					// For arrays or primitives, replace entirely
-					acc[key] = styles[key];
-				}
-				return acc;
-			}, {}),
+	Object.keys(source).forEach((key) => {
+		const sourceValue = source[key];
+		const targetValue = target[key];
+
+		// If both are objects (not arrays), recursively merge
+		if (
+			sourceValue &&
+			typeof sourceValue === 'object' &&
+			!Array.isArray(sourceValue) &&
+			targetValue &&
+			typeof targetValue === 'object' &&
+			!Array.isArray(targetValue)
+		) {
+			result[key] = deepMerge(targetValue, sourceValue);
+		} else if (sourceValue !== undefined) {
+			// For arrays and primitives, replace entirely
+			result[key] = sourceValue;
+		}
+	});
+
+	return result;
+};
+
+/**
+ * CopyPasteStylesHandler - Provides copy/paste functionality for chart styles.
+ *
+ * Styles are persisted to localStorage for cross-window support.
+ * Only visual/style attributes are copied, not data-related attributes.
+ *
+ * @param {Object}   props               - Component props
+ * @param {Object}   props.attributes    - The chart block attributes
+ * @param {Function} props.setAttributes - Function to update block attributes
+ */
+const CopyPasteStylesHandler = ({ attributes, setAttributes }) => {
+	const styleAttributes = getCopyableStyleAttributes(attributes);
+	const { copyChartStyles, refreshFromStorage } = useDispatch(store);
+
+	// Use useSelect for reactive state updates
+	const { hasCopiedStyles, copiedStyles } = useSelect(
+		(select) => ({
+			hasCopiedStyles: select(store).getCopiedStylesStatus(),
+			copiedStyles: select(store).getCopiedStyles(),
+		}),
+		[]
+	);
+
+	// Refresh from localStorage when window gains focus (cross-window support)
+	useEffect(() => {
+		const handleFocus = () => {
+			refreshFromStorage();
 		};
+
+		window.addEventListener('focus', handleFocus);
+		// Also listen for storage events from other windows
+		const handleStorageChange = (e) => {
+			if (e.key === 'prc-chart-builder-copied-styles') {
+				refreshFromStorage();
+			}
+		};
+		window.addEventListener('storage', handleStorageChange);
+
+		return () => {
+			window.removeEventListener('focus', handleFocus);
+			window.removeEventListener('storage', handleStorageChange);
+		};
+	}, [refreshFromStorage]);
+
+	const copyStyles = useCallback(() => {
+		copyChartStyles(styleAttributes);
+	}, [copyChartStyles, styleAttributes]);
+
+	const pasteStyles = useCallback(() => {
+		if (!copiedStyles || Object.keys(copiedStyles).length === 0) {
+			return;
+		}
+
+		// Deep merge copied styles into current attributes
+		const mergedAttributes = deepMerge(attributes, copiedStyles);
 		setAttributes(mergedAttributes);
-	};
+	}, [copiedStyles, attributes, setAttributes]);
 
 	return (
-		<>
-			<BlockControls>
-				<ToolbarGroup>
+		<BlockControls group="other">
+			<ToolbarGroup>
+				<ToolbarButton
+					icon={copy}
+					name="copy-styles"
+					label={COPY_STYLES_LABEL}
+					title={COPY_STYLES_LABEL}
+					onClick={copyStyles}
+				/>
+				{hasCopiedStyles && (
 					<ToolbarButton
-						name="copy-styles"
-						label={COPY_STYLES_LABEL}
-						title={COPY_STYLES_LABEL}
-						onClick={() => copyStyles()}
-					>
-						{COPY_STYLES_LABEL}
-					</ToolbarButton>
-				</ToolbarGroup>
-				{hasCopiedLayoutStyles && (
-					<ToolbarGroup>
-						<ToolbarButton
-							name="paste-styles"
-							label={PASTE_STYLES_LABEL}
-							title={PASTE_STYLES_LABEL}
-							onClick={() => pasteStyles()}
-						>
-							{PASTE_STYLES_LABEL}
-						</ToolbarButton>
-					</ToolbarGroup>
+						icon={brush}
+						name="paste-styles"
+						label={PASTE_STYLES_LABEL}
+						title={PASTE_STYLES_LABEL}
+						onClick={pasteStyles}
+					/>
 				)}
-			</BlockControls>
-			{children}
-		</>
+			</ToolbarGroup>
+		</BlockControls>
 	);
 };
 

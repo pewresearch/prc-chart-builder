@@ -9,6 +9,18 @@
 import { findAlignments, generateLabelId } from './alignment-utils';
 
 /**
+ * Generate a label key from x value and category.
+ * This is the format used to store customizations in block attributes.
+ *
+ * @param {string|number|Date} x        - The x value
+ * @param {string}             category - The category name
+ * @return {string} Key in format "xValue::category"
+ */
+export function generateLabelKey(x, category) {
+	return `${x}::${category}`;
+}
+
+/**
  * Create wpEditorFunctions object for chart interactions
  *
  * @param {Object}   params
@@ -19,7 +31,8 @@ import { findAlignments, generateLabelId } from './alignment-utils';
  * @param {Function} params.toggleSelection          - Function to enable/disable block selection
  * @param {Function} params.setAlignments            - Function to update alignment overlay state
  * @param {Function} params.setIsDragging            - Function to update drag state (for disabling tooltips)
- * @return {Object} wpEditorFunctions object with annotations and labels handlers
+ * @param {Function} params.onElementClick           - Callback when a chart element (label/shape) is clicked for customization
+ * @return {Object} wpEditorFunctions object with annotations, labels, shapes, and legend handlers
  */
 export function createWpEditorFunctions({
 	attrs,
@@ -29,6 +42,7 @@ export function createWpEditorFunctions({
 	toggleSelection,
 	setAlignments,
 	setIsDragging,
+	onElementClick,
 }) {
 	// Label position registry for alignment detection
 	const labelRegistry = new Map();
@@ -174,6 +188,174 @@ export function createWpEditorFunctions({
 				if (toggleSelection) {
 					toggleSelection(true);
 				}
+			},
+
+			/**
+			 * Handle click on a label to open customization popover.
+			 *
+			 * @param {Object}      dataPoint    - The data point object from chartData
+			 * @param {string}      category     - The category key (e.g., 'n1', 'Democrats')
+			 * @param {string}      defaultLabel - The programmatically generated label
+			 * @param {HTMLElement} anchorEl     - The DOM element to anchor the popover to
+			 */
+			onClick: (dataPoint, category, defaultLabel, anchorEl) => {
+				if (onElementClick) {
+					onElementClick({
+						elementType: 'label',
+						dataPoint,
+						category,
+						defaultLabel,
+						anchorEl,
+					});
+				}
+			},
+
+			/**
+			 * Update label customizations (text, visibility, styles).
+			 * Called from the DataPointPopover when user makes changes.
+			 *
+			 * @param {Object} updates - Object with optional keys: customLabels, customVisibility, customStyles
+			 */
+			updateCustomizations: (updates) => {
+				// Merge updates into the labels attribute viewport-aware
+				const labelsUpdates = {};
+
+				if (updates.customLabels !== undefined) {
+					labelsUpdates.customLabels = updates.customLabels;
+				}
+				if (updates.customVisibility !== undefined) {
+					labelsUpdates.customVisibility = updates.customVisibility;
+				}
+				if (updates.customStyles !== undefined) {
+					labelsUpdates.customStyles = updates.customStyles;
+				}
+
+				if (Object.keys(labelsUpdates).length > 0) {
+					updateAttributeForDevice('labels', labelsUpdates);
+				}
+			},
+
+			/**
+			 * Get current label customizations from attributes.
+			 * Used by the popover to show current values.
+			 *
+			 * @return {Object} Current customizations: { customLabels, customVisibility, customStyles, customPositions }
+			 */
+			getCustomizations: () => {
+				return {
+					customPositions:
+						getCurrentValue('labels', 'customPositions') || {},
+					customLabels:
+						getCurrentValue('labels', 'customLabels') || {},
+					customVisibility:
+						getCurrentValue('labels', 'customVisibility') || {},
+					customStyles:
+						getCurrentValue('labels', 'customStyles') || {},
+				};
+			},
+		},
+		shapes: {
+			/**
+			 * Handle click on a shape to open customization popover.
+			 *
+			 * @param {Object}      dataPoint    - The data point object from chartData
+			 * @param {string}      category     - The category key (e.g., 'n1', 'Democrats')
+			 * @param {string}      defaultColor - The default fill color
+			 * @param {HTMLElement} anchorEl     - The DOM element to anchor the popover to
+			 */
+			onClick: (dataPoint, category, defaultColor, anchorEl) => {
+				if (onElementClick) {
+					onElementClick({
+						elementType: 'shape',
+						dataPoint,
+						category,
+						defaultColor,
+						anchorEl,
+					});
+				}
+			},
+
+			/**
+			 * Update shape customizations (fill, stroke, opacity, etc.).
+			 * Called from the popover when user makes changes.
+			 *
+			 * @param {Object} updates - Object with customStyles updates
+			 */
+			updateCustomizations: (updates) => {
+				if (updates.customStyles !== undefined) {
+					updateAttributeForDevice('shapes', {
+						customStyles: updates.customStyles,
+					});
+				}
+			},
+
+			/**
+			 * Get current shape customizations from attributes.
+			 * Used by the popover to show current values.
+			 *
+			 * @return {Object} Current customizations: { customStyles }
+			 */
+			getCustomizations: () => {
+				return {
+					customStyles:
+						getCurrentValue('shapes', 'customStyles') || {},
+				};
+			},
+		},
+		segments: {
+			/**
+			 * Handle click on a line segment to open customization popover.
+			 *
+			 * @param {Object}      startPoint   - The start data point of the segment
+			 * @param {Object}      endPoint     - The end data point of the segment
+			 * @param {string}      category     - The category key (e.g., 'n1', 'Democrats')
+			 * @param {string}      defaultColor - The default stroke color
+			 * @param {HTMLElement} anchorEl     - The DOM element to anchor the popover to
+			 */
+			onClick: (
+				startPoint,
+				endPoint,
+				category,
+				defaultColor,
+				anchorEl
+			) => {
+				if (onElementClick) {
+					onElementClick({
+						elementType: 'segment',
+						startPoint,
+						endPoint,
+						category,
+						defaultColor,
+						anchorEl,
+					});
+				}
+			},
+
+			/**
+			 * Update segment customizations (stroke, strokeWidth, opacity, strokeDasharray).
+			 * Called from the popover when user makes changes.
+			 *
+			 * @param {Object} updates - Object with segmentStyles updates
+			 */
+			updateCustomizations: (updates) => {
+				if (updates.segmentStyles !== undefined) {
+					updateAttributeForDevice('shapes', {
+						segmentStyles: updates.segmentStyles,
+					});
+				}
+			},
+
+			/**
+			 * Get current segment customizations from attributes.
+			 * Used by the popover to show current values.
+			 *
+			 * @return {Object} Current customizations: { segmentStyles }
+			 */
+			getCustomizations: () => {
+				return {
+					segmentStyles:
+						getCurrentValue('shapes', 'segmentStyles') || {},
+				};
 			},
 		},
 		legend: {

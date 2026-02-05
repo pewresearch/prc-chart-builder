@@ -72,6 +72,7 @@ const getConfig = (
 		line,
 		explodedBar,
 		labels,
+		shapes,
 		pie,
 		dotPlot,
 		independentAxis,
@@ -479,6 +480,10 @@ const getConfig = (
 			hasPathStroke: elementHasStroke,
 			pathStrokeColor: 'white',
 			pathStrokeWidth: 1,
+			groupArcStyle: {
+				...baseConfig.pie.groupArcStyle,
+				...pie?.groupArcStyle,
+			},
 		},
 		explodedBar: {
 			...baseConfig.explodedBar,
@@ -496,6 +501,10 @@ const getConfig = (
 		labels: {
 			...baseConfig.labels,
 			...labels,
+		},
+		shapes: {
+			customStyles: shapes?.customStyles || {},
+			segmentStyles: shapes?.segmentStyles || {},
 		},
 		voronoi: {
 			...baseConfig.voronoi,
@@ -529,7 +538,10 @@ const getConfig = (
 			...baseConfig.annotations,
 			...annotations,
 		},
-		drawings: drawings || [],
+		drawings: {
+			active: drawings && drawings.length > 0,
+			items: drawings || [],
+		},
 	};
 };
 

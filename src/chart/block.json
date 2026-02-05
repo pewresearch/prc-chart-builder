@@ -285,7 +285,17 @@
 				"labelUnitPosition": "end",
 				"textAnchor": "middle",
 				"customLabelFormat": null,
-				"customPositions": {}
+				"customPositions": {},
+				"customLabels": {},
+				"customVisibility": {},
+				"customStyles": {}
+			}
+		},
+		"shapes": {
+			"type": "object",
+			"default": {
+				"customStyles": {},
+				"segmentStyles": {}
 			}
 		},
 		"bar": {
@@ -336,7 +346,14 @@
 				"innerRadius": 0,
 				"padAngle": 0,
 				"cornerRadius": 0,
-				"sortByValue": false
+				"sortByValue": false,
+				"groupGapAngle": 10,
+				"showGroupArcs": false,
+				"groupArcStyle": {
+					"stroke": "#666666",
+					"strokeWidth": 1,
+					"strokeDasharray": "4,4"
+				}
 			}
 		},
 		"nodes": {
@@ -418,6 +435,10 @@
 				"activeOnMobile": false,
 				"items": []
 			}
+		},
+		"drawings": {
+			"type": "array",
+			"default": []
 		},
 		"dataRender": {
 			"type": "object",

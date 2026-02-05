@@ -384,7 +384,10 @@ const USABlockMapTemplate = [
 		'prc-chart-builder/chart',
 		mergeWithDefaults({
 			_version: 'v2',
-			chartType: 'map-usa-block',
+			lock: {
+				move: true,
+				remove: true,
+			},
 			layout: {
 				type: 'map-usa-block',
 				width: 640,

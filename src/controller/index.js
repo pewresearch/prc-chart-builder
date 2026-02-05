@@ -10,6 +10,7 @@ import { store as preferencesStore } from '@wordpress/preferences';
  * Internal Dependencies
  */
 import './style.scss';
+import './freeform-inserter-filter';
 import metadata from './block.json';
 import edit from './edit';
 import save from './save';

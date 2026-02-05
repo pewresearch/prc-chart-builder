@@ -43,8 +43,8 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 		setAttributes
 	);
 
-	// Content attribute - NOT viewport-aware (defines what data categories to use)
-	const divergingBar = attributes.divergingBar || {};
+	// Get viewport-aware divergingBar configuration
+	const divergingBar = getCurrentValue('divergingBar') || {};
 	const neutralBar = divergingBar.neutralBar || {};
 
 	return (
@@ -92,13 +92,13 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						label={__('Neutral Bar Active')}
 						checked={neutralBar.active || false}
 						onChange={(newValue) => {
-							setAttributes({
-								divergingBar: {
-									...divergingBar,
-									neutralBar: {
-										...neutralBar,
-										active: newValue,
-									},
+							const currentNeutralBar =
+								getCurrentValue('divergingBar', 'neutralBar') ||
+								{};
+							updateAttributeForDevice('divergingBar', {
+								neutralBar: {
+									...currentNeutralBar,
+									active: newValue,
 								},
 							});
 						}}
@@ -110,13 +110,13 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						label={__('Neutral Bar Separator')}
 						checked={neutralBar.separator || false}
 						onChange={(newValue) => {
-							setAttributes({
-								divergingBar: {
-									...divergingBar,
-									neutralBar: {
-										...neutralBar,
-										separator: newValue,
-									},
+							const currentNeutralBar =
+								getCurrentValue('divergingBar', 'neutralBar') ||
+								{};
+							updateAttributeForDevice('divergingBar', {
+								neutralBar: {
+									...currentNeutralBar,
+									separator: newValue,
 								},
 							});
 						}}
@@ -138,13 +138,13 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						value={neutralBar.offsetX}
 						disabled={!neutralBar.active}
 						onChange={(value) => {
-							setAttributes({
-								divergingBar: {
-									...divergingBar,
-									neutralBar: {
-										...neutralBar,
-										offsetX: formatNum(value, 'integer'),
-									},
+							const currentNeutralBar =
+								getCurrentValue('divergingBar', 'neutralBar') ||
+								{};
+							updateAttributeForDevice('divergingBar', {
+								neutralBar: {
+									...currentNeutralBar,
+									offsetX: formatNum(value, 'integer'),
 								},
 							});
 						}}
@@ -163,16 +163,16 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						value={neutralBar.separatorOffsetX}
 						disabled={!neutralBar.separator}
 						onChange={(value) => {
-							setAttributes({
-								divergingBar: {
-									...divergingBar,
-									neutralBar: {
-										...neutralBar,
-										separatorOffsetX: formatNum(
-											value,
-											'integer'
-										),
-									},
+							const currentNeutralBar =
+								getCurrentValue('divergingBar', 'neutralBar') ||
+								{};
+							updateAttributeForDevice('divergingBar', {
+								neutralBar: {
+									...currentNeutralBar,
+									separatorOffsetX: formatNum(
+										value,
+										'integer'
+									),
 								},
 							});
 						}}
@@ -185,17 +185,18 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 				>
 					<RangeControl
 						label={__('Percent of Inner Width')}
+						help={__(
+							'This calculates the percentage of the total chart area that the main bars (positive and negative) will occupy. This is useful for adjusting the width of the bars to ensure they fit within the chart area without overlapping.'
+						)}
 						withInputField
 						disabled={!neutralBar.active}
 						min={0}
-						max={100}
+						max={1}
+						step={0.01}
 						value={divergingBar.percentOfInnerWidth}
 						onChange={(w) => {
-							setAttributes({
-								divergingBar: {
-									...divergingBar,
-									percentOfInnerWidth: formatNum(w, 'integer'),
-								},
+							updateAttributeForDevice('divergingBar', {
+								percentOfInnerWidth: formatNum(w, 'integer'),
 							});
 						}}
 					/>
