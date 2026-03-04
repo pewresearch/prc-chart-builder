@@ -7,3 +7,6 @@
 export { useLabelCustomizations } from './useLabelCustomizations';
 export { useShapeCustomizations } from './useShapeCustomizations';
 export { useSegmentCustomizations } from './useSegmentCustomizations';
+export { useTickLabelCustomizations } from './useTickLabelCustomizations';
+export { useAnnotationCustomizations } from './useAnnotationCustomizations';
+export { useLegendItemCustomizations } from './useLegendItemCustomizations';

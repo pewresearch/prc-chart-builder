@@ -104,9 +104,17 @@ const { actions, state } = store('prc-chart-builder/chart', {
 					viewportLabels.customStyles || labels.customStyles || {},
 			};
 
+			// Determine group breaks category for key matching
+			const activeGroupBreaksCategory =
+				config.dataRender?.groupBreaksActive &&
+				config.dataRender?.groupBreaksCategory
+					? config.dataRender.groupBreaksCategory
+					: null;
+
 			const dataWithCustomizations = mergeCustomLabelData(
 				data,
-				labelCustomizations
+				labelCustomizations,
+				activeGroupBreaksCategory
 			);
 
 			if (!ChartBuilderRenderer) {

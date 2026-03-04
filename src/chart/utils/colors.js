@@ -1,9 +1,9 @@
 const colors = {
-	general: ['#436983', '#bf3927', '#756a7e', '#ea9e2c'],
+	general: ['#456A83', '#BF3B27', '#756a7e', '#ea9e2c'],
 	'politics-main': ['#d1a730', '#a55a26', '#949d48'],
 	'global-main': ['#949d48', '#006699', '#a55a26'],
-	'religion-main': ['#0090bf', '#a55a26', '#949d48'],
-	'social-trends-main': ['#377668', '#d1a730', '#949d48'],
+	'religion-main': ['#0090C0', '#a55a26', '#949d48'],
+	'social-trends-main': ['#387668', '#d1a730', '#949d48'],
 	'journalism-main': ['#733d47', '#d1a730', '#949d48'],
 	'internet-main': ['#006699', '#949d48', '#d1a730'],
 	'hispanic-main': ['#a55a26', '#d1a730', '#949d48'],

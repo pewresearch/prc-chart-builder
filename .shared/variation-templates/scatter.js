@@ -71,11 +71,16 @@ const scatterTemplate = [
 			},
 			metadata: {
 				active: true,
-				title: 'Scatterplot Chart',
+				title: 'A Scatterplot Chart',
 				subtitle: 'A subtitle for the chart',
 				source: 'Source: Add source note here',
 				note: 'Note: Add note about the chart',
 				tag: 'PEW RESEARCH CENTER',
+			},
+			dataRender: {
+				groupBreaksActive: false,
+				groupBreaksCategory: '',
+				groupBreaksCategoryValues: [],
 			},
 			independentAxis: {
 				tickMarks: {

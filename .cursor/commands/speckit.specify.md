@@ -17,6 +17,7 @@ The text the user typed after `/speckit.specify` in the triggering message **is*
 Given that feature description, do this:
 
 1. **Generate a concise short name** (2-4 words) for the branch:
+
     - Analyze the feature description and extract the most meaningful keywords
     - Create a 2-4 word short name that captures the essence of the feature
     - Use action-noun format when possible (e.g., "add-user-auth", "fix-payment-bug")
@@ -37,21 +38,25 @@ Given that feature description, do this:
     ```
 
     b. Find the highest feature number across all sources for the short-name:
+
     - Remote branches: `git ls-remote --heads origin | grep -E 'refs/heads/[0-9]+-<short-name>$'`
     - Local branches: `git branch | grep -E '^[* ]*[0-9]+-<short-name>$'`
     - Specs directories: Check for directories matching `specs/[0-9]+-<short-name>`
 
     c. Determine the next available number:
+
     - Extract all numbers from all three sources
     - Find the highest number N
     - Use N+1 for the new branch number
 
     d. Run the script `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS"` with the calculated number and short-name:
+
     - Pass `--number N+1` and `--short-name "your-short-name"` along with the feature description
     - Bash example: `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" --json --number 5 --short-name "user-auth" "Add user authentication"`
     - PowerShell example: `.specify/scripts/bash/create-new-feature.sh --json "$ARGUMENTS" -Json -Number 5 -ShortName "user-auth" "Add user authentication"`
 
     **IMPORTANT**:
+
     - Check all three sources (remote branches, local branches, specs directories) to find the highest number
     - Only match branches/directories with the exact short-name pattern
     - If no existing branches/directories found with this short-name, start with number 1
@@ -63,6 +68,7 @@ Given that feature description, do this:
 3. Load `.specify/templates/spec-template.md` to understand required sections.
 
 4. Follow this execution flow:
+
     1. Parse user description from Input
        If empty: ERROR "No feature description provided"
     2. Extract key concepts from description
@@ -131,19 +137,23 @@ Given that feature description, do this:
     ```
 
     b. **Run Validation Check**: Review the spec against each checklist item:
+
     - For each item, determine if it passes or fails
     - Document specific issues found (quote relevant spec sections)
 
     c. **Handle Validation Results**:
+
     - **If all items pass**: Mark checklist complete and proceed to step 6
 
     - **If items fail (excluding [NEEDS CLARIFICATION])**:
+
         1. List the failing items and specific issues
         2. Update the spec to address each issue
         3. Re-run validation until all items pass (max 3 iterations)
         4. If still failing after 3 iterations, document remaining issues in checklist notes and warn user
 
     - **If [NEEDS CLARIFICATION] markers remain**:
+
         1. Extract all [NEEDS CLARIFICATION: ...] markers from the spec
         2. **LIMIT CHECK**: If more than 3 markers exist, keep only the 3 most critical (by scope/security/UX impact) and make informed guesses for the rest
         3. For each clarification needed (max 3), present options to user in this format:

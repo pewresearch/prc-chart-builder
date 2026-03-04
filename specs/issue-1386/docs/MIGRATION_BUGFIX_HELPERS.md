@@ -191,6 +191,7 @@ v2 Attributes (nested)
 ## Files Modified
 
 1. **`src/chart/utils/helpers.js`** (lines 38-96)
+
     - Updated `stringToArrayOfNums` to handle arrays
     - Updated `stringToArray` to handle arrays
     - Added type checking for both functions

@@ -299,6 +299,7 @@ Once all charts migrated via WP-CLI:
 **Implement Option 3 (Hybrid)**:
 
 1. **NOW (Phase 3.5)**: Add server-side migration filter
+
     - Tasks T061a-T061g (~4 hours)
     - Enables frontend/API immediately
     - Critical for MVP
@@ -313,11 +314,13 @@ Once all charts migrated via WP-CLI:
 ## Files to Create
 
 1. **`includes/class-block-migration.php`**
+
     - PHP class with `migrate_to_nested()` method
     - Matches JavaScript v1.js migration logic
     - Used by both filter and WP-CLI
 
 2. **Test fixtures** (shared)
+
     - JSON files with v1 attributes
     - Used by both JS and PHP tests
     - Ensures parity

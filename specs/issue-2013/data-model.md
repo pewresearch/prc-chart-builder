@@ -63,6 +63,7 @@ Previously, during v1→v2 migration planning, there was a proposal to place `id
 ### Migration Rules
 
 1. **v1 → v2 Transformation**:
+
     - `id` stays at root level (not moved to `io.id`)
     - Flat configuration attributes are reorganized into nested objects
     - `_version` is updated from 'v1' to 'v2'

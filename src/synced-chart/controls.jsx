@@ -12,6 +12,7 @@ import { useEntityProp } from '@wordpress/core-data';
 import { useSelect, useDispatch } from '@wordpress/data';
 import {
 	Button,
+	Notice,
 	TextControl,
 	PanelBody,
 	PanelRow,
@@ -27,16 +28,29 @@ import store from '../controller/store';
 const HIDE_TABLE_LABEL = __('Hide Table');
 const SHOW_TABLE_LABEL = __('Show Table');
 
-export default function Controls({ attributes, clientId, blocks }) {
+export default function Controls({
+	attributes,
+	clientId,
+	blocks,
+	effectiveRef,
+	isForkActive,
+}) {
 	const { ref } = attributes;
+	const displayRef = effectiveRef ?? ref;
 
-	const [title, setTitle] = useEntityProp('postType', 'chart', 'title', ref);
-	const [permalink] = useEntityProp('postType', 'chart', 'link', ref);
+	const [title, setTitle] = useEntityProp(
+		'postType',
+		'chart',
+		'title',
+		displayRef
+	);
+	const [permalink] = useEntityProp('postType', 'chart', 'link', displayRef);
 	const editLink = useMemo(() => {
+		if (!displayRef) return '';
 		const url = new URL(window.location.href);
-		url.searchParams.set('post', ref);
+		url.searchParams.set('post', displayRef);
 		return url.toString();
-	}, [ref]);
+	}, [displayRef]);
 
 	// Get the controller block's id attribute
 	const controllerId = useMemo(() => {
@@ -138,6 +152,14 @@ export default function Controls({ attributes, clientId, blocks }) {
 			</BlockControls>
 			<InspectorControls>
 				<PanelBody>
+					{isForkActive && (
+						<Notice status="warning" isDismissible={false}>
+							{__(
+								'Preview and edit links will open the future revision.',
+								'prc-chart-builder'
+							)}
+						</Notice>
+					)}
 					<div>
 						<TextControl
 							__nextHasNoMarginBottom

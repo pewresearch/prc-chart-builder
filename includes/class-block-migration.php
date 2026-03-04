@@ -1305,7 +1305,7 @@ class Block_Migration {
  *
  * @since 3.0.1
  */
-if ( defined( 'WP_CLI' ) && WP_CLI ) {
+if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
 	class PRC_Chart_Builder_Migration_CLI_Command extends WPCOM_VIP_CLI_Command {
 
 		/**

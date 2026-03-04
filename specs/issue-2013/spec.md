@@ -95,22 +95,26 @@ $chart_id = $attributes['id']; // ✅ Correct
 ### Test Scenarios
 
 1. **Create New Chart**
+
     - Insert controller block
     - Add table and chart blocks
     - Verify `attributes.id` is set to `{controllerId}-chart`
     - Verify `attributes.io.id` does not exist
 
 2. **Update Table Data**
+
     - Modify table cells
     - Verify chart updates with new data
     - Verify no errors in console
 
 3. **Copy/Paste Chart**
+
     - Copy existing chart block
     - Paste in same or different post
     - Verify new unique ID is generated at root level
 
 4. **Static Chart**
+
     - Create static chart with image
     - Verify `id` at root level
     - Verify chart renders correctly

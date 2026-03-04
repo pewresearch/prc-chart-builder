@@ -31,6 +31,12 @@ import { store as blocksStore } from '@wordpress/blocks';
  * Internal Dependencies
  */
 import { formatNum } from '../utils/helpers';
+import {
+	BAR_CHART_TYPES,
+	LINE_CHART_TYPES,
+	NODE_CHART_TYPES,
+	REGRESSION_CHART_TYPES,
+} from '../utils/chart-types';
 import { createPNG, createSVG } from '../utils/image-exports';
 import { useViewportAttributes } from './use-viewport-attributes';
 import BarControls from './bar-controls';
@@ -52,16 +58,15 @@ import DiffColumnControls from './diff-column-controls';
 import MapControls from './map-controls';
 import DrawingControls from './drawing-controls';
 import PieControls from './pie-controls';
+import TreemapControls from './treemap-controls';
+import SankeyControls from './sankey-controls';
+import RegressionControls from './regression-controls';
 
 function ControlSections(props) {
 	const { attributes, limitControls, clientId } = props;
 	if (limitControls) {
 		return <TextFieldControls {...props} />;
 	}
-	const barTypes = ['bar', 'stacked-bar', 'diverging-bar', 'exploded-bar'];
-	const lineTypes = ['line', 'area', 'stacked-area'];
-	const nodeTypes = ['scatter', 'dot-plot'];
-
 	// Access viewport-aware and non-viewport-aware attributes
 	const io = attributes.io || {}; // io is not viewport-aware
 	const layout = attributes.layout || {}; // Will use getCurrentValue in specific controls
@@ -83,11 +88,11 @@ function ControlSections(props) {
 			)}
 			{'map' === chartFamily && <MapControls {...props} />}
 
-			{barTypes.includes(chartType) && <BarControls {...props} />}
+			{BAR_CHART_TYPES.includes(chartType) && <BarControls {...props} />}
 			{'diverging-bar' === chartType && (
 				<DivergingBarControls {...props} />
 			)}
-			{lineTypes.includes(chartType) && (
+			{LINE_CHART_TYPES.includes(chartType) && (
 				<>
 					<PlotBandControls {...props} />
 					<LineControls {...props} />
@@ -95,10 +100,15 @@ function ControlSections(props) {
 			)}
 			{'dot-plot' === chartType && <DotPlotControls {...props} />}
 			{'pie' === chartType && <PieControls {...props} />}
-			{nodeTypes.includes(chartType) ||
-				(lineTypes.includes(chartType) && (
+			{'treemap' === chartType && <TreemapControls {...props} />}
+			{'sankey' === chartType && <SankeyControls {...props} />}
+			{NODE_CHART_TYPES.includes(chartType) ||
+				(LINE_CHART_TYPES.includes(chartType) && (
 					<NodeControls {...props} chartType={chartType} />
 				))}
+			{REGRESSION_CHART_TYPES.includes(chartType) && (
+				<RegressionControls {...props} />
+			)}
 			{diffColumn.active && <DiffColumnControls {...props} />}
 			<AnnotationControls {...props} />
 			<LabelControls {...props} />

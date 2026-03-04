@@ -85,7 +85,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 			fontWeight: 'normal',
 			fontStyle: 'normal',
 			fontFamily: "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
-			fill: '#000000',
+			fill: 'light-dark(#000000, #f0f0f0)',
 			textAnchor: 'start',
 			verticalAnchor: 'start',
 			rotation: 0,

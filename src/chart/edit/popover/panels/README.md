@@ -7,16 +7,19 @@ This folder contains the panel components for the chart element customization po
 The popover system uses a modular architecture where:
 
 1. **ChartElementPopover** (`../index.jsx`) - The main container that:
+
     - Handles positioning and click-outside behavior
     - Routes to the appropriate panel based on `elementType`
     - Manages the popover lifecycle
 
 2. **Panels** (this folder) - Specialized UI components for each element type:
+
     - `LabelPanel` - Customize data point labels
     - `ShapePanel` - Customize shapes (bars, circles, pie slices)
     - `LineSegmentPanel` - Customize individual line segments
 
 3. **Hooks** (`../hooks/`) - State management for each panel type:
+
     - `useLabelCustomizations`
     - `useShapeCustomizations`
     - `useSegmentCustomizations`

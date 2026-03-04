@@ -452,12 +452,10 @@ const WorldMapTemplate = [
 				active: true,
 				markerStyle: 'rect',
 			},
-			map: {
-				scale: 'threshold',
-				scaleDomain: [20, 100, 200, 500],
-			},
 			dataRender: {
 				categories: ['Population (millions)'],
+				mapScale: 'threshold',
+				mapScaleDomain: [20, 100, 200, 500],
 			},
 			io: {
 				isConvertedChart: false,

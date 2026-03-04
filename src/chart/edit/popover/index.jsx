@@ -17,7 +17,15 @@ import {
 } from '@wordpress/components';
 import { closeSmall } from '@wordpress/icons';
 
-import { LabelPanel, ShapePanel, LineSegmentPanel } from './panels';
+import {
+	LabelPanel,
+	ShapePanel,
+	LineSegmentPanel,
+	RegressionLinePanel,
+	AnnotationPanel,
+	TickLabelPanel,
+	LegendItemPanel,
+} from './panels';
 
 /**
  * Element type constants.
@@ -26,6 +34,10 @@ export const ELEMENT_TYPES = {
 	LABEL: 'label',
 	SHAPE: 'shape',
 	SEGMENT: 'segment',
+	REGRESSION: 'regression',
+	ANNOTATION: 'annotation',
+	TICK_LABEL: 'tickLabel',
+	LEGEND_ITEM: 'legendItem',
 };
 
 /**
@@ -40,6 +52,14 @@ function getPanelTitle(elementType) {
 			return __('Shape Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.SEGMENT:
 			return __('Line Segment Settings', 'prc-chart-builder');
+		case ELEMENT_TYPES.REGRESSION:
+			return __('Regression Line Settings', 'prc-chart-builder');
+		case ELEMENT_TYPES.ANNOTATION:
+			return __('Annotation Settings', 'prc-chart-builder');
+		case ELEMENT_TYPES.TICK_LABEL:
+			return __('Tick Label Settings', 'prc-chart-builder');
+		case ELEMENT_TYPES.LEGEND_ITEM:
+			return __('Legend Item Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.LABEL:
 		default:
 			return __('Label Settings', 'prc-chart-builder');
@@ -54,27 +74,43 @@ function getPanelTitle(elementType) {
  * @param {Object}   props
  * @param {Object}   props.anchorRef             - Ref to the element to anchor to
  * @param {string}   props.elementType           - Type of element ('label', 'shape', or 'segment')
- * @param {Object}   props.dataPoint             - The data point object (for labels/shapes)
- * @param {Object}   props.startPoint            - The start point of segment (for segments)
- * @param {Object}   props.endPoint              - The end point of segment (for segments)
- * @param {string}   props.category              - The category key
- * @param {string}   props.defaultLabel          - The default label value (for labels)
- * @param {string}   props.defaultColor          - The default color (for shapes/segments)
- * @param {Object}   props.currentCustomizations - Current customizations
- * @param {Function} props.onUpdate              - Callback to update
- * @param {Function} props.onClose               - Callback when closing
+ * @param {string}   props.chartType             - The chart layout type (e.g., 'bar', 'treemap', 'pie')
+ * @param {Object}      props.dataPoint             - The data point object (for labels/shapes)
+ * @param {Object}      props.startPoint            - The start point of segment (for segments)
+ * @param {Object}      props.endPoint              - The end point of segment (for segments)
+ * @param {string}      props.category              - The category key
+ * @param {string}      props.defaultLabel          - The default label value (for labels)
+ * @param {string}      props.defaultColor          - The default color (for shapes/segments)
+ * @param {string|null} props.groupValue            - The group value (when groupBreaksActive), or null
+ * @param {Object}      props.currentCustomizations - Current customizations
+ * @param {string}     props.annotationId          - Annotation index (for annotations)
+ * @param {Object}     props.annotation            - Annotation object (for annotations)
+ * @param {string}     props.axisKey               - 'independent' or 'dependent' (for tick labels)
+ * @param {string}     props.tickValue              - Raw tick value (for tick labels)
+ * @param {string}     props.categoryValue          - Category/domain value (for legend items)
+ * @param {Function}   props.onUpdate              - Callback to update
+ * @param {Function}   props.onDelete              - Callback to delete (for annotations)
+ * @param {Function}   props.onClose               - Callback when closing
  */
 export function ChartElementPopover({
 	anchorRef,
 	elementType = ELEMENT_TYPES.LABEL,
+	chartType,
 	dataPoint,
 	startPoint,
 	endPoint,
 	category,
 	defaultLabel,
 	defaultColor,
+	groupValue = null,
 	currentCustomizations = {},
+	annotationId,
+	annotation,
+	axisKey,
+	tickValue,
+	categoryValue,
 	onUpdate,
+	onDelete,
 	onClose,
 }) {
 	// Ref for the popover content to detect clicks outside
@@ -121,32 +157,72 @@ export function ChartElementPopover({
 						dataPoint={dataPoint}
 						category={category}
 						defaultColor={defaultColor}
+						groupValue={groupValue}
 						currentCustomizations={currentCustomizations}
 						onUpdate={onUpdate}
 					/>
 				);
-			case ELEMENT_TYPES.SEGMENT:
+		case ELEMENT_TYPES.SEGMENT:
+			return (
+				<LineSegmentPanel
+					startPoint={startPoint}
+					endPoint={endPoint}
+					category={category}
+					defaultColor={defaultColor}
+					currentCustomizations={currentCustomizations}
+					onUpdate={onUpdate}
+				/>
+			);
+		case ELEMENT_TYPES.REGRESSION:
+			return (
+				<RegressionLinePanel
+					category={category}
+					defaultColor={defaultColor}
+					currentCustomizations={currentCustomizations}
+					onUpdate={onUpdate}
+				/>
+			);
+		case ELEMENT_TYPES.ANNOTATION:
 				return (
-					<LineSegmentPanel
-						startPoint={startPoint}
-						endPoint={endPoint}
-						category={category}
-						defaultColor={defaultColor}
-						currentCustomizations={currentCustomizations}
+					<AnnotationPanel
+						annotationId={annotationId}
+						annotation={annotation}
 						onUpdate={onUpdate}
+						onDelete={onDelete}
 					/>
 				);
-			case ELEMENT_TYPES.LABEL:
-			default:
-				return (
-					<LabelPanel
-						dataPoint={dataPoint}
-						category={category}
-						defaultLabel={defaultLabel}
-						currentCustomizations={currentCustomizations}
-						onUpdate={onUpdate}
-					/>
-				);
+		case ELEMENT_TYPES.TICK_LABEL:
+			return (
+				<TickLabelPanel
+					axisKey={axisKey}
+					tickValue={tickValue}
+					defaultLabel={defaultLabel}
+					currentCustomizations={currentCustomizations}
+					onUpdate={onUpdate}
+				/>
+			);
+		case ELEMENT_TYPES.LEGEND_ITEM:
+			return (
+				<LegendItemPanel
+					categoryValue={categoryValue}
+					defaultLabel={defaultLabel}
+					currentCustomizations={currentCustomizations}
+					onUpdate={onUpdate}
+				/>
+			);
+	case ELEMENT_TYPES.LABEL:
+		default:
+			return (
+				<LabelPanel
+					dataPoint={dataPoint}
+					category={category}
+					defaultLabel={defaultLabel}
+					groupValue={groupValue}
+					chartType={chartType}
+					currentCustomizations={currentCustomizations}
+					onUpdate={onUpdate}
+				/>
+			);
 		}
 	};
 
@@ -192,7 +268,13 @@ export function ChartElementPopover({
 
 // Re-export for convenience
 export { ELEMENT_TYPES as ElementTypes };
-export { LabelPanel, ShapePanel, LineSegmentPanel } from './panels';
+export {
+	LabelPanel,
+	ShapePanel,
+	LineSegmentPanel,
+	RegressionLinePanel,
+	AnnotationPanel,
+} from './panels';
 export { useLabelCustomizations, useShapeCustomizations, useSegmentCustomizations } from './hooks';
 export { generateElementKey, generateSegmentKey, formatDisplayValue } from './utils';
 

@@ -34,6 +34,7 @@ import {
 	__experimentalSpacingSizesControl as SpacingSizesControl,
 } from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
+import { POINT_CHART_TYPES } from '../utils/chart-types';
 import Sorter from './sorter';
 import { useViewportAttributes } from './use-viewport-attributes';
 
@@ -81,8 +82,11 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 	const { chartFamily, availableCategories } = io;
 	const { mapScale, mapScaleDomain, categories: dataCategories } = dataRender;
 	const { neutralBar } = divergingBar;
-	// Determine available legend categories based on chart type
-	// This is the source of truth for what categories exist in the data
+	const isPointBasedChart = POINT_CHART_TYPES.includes(chartType);
+
+	// Determine available legend categories based on chart type.
+	// Point-based charts (scatter, bee-swarm, bubble) with a groupBreaksCategory set
+	// derive their legend items from the unique values of that column.
 	const availableLegendCategories = useMemo(() => {
 		const cat =
 			dataCategories?.length > 0 ? dataCategories : availableCategories;
@@ -102,6 +106,19 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 		if (chartFamily === 'map' && mapScale === 'ordinal') {
 			return mapScaleDomain;
 		}
+		if (isPointBasedChart && dataRender.groupBreaksCategory) {
+			const chartData = io.chartData || [];
+			const groupValues = [
+				...new Set(
+					chartData
+						.map((d) => d[dataRender.groupBreaksCategory])
+						.filter(
+							(v) => v !== null && v !== undefined && v !== ''
+						)
+				),
+			];
+			return groupValues;
+		}
 		return cat;
 	}, [
 		chartType,
@@ -111,6 +128,9 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 		availableCategories,
 		divergingBar,
 		mapScaleDomain,
+		dataRender.groupBreaksCategory,
+		io.chartData,
+		isPointBasedChart,
 	]);
 
 	// Create options for the Sorter
@@ -118,6 +138,7 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 	const legendCategories = getCurrentValue('legend', 'categories');
 	const legendOrderOptions = useMemo(() => {
 		// If legendCategories exists and contains the same items as available categories, use it
+		// (respects custom drag order the user has set, including for point-based charts)
 		if (
 			legendCategories &&
 			legendCategories.length > 0 &&

@@ -40,7 +40,11 @@ export function useLabelCustomizations(labelKey, currentCustomizations, onUpdate
 	const [fontFamily, setFontFamily] = useState(
 		currentStyles.fontFamily || ''
 	);
+	const [fontSize, setFontSize] = useState(currentStyles.fontSize || null);
 	const [maxWidth, setMaxWidth] = useState(currentStyles.maxWidth || 0);
+	const [textOutline, setTextOutline] = useState(
+		currentStyles.textOutline ?? false
+	);
 
 	useEffect(() => {
 		setCustomText(currentText);
@@ -51,7 +55,9 @@ export function useLabelCustomizations(labelKey, currentCustomizations, onUpdate
 		setFontWeight(currentStyles.fontWeight || 'normal');
 		setFontStyle(currentStyles.fontStyle || 'normal');
 		setFontFamily(currentStyles.fontFamily || '');
+		setFontSize(currentStyles.fontSize || null);
 		setMaxWidth(currentStyles.maxWidth || 0);
+		setTextOutline(currentStyles.textOutline ?? false);
 	}, [currentText, currentVisible, currentPosition, currentStyles]);
 
 	const handleTextChange = useCallback(
@@ -109,11 +115,13 @@ export function useLabelCustomizations(labelKey, currentCustomizations, onUpdate
 
 	const handleStyleChange = useCallback(
 		(property, value) => {
-			if (property === 'color') setCustomColor(value);
-			if (property === 'fontWeight') setFontWeight(value);
-			if (property === 'fontStyle') setFontStyle(value);
-			if (property === 'fontFamily') setFontFamily(value);
-			if (property === 'maxWidth') setMaxWidth(value);
+		if (property === 'color') setCustomColor(value);
+		if (property === 'fontWeight') setFontWeight(value);
+		if (property === 'fontStyle') setFontStyle(value);
+		if (property === 'fontFamily') setFontFamily(value);
+		if (property === 'fontSize') setFontSize(value);
+		if (property === 'maxWidth') setMaxWidth(value);
+		if (property === 'textOutline') setTextOutline(value);
 
 			const updated = { ...currentCustomizations.customStyles };
 			const labelStyles = updated[labelKey] || {};
@@ -143,7 +151,9 @@ export function useLabelCustomizations(labelKey, currentCustomizations, onUpdate
 		setFontWeight('normal');
 		setFontStyle('normal');
 		setFontFamily('');
+		setFontSize(null);
 		setMaxWidth(0);
+		setTextOutline(false);
 
 		const labels = { ...currentCustomizations.customLabels };
 		const visibility = { ...currentCustomizations.customVisibility };
@@ -172,7 +182,9 @@ export function useLabelCustomizations(labelKey, currentCustomizations, onUpdate
 		fontWeight !== 'normal' ||
 		fontStyle !== 'normal' ||
 		fontFamily !== '' ||
-		maxWidth > 0;
+		fontSize !== null ||
+		maxWidth > 0 ||
+		textOutline !== false;
 
 	return {
 		customText,
@@ -183,7 +195,9 @@ export function useLabelCustomizations(labelKey, currentCustomizations, onUpdate
 		fontWeight,
 		fontStyle,
 		fontFamily,
+		fontSize,
 		maxWidth,
+		textOutline,
 		hasCustomizations,
 		handleTextChange,
 		handleVisibilityChange,

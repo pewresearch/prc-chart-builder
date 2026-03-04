@@ -1,5 +1,4 @@
-$thunder: #231f20;
-$gallery: #eee;
+$thunder: var(--wp--preset--color--ui-text-color);
 $bluesky: #1385fe;
 $facebook: #3b5998;
 $gray-very-dark: var(--wp--preset--color--ui-gray-very-dark);
@@ -63,7 +62,7 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		line-height: 110%;
 		font-family: var(--wp--preset--font-family--sans-serif) !important;
 		font-weight: 700 !important;
-		color: #231f20;
+		color: $thunder;
 		margin-bottom: 10px;
 	}
 	.cb__subtitle {
@@ -126,9 +125,6 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		font-family: var(--wp--preset--font-family--sans-serif) !important;
 		color: $thunder !important;
 		margin-top: 10px;
-		// @media (prefers-color-scheme: dark) {
-		// 	color: #fff;
-		// }
 	}
 	.wp-chart-builder-table,
 	.wp-chart-builder-table.wp-block-prc-block-table {
@@ -229,9 +225,6 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 				color: #000;
 				cursor: pointer;
 			}
-			// @media (prefers-color-scheme: dark) {
-			// 	color: #fff;
-			// }
 		}
 		.share-modal__body {
 			display: flex;

@@ -101,6 +101,22 @@ class Synced_Chart {
 			return '';
 		}
 
+		// When previewing, use the active fork if the chart has one.
+		$is_fork_preview   = false;
+		$original_chart_id = 0;
+		if ( is_preview() ) {
+			$active_fork_id = get_post_meta( $synced_chart_block->ID, '_prc_active_fork', true );
+			if ( $active_fork_id ) {
+				$fork_post = get_post( $active_fork_id );
+				if ( $fork_post && Content_Type::$post_type === $fork_post->post_type ) {
+					$original_chart_id  = $synced_chart_block->ID;
+					$synced_chart_block = $fork_post;
+					$attributes['ref']  = $fork_post->ID;
+					$is_fork_preview    = true;
+				}
+			}
+		}
+
 		if ( isset( $seen_refs[ $attributes['ref'] ] ) ) {
 			// WP_DEBUG_DISPLAY must only be honored when WP_DEBUG. This precedent
 			// is set in `wp_debug_mode()`.
@@ -138,6 +154,14 @@ class Synced_Chart {
 		$content = $wp_embed->autoembed( $content );
 
 		$content = do_blocks( $content );
+
+		if ( $is_fork_preview && class_exists( '\PRC\Platform\Revisions\Future_Revisions' ) ) {
+			$content = \PRC\Platform\Revisions\Future_Revisions::get_future_revision_banner_html(
+				array(
+					'label' => __( 'Previewing future revision', 'prc-chart-builder' ),
+				)
+			) . $content;
+		}
 
 		unset( $seen_refs[ $attributes['ref'] ] );
 		return $content;

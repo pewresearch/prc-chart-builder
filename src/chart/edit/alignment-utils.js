@@ -40,12 +40,16 @@ export function findAlignments(currentX, currentY, currentLabelId, allLabels) {
 }
 
 /**
- * Generate a unique ID for a label based on its data point and category
+ * Generate a unique ID for a label based on its data point, category, and optional group value.
  *
- * @param {*} x - The x value from the data point
- * @param {string} category - The category/series name
+ * @param {*}           x          - The x value from the data point
+ * @param {string}      category   - The category/series name
+ * @param {string|null} groupValue - The group value (when groupBreaksActive), or null
  * @returns {string} Unique label ID
  */
-export function generateLabelId(x, category) {
+export function generateLabelId(x, category, groupValue = null) {
+	if (groupValue) {
+		return `label-${x}-${category}-${groupValue}`;
+	}
 	return `label-${x}-${category}`;
 }

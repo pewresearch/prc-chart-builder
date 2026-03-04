@@ -249,6 +249,7 @@ Before moving to Phase 4, complete:
 ### Testing Recommendations
 
 1. **Manual Frontend Test**:
+
     - Find a chart post with v1 attributes
     - View it on the frontend (not in editor)
     - Verify chart renders correctly

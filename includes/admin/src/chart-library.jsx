@@ -1,8 +1,4 @@
 /**
- * External Dependencies
- */
-
-/**
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
@@ -18,23 +14,26 @@ import {
 /**
  * Internal Dependencies
  */
-import { DataViews, CreateNewChartDropdown, DropZone } from './components';
+import { DataViews, CreateNewChartModal, DropZone } from './components';
 
 export default function ChartLibrary() {
 	return (
 		<Card>
 			<CardHeader>
-				<Flex>
+				<Flex align="center">
 					<FlexBlock>
-						<h1>
-							{__('Chart Builder Library', 'prc-chart-builder')}
+						<h1 style={{ margin: 0 }}>
+							{__('Chart Library', 'prc-chart-builder')}
 						</h1>
-						<p>
-							{__('Add and manage charts used across the site.')}
+						<p style={{ margin: '4px 0 0', color: '#757575' }}>
+							{__(
+								'Add and manage charts used across the site.',
+								'prc-chart-builder'
+							)}
 						</p>
 					</FlexBlock>
 					<FlexItem>
-						<CreateNewChartDropdown />
+						<CreateNewChartModal />
 					</FlexItem>
 				</Flex>
 			</CardHeader>

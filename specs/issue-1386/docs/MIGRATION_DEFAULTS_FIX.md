@@ -128,6 +128,7 @@ caretPosition: attributes.tooltipCaretPosition,  // ✅ undefined → charting l
 ## Files Modified
 
 1. **`src/chart/deprecations/v1.js`**
+
     - Fixed grid stroke defaults (lines 163-168, 225-230)
     - Fixed label color (line 305)
     - Fixed legend borderStroke/fill (lines 285-286)

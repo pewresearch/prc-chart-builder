@@ -5,6 +5,36 @@
  */
 
 /**
+ * Chart types where label positions are algorithmically determined
+ * and should not support manual drag positioning.
+ */
+export const POSITION_DISABLED_CHART_TYPES = ['treemap'];
+
+/**
+ * Rollout pattern: use these arrays to gate new popover features to a subset
+ * of chart types during development, then expand or remove the restriction
+ * once validated. Pass the array to a helper like:
+ *
+ *   const featureEnabled = SOME_FEATURE_CHART_TYPES.includes(chartType);
+ *
+ * or use `null` to mean "all chart types" (no restriction).
+ */
+
+/**
+ * Chart types that support inline annotation editing via click-to-popover.
+ * Validated on horizontal bar; now enabled for all chart types.
+ * Set to a string array to restrict to specific types during future rollouts.
+ */
+export const ANNOTATION_POPOVER_CHART_TYPES = null; // null = all chart types
+
+/**
+ * Chart types that support inline tick label editing via click-to-popover.
+ * Start with a restricted list (e.g. ['bar']) when rolling out, then set
+ * to null once validated across all chart types.
+ */
+export const TICK_LABEL_POPOVER_CHART_TYPES = null; // null = all chart types
+
+/**
  * Normalize a value for use in keys.
  * Converts Date objects to ISO strings for consistent keys across editor and frontend.
  *
@@ -20,16 +50,21 @@ function normalizeKeyValue(value) {
 }
 
 /**
- * Generate a unique key from x value and category.
+ * Generate a unique key from x value, category, and optional group value.
  * Used for storing customizations in block attributes.
  * Normalizes Date objects to ISO strings for consistent keys.
  *
- * @param {string|number|Date} x        - The x value
- * @param {string}             category - The category name
- * @return {string} Key in format "xValue::category"
+ * @param {string|number|Date} x          - The x value
+ * @param {string}             category   - The category name
+ * @param {string|null}        groupValue - The group value (when groupBreaksActive), or null
+ * @return {string} Key in format "xValue::category" or "xValue::category::groupValue"
  */
-export function generateElementKey(x, category) {
-	return `${normalizeKeyValue(x)}::${category}`;
+export function generateElementKey(x, category, groupValue = null) {
+	const normalizedX = normalizeKeyValue(x);
+	if (groupValue) {
+		return `${normalizedX}::${category}::${groupValue}`;
+	}
+	return `${normalizedX}::${category}`;
 }
 
 /**

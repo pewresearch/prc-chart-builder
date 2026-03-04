@@ -90,16 +90,19 @@ plugins/prc-chart-builder/
 ### Research Tasks
 
 1. **WordPress Editor Device Detection API**
+
     - Research: How `getDeviceType()` works and when it updates
     - Research: Available device types and their values
     - Research: How to listen for device type changes
 
 2. **Block Attribute Merging Patterns**
+
     - Research: Best practices for deep merging nested attribute objects
     - Research: How to preserve default values when overrides are undefined
     - Research: Performance implications of deep object merging
 
 3. **Server-Side Device Detection**
+
     - Research: Jetpack Device_Detection class capabilities and reliability
     - Research: Fallback behavior when Jetpack not available
     - Research: Caching considerations for device detection
@@ -157,10 +160,12 @@ See [data-model.md](./data-model.md) for complete attribute structure.
 ### Files to Modify
 
 1. **src/chart/block.json**
+
     - Add `mobile` attribute: `{ "type": "object", "default": {} }`
     - Add `tablet` attribute: `{ "type": "object", "default": {} }`
 
 2. **src/chart/edit/use-viewport-attributes.js** (NEW - Custom Hook)
+
     - Create `useDeviceType()` hook that accesses WordPress Redux store via `select(editorStore).getDeviceType()`
     - Create `useViewportAttributes(attributes, setAttributes)` hook that provides centralized viewport-aware attribute management
     - Export `getCurrentValue(attributeGroup, attributeKey)` helper that checks viewport override first, then falls back to default
@@ -168,24 +173,28 @@ See [data-model.md](./data-model.md) for complete attribute structure.
     - **BENEFIT**: No prop drilling - any component can import and use the hook directly to access device type and attribute helpers
 
 3. **src/chart/edit/index.jsx**
+
     - Import and use `useViewportAttributes` hook instead of inline useSelect
     - Get `{ deviceType, getCurrentValue, updateAttributeForDevice }` from hook
     - Pass `deviceType` to `getConfig()` function call
     - **CRITICAL**: Never listen to window resize events in editor - device type comes exclusively from WordPress device selector
 
 4. **src/chart/edit/meta-text-fields.jsx**
+
     - Import and use `useViewportAttributes` hook to get attribute helpers
     - Update title/subtitle RichText components to use `getCurrentValue()` for values
     - Update onChange handlers to use `updateAttributeForDevice()` for updates
     - **BENEFIT**: Component is self-contained - no props needed beyond attributes and setAttributes
 
 5. **src/chart/utils/get-config.js**
+
     - Add `deviceType` parameter to `getConfig(attributes, clientId, editorClickEvent, deviceType = 'desktop')`
     - Create `mergeViewportOverrides(baseAttributes, deviceType)` helper
     - Merge viewport-specific attributes before constructing config
     - Return merged configuration to PRC Charting Library
 
 6. **src/chart/view.js** (NEW implementation requirement)
+
     - Create `detectViewportFromWidth(windowWidth)` function: returns 'mobile' | 'tablet' | 'desktop' based on width thresholds
     - Add debounced window resize listener (~250ms delay) that calls detectViewportFromWidth
     - Implement chart re-render logic when viewport breakpoint is crossed
@@ -240,11 +249,13 @@ function mergeViewportOverrides(
 ### Integration Points
 
 1. **Editor Integration**
+
     - WordPress device preview (Desktop/Tablet/Mobile buttons in toolbar)
     - Attribute panel: Visual indicator when editing viewport-specific override
     - Chart preview: Real-time update when switching devices
 
 2. **Rendering Integration**
+
     - `get-config.js`: Constructs merged config for PRC Charting Library
     - `class-chart.php`: Server-side rendering with device-specific attributes
     - Frontend: Uses server-rendered attributes (no client-side JS needed for device detection)
@@ -381,11 +392,13 @@ After metadata.title testing, verify against spec.md success criteria:
 ### Manual Test Scenarios (Original - For Full Implementation)
 
 1. **Desktop Editing**
+
     - Open chart in editor (desktop device type)
     - Change layout.width
     - Verify: Default `layout.width` updated, mobile/tablet unchanged
 
 2. **Mobile Device Type**
+
     - Switch to mobile device preview in editor
     - Change labels.active to false
     - Verify: `mobile.labels.active = false`, default `labels.active` unchanged
@@ -393,6 +406,7 @@ After metadata.title testing, verify against spec.md success criteria:
     - Verify: Labels still visible (default active = true)
 
 3. **Tablet Fallback**
+
     - Switch to tablet device preview
     - Verify: Chart uses tablet overrides if set
     - If no tablet override, verify: Chart uses desktop defaults
@@ -400,6 +414,7 @@ After metadata.title testing, verify against spec.md success criteria:
     - Verify: Only affects tablet view
 
 4. **Server Render**
+
     - Create chart with mobile overrides (labels off)
     - View on actual mobile device
     - Verify: Labels are hidden

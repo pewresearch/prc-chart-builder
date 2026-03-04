@@ -451,6 +451,7 @@ store('prc-chart/scrollytelling', {
 ### Immediate (v1.3.12)
 
 1. ✅ **Implement smart merge logic** (Option 1)
+
     - Solves 90% of use cases
     - Simple, maintainable
     - Preserves unified data structure
@@ -462,6 +463,7 @@ store('prc-chart/scrollytelling', {
 ### Near Future (v1.4.x)
 
 3. **Add visual indicators** for customized labels
+
     - Icon or highlight on labels with custom positions
     - Helps users understand what they've changed
 

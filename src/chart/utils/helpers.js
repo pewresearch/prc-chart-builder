@@ -1,14 +1,11 @@
+import { FORMATTED_DATA_PASSTHROUGH_TYPES } from './chart-types';
+
 // Transform data from table block into json useable for chart builder
 export const formattedData = (data, scale, chartType) => {
 	const { body, tableHeaders } = data;
 	const seriesData = [];
 	const scaleData = (d, s) => {
-		if (
-			'bar' === chartType ||
-			'stacked-bar' === chartType ||
-			'pie' === chartType ||
-			'dot-plot' === chartType
-		) {
+		if (FORMATTED_DATA_PASSTHROUGH_TYPES.includes(chartType)) {
 			return d;
 		}
 		if ('time' === s) {
@@ -282,7 +279,8 @@ export const formatCellContent = (
 	scale,
 	groupBreaksCategory,
 	xScale,
-	xFormat
+	xFormat,
+	preserveStringKeys = []
 ) => {
 	if ('ordinal' === scale) {
 		return content;
@@ -329,6 +327,13 @@ export const formatCellContent = (
 		if ('x' === key && 'time' === xScale && xFormat) {
 			return parseDateString(content, xFormat);
 		}
+		return content;
+	}
+	// Preserve string values for specified keys (e.g. Sankey 'target' column)
+	if (
+		Array.isArray(preserveStringKeys) &&
+		preserveStringKeys.includes(key)
+	) {
 		return content;
 	}
 	// TODO: temporary fix for less than signs in table cells.
@@ -378,6 +383,7 @@ export const generateDefaultAltText = (chartType, metaTitle) => {
 		'map-usa': 'map of the United States',
 		'map-usa-counties': 'county map of the United States',
 		'map-usa-block': 'block map of the United States',
+		'map-usa-hex': 'hex map of the United States',
 		'map-world': 'world map',
 	};
 

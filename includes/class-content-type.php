@@ -25,6 +25,13 @@ class Content_Type {
 	public static $menu_icon = 'dashicons-chart-area';
 
 	/**
+	 * The chart_type taxonomy slug.
+	 *
+	 * @var string
+	 */
+	public static $chart_type_taxonomy = 'chart_type';
+
+	/**
 	 * The constructor.
 	 *
 	 * @param mixed $loader The loader object.
@@ -32,13 +39,217 @@ class Content_Type {
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'register_types' );
 		$loader->add_action( 'init', $this, 'register_chart_meta' );
-		$loader->add_filter( 'prc_platform__datasets_enabled_post_types', $this, 'enable_datasets_support' );
+		$loader->add_action( 'init', $this, 'register_chart_type_taxonomy' );
+		$loader->add_action( 'save_post_' . self::$post_type, $this, 'sync_chart_type_on_save', 10, 3 );
+		$loader->add_filter( 'prc_platform_post_publish_pipeline_post_types', $this, 'opt_into_publish_pipeline' );
 		$loader->add_filter( 'oembed_response_data', $this, 'modify_oembed_response', 10, 4 );
 		$loader->add_filter( 'manage_' . self::$post_type . '_posts_columns', $this, 'add_design_slug_column' );
 		$loader->add_action( 'manage_' . self::$post_type . '_posts_custom_column', $this, 'render_design_slug_column', 10, 2 );
 		$loader->add_filter( 'manage_edit-' . self::$post_type . '_sortable_columns', $this, 'make_design_slug_sortable' );
 		$loader->add_action( 'pre_get_posts', $this, 'make_design_slug_searchable' );
 		$loader->add_filter( 'rest_' . self::$post_type . '_query', $this, 'make_design_slug_rest_searchable', 10, 2 );
+		$loader->add_filter( 'rest_' . self::$post_type . '_query', $this, 'filter_by_chart_type', 10, 2 );
+	}
+
+	/**
+	 * Known chart type slugs, matching the chartType attribute values set by block variations.
+	 *
+	 * @var array
+	 */
+	public static $known_chart_types = array(
+		'area'          => 'Area',
+		'bar'           => 'Bar',
+		'column'        => 'Column',
+		'diverging-bar' => 'Diverging Bar',
+		'dot-plot'      => 'Dot Plot',
+		'exploded-bar'  => 'Exploded Bar',
+		'freeform'      => 'Freeform',
+		'line'          => 'Line',
+		'map-usa'       => 'USA Map',
+		'map-usa-block' => 'USA Block Map',
+		'map-usa-county'=> 'USA County Map',
+		'map-usa-hex'   => 'USA Hex Map',
+		'map-world'     => 'World Map',
+		'pie'           => 'Pie',
+		'sankey'        => 'Sankey',
+		'scatter'       => 'Scatter Plot',
+		'stacked-area'  => 'Stacked Area',
+		'stacked-bar'   => 'Stacked Bar',
+		'stacked-column'=> 'Stacked Column',
+		'treemap'       => 'Treemap',
+	);
+
+	/**
+	 * Register the chart_type taxonomy.
+	 *
+	 * This taxonomy is managed programmatically — terms are set on save via sync_chart_type_on_save()
+	 * and should not be manually edited by users. It exists solely to enable efficient server-side
+	 * filtering in the REST API (e.g., /wp/v2/chart?chart_type=bar).
+	 *
+	 * @hook init
+	 */
+	public function register_chart_type_taxonomy() {
+		$labels = array(
+			'name'          => _x( 'Chart Types', 'Taxonomy General Name', 'prc-chart-builder' ),
+			'singular_name' => _x( 'Chart Type', 'Taxonomy Singular Name', 'prc-chart-builder' ),
+		);
+
+		$args = array(
+			'labels'            => $labels,
+			'hierarchical'      => false,
+			'public'            => false,
+			'show_ui'           => false,
+			'show_admin_column' => false,
+			'show_in_nav_menus' => false,
+			'show_in_rest'      => true,
+			'rest_base'         => self::$chart_type_taxonomy,
+			'rewrite'           => false,
+		);
+
+		register_taxonomy( self::$chart_type_taxonomy, self::$post_type, $args );
+
+		// Pre-register all known chart type terms so they exist for filtering
+		// even if no charts of that type have been saved yet.
+		foreach ( self::$known_chart_types as $slug => $label ) {
+			if ( ! term_exists( $slug, self::$chart_type_taxonomy ) ) {
+				wp_insert_term( $label, self::$chart_type_taxonomy, array( 'slug' => $slug ) );
+			}
+		}
+	}
+
+	/**
+	 * Extract the chartType attribute from a chart post's block content and sync it
+	 * to the chart_type taxonomy. Called on save_post_chart.
+	 *
+	 * @hook save_post_chart
+	 *
+	 * @param int      $post_id The post ID.
+	 * @param \WP_Post $post    The post object.
+	 * @param bool     $update  Whether this is an existing post being updated.
+	 */
+	public function sync_chart_type_on_save( $post_id, $post, $update ) {
+		// Skip autosaves, revisions, and trashed posts.
+		if ( wp_is_post_autosave( $post_id ) || wp_is_post_revision( $post_id ) ) {
+			return;
+		}
+		if ( 'trash' === $post->post_status ) {
+			return;
+		}
+		if ( empty( $post->post_content ) ) {
+			return;
+		}
+
+		$chart_type = self::extract_chart_type_from_content( $post->post_content );
+
+		if ( ! $chart_type ) {
+			return;
+		}
+
+		// Ensure the term exists before assigning.
+		if ( ! term_exists( $chart_type, self::$chart_type_taxonomy ) ) {
+			$label = self::$known_chart_types[ $chart_type ] ?? ucfirst( str_replace( '-', ' ', $chart_type ) );
+			wp_insert_term( $label, self::$chart_type_taxonomy, array( 'slug' => $chart_type ) );
+		}
+
+		wp_set_object_terms( $post_id, $chart_type, self::$chart_type_taxonomy );
+	}
+
+	/**
+	 * Parse block content to extract the chartType attribute from the controller block.
+	 *
+	 * @param string $post_content Raw post content.
+	 * @return string|null The chartType slug, or null if not found.
+	 */
+	public static function extract_chart_type_from_content( $post_content ) {
+		// The canonical chart type source depends on block vintage:
+		//
+		//   v2 (prc-chart-builder/*):
+		//     - prc-chart-builder/chart  → layout.type (canonical, typed in block.json)
+		//     - prc-chart-builder/controller → chartType (convenience duplicate)
+		//
+		//   v1 / legacy (prc-block/*):
+		//     - prc-block/chart-builder → chartType (inner block, self-closing)
+		//
+		// Fast path: skip entirely if no recognisable chart block is present.
+		$has_new    = false !== strpos( $post_content, 'prc-chart-builder/controller' );
+		$has_legacy = false !== strpos( $post_content, 'prc-block/chart-builder' );
+
+		if ( ! $has_new && ! $has_legacy ) {
+			return null;
+		}
+
+		// v2: parse blocks to extract layout.type from the inner chart block.
+		// Uses parse_blocks() because the chart block's JSON is deeply nested.
+		if ( $has_new ) {
+			$chart_type = self::extract_chart_type_from_parsed_blocks( parse_blocks( $post_content ) );
+			if ( $chart_type ) {
+				return sanitize_title( $chart_type );
+			}
+		}
+
+		// v1 / legacy fallback: chartType on the inner prc-block/chart-builder (self-closing).
+		if ( $has_legacy ) {
+			$pattern = '/<!--\s*wp:prc-block\/chart-builder\s+(\{(?:[^{}]|\{[^{}]*\})*\})\s*\/-->/';
+			if ( preg_match( $pattern, $post_content, $matches ) ) {
+				$attrs = json_decode( $matches[1], true );
+				if ( JSON_ERROR_NONE === json_last_error() && ! empty( $attrs['chartType'] ) ) {
+					return sanitize_title( $attrs['chartType'] );
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Walk parsed blocks to find the chart type from the canonical sources.
+	 *
+	 * Checks prc-chart-builder/chart → layout.type first, then falls back
+	 * to prc-chart-builder/controller → chartType.
+	 *
+	 * @param array $blocks Parsed block array from parse_blocks().
+	 * @return string|null Chart type slug or null.
+	 */
+	private static function extract_chart_type_from_parsed_blocks( $blocks ) {
+		foreach ( $blocks as $block ) {
+			// Canonical: layout.type on the inner chart block.
+			if ( 'prc-chart-builder/chart' === $block['blockName'] ) {
+				$type = $block['attrs']['layout']['type'] ?? null;
+				if ( $type ) {
+					return $type;
+				}
+			}
+
+			// Fallback: chartType on the controller.
+			if ( 'prc-chart-builder/controller' === $block['blockName'] ) {
+				if ( ! empty( $block['attrs']['chartType'] ) ) {
+					return $block['attrs']['chartType'];
+				}
+			}
+
+			// Recurse into inner blocks.
+			if ( ! empty( $block['innerBlocks'] ) ) {
+				$found = self::extract_chart_type_from_parsed_blocks( $block['innerBlocks'] );
+				if ( $found ) {
+					return $found;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Add the chart post type to the post publish pipeline.
+	 *
+	 * @hook prc_platform_post_publish_pipeline_post_types
+	 *
+	 * @param array $post_types The allowed post types.
+	 * @return array
+	 */
+	public function opt_into_publish_pipeline( $post_types ) {
+		$post_types[] = self::$post_type;
+		return $post_types;
 	}
 
 	/**
@@ -88,7 +299,7 @@ class Content_Type {
 			'label'               => __( 'Chart', 'prc-chart-builder' ),
 			'description'         => __( 'A store for chart blocks. This post type allows you to save a chart once and update everywhere it is used.', 'prc-chart-builder' ),
 			'labels'              => self::get_labels(),
-			'supports'            => array( 'title', 'editor', 'excerpt', 'author', 'thumbnail', 'revisions', 'custom-fields' ),
+			'supports'            => array( 'title', 'editor', 'excerpt', 'author', 'thumbnail', 'revisions', 'prc-revisions', 'custom-fields', 'prc-datasets' ),
 			'taxonomies'          => array( 'category' ),
 			'hierarchical'        => false,
 			'public'              => true,
@@ -264,16 +475,42 @@ class Content_Type {
 	}
 
 	/**
-	 * Enable datasets support.
+	 * When no explicit chart_type filter is applied in admin context, require that
+	 * a chart_type term EXISTS so vestigial/legacy posts are excluded from the gallery.
 	 *
-	 * @hook prc_platform__datasets_enabled_post_types
+	 * Specific chart_type filtering (e.g. ?chart_type=123) is handled natively by
+	 * the WordPress REST API because the taxonomy has show_in_rest=true.
 	 *
-	 * @param array $post_types The post types.
-	 * @return array The post types.
+	 * @hook rest_chart_query
+	 *
+	 * @param array            $args    Array of arguments for WP_Query.
+	 * @param \WP_REST_Request $request The REST API request.
+	 * @return array Modified query arguments.
 	 */
-	public function enable_datasets_support( $post_types ) {
-		$post_types[] = 'chart';
-		return $post_types;
+	public function filter_by_chart_type( $args, $request ) {
+		if ( 'edit' !== $request->get_param( 'context' ) ) {
+			return $args;
+		}
+
+		// If WP already added a chart_type tax_query (from the native param), skip the EXISTS fallback.
+		if ( ! empty( $args['tax_query'] ) ) {
+			foreach ( $args['tax_query'] as $clause ) {
+				if ( is_array( $clause ) && isset( $clause['taxonomy'] ) && self::$chart_type_taxonomy === $clause['taxonomy'] ) {
+					return $args;
+				}
+			}
+		}
+
+		if ( ! isset( $args['tax_query'] ) ) {
+			$args['tax_query'] = array();
+		}
+
+		$args['tax_query'][] = array(
+			'taxonomy' => self::$chart_type_taxonomy,
+			'operator' => 'EXISTS',
+		);
+
+		return $args;
 	}
 
 	/**

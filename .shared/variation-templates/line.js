@@ -76,16 +76,12 @@ const lineTemplate = [
 					min: 2000,
 					max: 2020,
 				},
-				tickMarks: {
-					active: true,
-				},
+				tickMarksActive: true,
 				scale: 'time',
 			},
 			dependentAxis: {
 				showZero: true,
-				tickMarks: {
-					active: true,
-				},
+				tickMarksActive: true,
 			},
 			tooltip: {
 				active: true,

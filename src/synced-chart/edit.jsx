@@ -3,9 +3,9 @@
 /**
  * WordPress Dependencies
  */
-import { useMemo, useRef } from '@wordpress/element';
+import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
-import { withNotices, KeyboardShortcuts } from '@wordpress/components';
+import { Notice, withNotices, KeyboardShortcuts } from '@wordpress/components';
 import { useEntityBlockEditor, useEntityRecord } from '@wordpress/core-data';
 import { useSelect, useDispatch } from '@wordpress/data';
 import { useCommand } from '@wordpress/commands';
@@ -16,10 +16,7 @@ import {
 	InnerBlocks,
 	useBlockProps,
 	Warning,
-	BlockContextProvider,
 } from '@wordpress/block-editor';
-// eslint-disable-next-line import/no-extraneous-dependencies
-import { isEqual } from 'lodash';
 
 /**
  * Internal Dependencies
@@ -31,75 +28,26 @@ import controllerStore from '../controller/store';
 function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
 	const { ref } = attributes;
 	const isNew = !ref;
-	const hasAlreadyRendered = useHasRecursion(ref); // @TODO: Could this be an issue for realtime collab?
-	const { record, hasResolved } = useEntityRecord('postType', 'chart', ref);
+
+	// Fetch base chart first to read meta; swap to fork if it has an active future revision.
+	const { record: baseRecord } = useEntityRecord('postType', 'chart', ref);
+	const effectiveRef = ref ? baseRecord?.meta?._prc_active_fork || ref : ref;
+	const isForkActive = !!ref && effectiveRef !== ref;
+
+	const hasAlreadyRendered = useHasRecursion(effectiveRef); // @TODO: Could this be an issue for realtime collab?
+	const { record, hasResolved } = useEntityRecord(
+		'postType',
+		'chart',
+		effectiveRef
+	);
 	const isResolving = !hasResolved;
 	const isMissing = hasResolved && !record && !isNew;
 
 	const [blocks, onInput, onChange] = useEntityBlockEditor(
 		'postType',
 		'chart',
-		{ id: ref }
+		{ id: effectiveRef }
 	);
-
-	// Use a ref to store the previous table data for deep comparison
-	// This prevents context updates when data hasn't actually changed
-	const tableDataRef = useRef(null);
-
-	// Extract table data from blocks to pass via context
-	// Uses deep comparison to maintain stable references
-	const tableDataFromBlocks = useMemo(() => {
-		if (!blocks || blocks.length === 0) {
-			return tableDataRef.current; // Return previous value if no blocks
-		}
-
-		// Find the controller block
-		const controllerBlock = blocks.find(
-			(block) => block.name === 'prc-chart-builder/controller'
-		);
-
-		if (!controllerBlock || !controllerBlock.innerBlocks) {
-			return tableDataRef.current;
-		}
-
-		// Find the table block within the controller's inner blocks
-		const tableBlock = controllerBlock.innerBlocks.find(
-			(block) =>
-				block.name === 'core/table' || block.name === 'prc-block/table'
-		);
-
-		const newTableData = tableBlock?.attributes || null;
-
-		// Deep compare to prevent unnecessary context updates
-		// This is crucial for preventing infinite re-render loops in nested entities
-		if (isEqual(tableDataRef.current, newTableData)) {
-			return tableDataRef.current; // Return stable reference
-		}
-
-		// Update ref and return new value only when content actually changes
-		tableDataRef.current = newTableData;
-		return newTableData;
-	}, [blocks]);
-
-	// Use a ref for stable context value reference
-	const contextValueRef = useRef({
-		'prc-chart-builder/syncedTableData': null,
-	});
-
-	// Memoize context value to prevent infinite re-renders
-	// Only create new object when tableDataFromBlocks reference actually changes
-	const syncedTableContextValue = useMemo(() => {
-		// Only update context if the data reference changed (which means content changed)
-		if (
-			contextValueRef.current['prc-chart-builder/syncedTableData'] !==
-			tableDataFromBlocks
-		) {
-			contextValueRef.current = {
-				'prc-chart-builder/syncedTableData': tableDataFromBlocks,
-			};
-		}
-		return contextValueRef.current;
-	}, [tableDataFromBlocks]);
 
 	// Get the controller block's id attribute for keyboard shortcuts
 	const controllerId = useMemo(() => {
@@ -242,20 +190,25 @@ function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
 			: {};
 
 	return (
-		<BlockContextProvider value={syncedTableContextValue}>
-			<RecursionProvider uniqueId={ref}>
-				<Controls
-					{...{
-						attributes,
-						clientId,
-						blocks,
-					}}
-				/>
-				<KeyboardShortcuts bindGlobal shortcuts={keyboardShortcuts}>
-					<div {...innerBlocksProps} />
-				</KeyboardShortcuts>
-			</RecursionProvider>
-		</BlockContextProvider>
+		<RecursionProvider uniqueId={effectiveRef}>
+			{isForkActive && (
+				<Notice status="warning" isDismissible={false}>
+					{__('Editing future revision', 'prc-chart-builder')}
+				</Notice>
+			)}
+			<Controls
+				{...{
+					attributes,
+					clientId,
+					blocks,
+					effectiveRef,
+					isForkActive,
+				}}
+			/>
+			<KeyboardShortcuts bindGlobal shortcuts={keyboardShortcuts}>
+				<div {...innerBlocksProps} />
+			</KeyboardShortcuts>
+		</RecursionProvider>
 	);
 }
 

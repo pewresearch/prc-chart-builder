@@ -1,6 +1,6 @@
 {
 	"name": "@prc/chart-builder",
-	"version": "3.4.0",
+	"version": "3.5.0",
 	"description": "Create interactive D3 charts for your WordPress site.",
 	"author": "Pew Research Center",
 	"contributors": [
@@ -10,10 +10,10 @@
 	"license": "GPL-2.0-or-later",
 	"main": "build/index.js",
 	"scripts": {
-		"build": "wp-scripts build --webpack-copy-php --experimental-modules; wp-scripts build-blocks-manifest; wp-scripts build --source-path=includes/inspector-sidebar-panel/src/ --output-path=includes/inspector-sidebar-panel/build/",
+		"build": "wp-scripts build --webpack-copy-php --experimental-modules; wp-scripts build-blocks-manifest; wp-scripts build --source-path=includes/inspector-sidebar-panel/src/ --output-path=includes/inspector-sidebar-panel/build/; wp-scripts build --source-path=includes/admin/src/ --output-path=includes/admin/build/",
 		"build:block": "node bin/build-block.js",
 		"build:manifest": "wp-scripts build-blocks-manifest",
-		"start": "wp-scripts start --webpack-copy-php --experimental-modules",
+		"start": "wp-scripts start --webpack-copy-php --experimental-modules & wp-scripts start --source-path=includes/admin/src/ --output-path=includes/admin/build/",
 		"start:block": "node bin/start-block.js",
 		"package": "node bin/package.js",
 		"build:playground": "node bin/build-playground.js",
@@ -29,6 +29,7 @@
 		"@emotion/react": "^11.13.3",
 		"@emotion/styled": "^11.13.0",
 		"@wordpress/icons": "^10.10.0",
+		"d3-regression": "^1.3.10",
 		"html2canvas": "^1.4.1",
 		"react-movable": "^3.3.1"
 	}

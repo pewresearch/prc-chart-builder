@@ -79,6 +79,7 @@
 				"map-usa",
 				"map-usa-counties",
 				"map-usa-block",
+				"map-usa-hex",
 				"map-world",
 				"freeform"
 			],

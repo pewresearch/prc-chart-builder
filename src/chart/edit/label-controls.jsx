@@ -29,6 +29,7 @@ import {
  */
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './use-viewport-attributes';
+import { POSITION_DISABLED_CHART_TYPES } from './popover/utils';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -65,6 +66,7 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 
 	const layoutObj = getCurrentValue('layout') || {};
 	const { type: chartType, orientation } = layoutObj;
+	const positionDisabled = POSITION_DISABLED_CHART_TYPES.includes(chartType);
 	// Content attribute - NOT viewport-aware
 	const currentIo = attributes.io || {};
 	const chartData = currentIo.chartData || [];
@@ -155,32 +157,132 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 							/>
 						</ToolsPanelItem>
 					)}
-					{chartType === 'pie' && (
+				{chartType === 'pie' && (
+					<ToolsPanelItem
+						hasValue={() => true}
+						label={__('Category Labels Active')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<ToggleControl
+							label={__('Category Labels Active')}
+							checked={
+								getCurrentValue(
+									'pie',
+									'showCategoryLabels'
+								) || false
+							}
+							onChange={(newValue) => {
+								const pie = getCurrentValue('pie') || {};
+								updateAttributeForDevice('pie', {
+									...pie,
+									showCategoryLabels: newValue,
+								});
+							}}
+						/>
+					</ToolsPanelItem>
+				)}
+				{chartType === 'treemap' && (
+					<>
 						<ToolsPanelItem
 							hasValue={() => true}
-							label={__('Category Labels Active')}
+							label={__('Show Values in Rectangles')}
 							isShownByDefault
 							panelId={clientId}
 						>
 							<ToggleControl
-								label={__('Category Labels Active')}
+								label={__('Show Values in Rectangles')}
+								help={__(
+									'Display the numeric data value inside each rectangle below the name.'
+								)}
 								checked={
 									getCurrentValue(
-										'pie',
-										'showCategoryLabels'
+										'treemap',
+										'showValues'
 									) || false
 								}
+								disabled={
+									!getCurrentValue('labels', 'active')
+								}
 								onChange={(newValue) => {
-									const pie = getCurrentValue('pie') || {};
-									updateAttributeForDevice('pie', {
-										...pie,
-										showCategoryLabels: newValue,
+									const treemap =
+										getCurrentValue('treemap') || {};
+									updateAttributeForDevice('treemap', {
+										...treemap,
+										showValues: newValue,
 									});
 								}}
 							/>
 						</ToolsPanelItem>
-					)}
-				</ToolsPanelItem>
+						<ToolsPanelItem
+							hasValue={() => true}
+							label={__('Show Group Labels')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<ToggleControl
+								label={__('Show Group Labels')}
+								help={__(
+									'Display group header labels at the top of each group section.'
+								)}
+								checked={
+									getCurrentValue(
+										'treemap',
+										'showGroupLabels'
+									) ?? true
+								}
+								disabled={
+									!getCurrentValue('labels', 'active')
+								}
+								onChange={(newValue) => {
+									const treemap =
+										getCurrentValue('treemap') || {};
+									updateAttributeForDevice('treemap', {
+										...treemap,
+										showGroupLabels: newValue,
+									});
+								}}
+							/>
+						</ToolsPanelItem>
+						<ToolsPanelItem
+							hasValue={() => true}
+							label={__('Label Min Area')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<NumberControl
+								label={__('Label Min Area (px²)')}
+								help={__(
+									'Minimum rectangle area (in square pixels) required to show a label. Increase to hide labels on small rectangles.'
+								)}
+								min={0}
+								max={10000}
+								step={100}
+								value={
+									getCurrentValue(
+										'treemap',
+										'labelMinArea'
+									) ?? 1600
+								}
+								disabled={
+									!getCurrentValue('labels', 'active')
+								}
+								onChange={(value) => {
+									const treemap =
+										getCurrentValue('treemap') || {};
+									updateAttributeForDevice('treemap', {
+										...treemap,
+										labelMinArea: formatNum(
+											value,
+											'integer'
+										),
+									});
+								}}
+							/>
+						</ToolsPanelItem>
+					</>
+				)}
+			</ToolsPanelItem>
 				<WidePanelItem
 					hasValue={() => getCurrentValue('labels', 'fontSize')}
 					label={__('Label Font Size')}
@@ -211,63 +313,75 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 						</Help>
 					</PanelDescription>
 				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() =>
-						getCurrentValue('labels', 'labelPositionDX')
-					}
-					label={__('Label Positioning')}
-					panelId={clientId}
-					isShownByDefault
-				>
-					<PanelDescription>
-						<StyledLabel>Label Positioning</StyledLabel>
-					</PanelDescription>
-					<Flex>
-						<FlexItem>
-							<NumberControl
-								label={__('DX')}
-								value={getCurrentValue(
-									'labels',
-									'labelPositionDX'
-								)}
-								disabled={!getCurrentValue('labels', 'active')}
-								onChange={(value) =>
-									updateAttributeForDevice('labels', {
-										labelPositionDX: formatNum(
-											value,
-											'integer'
-										),
-									})
-								}
-							/>
-						</FlexItem>
-						<FlexItem>
-							<NumberControl
-								label={__('DY')}
-								value={getCurrentValue(
-									'labels',
-									'labelPositionDY'
-								)}
-								disabled={!getCurrentValue('labels', 'active')}
-								onChange={(value) =>
-									updateAttributeForDevice('labels', {
-										labelPositionDY: formatNum(
-											value,
-											'integer'
-										),
-									})
-								}
-							/>
-						</FlexItem>
-					</Flex>
-					<PanelDescription>
-						<Help>
-							{__(
-								"Select the position of the label relative to it's parent node, as well as any label units number formatting."
+			<WidePanelItem
+				hasValue={() =>
+					getCurrentValue('labels', 'labelPositionDX')
+				}
+				label={__('Label Positioning')}
+				panelId={clientId}
+				isShownByDefault
+			>
+				<PanelDescription>
+					<StyledLabel>Label Positioning</StyledLabel>
+				</PanelDescription>
+				<Flex>
+					<FlexItem>
+						<NumberControl
+							label={__('DX')}
+							value={getCurrentValue(
+								'labels',
+								'labelPositionDX'
 							)}
-						</Help>
-					</PanelDescription>
-				</WidePanelItem>
+							disabled={
+								!getCurrentValue('labels', 'active') ||
+								positionDisabled
+							}
+							onChange={(value) =>
+								updateAttributeForDevice('labels', {
+									labelPositionDX: formatNum(
+										value,
+										'integer'
+									),
+								})
+							}
+						/>
+					</FlexItem>
+					<FlexItem>
+						<NumberControl
+							label={__('DY')}
+							value={getCurrentValue(
+								'labels',
+								'labelPositionDY'
+							)}
+							disabled={
+								!getCurrentValue('labels', 'active') ||
+								positionDisabled
+							}
+							onChange={(value) =>
+								updateAttributeForDevice('labels', {
+									labelPositionDY: formatNum(
+										value,
+										'integer'
+									),
+								})
+							}
+						/>
+					</FlexItem>
+				</Flex>
+				<PanelDescription>
+					<Help>
+						{positionDisabled
+							? __(
+									'Label positions are algorithmically determined for this chart type. DX/DY offsets are disabled.',
+									'prc-chart-builder'
+								)
+							: __(
+									"Select the position of the label relative to it's parent node, as well as any label units number formatting.",
+									'prc-chart-builder'
+								)}
+					</Help>
+				</PanelDescription>
+			</WidePanelItem>
 				{hasCustomPositions && (
 					<WidePanelItem
 						hasValue={() => hasCustomPositions}

@@ -58,11 +58,11 @@
 		"colors": {
 			"type": "array",
 			"default": [
-				"#436983",
-				"#bf3927",
+				"#456A83",
+				"#BF3B27",
 				"#756a7e",
 				"#ea9e2c",
-				"#bc7b2b",
+				"#BB792A",
 				"#eeece4"
 			]
 		},
@@ -104,13 +104,13 @@
 					"dy": 0,
 					"textAnchor": "middle",
 					"verticalAnchor": "end",
-					"fill": "#231F20",
+					"fill": "#2a2a2a",
 					"fontFamily": "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
 					"maxWidth": 50
 				},
 				"axisLabel": {
 					"fontSize": 12,
-					"fill": "#231F20",
+					"fill": "#2a2a2a",
 					"padding": 15,
 					"angle": 0,
 					"dx": 0,
@@ -121,11 +121,11 @@
 					"maxWidth": 100
 				},
 				"axis": {
-					"stroke": "#756f6a",
+					"stroke": "#818181",
 					"strokeWidth": 1
 				},
 				"ticks": {
-					"stroke": "#756f6a",
+					"stroke": "#818181",
 					"size": 5,
 					"strokeWidth": 0
 				},
@@ -163,13 +163,13 @@
 					"dy": 0,
 					"textAnchor": "end",
 					"verticalAnchor": "middle",
-					"fill": "rgba(35, 31, 32, 0.7)",
+					"fill": "#565656",
 					"fontFamily": "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
 					"maxWidth": 50
 				},
 				"axisLabel": {
 					"fontSize": 12,
-					"fill": "rgba(35, 31, 32, 0.7)",
+					"fill": "#565656",
 					"padding": 30,
 					"angle": 270,
 					"dx": 0,
@@ -180,11 +180,11 @@
 					"maxWidth": 200
 				},
 				"axis": {
-					"stroke": "#756f6a",
+					"stroke": "#818181",
 					"strokeWidth": 1
 				},
 				"ticks": {
-					"stroke": "#756f6a",
+					"stroke": "#818181",
 					"size": 5,
 					"strokeWidth": 0
 				},
@@ -365,6 +365,18 @@
 				"pointStroke": "inherit"
 			}
 		},
+		"regression": {
+			"type": "object",
+			"default": {
+				"active": false,
+				"type": "linear",
+				"stroke": "#2a2a2a",
+				"strokeWidth": 2,
+				"strokeDasharray": "",
+				"perGroupBreak": false,
+				"groupBreakStyles": {}
+			}
+		},
 		"map": {
 			"type": "object",
 			"default": {
@@ -428,6 +440,35 @@
 				}
 			}
 		},
+		"treemap": {
+			"type": "object",
+			"default": {
+				"tile": "squarify",
+				"rectStroke": "#ffffff",
+				"rectStrokeWidth": 2,
+				"labelMinArea": 1600,
+				"paddingInner": 2,
+				"paddingOuter": 4,
+				"showGroupLabels": true,
+				"scaleOpacity": false,
+				"opacityRange": [0.4, 1],
+				"borderRadius": 0,
+				"showValues": false
+			}
+		},
+		"sankey": {
+			"type": "object",
+			"default": {
+				"nodeAlign": "justify",
+				"nodeWidth": 12,
+				"nodePadding": 10,
+				"linkOpacity": 0.5,
+				"nodeRadius": 0,
+				"sourceKey": "x",
+				"targetKey": "target",
+				"valueKey": "value"
+			}
+		},
 		"annotations": {
 			"type": "object",
 			"default": {
@@ -439,6 +480,17 @@
 		"drawings": {
 			"type": "array",
 			"default": []
+		},
+		"customTickLabels": {
+			"type": "object",
+			"default": {
+				"independent": {},
+				"dependent": {}
+			}
+		},
+		"customLegendLabels": {
+			"type": "object",
+			"default": {}
 		},
 		"dataRender": {
 			"type": "object",
@@ -514,11 +566,12 @@
 				"tabsActive": false,
 				"allowDataDownload": true,
 				"elementHasStroke": false,
-				"isCustomChart": false,
-				"customAttributes": {}
-			}
-		},
-		"_legacy": {
+			"isCustomChart": false,
+			"customAttributes": {},
+			"preserveStringKeys": []
+		}
+	},
+	"_legacy": {
 			"type": "object",
 			"default": {}
 		},
@@ -555,11 +608,7 @@
 			}
 		}
 	},
-	"usesContext": [
-		"refId",
-		"prc-chart-builder/id",
-		"prc-chart-builder/syncedTableData"
-	],
+	"usesContext": ["refId", "prc-chart-builder/id"],
 	"supports": {
 		"html": false,
 		"inserter": false,

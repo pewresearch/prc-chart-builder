@@ -30,6 +30,55 @@ function normalizeXValue(value) {
 }
 
 /**
+ * Resolve lookup map entries for a specific data point, handling group discriminators.
+ *
+ * Entries without a group discriminator ("category") apply to all data points.
+ * Entries with a group discriminator ("category::groupValue") only apply if the
+ * data point belongs to that group.
+ *
+ * @param {Object} entries             - The entries from the lookup map for this x value
+ * @param {Object} dataPoint           - The data point being processed
+ * @param {string} groupBreaksCategory - The column name used for grouping (or null)
+ * @return {Object} Resolved entries: { category: value }
+ */
+function resolveEntries(entries, dataPoint, groupBreaksCategory) {
+	const resolved = {};
+
+	// Separate non-grouped and grouped entries for proper ordering
+	const nonGrouped = [];
+	const grouped = [];
+
+	Object.entries(entries).forEach(([entryKey, value]) => {
+		if (entryKey.includes('::')) {
+			grouped.push([entryKey, value]);
+		} else {
+			nonGrouped.push([entryKey, value]);
+		}
+	});
+
+	// Apply non-grouped entries first (backward compatible)
+	nonGrouped.forEach(([category, value]) => {
+		resolved[category] = value;
+	});
+
+	// Apply grouped entries second (group-specific overrides)
+	grouped.forEach(([entryKey, value]) => {
+		const groupSepIdx = entryKey.indexOf('::');
+		const category = entryKey.substring(0, groupSepIdx);
+		const groupValue = entryKey.substring(groupSepIdx + 2);
+
+		if (
+			groupBreaksCategory &&
+			String(dataPoint[groupBreaksCategory]) === groupValue
+		) {
+			resolved[category] = value;
+		}
+	});
+
+	return resolved;
+}
+
+/**
  * Merge custom label positions from labels.customPositions into chartData
  *
  * This function takes custom positions stored in the viewport-aware
@@ -39,11 +88,19 @@ function normalizeXValue(value) {
  * It also preserves any legacy __labelPositions that may already exist
  * in the chartData (for backwards compatibility).
  *
- * @param {Array}  chartData       - The chart data array
- * @param {Object} customPositions - Custom positions from labels.customPositions
+ * Supports both 2-part keys ("xValue::category") and 3-part keys
+ * ("xValue::category::groupValue") for group-aware matching.
+ *
+ * @param {Array}  chartData           - The chart data array
+ * @param {Object} customPositions     - Custom positions from labels.customPositions
+ * @param {string} groupBreaksCategory - The column name used for grouping, or null
  * @return {Array} chartData with __labelPositions merged in
  */
-export function mergeCustomLabelPositions(chartData, customPositions) {
+export function mergeCustomLabelPositions(
+	chartData,
+	customPositions,
+	groupBreaksCategory = null
+) {
 	if (!chartData || !Array.isArray(chartData)) {
 		return chartData;
 	}
@@ -53,16 +110,17 @@ export function mergeCustomLabelPositions(chartData, customPositions) {
 		return chartData;
 	}
 
-	// Build a lookup map: xValue -> { category: { dx, dy } }
+	// Build a lookup map: xValue -> { entryKey: position }
+	// entryKey is "category" or "category::groupValue"
 	const positionsByX = {};
 	Object.entries(customPositions).forEach(([key, position]) => {
-		// Key format is "xValue::category"
-		const separatorIndex = key.lastIndexOf('::');
-		if (separatorIndex === -1) {
+		// Key format: "xValue::category" or "xValue::category::groupValue"
+		const parts = key.split('::');
+		if (parts.length < 2) {
 			return; // Invalid key format
 		}
-		const xValue = key.substring(0, separatorIndex);
-		const category = key.substring(separatorIndex + 2);
+		const xValue = parts[0];
+		const entryKey = parts.slice(1).join('::');
 
 		// Normalize the xValue for consistent comparison
 		const normalizedX = normalizeXValue(xValue);
@@ -70,24 +128,29 @@ export function mergeCustomLabelPositions(chartData, customPositions) {
 		if (!positionsByX[normalizedX]) {
 			positionsByX[normalizedX] = {};
 		}
-		positionsByX[normalizedX][category] = position;
+		positionsByX[normalizedX][entryKey] = position;
 	});
 
 	// Merge positions into chartData
 	return chartData.map((d) => {
 		const normalizedX = normalizeXValue(d.x);
-		const customPositionsForRow = positionsByX[normalizedX];
+		const entriesForRow = positionsByX[normalizedX];
 
-		if (customPositionsForRow) {
-			// Merge with any existing __labelPositions (legacy data takes precedence)
-			// Custom positions from labels.customPositions override legacy
-			return {
-				...d,
-				__labelPositions: {
-					...d.__labelPositions, // Preserve any legacy positions
-					...customPositionsForRow, // Viewport-aware positions override
-				},
-			};
+		if (entriesForRow) {
+			const resolved = resolveEntries(
+				entriesForRow,
+				d,
+				groupBreaksCategory
+			);
+			if (Object.keys(resolved).length > 0) {
+				return {
+					...d,
+					__labelPositions: {
+						...d.__labelPositions, // Preserve any legacy positions
+						...resolved, // Viewport-aware positions override
+					},
+				};
+			}
 		}
 
 		return d;

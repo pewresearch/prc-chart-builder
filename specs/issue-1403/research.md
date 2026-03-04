@@ -61,6 +61,7 @@ const { deviceType } = useSelect((select) => {
 **Alternatives Considered**:
 
 1. **Window width detection**: `window.innerWidth` with custom breakpoints
+
     - Rejected for editor: Doesn't align with WordPress preview modes, would conflict with explicit device selection
     - Accepted for frontend: See "Frontend (Client-Side)" section below
 
@@ -307,10 +308,12 @@ const width = getCurrentValue('layout', 'width', deviceType);
 ### Precedence Rules
 
 1. **Desktop device type (or undefined)**: Use default attributes only
+
     - `attributes.layout.width` → chart width
     - Viewport overrides ignored
 
 2. **Mobile device type**: Check mobile override first, fallback to default
+
     - `attributes.mobile?.layout?.width` (if exists) → chart width
     - Otherwise: `attributes.layout.width` → chart width
 

@@ -9,7 +9,17 @@
  * - customLabels -> __labelText (custom text overrides)
  * - customVisibility -> __labelVisible (visibility toggles)
  * - customStyles -> __labelStyles (style overrides like color)
+ *
+ * Key Formats:
+ * - 2-part (standard): "xValue::category"
+ * - 3-part (grouped):  "xValue::category::groupValue"
+ *
+ * The 3-part format is used when groupBreaksActive is true, to disambiguate
+ * data points that share the same x value and category but belong to different groups.
+ * Backward compatible: existing 2-part keys continue to work.
  */
+
+import { resolveColor } from './resolve-color';
 
 /**
  * Normalize a value to a consistent string format for comparison.
@@ -45,8 +55,13 @@ function normalizeXValue(value) {
 /**
  * Parse customization keys and build a lookup map by normalized x value.
  *
- * @param {Object} customizations - Object with "xValue::category" keys
- * @return {Object} Lookup map: { normalizedX: { category: value } }
+ * Supports both 2-part keys ("xValue::category") and 3-part keys
+ * ("xValue::category::groupValue"). The entry key stored in the map
+ * is everything after the first "::" separator — either just "category"
+ * or "category::groupValue".
+ *
+ * @param {Object} customizations - Object with "xValue::category" or "xValue::category::groupValue" keys
+ * @return {Object} Lookup map: { normalizedX: { entryKey: value } }
  */
 function buildLookupMap(customizations) {
 	const lookupMap = {};
@@ -56,13 +71,19 @@ function buildLookupMap(customizations) {
 	}
 
 	Object.entries(customizations).forEach(([key, value]) => {
-		// Key format is "xValue::category"
-		const separatorIndex = key.lastIndexOf('::');
-		if (separatorIndex === -1) {
+		// Key format: "xValue::category" or "xValue::category::groupValue"
+		// Note: x values (country names, years, ISO dates) do not contain "::"
+		// so splitting on "::" safely separates the parts.
+		const parts = key.split('::');
+		if (parts.length < 2) {
 			return; // Invalid key format
 		}
-		const xValue = key.substring(0, separatorIndex);
-		const category = key.substring(separatorIndex + 2);
+
+		const xValue = parts[0];
+		// Everything after the first "::" is the entry key
+		// For 2-part keys: "category"
+		// For 3-part keys: "category::groupValue"
+		const entryKey = parts.slice(1).join('::');
 
 		// Normalize the xValue for consistent comparison
 		const normalizedX = normalizeXValue(xValue);
@@ -70,10 +91,63 @@ function buildLookupMap(customizations) {
 		if (!lookupMap[normalizedX]) {
 			lookupMap[normalizedX] = {};
 		}
-		lookupMap[normalizedX][category] = value;
+		lookupMap[normalizedX][entryKey] = value;
 	});
 
 	return lookupMap;
+}
+
+/**
+ * Resolve lookup map entries for a specific data point, handling group discriminators.
+ *
+ * Entries without a group discriminator ("category") apply to all data points.
+ * Entries with a group discriminator ("category::groupValue") only apply if the
+ * data point belongs to that group.
+ *
+ * Non-grouped entries are applied first, then group-specific entries override them.
+ * This ensures backward compatibility: existing 2-part keys apply universally,
+ * while new 3-part keys provide group-specific overrides.
+ *
+ * @param {Object} entries             - The entries from the lookup map for this x value
+ * @param {Object} dataPoint           - The data point being processed
+ * @param {string} groupBreaksCategory - The column name used for grouping (or null)
+ * @return {Object} Resolved entries: { category: value }
+ */
+function resolveEntries(entries, dataPoint, groupBreaksCategory) {
+	const resolved = {};
+
+	// Separate non-grouped and grouped entries for proper ordering
+	const nonGrouped = [];
+	const grouped = [];
+
+	Object.entries(entries).forEach(([entryKey, value]) => {
+		if (entryKey.includes('::')) {
+			grouped.push([entryKey, value]);
+		} else {
+			nonGrouped.push([entryKey, value]);
+		}
+	});
+
+	// Apply non-grouped entries first (backward compatible, apply to all)
+	nonGrouped.forEach(([category, value]) => {
+		resolved[category] = value;
+	});
+
+	// Apply grouped entries second (override non-grouped if group matches)
+	grouped.forEach(([entryKey, value]) => {
+		const groupSepIdx = entryKey.indexOf('::');
+		const category = entryKey.substring(0, groupSepIdx);
+		const groupValue = entryKey.substring(groupSepIdx + 2);
+
+		if (
+			groupBreaksCategory &&
+			String(dataPoint[groupBreaksCategory]) === groupValue
+		) {
+			resolved[category] = value;
+		}
+	});
+
+	return resolved;
 }
 
 /**
@@ -86,11 +160,16 @@ function buildLookupMap(customizations) {
  * It also preserves any legacy hidden attributes that may already exist
  * in the chartData (for backwards compatibility).
  *
- * @param {Array}  chartData       - The chart data array
- * @param {Object} labelsAttribute - The labels attribute object containing customizations
+ * @param {Array}  chartData           - The chart data array
+ * @param {Object} labelsAttribute     - The labels attribute object containing customizations
+ * @param {string} groupBreaksCategory - The column name used for grouping, or null if not grouped
  * @return {Array} chartData with all label customizations merged in
  */
-export function mergeCustomLabelData(chartData, labelsAttribute) {
+export function mergeCustomLabelData(
+	chartData,
+	labelsAttribute,
+	groupBreaksCategory = null
+) {
 	if (!chartData || !Array.isArray(chartData)) {
 		return chartData;
 	}
@@ -130,37 +209,74 @@ export function mergeCustomLabelData(chartData, labelsAttribute) {
 		// Merge positions
 		const positionsForRow = positionsMap[normalizedX];
 		if (positionsForRow) {
-			result.__labelPositions = {
-				...d.__labelPositions, // Preserve legacy
-				...positionsForRow,
-			};
+			const resolved = resolveEntries(
+				positionsForRow,
+				d,
+				groupBreaksCategory
+			);
+			if (Object.keys(resolved).length > 0) {
+				result.__labelPositions = {
+					...d.__labelPositions, // Preserve legacy
+					...resolved,
+				};
+			}
 		}
 
 		// Merge custom label text
 		const labelsForRow = labelsMap[normalizedX];
 		if (labelsForRow) {
-			result.__labelText = {
-				...d.__labelText, // Preserve legacy
-				...labelsForRow,
-			};
+			const resolved = resolveEntries(
+				labelsForRow,
+				d,
+				groupBreaksCategory
+			);
+			if (Object.keys(resolved).length > 0) {
+				result.__labelText = {
+					...d.__labelText, // Preserve legacy
+					...resolved,
+				};
+			}
 		}
 
 		// Merge visibility
 		const visibilityForRow = visibilityMap[normalizedX];
 		if (visibilityForRow) {
-			result.__labelVisible = {
-				...d.__labelVisible, // Preserve legacy
-				...visibilityForRow,
-			};
+			const resolved = resolveEntries(
+				visibilityForRow,
+				d,
+				groupBreaksCategory
+			);
+			if (Object.keys(resolved).length > 0) {
+				result.__labelVisible = {
+					...d.__labelVisible, // Preserve legacy
+					...resolved,
+				};
+			}
 		}
 
 		// Merge styles
 		const stylesForRow = stylesMap[normalizedX];
 		if (stylesForRow) {
-			result.__labelStyles = {
-				...d.__labelStyles, // Preserve legacy
-				...stylesForRow,
-			};
+			const resolved = resolveEntries(
+				stylesForRow,
+				d,
+				groupBreaksCategory
+			);
+			if (Object.keys(resolved).length > 0) {
+				const resolvedStyles = {};
+				Object.entries(resolved).forEach(([cat, style]) => {
+					const s = { ...style };
+					if (s.color) {
+						s.color = resolveColor(s.color);
+					}
+					resolvedStyles[cat] = s;
+				});
+
+				result.__labelStyles = {
+					...d.__labelStyles, // Preserve legacy
+					...resolvedStyles,
+				};
+			}
 		}
 
 		return result;
@@ -168,14 +284,18 @@ export function mergeCustomLabelData(chartData, labelsAttribute) {
 }
 
 /**
- * Generate a label key from x value and category.
+ * Generate a label key from x value, category, and optional group value.
  * This is the format used to store customizations in block attributes.
  *
- * @param {string|number|Date} x        - The x value
- * @param {string}             category - The category name
- * @return {string} Key in format "xValue::category"
+ * @param {string|number|Date} x          - The x value
+ * @param {string}             category   - The category name
+ * @param {string|null}        groupValue - The group value (when groupBreaksActive), or null
+ * @return {string} Key in format "xValue::category" or "xValue::category::groupValue"
  */
-export function generateLabelKey(x, category) {
+export function generateLabelKey(x, category, groupValue = null) {
+	if (groupValue) {
+		return `${x}::${category}::${groupValue}`;
+	}
 	return `${x}::${category}`;
 }
 

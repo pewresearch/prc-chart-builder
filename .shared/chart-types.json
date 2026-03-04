@@ -111,6 +111,27 @@
 			"attributes": {
 				"chartType": "map-usa-block"
 			}
+		},
+		{
+			"title": "USA Hex Map",
+			"slug": "map-usa-hex",
+			"attributes": {
+				"chartType": "map-usa-hex"
+			}
+		},
+		{
+			"title": "Treemap",
+			"slug": "treemap",
+			"attributes": {
+				"chartType": "treemap"
+			}
+		},
+		{
+			"title": "Sankey Diagram",
+			"slug": "sankey",
+			"attributes": {
+				"chartType": "sankey"
+			}
 		}
 	]
 }

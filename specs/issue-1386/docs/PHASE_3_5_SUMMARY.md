@@ -11,6 +11,7 @@
 ### Files Created/Modified
 
 1. **`src/chart/deprecations/v1.js`** (810 lines)
+
     - Comprehensive migration function: 235+ attribute mappings
     - Transforms flat v1 attributes → nested v2 structure
     - Preserves `chartType` and `chartOrientation` at root for WordPress
@@ -20,10 +21,12 @@
     - Uses existing `save()` function for compatibility
 
 2. **`src/chart/deprecations/index.js`** (20 lines)
+
     - Exports deprecation array
     - Imports and registers v1 deprecation
 
 3. **`src/chart/index.js`** (Modified)
+
     - Added `deprecated` import and registration
 
 4. **`src/chart/block.json`** (Modified - nested structure added)
@@ -34,6 +37,7 @@
 ### Test Infrastructure
 
 1. **`tests/integration/block-deprecation.test.js`** (506 lines)
+
     - 42 test cases (all passing)
     - Enhanced validation for production fixtures
     - Automatic structure validation (all 21 nested objects)
@@ -41,6 +45,7 @@
     - Performance testing
 
 2. **`tests/helpers/fixture-validator.js`** (Created)
+
     - `validateFixture()` - schema validation
     - `validateMigration()` - deep comparison
     - `checkDataLoss()` - attribute preservation check
@@ -93,12 +98,15 @@ Time:        ~0.7s
 1. **No transformations in migration** - Preserves `chartType` as-is (e.g., "stacked-bar", "area")
     - Transformations happen in `get-config.js` where they belong
 2. **`chartOrientation` default = `"horizontal"`** (not "vertical")
+
     - Matches v1 block.json default
 
 3. **WordPress-specific attributes → `io` object**
+
     - `colorValue`, `chartFamily`, `chartData`, `tableData`, `independentVariable`, `availableCategories`, etc.
 
 4. **Charting library attributes → nested objects**
+
     - `layout`, `metadata`, `independentAxis`, `dependentAxis`, `tooltip`, `legend`, etc.
 
 5. **`chartType` preserved at root AND in `layout.type`**

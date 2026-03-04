@@ -247,17 +247,20 @@ console.log('ID in io:', block.attributes.io.id); // Should be undefined
 ### Test Checklist
 
 - [ ] **New Chart Creation**
+
     - Create controller block
     - Insert chart block
     - Verify `attributes.id` is set
     - Verify `attributes.io.id` is undefined
 
 - [ ] **Existing Chart**
+
     - Open post with existing chart
     - Inspect attributes in console or React DevTools
     - Confirm ID is at root level
 
 - [ ] **Copy/Paste**
+
     - Copy a chart block
     - Paste it elsewhere
     - Verify new unique ID is generated at root

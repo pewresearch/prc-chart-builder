@@ -8,21 +8,26 @@ import styled from '@emotion/styled';
 /**
  * WordPress Dependencies
  */
-import { __ } from '@wordpress/i18n';
-import { useMemo } from '@wordpress/element';
 import {
+	FormTokenField,
+	__experimentalNumberControl as NumberControl,
 	PanelBody,
+	SelectControl,
+	TextareaControl,
+	ToggleControl,
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
-	SelectControl,
-	ToggleControl,
-	FormTokenField,
-	TextareaControl,
-	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
+import { useMemo } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 
-import Sorter from './sorter';
+import {
+	GROUP_BREAKS_CHART_TYPES,
+	POINT_CHART_TYPES,
+	SORTABLE_CHART_TYPES,
+} from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
+import Sorter from './sorter';
 import { useViewportAttributes } from './use-viewport-attributes';
 
 const PanelDescription = styled.div`
@@ -129,7 +134,6 @@ function DataControls({ attributes, setAttributes, clientId }) {
 			})),
 		[availableGroupValues]
 	);
-
 	return (
 		<PanelBody title={__('Data')} initialOpen={true}>
 			<ToolsPanel
@@ -464,11 +468,50 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						/>
 					</WidePanelItem>
 				)}
-				<PanelDescription>
-					<StyledLabel>2. Group Breaks</StyledLabel>
-				</PanelDescription>
-				{'map' !== chartFamily && (
+				{POINT_CHART_TYPES.includes(chartType) && (
+					<WidePanelItem
+						hasValue={() => !!dataRender.groupBreaksCategory}
+						label={__('Group By')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<SelectControl
+							label={__('Color Points By Group')}
+							help={__(
+								'Select a column to group and color points. Each unique value becomes a color group in the legend.'
+							)}
+					value={dataRender.groupBreaksCategory || ''}
+					onChange={(value) => {
+						const categoryValues = value && chartData
+							? [ ...new Set( chartData.map((d) => d[value]).filter(Boolean) ) ]
+							: [];
+						setAttributes({
+							dataRender: {
+								...dataRender,
+								groupBreaksCategory: value || '',
+								groupBreaksActive: !!value,
+								groupBreaksCategoryValues: categoryValues,
+							},
+						});
+					}}
+							options={[
+								{
+									value: '',
+									label: __('— None (color by series) —'),
+								},
+								...availableCategories.map((category) => ({
+									label: category,
+									value: category,
+								})),
+							]}
+						/>
+					</WidePanelItem>
+				)}
+				{GROUP_BREAKS_CHART_TYPES.includes(chartType) && (
 					<>
+						<PanelDescription>
+							<StyledLabel>2. Group Breaks</StyledLabel>
+						</PanelDescription>
 						<WidePanelItem
 							hasValue={() => true}
 							label={__('Group Breaks')}
@@ -542,8 +585,14 @@ function DataControls({ attributes, setAttributes, clientId }) {
 											);
 										}}
 										options={[
-											{ value: 'empty', label: 'Empty' },
-											{ value: 'solid', label: 'Solid' },
+											{
+												value: 'empty',
+												label: 'Empty',
+											},
+											{
+												value: 'solid',
+												label: 'Solid',
+											},
 											{
 												value: 'dotted',
 												label: 'Dotted',
@@ -625,115 +674,121 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							)}
 					</>
 				)}
-				<PanelDescription>
-					<StyledLabel>4. Data Sorting</StyledLabel>
-				</PanelDescription>
-				{'map' !== chartFamily && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Sorting')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<SelectControl
-							label={__('Sort Key')}
-							value={dataRender.sortKey}
-							help={__(
-								'Choose the column you would like to sort your data by.'
-							)}
-							onChange={(value) =>
-								setAttributes({
-									dataRender: {
-										...dataRender,
-										sortKey: value,
-									},
-								})
-							}
-							options={[
-								...availableSelectableOptions,
-								{
-									label: independentVariable,
-									value: 'x',
-								},
-							]}
-						/>
-						<SelectControl
-							label={__('Sort Order')}
-							value={dataRender.sortOrder}
-							options={[
-								{
-									value: 'ascending',
-									label: 'Ascending',
-								},
-								{
-									value: 'descending',
-									label: 'Descending',
-								},
-								{
-									value: 'none',
-									label: 'No Sort',
-								},
-							]}
-							onChange={(sort) => {
-								setAttributes({
-									dataRender: {
-										...dataRender,
-										sortOrder: sort,
-									},
-								});
-							}}
-						/>
-					</WidePanelItem>
-				)}
-				<PanelDescription>
-					<StyledLabel>5. Diff Column</StyledLabel>
-				</PanelDescription>
-				{'map' !== chartFamily && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Diff Column')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<ToggleControl
-							label={
-								getCurrentValue('diffColumn', 'active')
-									? __('Active')
-									: __('Inactive')
-							}
-							checked={
-								getCurrentValue('diffColumn', 'active') || false
-							}
-							onChange={(value) =>
-								updateAttributeForDevice('diffColumn', {
-									active: value,
-								})
-							}
-						/>
+				{SORTABLE_CHART_TYPES.includes(chartType) && (
+					<>
 						<PanelDescription>
-							Activate if you&apos;d like to include a column that
-							shows the total/difference/or any other data column
-							to the right of the chart (optional).
+							<StyledLabel>4. Data Sorting</StyledLabel>
 						</PanelDescription>
-						{getCurrentValue('diffColumn', 'active') && (
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Sorting')}
+							isShownByDefault
+							panelId={clientId}
+						>
 							<SelectControl
-								label={__('Diff Column Category')}
-								value={getCurrentValue(
-									'diffColumn',
-									'category'
+								label={__('Sort Key')}
+								value={dataRender.sortKey}
+								help={__(
+									'Choose the column you would like to sort your data by.'
 								)}
 								onChange={(value) =>
-									updateAttributeForDevice('diffColumn', {
-										category: value,
+									setAttributes({
+										dataRender: {
+											...dataRender,
+											sortKey: value,
+										},
 									})
 								}
-								options={availableOptions.map((option) => ({
-									label: option.label,
-									value: option.label,
-								}))}
+								options={[
+									...availableSelectableOptions,
+									{
+										label: independentVariable,
+										value: 'x',
+									},
+								]}
 							/>
-						)}
-					</WidePanelItem>
+							<SelectControl
+								label={__('Sort Order')}
+								value={dataRender.sortOrder}
+								options={[
+									{
+										value: 'ascending',
+										label: 'Ascending',
+									},
+									{
+										value: 'descending',
+										label: 'Descending',
+									},
+									{
+										value: 'none',
+										label: 'No Sort',
+									},
+								]}
+								onChange={(sort) => {
+									setAttributes({
+										dataRender: {
+											...dataRender,
+											sortOrder: sort,
+										},
+									});
+								}}
+							/>
+						</WidePanelItem>
+					</>
+				)}
+				{SORTABLE_CHART_TYPES.includes(chartType) && (
+					<>
+						<PanelDescription>
+							<StyledLabel>5. Diff Column</StyledLabel>
+						</PanelDescription>
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Diff Column')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<ToggleControl
+								label={
+									getCurrentValue('diffColumn', 'active')
+										? __('Active')
+										: __('Inactive')
+								}
+								checked={
+									getCurrentValue('diffColumn', 'active') ||
+									false
+								}
+								onChange={(value) =>
+									updateAttributeForDevice('diffColumn', {
+										active: value,
+									})
+								}
+							/>
+							<PanelDescription>
+								Activate if you&apos;d like to include a column
+								that shows the total/difference/or any other
+								data column to the right of the chart
+								(optional).
+							</PanelDescription>
+							{getCurrentValue('diffColumn', 'active') && (
+								<SelectControl
+									label={__('Diff Column Category')}
+									value={getCurrentValue(
+										'diffColumn',
+										'category'
+									)}
+									onChange={(value) =>
+										updateAttributeForDevice('diffColumn', {
+											category: value,
+										})
+									}
+									options={availableOptions.map((option) => ({
+										label: option.label,
+										value: option.label,
+									}))}
+								/>
+							)}
+						</WidePanelItem>
+					</>
 				)}
 			</ToolsPanel>
 		</PanelBody>

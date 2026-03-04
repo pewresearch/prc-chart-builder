@@ -23,21 +23,23 @@ import { generateElementKey } from '../utils';
 /**
  * ShapePanel Component
  *
- * @param {Object}   props
- * @param {Object}   props.dataPoint             - The data point object
- * @param {string}   props.category              - The category key
- * @param {string}   props.defaultColor          - The default fill color
- * @param {Object}   props.currentCustomizations - Current customizations
- * @param {Function} props.onUpdate              - Callback to update
+ * @param {Object}      props
+ * @param {Object}      props.dataPoint             - The data point object
+ * @param {string}      props.category              - The category key
+ * @param {string}      props.defaultColor          - The default fill color
+ * @param {string|null} props.groupValue            - The group value (when groupBreaksActive), or null
+ * @param {Object}      props.currentCustomizations - Current customizations
+ * @param {Function}    props.onUpdate              - Callback to update
  */
 export function ShapePanel({
 	dataPoint,
 	category,
 	defaultColor,
+	groupValue = null,
 	currentCustomizations = {},
 	onUpdate,
 }) {
-	const shapeKey = generateElementKey(dataPoint.x, category);
+	const shapeKey = generateElementKey(dataPoint.x, category, groupValue);
 
 	const {
 		fill,

@@ -153,8 +153,18 @@ class Plugin_Bootstrap {
 		$this->include( 'class-seo.php' );
 		$this->include( 'class-block-migration.php' );
 		$this->include( 'class-wp-cli-commands.php' );
+		$this->include( 'class-distributor.php' );
+		$this->include( 'class-markdown-for-agents-integration.php' );
+		$this->include( 'class-print-engine-integration.php' );
 		$this->include( 'admin/class-admin.php' );
+		$this->include( 'class-chart-patterns.php' );
 		$this->include( 'inspector-sidebar-panel/class-inspector-sidebar-panel.php' );
+
+		// Conditionally load the AI experiment if the Abstracts_Experiment base class is available.
+		if ( class_exists( '\WordPress\AI\Abstracts\Abstract_Experiment' ) ) {
+			$this->include( 'ai-experiment/class-chart-ai-ability.php' );
+			$this->include( 'ai-experiment/class-chart-ai-experiment.php' );
+		}
 
 		$this->load_blocks();
 
@@ -174,8 +184,35 @@ class Plugin_Bootstrap {
 		new Media_Library( $this->get_loader() );
 		new SEO( $this->get_loader() );
 		new Block_Migration( $this->get_loader() );
+		new Distributor( $this->get_loader() );
+		new Markdown_For_Agents_Integration( $this->get_loader() );
+		new Print_Engine_Integration( $this->get_loader() );
 		new Admin( $this->get_loader() );
+		new Chart_Patterns( $this->get_loader() );
 		new Inspector_Sidebar_Panel( $this->get_loader() );
+
+		// Register the AI experiment if the base class is available.
+		if ( class_exists( '\WordPress\AI\Abstracts\Abstract_Experiment' ) && class_exists( '\PRC\Platform\Chart_Builder\Chart_AI_Experiment' ) ) {
+			// Increase HTTP timeout for Gemini API calls (thinking models can take 30–60s).
+			add_filter(
+				'http_request_args',
+				static function ( $args, $url ) {
+					if ( is_string( $url ) && str_contains( $url, 'generativelanguage.googleapis.com' ) ) {
+						$args['timeout'] = 90;
+					}
+					return $args;
+				},
+				10,
+				2
+			);
+
+			add_action(
+				'ai_experiments_register_experiments',
+				static function ( $registry ) {
+					$registry->register_experiment( new Chart_AI_Experiment() );
+				}
+			);
+		}
 	}
 
 	/**

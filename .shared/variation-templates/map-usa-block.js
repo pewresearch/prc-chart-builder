@@ -427,12 +427,10 @@ const USABlockMapTemplate = [
 				active: true,
 				markerStyle: 'rect',
 			},
-			map: {
-				scale: 'ordinal',
-				scaleDomain: ['yes', 'maybe', 'no'],
-			},
 			dataRender: {
 				categories: ['Response'],
+				mapScale: 'ordinal',
+				mapScaleDomain: ['yes', 'maybe', 'no'],
 			},
 			io: {
 				isConvertedChart: false,

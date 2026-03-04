@@ -75,8 +75,10 @@ export default function Edit({
 }) {
 	const { id, io, metadata, dataRender, drawings = [] } = attrs;
 
-	const { chartData, isStaticChart, isFreeformChart } = io;
-	const { groupBreaksCategory, mapScale } = dataRender || {};
+	const { chartData, isStaticChart, isFreeformChart, preserveStringKeys } =
+		io;
+	const { groupBreaksActive, groupBreaksCategory, mapScale } =
+		dataRender || {};
 
 	// Use the controller id to create a unique id for the chart.
 	const controllerId = context['prc-chart-builder/id'];
@@ -95,17 +97,32 @@ export default function Edit({
 	const customVisibility = getCurrentValue('labels', 'customVisibility');
 	const customStyles = getCurrentValue('labels', 'customStyles');
 
+	// Determine group breaks category for key matching
+	const activeGroupBreaksCategory =
+		groupBreaksActive && groupBreaksCategory ? groupBreaksCategory : null;
+
 	// Memoized chartData with all label customizations merged in
 	// This merges labels.custom* attributes into chartData as __label* hidden attributes
 	const chartDataWithCustomizations = useMemo(
 		() =>
-			mergeCustomLabelData(chartData, {
-				customPositions,
-				customLabels,
-				customVisibility,
-				customStyles,
-			}),
-		[chartData, customPositions, customLabels, customVisibility, customStyles]
+			mergeCustomLabelData(
+				chartData,
+				{
+					customPositions,
+					customLabels,
+					customVisibility,
+					customStyles,
+				},
+				activeGroupBreaksCategory
+			),
+		[
+			chartData,
+			customPositions,
+			customLabels,
+			customVisibility,
+			customStyles,
+			activeGroupBreaksCategory,
+		]
 	);
 
 	// State for chart element customization popover (labels, shapes, etc.)
@@ -138,32 +155,15 @@ export default function Edit({
 		}
 	}, [controllerId, id, setAttributes]);
 
-	// Get table data from parent controller's innerBlocks
+	// Get table data from the chart's own parent controller's innerBlocks.
+	// Each chart block is always bound to its nearest non-freeform controller.
+	// Table data is never inherited from ancestor controllers or external context.
 	const { tableData, parentBlockId, refId } = useSelect(
 		(select) => {
 			const { getBlock, getBlockParentsByBlockName } =
 				select(blockEditorStore);
 			const { getCurrentPostId, getCurrentPostType } =
 				select(editorStore);
-
-			// If we're in a synced chart context and have synced table data, use it
-			const syncedTableData =
-				context['prc-chart-builder/syncedTableData'];
-			if (syncedTableData) {
-				const editorContextPostType = getCurrentPostType();
-				let postId = null;
-				if (context && context.refId) {
-					postId = context.refId;
-				} else if ('chart' === editorContextPostType) {
-					postId = getCurrentPostId();
-				}
-
-				return {
-					tableData: syncedTableData,
-					parentBlockId: controllerId,
-					refId: postId,
-				};
-			}
 
 			// Use getBlockParentsByBlockName to find controller parents
 			// Returns array ordered from nearest to farthest ancestor
@@ -179,11 +179,15 @@ export default function Edit({
 			for (const parentId of controllerParents) {
 				const controllerBlock = getBlock(parentId);
 				// Skip freeform controllers - they don't provide data
-				if (controllerBlock && !controllerBlock.attributes?.isFreeform) {
+				if (
+					controllerBlock &&
+					!controllerBlock.attributes?.isFreeform
+				) {
 					parentControllerId = parentId;
 					break;
 				}
 			}
+
 			// Find the table block among the parent controller's children
 			let tableAttributes = null;
 			if (parentControllerId) {
@@ -213,7 +217,7 @@ export default function Edit({
 
 			return {
 				tableData: tableAttributes,
-				parentBlockId: parentControllerId,
+				parentBlockId: parentControllerId || controllerId,
 				refId: postId,
 			};
 		},
@@ -229,8 +233,22 @@ export default function Edit({
 	// Track drag state to disable tooltips during drag
 	const [isDragging, setIsDragging] = useState(false);
 
-	// Handle element click for customization popover (labels, shapes, segments, etc.)
-	const handleElementClick = ({ elementType, dataPoint, startPoint, endPoint, category, defaultLabel, defaultColor, anchorEl }) => {
+	// Handle element click for customization popover (labels, shapes, segments, annotations, tick labels, etc.)
+	const handleElementClick = ({
+		elementType,
+		dataPoint,
+		startPoint,
+		endPoint,
+		category,
+		defaultLabel,
+		defaultColor,
+		anchorEl,
+		groupValue = null,
+		annotationId = null,
+		axisKey = null,
+		tickValue = null,
+		categoryValue = null,
+	}) => {
 		setSelectedElement({
 			elementType,
 			dataPoint,
@@ -240,6 +258,11 @@ export default function Edit({
 			defaultLabel,
 			defaultColor,
 			anchorEl,
+			groupValue,
+			annotationId,
+			axisKey,
+			tickValue,
+			categoryValue,
 		});
 	};
 
@@ -293,13 +316,124 @@ export default function Edit({
 		}
 	};
 
+	// Handle annotation customization updates from popover
+	const handleAnnotationCustomizationUpdate = (annotationId, updates) => {
+		const index = parseInt(annotationId, 10);
+		const currentItems = getCurrentValue('annotations', 'items') || [];
+		if (index < 0 || index >= currentItems.length) return;
+		const updated = currentItems.map((item, i) =>
+			i === index ? { ...item, ...updates } : item
+		);
+		updateAttributeForDevice('annotations', { items: updated });
+	};
+
+	// Ref for the "Add annotation" button, used to anchor the popover on creation
+	// Create a new annotation centered in the chart.
+	// The user drags it into position, then clicks it to open the popover.
+	const handleAddAnnotation = () => {
+		const currentItems = getCurrentValue('annotations', 'items') || [];
+		const layout = getCurrentValue('layout') || {};
+		const newAnnotation = {
+			x: (layout.width || 640) / 2,
+			y: (layout.height || 400) / 2,
+			text: 'New annotation',
+			fontSize: 12,
+			fontWeight: 'normal',
+			fontStyle: 'normal',
+			fontFamily: "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
+			fill: 'light-dark(#000000, #f0f0f0)',
+			textAnchor: 'middle',
+			verticalAnchor: 'middle',
+			rotation: 0,
+			link: '',
+			backgroundColor: 'transparent',
+			padding: 0,
+			borderRadius: 0,
+			opacity: 1,
+			maxWidth: 200,
+			activeOnMobile: true,
+			positioningContext: 'chart',
+		};
+		updateAttributeForDevice('annotations', {
+			items: [...currentItems, newAnnotation],
+		});
+	};
+
+	// Handle regression line customization updates from popover.
+	// Merges groupBreakStyles overrides into the regression attribute.
+	const handleRegressionCustomizationUpdate = (updates) => {
+		const currentRegression = getCurrentValue('regression') || {};
+		updateAttributeForDevice('regression', {
+			...currentRegression,
+			...updates,
+		});
+	};
+
+	// Handle legend item customization updates from popover.
+	// customLegendLabels is a flat object attribute (not a nested group), so we
+	// call setAttributes directly with the complete new value rather than using
+	// updateAttributeForDevice which would merge via spread and prevent deletions.
+	const handleLegendItemCustomizationUpdate = (updates) => {
+		if (updates.customLegendLabels !== undefined) {
+			setAttributes( { customLegendLabels: updates.customLegendLabels } );
+		}
+	};
+
+	// Handle tick label customization updates from popover
+	const handleTickLabelCustomizationUpdate = (updates) => {
+		const current =
+			getCurrentValue('customTickLabels') || {
+				independent: {},
+				dependent: {},
+			};
+		const next = {
+			independent:
+				updates.independent !== undefined
+					? updates.independent
+					: current.independent,
+			dependent:
+				updates.dependent !== undefined
+					? updates.dependent
+					: current.dependent,
+		};
+		updateAttributeForDevice('customTickLabels', next);
+	};
+
+	// Handle annotation delete from popover
+	const handleAnnotationDelete = (annotationId) => {
+		const index = parseInt(annotationId, 10);
+		const currentItems = getCurrentValue('annotations', 'items') || [];
+		const updated = currentItems.filter((_, i) => i !== index);
+		updateAttributeForDevice('annotations', { items: updated });
+		handlePopoverClose();
+	};
+
 	// Get the appropriate update handler based on element type
-	const getCustomizationUpdateHandler = (elementType) => {
+	const getCustomizationUpdateHandler = (elementType, selectedElement) => {
 		if (elementType === ELEMENT_TYPES.SHAPE) {
 			return handleShapeCustomizationUpdate;
 		}
 		if (elementType === ELEMENT_TYPES.SEGMENT) {
 			return handleSegmentCustomizationUpdate;
+		}
+		if (elementType === ELEMENT_TYPES.REGRESSION) {
+			return handleRegressionCustomizationUpdate;
+		}
+		if (
+			elementType === ELEMENT_TYPES.ANNOTATION &&
+			selectedElement?.annotationId != null
+		) {
+			return (updates) =>
+				handleAnnotationCustomizationUpdate(
+					selectedElement.annotationId,
+					updates
+				);
+		}
+		if (elementType === ELEMENT_TYPES.TICK_LABEL) {
+			return handleTickLabelCustomizationUpdate;
+		}
+		if (elementType === ELEMENT_TYPES.LEGEND_ITEM) {
+			return handleLegendItemCustomizationUpdate;
 		}
 		return handleLabelCustomizationUpdate;
 	};
@@ -307,16 +441,32 @@ export default function Edit({
 	// Get the appropriate customizations based on element type
 	const getCustomizationsForElement = (elementType) => {
 		if (elementType === ELEMENT_TYPES.SHAPE) {
-			const shapeCustomStyles = getCurrentValue('shapes', 'customStyles') || {};
+			const shapeCustomStyles =
+				getCurrentValue('shapes', 'customStyles') || {};
 			return {
 				customStyles: shapeCustomStyles,
 			};
 		}
 		if (elementType === ELEMENT_TYPES.SEGMENT) {
-			const segmentStyles = getCurrentValue('shapes', 'segmentStyles') || {};
+			const segmentStyles =
+				getCurrentValue('shapes', 'segmentStyles') || {};
 			return {
 				segmentStyles,
 			};
+		}
+		if (elementType === ELEMENT_TYPES.REGRESSION) {
+			return getCurrentValue('regression') || {};
+		}
+		if (elementType === ELEMENT_TYPES.TICK_LABEL) {
+			return (
+				getCurrentValue('customTickLabels') || {
+					independent: {},
+					dependent: {},
+				}
+			);
+		}
+		if (elementType === ELEMENT_TYPES.LEGEND_ITEM) {
+			return getCurrentValue('customLegendLabels') || {};
 		}
 		return {
 			customPositions: customPositions || {},
@@ -330,11 +480,15 @@ export default function Edit({
 	const editorClickEvent = () => {
 		// Editor click handler for chart interactions
 	};
+	// Resolve chart type from layout attributes for editor-function configuration
+	const chartType = attrs?.layout?.type || 'bar';
+
 	// IMPORTANT: setAlignments and setIsDragging are NOT in dependencies to avoid recreating on every state change
 	const wpEditorFunctions = useMemo(
 		() =>
 			createWpEditorFunctions({
 				attrs,
+				chartType,
 				deviceType,
 				getCurrentValue,
 				updateAttributeForDevice,
@@ -345,6 +499,7 @@ export default function Edit({
 			}),
 		[
 			attrs,
+			chartType,
 			deviceType,
 			getCurrentValue,
 			updateAttributeForDevice,
@@ -408,7 +563,8 @@ export default function Edit({
 							mapScale,
 							groupBreaksCategory,
 							dataRender?.xScale,
-							dataRender?.xFormat
+							dataRender?.xFormat,
+							preserveStringKeys
 						),
 					};
 				}, {})
@@ -420,6 +576,7 @@ export default function Edit({
 			groupBreaksCategory,
 			dataRender?.xScale,
 			dataRender?.xFormat,
+			preserveStringKeys,
 		]
 	);
 
@@ -552,31 +709,95 @@ export default function Edit({
 							!isFreeformChart &&
 							memoizedChartData && (
 								<div style={{ position: 'relative' }}>
-								<MemoizedChartBuilder
-									className="cb__chart"
-									config={config}
-									data={
-										chartDataWithCustomizations ||
-										memoizedChartData
-									}
-									wpEditorFunctions={wpEditorFunctions}
-								/>
-								{/* Chart Element Customization Popover (Labels, Shapes, Segments, etc.) */}
-								{selectedElement && (
-									<ChartElementPopover
-										anchorRef={selectedElement.anchorEl}
-										elementType={selectedElement.elementType}
-										dataPoint={selectedElement.dataPoint}
-										startPoint={selectedElement.startPoint}
-										endPoint={selectedElement.endPoint}
-										category={selectedElement.category}
-										defaultLabel={selectedElement.defaultLabel}
-										defaultColor={selectedElement.defaultColor}
-										currentCustomizations={getCustomizationsForElement(selectedElement.elementType)}
-										onUpdate={getCustomizationUpdateHandler(selectedElement.elementType)}
-										onClose={handlePopoverClose}
+									<MemoizedChartBuilder
+										className="cb__chart"
+										config={config}
+										data={
+											chartDataWithCustomizations ||
+											memoizedChartData
+										}
+										wpEditorFunctions={wpEditorFunctions}
 									/>
-								)}
+									{/* Chart Element Customization Popover (Labels, Shapes, Segments, Annotations, etc.) */}
+									{selectedElement && (
+										<ChartElementPopover
+											anchorRef={selectedElement.anchorEl}
+											elementType={
+												selectedElement.elementType
+											}
+											chartType={chartType}
+											dataPoint={
+												selectedElement.dataPoint
+											}
+											startPoint={
+												selectedElement.startPoint
+											}
+											endPoint={selectedElement.endPoint}
+											category={selectedElement.category}
+											defaultLabel={
+												selectedElement.defaultLabel
+											}
+											defaultColor={
+												selectedElement.defaultColor
+											}
+											groupValue={
+												selectedElement.groupValue
+											}
+											currentCustomizations={getCustomizationsForElement(
+												selectedElement.elementType
+											)}
+											annotationId={
+												selectedElement.annotationId
+											}
+											axisKey={
+												selectedElement.axisKey ?? null
+											}
+										tickValue={
+											selectedElement.tickValue ?? null
+										}
+										categoryValue={
+											selectedElement.categoryValue ?? null
+										}
+										annotation={
+												selectedElement.elementType ===
+													ELEMENT_TYPES.ANNOTATION &&
+												selectedElement.annotationId !=
+													null
+													? (() => {
+															const items =
+																getCurrentValue(
+																	'annotations',
+																	'items'
+																) || [];
+															const idx =
+																parseInt(
+																	selectedElement.annotationId,
+																	10
+																);
+															return (
+																items[idx] ??
+																selectedElement.annotationSnapshot ??
+																null
+															);
+														})()
+													: undefined
+											}
+											onUpdate={getCustomizationUpdateHandler(
+												selectedElement.elementType,
+												selectedElement
+											)}
+											onDelete={
+												selectedElement.elementType ===
+												ELEMENT_TYPES.ANNOTATION
+													? () =>
+															handleAnnotationDelete(
+																selectedElement.annotationId
+															)
+													: undefined
+											}
+											onClose={handlePopoverClose}
+										/>
+									)}
 									<DrawingLayer
 										drawings={drawings}
 										chartDimensions={{
@@ -607,15 +828,15 @@ export default function Edit({
 												height: config.layout.height,
 												padding: config.layout.padding,
 											}}
-											onDrawingsChange={(
-												newDrawings
-											) =>
+											onDrawingsChange={(newDrawings) =>
 												setAttributes({
 													drawings: newDrawings,
 												})
 											}
 											isDrawingMode={isDrawingMode}
-											selectedDrawingId={selectedDrawingId}
+											selectedDrawingId={
+												selectedDrawingId
+											}
 											onSelectionChange={
 												setSelectedDrawingId
 											}
@@ -652,6 +873,29 @@ export default function Edit({
 											}}
 										/>
 									)}
+									{isSelected &&
+										config.annotations?.active && (
+											<button
+												type="button"
+												className="has-ui-white-background-color has-background has-small-label-font-size wp-element-button"
+												onClick={handleAddAnnotation}
+												style={{
+													position: 'absolute',
+													bottom: '',
+													right: '8px',
+													zIndex: 10,
+													padding: '4px 8px',
+													borderRadius: '4px',
+													color: 'var(--wp--preset--color--sky-blue-spectrum-primary)',
+													border: '1px solid var(--wp--preset--color--sky-blue-spectrum-primary)',
+													cursor: 'pointer !important',
+													fontFamily:
+														'var(--wp--preset--font-family--sans-serif)',
+												}}
+											>
+												+ Add annotation
+											</button>
+										)}
 								</div>
 							)}
 						{metadata.active && (

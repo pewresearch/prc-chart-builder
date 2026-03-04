@@ -147,9 +147,12 @@ const { state, actions } = store('prc-chart-builder/controller', {
 				);
 				// get the shallowest table container
 				const tableContainer = document.getElementById(`${id}-table`);
-				const tableInnerContainer = tableContainer.querySelector(
-					'.wp-chart-builder-table__inner'
-				);
+				let tableInnerContainer = null;
+				if (tableContainer) {
+					tableInnerContainer = tableContainer.querySelector(
+						'.wp-chart-builder-table__inner'
+					);
+				}
 				const chartContainer = isFreeform
 					? controllerEl.querySelector(
 							'.wp-chart-builder-freeform-chart'

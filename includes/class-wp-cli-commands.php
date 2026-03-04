@@ -19,7 +19,7 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
  *
  * @since 3.0.1
  */
-class WP_CLI_Commands {
+class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 
 	/**
 	 * Migrate block names in existing posts on blog ID 20.
@@ -254,6 +254,209 @@ class WP_CLI_Commands {
 				\WP_CLI::log( sprintf( '  Completed on: %s', $status['stats']['timestamp'] ) );
 			}
 		}
+	}
+
+	/**
+	 * Backfill the chart_type taxonomy for all existing chart posts.
+	 *
+	 * Scans post_content for the chartType attribute on the inner chart block
+	 * (prc-chart-builder/chart or legacy prc-block/chart-builder) and assigns the
+	 * corresponding chart_type taxonomy term via direct DB writes.
+	 *
+	 * Modelled on Block_Migration::run_migration() — raw SQL batches with
+	 * LIMIT/OFFSET, sleep between batches, and direct $wpdb inserts.
+	 *
+	 * Safe to run multiple times — idempotent.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--dry-run]
+	 * : Preview which posts would be updated without making changes.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp prc-chart-builder backfill-chart-types --dry-run
+	 *     wp prc-chart-builder backfill-chart-types
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Associative arguments.
+	 * @when after_wp_load
+	 */
+	public function backfill_chart_types( $args, $assoc_args ) {
+		global $wpdb;
+
+		$dry_run         = isset( $assoc_args['dry-run'] );
+		$posts_per_page  = 50;
+		$paged           = 1;
+		$updated         = 0;
+		$skipped         = 0;
+		$total_processed = 0;
+		$taxonomy        = Content_Type::$chart_type_taxonomy;
+
+		if ( $dry_run ) {
+			\WP_CLI::log( 'Dry-run mode — no changes will be made.' );
+		}
+
+		// Build a slug → term_taxonomy_id lookup so we never call wp_set_object_terms().
+		$term_map = $this->build_term_map( $taxonomy );
+
+		\WP_CLI::log( 'Backfilling chart_type taxonomy for chart posts...' );
+
+		do {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$posts = $wpdb->get_results(
+				$wpdb->prepare(
+					"SELECT ID, post_title, post_content FROM {$wpdb->posts}
+					WHERE post_type = %s
+					AND post_status IN ('publish','draft','private')
+					AND (post_content LIKE %s OR post_content LIKE %s OR post_content LIKE %s)
+					ORDER BY ID
+					LIMIT %d OFFSET %d",
+					Content_Type::$post_type,
+					'%prc-chart-builder/controller %',
+					'%prc-chart-builder/chart %',
+					'%prc-block/chart-builder %',
+					$posts_per_page,
+					( $paged - 1 ) * $posts_per_page
+				)
+			);
+
+			if ( empty( $posts ) ) {
+				break;
+			}
+
+			foreach ( $posts as $post ) {
+				$chart_type = Content_Type::extract_chart_type_from_content( $post->post_content );
+
+				if ( ! $chart_type ) {
+					++$skipped;
+					continue;
+				}
+
+				// Resolve the term_taxonomy_id, creating the term if needed.
+				if ( ! isset( $term_map[ $chart_type ] ) ) {
+					$term_map = $this->ensure_term( $chart_type, $taxonomy, $term_map );
+				}
+				$tt_id = $term_map[ $chart_type ] ?? null;
+				if ( ! $tt_id ) {
+					\WP_CLI::warning( sprintf( 'Could not resolve term for "%s" on post %d.', $chart_type, $post->ID ) );
+					++$skipped;
+					continue;
+				}
+
+				// Check if the relationship already exists.
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				$exists = $wpdb->get_var(
+					$wpdb->prepare(
+						"SELECT COUNT(*) FROM {$wpdb->term_relationships}
+						WHERE object_id = %d AND term_taxonomy_id = %d",
+						$post->ID,
+						$tt_id
+					)
+				);
+
+				if ( $exists ) {
+					\WP_CLI::log( sprintf( '  [ok]   %d "%s" — already "%s"', $post->ID, $post->post_title, $chart_type ) );
+					++$skipped;
+				} elseif ( $dry_run ) {
+					\WP_CLI::log( sprintf( '  [would set] %d "%s" → "%s"', $post->ID, $post->post_title, $chart_type ) );
+					++$updated;
+				} else {
+					// Direct insert — avoids wp_set_object_terms() overhead and any
+					// hooks/filters that cause fatals in the VIP dev environment.
+					// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+					$wpdb->insert(
+						$wpdb->term_relationships,
+						array(
+							'object_id'        => $post->ID,
+							'term_taxonomy_id' => $tt_id,
+							'term_order'       => 0,
+						),
+						array( '%d', '%d', '%d' )
+					);
+					\WP_CLI::log( sprintf( '  [set]  %d "%s" → "%s"', $post->ID, $post->post_title, $chart_type ) );
+					++$updated;
+					clean_post_cache( $post->ID );
+				}
+
+				++$total_processed;
+			}
+
+			$paged++;
+
+			// Pause between batches for cache revalidation.
+			if ( count( $posts ) === $posts_per_page ) {
+				sleep( 3 );
+			}
+
+			// Free memory.
+			if ( method_exists( $this, 'vip_inmemory_cleanup' ) ) {
+				$this->vip_inmemory_cleanup();
+			}
+
+		} while ( count( $posts ) === $posts_per_page );
+
+		// Update term counts now that we inserted relationships directly.
+		if ( ! $dry_run && ! empty( $term_map ) ) {
+			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+			$wpdb->query(
+				"UPDATE {$wpdb->term_taxonomy} tt
+				SET count = (
+					SELECT COUNT(*) FROM {$wpdb->term_relationships} tr
+					WHERE tr.term_taxonomy_id = tt.term_taxonomy_id
+				)
+				WHERE tt.taxonomy = '{$taxonomy}'"
+			);
+		}
+
+		\WP_CLI::log( '' );
+		\WP_CLI::log( sprintf( 'Processed: %d | Updated: %d | Skipped: %d', $total_processed, $updated, $skipped ) );
+
+		if ( $dry_run ) {
+			\WP_CLI::log( 'Dry run complete. Run without --dry-run to apply.' );
+		} else {
+			\WP_CLI::success( 'chart_type backfill complete.' );
+		}
+	}
+
+	/**
+	 * Build a slug → term_taxonomy_id lookup for all existing terms in a taxonomy.
+	 *
+	 * @param string $taxonomy Taxonomy name.
+	 * @return array<string, int> Map of slug to term_taxonomy_id.
+	 */
+	private function build_term_map( $taxonomy ) {
+		global $wpdb;
+		$map = array();
+		// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+		$rows = $wpdb->get_results(
+			$wpdb->prepare(
+				"SELECT t.slug, tt.term_taxonomy_id
+				FROM {$wpdb->terms} t
+				INNER JOIN {$wpdb->term_taxonomy} tt ON t.term_id = tt.term_id
+				WHERE tt.taxonomy = %s",
+				$taxonomy
+			)
+		);
+		foreach ( $rows as $row ) {
+			$map[ $row->slug ] = (int) $row->term_taxonomy_id;
+		}
+		return $map;
+	}
+
+	/**
+	 * Ensure a term exists for a given chart type slug and return the updated term map.
+	 *
+	 * @param string $slug     The chart type slug.
+	 * @param string $taxonomy The taxonomy name.
+	 * @param array  $term_map Existing slug → term_taxonomy_id map.
+	 * @return array Updated term map.
+	 */
+	private function ensure_term( $slug, $taxonomy, $term_map ) {
+		$known = Content_Type::$known_chart_types;
+		$label = $known[ $slug ] ?? ucfirst( str_replace( '-', ' ', $slug ) );
+		wp_insert_term( $label, $taxonomy, array( 'slug' => $slug ) );
+		return $this->build_term_map( $taxonomy );
 	}
 
 	/**

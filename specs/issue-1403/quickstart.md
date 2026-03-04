@@ -530,19 +530,23 @@ error_log('Merged attributes: ' . print_r($merged_attributes, true));
 After successful implementation:
 
 1. **Add Visual Indicators** (Future Enhancement):
+
     - Show badge/icon next to controls that have viewport overrides
     - "This setting is overridden for Mobile" message
 
 2. **Add Reset Functions** (Future Enhancement):
+
     - "Clear Mobile Overrides" button
     - "Copy Desktop to Mobile" button
     - "Copy Mobile to Tablet" button
 
 3. **Add Viewport Preview** (Already Supported):
+
     - WordPress editor already provides device preview modes
     - Ensure chart updates immediately when switching
 
 4. **Monitor Performance**:
+
     - Track attribute payload sizes
     - Alert if overrides getting too large (>20KB)
     - Optimize merge logic if needed

@@ -8,6 +8,7 @@ import {
 	stringToArray,
 	generateDefaultAltText,
 } from './helpers';
+import { resolveColor, resolveColorInString } from './resolve-color';
 
 /**
  * Deep merge viewport-specific overrides into base attributes
@@ -80,11 +81,16 @@ const getConfig = (
 		map,
 		divergingBar,
 		drawings,
+		customTickLabels,
+		customLegendLabels,
 		diffColumn,
 		dataRender,
 		legend,
 		nodes,
 		tooltip,
+		treemap,
+		sankey,
+		regression,
 	} = mergedAttributes;
 	const {
 		customColors,
@@ -99,215 +105,7 @@ const getConfig = (
 	const { scale: iScale, domain: iDomain } = independentAxis;
 	const { scale: dScale, domain: dDomain } = dependentAxis;
 	const { neutralBar } = divergingBar;
-	// independent axis attributes
-	// const {
-	// 	showXMinDomainLabel,
-	// 	xAbbreviateTicks,
-	// 	xAbbreviateTicksDecimals,
-	// 	xTicksToLocaleString,
-	// 	xAxisActive,
-	// 	xAxisStroke,
-	// 	xGridStroke,
-	// 	xGridStrokeDasharray,
-	// 	xGridOpacity,
-	// 	xLabel,
-	// 	xLabelFontSize,
-	// 	xLabelTextFill,
-	// 	xLabelPadding,
-	// 	xLabelMaxWidth,
-	// 	xMaxDomain,
-	// 	xMinDomain,
-	// 	xScale,
-	// 	xDateFormat,
-	// 	xTickExact,
-	// 	xTickLabelAngle,
-	// 	xTickLabelMaxWidth,
-	// 	xTickLabelDX,
-	// 	xTickLabelDY,
-	// 	xTickLabelTextAnchor,
-	// 	xTickLabelVerticalAnchor,
-	// 	xTickMarksActive,
-	// 	xTickNum,
-	// 	xTickUnit,
-	// 	xTickUnitPosition,
-	// } = attributes;
-	// dependent axis attributes
-	// const {
-	// 	yAxisStroke,
-	// 	yGridStroke,
-	// 	yGridStrokeDasharray,
-	// 	yGridOpacity,
-	// 	yAxisActive,
-	// 	yScale,
-	// 	yScaleFormat,
-	// 	yLabel,
-	// 	yLabelFontSize,
-	// 	yLabelTextFill,
-	// 	yLabelPadding,
-	// 	yLabelMaxWidth,
-	// 	yMinDomain,
-	// 	yMaxDomain,
-	// 	showYMinDomainLabel,
-	// 	yTickMarksActive,
-	// 	yTickNum,
-	// 	yTickExact,
-	// 	yTickUnit,
-	// 	yTickUnitPosition,
-	// 	yTickLabelAngle,
-	// 	yTickLabelMaxWidth,
-	// 	yTickLabelVerticalAnchor,
-	// 	yTickLabelTextAnchor,
-	// 	yTickLabelDY,
-	// 	yTickLabelDX,
-	// 	yAbbreviateTicks,
-	// 	yAbbreviateTicksDecimals,
-	// 	yTicksToLocaleString,
-	// } = attributes;
-	// label attributes
-	// const {
-	// 	labelsActive,
-	// 	showFirstLastPointsOnly,
-	// 	labelPositionDX,
-	// 	labelPositionDY,
-	// 	labelAbsoluteValue,
-	// 	labelFormatValue,
-	// 	labelUnit,
-	// 	labelUnitPosition,
-	// 	barLabelPosition,
-	// 	barLabelCutoff,
-	// 	barLabelCutoffMobile,
-	// 	labelColor,
-	// 	labelFontSize,
-	// 	labelFontWeight,
-	// 	labelTruncateDecimal,
-	// 	labelToFixedDecimal,
-	// } = attributes;
-	// legend attributes
-	// const {
-	// 	legendActive,
-	// 	legendOrientation,
-	// 	legendCategories,
-	// 	legendTitle,
-	// 	legendOffsetX,
-	// 	legendOffsetY,
-	// 	legendAlignment,
-	// 	legendMarkerStyle,
-	// 	legendBorderStroke,
-	// 	legendFill,
-	// 	legendFontSize,
-	// 	legendMargin,
-	// 	legendLabelDelimiter,
-	// 	legendLabelLower,
-	// 	legendLabelUpper,
-	// } = attributes;
-	// tooltip attributes
-	// const {
-	// 	tooltipActive,
-	// 	tooltipActiveOnMobile,
-	// 	tooltipHeaderActive,
-	// 	tooltipHeaderValue,
-	// 	tooltipMaxHeight,
-	// 	tooltipMaxWidth,
-	// 	tooltipMinWidth,
-	// 	tooltipMinHeight,
-	// 	tooltipOffsetX,
-	// 	tooltipOffsetY,
-	// 	tooltipFormat,
-	// 	tooltipDateFormat,
-	// 	tooltipFormatValue,
-	// 	tooltipAbsoluteValue,
-	// 	deemphasizeSiblings,
-	// 	deemphasizeOpacity,
-	// } = attributes;
-	// pie chart attributes
-	// const { pieCategoryLabelsActive } = attributes;
-	// bar chart attributes
-	// const { barPadding, barGroupPadding } = attributes;
-	// diverging bar attributes
-	// const {
-	// 	positiveCategories,
-	// 	negativeCategories,
-	// 	neutralCategory,
-	// 	divergingBarPercentOfInnerWidth,
-	// 	neutralBarSeparator,
-	// 	neutralBarActive,
-	// 	neutralBarOffsetX,
-	// 	neutralBarSeparatorOffsetX,
-	// } = attributes;
-	// dot plot attributes
-	// const {
-	// 	dotPlotConnectPoints,
-	// 	dotPlotConnectPointsStroke,
-	// 	dotPlotConnectPointsStrokeWidth,
-	// 	dotPlotConnectPointsStrokeDasharray,
-	// } = attributes;
-	// line attributes
-	// const {
-	// 	lineStrokeDashArray,
-	// 	lineInterpolation,
-	// 	lineStrokeWidth,
-	// 	lineNodes,
-	// 	nodeSize,
-	// 	nodeStrokeWidth,
-	// 	nodeFill,
-	// 	areaFillOpacity,
-	// } = attributes;
-	// explded bar attributes
-	// const { explodedBarColumnGap } = attributes;
-	// // plot band attributes
-	// const { plotBandsActive } = attributes;
-	// diff column attributes
-	// const {
-	// 	diffColumnActive,
-	// 	diffColumnCategory,
-	// 	diffColumnHeader,
-	// 	diffColumnMarginLeft,
-	// 	diffColumnBackgroundColor,
-	// 	diffColumnHeightOffset,
-	// 	diffColumnWidth,
-	// 	diffColumnAppearance,
-	// } = attributes;
-	// data render attributes
-	// const {
-	// 	sortOrder,
-	// 	// categories,
-	// 	// availableCategories,
-	// 	dateInputFormat,
-	// 	sortKey,
-	// 	dataRenderX,
-	// 	dataRenderY,
-	// 	groupBreaksActive,
-	// 	groupBreaksCategory,
-	// 	groupBreaksCategoryValues,
-	// 	groupBreaksStyleVariation,
-	// 	groupBreaksHeight,
-	// 	mapScale,
-	// 	mapScaleDomain,
-	// } = attributes;
-	// annotations
-	// const { annotationsActive, annotations } = attributes;
-	// map attributes
-	// const {
-	// 	mapShowCountyBoundaries,
-	// 	mapShowStateBoundaries,
-	// 	mapPathBackgroundFill,
-	// 	mapPathStroke,
-	// 	mapBlockRectSize,
-	// 	// mapAbbreviateLabels,
-	// 	mapIgnoreSmallStateLabels,
-	// 	// mapIgnoredLabels,
-	// 	mapProjectionPreset,
-	// 	mapTopologyRegion,
-	// 	mapCenterLongitude,
-	// 	mapCenterLatitude,
-	// 	mapRotateLambda,
-	// 	mapRotatePhi,
-	// 	mapRotateGamma,
-	// 	mapCustomScale,
-	// 	mapZoomActive,
-	// } = attributes;
 
-	// const { isCustomChart, customAttributes } = attributes;
 	// Use stringToArray for time scales to preserve date strings, stringToArrayOfNums for numeric scales
 	const independentAxisTickValues =
 		independentAxis.scale === 'time'
@@ -334,10 +132,10 @@ const getConfig = (
 					? alt
 					: generateDefaultAltText(chartType, title),
 		},
-		colors:
-			customColors && customColors.length > 0
-				? customColors
-				: colorPalette[colorValue],
+		colors: (customColors && customColors.length > 0
+			? customColors
+			: colorPalette[colorValue]
+		).map(resolveColor),
 		plotBands: {
 			...baseConfig.plotBands,
 			...plotBands,
@@ -345,6 +143,8 @@ const getConfig = (
 		independentAxis: {
 			...baseConfig.independentAxis,
 			...independentAxis,
+			customTickLabels:
+				customTickLabels?.independent ?? {},
 			domain: getDomain(iDomain[0], iDomain[1], chartType, iScale, 'x'),
 			tickValues:
 				0 >= independentAxisTickValues.length
@@ -353,28 +153,50 @@ const getConfig = (
 			tickLabels: {
 				...baseConfig.independentAxis.tickLabels,
 				...independentAxis.tickLabels,
+				fill: resolveColor(
+					independentAxis.tickLabels?.fill ??
+						baseConfig.independentAxis.tickLabels?.fill
+				),
 			},
 			axisLabel: {
 				...baseConfig.independentAxis.axisLabel,
 				...independentAxis.axisLabel,
+				fill: resolveColor(
+					independentAxis.axisLabel?.fill ??
+						baseConfig.independentAxis.axisLabel?.fill
+				),
 			},
 			axis: {
 				...baseConfig.independentAxis.axis,
 				...independentAxis.axis,
+				stroke: resolveColor(
+					independentAxis.axis?.stroke ??
+						baseConfig.independentAxis.axis?.stroke
+				),
 			},
 			ticks: {
 				...baseConfig.independentAxis.ticks,
 				...independentAxis.ticks,
 				size: independentAxis.tickMarksActive ? 5 : 0,
+				stroke: resolveColor(
+					independentAxis.ticks?.stroke ??
+						baseConfig.independentAxis.ticks?.stroke
+				),
 			},
 			grid: {
 				...baseConfig.independentAxis.grid,
 				...independentAxis.grid,
+				stroke: resolveColor(
+					independentAxis.grid?.stroke ??
+						baseConfig.independentAxis.grid?.stroke
+				),
 			},
 		},
 		dependentAxis: {
 			...baseConfig.dependentAxis,
 			...dependentAxis,
+			customTickLabels:
+				customTickLabels?.dependent ?? {},
 			domain: getDomain(dDomain[0], dDomain[1], chartType, dScale, 'y'),
 			tickValues:
 				0 >= dependentAxisTickValues.length
@@ -383,23 +205,43 @@ const getConfig = (
 			tickLabels: {
 				...baseConfig.dependentAxis.tickLabels,
 				...dependentAxis.tickLabels,
+				fill: resolveColor(
+					dependentAxis.tickLabels?.fill ??
+						baseConfig.dependentAxis.tickLabels?.fill
+				),
 			},
 			axisLabel: {
 				...baseConfig.dependentAxis.axisLabel,
 				...dependentAxis.axisLabel,
+				fill: resolveColor(
+					dependentAxis.axisLabel?.fill ??
+						baseConfig.dependentAxis.axisLabel?.fill
+				),
 			},
 			axis: {
 				...baseConfig.dependentAxis.axis,
 				...dependentAxis.axis,
+				stroke: resolveColor(
+					dependentAxis.axis?.stroke ??
+						baseConfig.dependentAxis.axis?.stroke
+				),
 			},
 			ticks: {
 				...baseConfig.dependentAxis.ticks,
 				...dependentAxis.ticks,
 				size: dependentAxis.tickMarksActive ? 5 : 0,
+				stroke: resolveColor(
+					dependentAxis.ticks?.stroke ??
+						baseConfig.dependentAxis.ticks?.stroke
+				),
 			},
 			grid: {
 				...baseConfig.dependentAxis.grid,
 				...dependentAxis.grid,
+				stroke: resolveColor(
+					dependentAxis.grid?.stroke ??
+						baseConfig.dependentAxis.grid?.stroke
+				),
 			},
 		},
 		dataRender: {
@@ -411,6 +253,32 @@ const getConfig = (
 					: availableCategories,
 			xScale: iScale,
 			yScale: dScale,
+			isHighlightedColor: resolveColor(
+				dataRender.isHighlightedColor ??
+					baseConfig.dataRender?.isHighlightedColor
+			),
+			groupBreaks: {
+				...baseConfig.dataRender?.groupBreaks,
+				...dataRender.groupBreaks,
+				breakStyles: {
+					...baseConfig.dataRender?.groupBreaks?.breakStyles,
+					...dataRender.groupBreaks?.breakStyles,
+					stroke: resolveColor(
+						dataRender.groupBreaks?.breakStyles?.stroke ??
+							baseConfig.dataRender?.groupBreaks?.breakStyles
+								?.stroke
+					),
+				},
+				labelStyles: {
+					...baseConfig.dataRender?.groupBreaks?.labelStyles,
+					...dataRender.groupBreaks?.labelStyles,
+					fill: resolveColor(
+						dataRender.groupBreaks?.labelStyles?.fill ??
+							baseConfig.dataRender?.groupBreaks?.labelStyles
+								?.fill
+					),
+				},
+			},
 		},
 		animate: {
 			...baseConfig.animate,
@@ -424,14 +292,33 @@ const getConfig = (
 			...tooltip,
 			customFormat: null, // function(d) { return d; },
 			rlsFormat: false,
+			emphasizeStrokeColor: resolveColor(
+				tooltip.emphasizeStrokeColor ??
+					baseConfig.tooltip?.emphasizeStrokeColor
+			),
 			style: {
 				...baseConfig.tooltip.style,
 				...tooltip.style,
+				background: resolveColor(
+					tooltip.style?.background ??
+						baseConfig.tooltip.style?.background
+				),
+				color: resolveColor(
+					tooltip.style?.color ?? baseConfig.tooltip.style?.color
+				),
+				border: resolveColorInString(
+					tooltip.style?.border ?? baseConfig.tooltip.style?.border
+				),
 			},
 		},
 		legend: {
 			...baseConfig.legend,
 			...legend,
+			borderStroke: resolveColor(
+				legend.borderStroke ?? baseConfig.legend?.borderStroke
+			),
+			fill: resolveColor(legend.fill ?? baseConfig.legend?.fill),
+			customLabels: customLegendLabels ?? {},
 			categories: (() => {
 				// If legendCategories is set, use it (custom user-defined order)
 				if (legend.categories && legend.categories.length > 0) {
@@ -456,6 +343,11 @@ const getConfig = (
 					// For maps with ordinal scale, use the mapScaleDomain
 					return dataRender.mapScaleDomain;
 				}
+				if (chartType === 'treemap' || chartType === 'sankey') {
+					// For treemaps and sankey, legend categories are derived from node/group names
+					// in the data by the component itself — return empty so it's not overridden
+					return [];
+				}
 				// For all other charts, use the categories array from dataRender
 				return dataRender.categories || [];
 			})(),
@@ -473,16 +365,28 @@ const getConfig = (
 		dotPlot: {
 			...baseConfig.dotPlot,
 			...dotPlot,
+			connectingLine: {
+				...baseConfig.dotPlot?.connectingLine,
+				...dotPlot.connectingLine,
+				stroke: resolveColor(
+					dotPlot.connectingLine?.stroke ??
+						baseConfig.dotPlot?.connectingLine?.stroke
+				),
+			},
 		},
 		pie: {
 			...baseConfig.pie,
 			...pie,
 			hasPathStroke: elementHasStroke,
-			pathStrokeColor: 'white',
+			pathStrokeColor: resolveColor(pie?.pathStrokeColor ?? 'white'),
 			pathStrokeWidth: 1,
 			groupArcStyle: {
 				...baseConfig.pie.groupArcStyle,
 				...pie?.groupArcStyle,
+				stroke: resolveColor(
+					pie?.groupArcStyle?.stroke ??
+						baseConfig.pie?.groupArcStyle?.stroke
+				),
 			},
 		},
 		explodedBar: {
@@ -492,6 +396,12 @@ const getConfig = (
 		map: {
 			...baseConfig.map,
 			...map,
+			pathBackgroundFill: resolveColor(
+				map.pathBackgroundFill ?? baseConfig.map?.pathBackgroundFill
+			),
+			pathStroke: resolveColor(
+				map.pathStroke ?? baseConfig.map?.pathStroke
+			),
 		},
 		nodes: {
 			...baseConfig.nodes,
@@ -501,6 +411,7 @@ const getConfig = (
 		labels: {
 			...baseConfig.labels,
 			...labels,
+			color: resolveColor(labels.color ?? baseConfig.labels?.color),
 		},
 		shapes: {
 			customStyles: shapes?.customStyles || {},
@@ -508,9 +419,15 @@ const getConfig = (
 		},
 		voronoi: {
 			...baseConfig.voronoi,
+			fill: resolveColor(baseConfig.voronoi?.fill),
+			stroke: resolveColor(baseConfig.voronoi?.stroke),
 		},
 		regression: {
 			...baseConfig.regression,
+			...regression,
+			stroke: resolveColor(
+				regression?.stroke ?? baseConfig.regression?.stroke
+			),
 		},
 		divergingBar: {
 			...baseConfig.divergingBar,
@@ -526,6 +443,14 @@ const getConfig = (
 			style: {
 				...baseConfig.diffColumn.style,
 				...diffColumn.style,
+				rectStrokeColor: resolveColor(
+					diffColumn.style?.rectStrokeColor ??
+						baseConfig.diffColumn?.style?.rectStrokeColor
+				),
+				rectFill: resolveColor(
+					diffColumn.style?.rectFill ??
+						baseConfig.diffColumn?.style?.rectFill
+				),
 			},
 		},
 		custom: {
@@ -533,6 +458,14 @@ const getConfig = (
 			attributes: {
 				...customAttributes,
 			},
+		},
+		treemap: {
+			...baseConfig.treemap,
+			...treemap,
+		},
+		sankey: {
+			...baseConfig.sankey,
+			...sankey,
 		},
 		annotations: {
 			...baseConfig.annotations,

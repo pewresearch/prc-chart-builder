@@ -70,11 +70,11 @@ return array(
 			'colors' => array(
 				'type' => 'array',
 				'default' => array(
-					'#436983',
-					'#bf3927',
+					'#456A83',
+					'#BF3B27',
 					'#756a7e',
 					'#ea9e2c',
-					'#bc7b2b',
+					'#BB792A',
 					'#eeece4'
 				)
 			),
@@ -121,13 +121,13 @@ return array(
 						'dy' => 0,
 						'textAnchor' => 'middle',
 						'verticalAnchor' => 'end',
-						'fill' => '#231F20',
+						'fill' => '#2a2a2a',
 						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
 						'maxWidth' => 50
 					),
 					'axisLabel' => array(
 						'fontSize' => 12,
-						'fill' => '#231F20',
+						'fill' => '#2a2a2a',
 						'padding' => 15,
 						'angle' => 0,
 						'dx' => 0,
@@ -138,11 +138,11 @@ return array(
 						'maxWidth' => 100
 					),
 					'axis' => array(
-						'stroke' => '#756f6a',
+						'stroke' => '#818181',
 						'strokeWidth' => 1
 					),
 					'ticks' => array(
-						'stroke' => '#756f6a',
+						'stroke' => '#818181',
 						'size' => 5,
 						'strokeWidth' => 0
 					),
@@ -183,13 +183,13 @@ return array(
 						'dy' => 0,
 						'textAnchor' => 'end',
 						'verticalAnchor' => 'middle',
-						'fill' => 'rgba(35, 31, 32, 0.7)',
+						'fill' => '#565656',
 						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
 						'maxWidth' => 50
 					),
 					'axisLabel' => array(
 						'fontSize' => 12,
-						'fill' => 'rgba(35, 31, 32, 0.7)',
+						'fill' => '#565656',
 						'padding' => 30,
 						'angle' => 270,
 						'dx' => 0,
@@ -200,11 +200,11 @@ return array(
 						'maxWidth' => 200
 					),
 					'axis' => array(
-						'stroke' => '#756f6a',
+						'stroke' => '#818181',
 						'strokeWidth' => 1
 					),
 					'ticks' => array(
-						'stroke' => '#756f6a',
+						'stroke' => '#818181',
 						'size' => 5,
 						'strokeWidth' => 0
 					),
@@ -399,6 +399,20 @@ return array(
 					'pointStroke' => 'inherit'
 				)
 			),
+			'regression' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => false,
+					'type' => 'linear',
+					'stroke' => '#2a2a2a',
+					'strokeWidth' => 2,
+					'strokeDasharray' => '',
+					'perGroupBreak' => false,
+					'groupBreakStyles' => array(
+						
+					)
+				)
+			),
 			'map' => array(
 				'type' => 'object',
 				'default' => array(
@@ -468,6 +482,38 @@ return array(
 					)
 				)
 			),
+			'treemap' => array(
+				'type' => 'object',
+				'default' => array(
+					'tile' => 'squarify',
+					'rectStroke' => '#ffffff',
+					'rectStrokeWidth' => 2,
+					'labelMinArea' => 1600,
+					'paddingInner' => 2,
+					'paddingOuter' => 4,
+					'showGroupLabels' => true,
+					'scaleOpacity' => false,
+					'opacityRange' => array(
+						0.4,
+						1
+					),
+					'borderRadius' => 0,
+					'showValues' => false
+				)
+			),
+			'sankey' => array(
+				'type' => 'object',
+				'default' => array(
+					'nodeAlign' => 'justify',
+					'nodeWidth' => 12,
+					'nodePadding' => 10,
+					'linkOpacity' => 0.5,
+					'nodeRadius' => 0,
+					'sourceKey' => 'x',
+					'targetKey' => 'target',
+					'valueKey' => 'value'
+				)
+			),
 			'annotations' => array(
 				'type' => 'object',
 				'default' => array(
@@ -480,6 +526,23 @@ return array(
 			),
 			'drawings' => array(
 				'type' => 'array',
+				'default' => array(
+					
+				)
+			),
+			'customTickLabels' => array(
+				'type' => 'object',
+				'default' => array(
+					'independent' => array(
+						
+					),
+					'dependent' => array(
+						
+					)
+				)
+			),
+			'customLegendLabels' => array(
+				'type' => 'object',
 				'default' => array(
 					
 				)
@@ -581,6 +644,9 @@ return array(
 					'isCustomChart' => false,
 					'customAttributes' => array(
 						
+					),
+					'preserveStringKeys' => array(
+						
 					)
 				)
 			),
@@ -633,8 +699,7 @@ return array(
 		),
 		'usesContext' => array(
 			'refId',
-			'prc-chart-builder/id',
-			'prc-chart-builder/syncedTableData'
+			'prc-chart-builder/id'
 		),
 		'supports' => array(
 			'html' => false,

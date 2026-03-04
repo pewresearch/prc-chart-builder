@@ -424,12 +424,10 @@ const USAMapTemplate = [
 				active: true,
 				markerStyle: 'rect',
 			},
-			map: {
-				scale: 'threshold',
-				scaleDomain: [20, 40, 60, 80],
-			},
 			dataRender: {
 				categories: ['Response'],
+				mapScale: 'threshold',
+				mapScaleDomain: [20, 40, 60, 80],
 			},
 			io: {
 				isConvertedChart: false,
