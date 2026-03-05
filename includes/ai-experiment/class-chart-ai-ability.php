@@ -182,16 +182,28 @@ class Chart_AI_Ability {
 						'sanitize_callback' => 'sanitize_textarea_field',
 						'default'           => '',
 					),
-					'image'       => array(
-						'required' => false,
-						'type'     => 'string',
-						'default'  => '',
-					),
-				'csvData'     => array(
-					'required' => false,
-					'type'     => 'string',
-					'default'  => '',
+				'image'       => array(
+					'required'          => false,
+					'type'              => 'string',
+					'default'           => '',
+					// Strip everything except valid base64 chars and the data URI prefix.
+					'sanitize_callback' => static function ( $value ) {
+						if ( empty( $value ) ) {
+							return '';
+						}
+						// Allow optional data URI prefix then base64 payload only.
+						if ( preg_match( '/^(data:image\/[a-z+]+;base64,)?([A-Za-z0-9+\/=]+)$/', $value, $m ) ) {
+							return $m[1] . $m[2];
+						}
+						return '';
+					},
 				),
+		'csvData'     => array(
+			'required'          => false,
+			'type'              => 'string',
+			'default'           => '',
+			'sanitize_callback' => array( $this, 'sanitize_csv_data' ),
+		),
 				'model'       => array(
 					'required'          => false,
 					'type'              => 'string',
@@ -226,6 +238,40 @@ class Chart_AI_Ability {
 		$result = $this->generate_chart( $input );
 
 		return new WP_REST_Response( $result, 200 );
+	}
+
+	// ── Sanitization ─────────────────────────────────────────────────────
+
+	/**
+	 * Sanitize CSV data without stripping angle brackets.
+	 *
+	 * Unlike sanitize_textarea_field(), this preserves `<` and `>` characters
+	 * which are valid in CSV data (e.g., "< 10", "<$50k", comparison operators).
+	 * The function removes null bytes, validates UTF-8, and normalizes line endings.
+	 *
+	 * @param mixed $value The raw CSV string to sanitize.
+	 * @return string Sanitized CSV data.
+	 */
+	public function sanitize_csv_data( $value ): string {
+		if ( ! is_string( $value ) ) {
+			return '';
+		}
+
+		// Remove null bytes which could cause issues.
+		$value = str_replace( "\0", '', $value );
+
+		// Remove other potentially dangerous control characters (except newlines/tabs).
+		$value = preg_replace( '/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', '', $value );
+
+		// Normalize line endings to \n.
+		$value = str_replace( array( "\r\n", "\r" ), "\n", $value );
+
+		// Ensure valid UTF-8 encoding.
+		if ( function_exists( 'mb_convert_encoding' ) ) {
+			$value = mb_convert_encoding( $value, 'UTF-8', 'UTF-8' );
+		}
+
+		return $value;
 	}
 
 	// ── Generation logic ──────────────────────────────────────────────────

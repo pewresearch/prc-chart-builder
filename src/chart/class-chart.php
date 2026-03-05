@@ -138,6 +138,10 @@ class Chart {
 			return;
 		}
 
+		// Strip internal migration fields before exposing attributes as public state.
+		$public_attributes = $attributes;
+		unset( $public_attributes['_legacy'], $public_attributes['_v1Original'], $public_attributes['_migrationMeta'] );
+
 		wp_interactivity_state(
 			$target_namespace,
 			array(
@@ -148,7 +152,7 @@ class Chart {
 					'chart-hash'         => $block_id,
 					'iframe-height'      => null,
 					'should-render'      => $should_render,
-					'attributes'         => $attributes, // ✅ Use migrated attributes, not $block->attributes
+					'attributes'         => $public_attributes,
 					'isQuestionExpanded' => false,
 					'currentViewport'    => $device_type,
 				),
@@ -184,7 +188,7 @@ class Chart {
 			$static_chart = wp_sprintf(
 				'<div id="%1$s">%2$s</div>',
 				$block_attributes['io']['staticImageId'],
-				$block_attributes['io']['staticImageInnerHTML']
+				wp_kses_post( $block_attributes['io']['staticImageInnerHTML'] )
 			);
 		}
 

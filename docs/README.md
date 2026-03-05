@@ -2,20 +2,34 @@
 
 This directory contains general documentation for the PRC Chart Builder plugin.
 
-## Contents
+## Core Docs
 
-- **ARCHITECTURE.md** - Chart Builder architecture and state management overview
-- **CHART_GALLERY_PLAN.md** - Full implementation plan for the DataViews chart gallery, Add New Chart modal, AI Chart Wizard, and live block previews
-- **PHASE_5_BACKLOG.md** - Deferred polish items (bulk actions, URL state, keyboard nav, search, CSV drop-to-create) for future GitHub issues
-- **COMMIT_MESSAGE.md** - Commit message templates and guidelines
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** — System architecture, data flow, state management patterns, and decision matrix. Start here for a structural overview of how the three tiers (Admin, Block Editor, Charting Library) fit together.
+- **[VIEWPORT_ATTRIBUTES.md](VIEWPORT_ATTRIBUTES.md)** — How viewport-aware block attributes work (Desktop / Tablet / Mobile overrides)
+- **[VIEWPORT_BREAKPOINTS.md](VIEWPORT_BREAKPOINTS.md)** — Breakpoint values and their role in responsive chart rendering
+- **[VIEWPORT_USAGE_GUIDE.md](VIEWPORT_USAGE_GUIDE.md)** — Practical guide to authoring responsive chart customizations
+
+## Release Notes
+
+Release notes are in [`release-notes/`](release-notes/). Each file covers one version.
+
+| Version | File | Highlights |
+|---|---|---|
+| 3.5.0 | [release-notes/3_5_0.md](release-notes/3_5_0.md) | Chart Library admin, AI generation, element popover system, Sankey, Treemap, dark mode, scatter grouping + regression, map improvements |
+
+## Plans & Specs
+
+Active and completed planning documents are in [`plans/`](plans/):
+
+- **[CHART_GALLERY_PLAN.md](plans/CHART_GALLERY_PLAN.md)** — Full implementation plan for the DataViews chart gallery, Create New Chart modal, AI Chart Wizard, and live block previews
+- **[CHART_GALLERY_PHASE_5_BACKLOG.md](plans/CHART_GALLERY_PHASE_5_BACKLOG.md)** — Deferred polish items (bulk actions, URL state, keyboard nav, search, CSV drop-to-create) for future issues
+- **[CHARTING_PATTERNS_PLAN.md](plans/CHARTING_PATTERNS_PLAN.md)** — Plan for chart pattern templates used in the Create New Chart flow
+- **[LEGEND_TOOLTIP_CUSTOMIZATION.md](plans/LEGEND_TOOLTIP_CUSTOMIZATION.md)** — Legend and tooltip customization design notes
+- **[COMMIT_MESSAGE.md](plans/COMMIT_MESSAGE.md)** — Commit message templates and guidelines
 
 ## Issue-Specific Documentation
 
-Issue-specific documentation is organized in the `specs/` directory:
+Issue-specific documentation is organized in the `specs/` directory at the plugin root:
 
-- **specs/issue-1386/** - V1 to V2 migration documentation
-    - `docs/` - Migration-related analysis, reports, and implementation notes
-    - `spec.md`, `plan.md`, `tasks.md` - Specification and planning documents
-
-- **specs/issue-2016/** - Other issue documentation
-    - `spec.md`, `plan.md`, `tasks.md` - Specification and planning documents
+- **specs/issue-1386/** — V1 to V2 attribute migration documentation
+- **specs/issue-2013/**, **specs/issue-2016/** — Other issue-specific specs and plans

@@ -1,534 +1,246 @@
 # Chart Builder Architecture & State Management
 
-## Overview
-
-This document outlines architectural decisions for the PRC Chart Builder, particularly around data persistence, state management, and interactive features.
+_Last Updated: March 2026 · Version 3.5.0_
 
 ---
 
-## Current Architecture
+## System Overview
 
-### Data Flow
+PRC Chart Builder is composed of three tiers that work together:
 
 ```
-Table Block (source)
-  ↓
-chartData (derived via formatCellContent)
-  ↓
-Block Attributes (persisted)
-  ↓
-Charting Library (rendered)
+┌─────────────────────────────────────────────┐
+│           Admin (Chart Library)             │  wp-admin/edit.php?post_type=chart
+│  DataViews gallery · Create modal · AI gen  │
+└─────────────────────┬───────────────────────┘
+                      │ creates / edits
+┌─────────────────────▼───────────────────────┐
+│         Block Editor (Chart CPT post)       │  Gutenberg
+│  Controller block · Chart block · Popover   │
+└─────────────────────┬───────────────────────┘
+                      │ renders via
+┌─────────────────────▼───────────────────────┐
+│        Charting Library + Utilities         │  prc-charting-library / @prc/charting-utilities
+│  @visx components · D3 helpers              │
+└─────────────────────────────────────────────┘
 ```
 
-### Key Concepts
+---
 
-**Block Attributes**
+## Tier 1: Admin (Chart Library)
 
-- WordPress-native storage mechanism
-- Saves with post content
-- Automatically syncs in real-time collaboration
-- Accessible via `@wordpress/data` store
+Introduced in 3.5.0 (issue #1400). Lives in `includes/admin/`.
 
-**Hidden Attributes Pattern**
-Data points can include "hidden" attributes prefixed with `__`:
+### Responsibilities
 
-```javascript
+- Lists and manages all `chart` CPT posts via `@wordpress/dataviews`
+- Provides the "Create New Chart" modal with three entry paths: blank template, pattern picker, and AI generation
+- Handles CSV drag-and-drop to bootstrap new chart posts from data
+
+### Key components
+
+| Component | File | Role |
+|---|---|---|
+| `ChartLibrary` | `src/chart-library.jsx` | Page root; composes DataViews + modal + dropzone |
+| `DataViews` | `src/components/dataviews.jsx` | Filterable/searchable chart grid with live block previews |
+| `CreateNewChartModal` | `src/components/create-new-chart-modal.jsx` | Multi-step creation flow; chart type picker → template/pattern/AI |
+| `AICreateStep` | `src/components/ai-create-step.jsx` | AI generation panel (text + image + CSV → block markup) |
+| `DropZone` | `src/components/dropzone.jsx` | Page-level CSV drop target |
+
+### AI generation flow
+
+```
+User input (text description + optional PNG + optional CSV)
+  ↓
+REST request to AI experiment endpoint (Claude Sonnet by default)
+  ↓
+Block markup string returned
+  ↓
+parse_blocks() → BlockPreview rendered live
+  ↓
+Accept → post created with that markup | Regenerate → retry
+```
+
+The AI feature is gated by `window.prcChartBuilderLibrary.aiEnabled`, set server-side by `Chart_AI_Experiment`. It is off by default.
+
+---
+
+## Tier 2: Block Editor
+
+### Block structure
+
+```
+prc-chart-builder/controller   (outer, provides context + data table)
+  └── prc-chart-builder/chart  (inner, holds all chart config in attributes)
+  └── core/table               (optional, canonical data source)
+```
+
+`prc-chart-builder/synced-chart` is a reference block used when embedding a chart CPT post into an article. It holds a `ref` (post ID) and delegates rendering to the chart CPT's controller block.
+
+### Data flow
+
+```
+core/table (source of truth for data)
+  ↓ formatCellContent()
+io.chartData (derived, stored in chart block attributes)
+  ↓
+prc-charting-library components (render)
+  ↓
+SVG output
+```
+
+Chart configuration (axes, colors, labels, layout, etc.) is stored entirely in the `chart` block attribute object on `prc-chart-builder/chart`. See `README.md` at the plugin root for the full attribute reference.
+
+### Element-level customizations
+
+As of 3.5.0, per-element style overrides (label colors, shape fills, line styles, etc.) are stored in **separate top-level block attributes** using a `{x}::{category}` key format:
+
+```json
 {
-  x: "2020",
-  Category: 42,
-  __labels: { Category: "42%" },
-  __tooltips: { Category: "<strong>42%</strong> of respondents..." },
-  __labelPositions: { Category: { dx: 10, dy: -5 } }
+  "labels": {
+    "customLabels":     { "2020::Democrats": "52%" },
+    "customVisibility": { "2020::Democrats": false },
+    "customStyles":     { "2020::Democrats": { "color": "#ff0000", "fontWeight": "bold" } },
+    "customPositions":  { "2020::Democrats": { "dx": 10, "dy": -5 } }
+  },
+  "shapes": {
+    "customStyles":   { "2020::Democrats": { "fill": "#ff0000", "opacity": 0.8 } },
+    "segmentStyles":  { "2020::2024::Democrats": { "stroke": "#ff0000", "strokeDasharray": "5,5" } }
+  }
 }
 ```
 
-**Benefits:**
+**Key normalization:** Date values are always converted to ISO strings before key generation to ensure consistency between the editor (where dates are JS `Date` objects) and the frontend (where they are ISO strings from JSON serialization).
 
-- Unified data structure
-- Positions travel with data points
-- Intuitive relationship (position tied to x-value + category)
+This approach was explicitly considered and deferred in the v1.3.12 architecture document as "Option 2: Separate Attribute with Key-Based Lookup." It was ultimately adopted over the `__labelPositions`-in-chartData approach because:
 
----
+- Customizations survive all data changes (not just x-value-matching ones)
+- Clean separation of concerns — data and presentation are distinct
+- The orphaned-key concern is manageable at the scale of typical chart data
 
-## Problem: Data Persistence vs. Derivation
+### Element popover system
 
-### The Challenge
-
-When table data changes → `chartData` is regenerated → custom positions are lost.
-
-**Example:**
-
-1. User customizes label positions by dragging
-2. User fixes typo in table data ("Demcorats" → "Democrats")
-3. `chartData` regenerates from table
-4. All custom `__labelPositions` disappear
-
-This is technically correct (derived data should be pure) but frustrating for users.
-
----
-
-## Solution Options Considered
-
-### Option 1: Smart Merge on Data Update ⭐ RECOMMENDED
-
-**Preserve `__labelPositions` when x-values match between old and new data**
-
-```javascript
-useEffect(() => {
-	if (!chartData || !memoizedChartData) return;
-
-	// Check if we have custom positions to preserve
-	const hasCustomPositions = chartData.some(
-		(d) => d.__labelPositions && Object.keys(d.__labelPositions).length > 0
-	);
-
-	if (hasCustomPositions) {
-		// Create lookup map of old positions by x-value
-		const positionsMap = new Map();
-		chartData.forEach((d) => {
-			if (d.__labelPositions) {
-				positionsMap.set(d.x, d.__labelPositions);
-			}
-		});
-
-		// Merge positions into new data where x-values match
-		const mergedData = memoizedChartData.map((d) => {
-			const existingPositions = positionsMap.get(d.x);
-			if (existingPositions) {
-				return { ...d, __labelPositions: existingPositions };
-			}
-			return d;
-		});
-
-		setAttributes({ chartData: mergedData });
-	} else {
-		setAttributes({ chartData: memoizedChartData });
-	}
-}, [memoizedChartData]);
-```
-
-**Pros:**
-
-- ✅ Maintains unified data structure
-- ✅ Positions survive data updates when x-values match
-- ✅ Intuitive behavior (positions tied to x-value)
-- ✅ Automatically handles removed data points
-- ✅ Simple implementation
-
-**Cons:**
-
-- ⚠️ Positions lost if x-values change (e.g., "2020" → "2021")
-- ⚠️ Need to handle category name changes (could match by index as fallback)
-
-**Edge Cases:**
-
-- X-value changes → Accept loss (it's a different data point)
-- Category renames → Could implement index-based fallback matching
-- Data point removed → Positions automatically discarded (correct behavior)
-
-**Status:** Accepted as the pragmatic solution. Solves 90% of use cases.
-
----
-
-### Option 2: Separate Attribute with Key-Based Lookup
-
-**Store positions separately from chartData**
-
-```javascript
-// In block attributes
-customLabelPositions: {
-  type: 'object',
-  default: {},
-  // Structure: { "2020|Category1": { dx: 10, dy: -5 } }
-}
-
-// In wp-editor-functions.js
-onDragEnd: (x, category, finalDx, finalDy) => {
-  const key = `${x}|${category}`;
-  setAttributes({
-    customLabelPositions: {
-      ...attrs.customLabelPositions,
-      [key]: { dx: finalDx, dy: finalDy }
-    }
-  });
-}
-```
-
-**Pros:**
-
-- ✅ Positions survive all data changes
-- ✅ Simple key-based lookup
-- ✅ Clear separation of concerns
-
-**Cons:**
-
-- ❌ Two sources of truth
-- ❌ Loses unified structure
-- ❌ Need to clean up orphaned positions
-- ❌ More complex merge logic at render time
-
-**Status:** Not chosen, but valid alternative if Option 1 proves insufficient.
-
----
-
-### Option 3: Hybrid Approach
-
-Combine Option 1 with enhanced UX:
-
-1. Store in chartData (unified structure)
-2. Add merge logic (preserve on updates)
-3. Add visual indicators (show which labels are customized)
-4. Add bulk operations (clear all, reset specific points)
-
-**Status:** Future enhancement if users need better visibility into customizations.
-
----
-
-### Option 4: Version/Snapshot System
-
-Keep history of custom positions with data hashes:
-
-```javascript
-labelPositionHistory: [
-  { dataHash: 'abc123', positions: {...} },
-  { dataHash: 'def456', positions: {...} }
-]
-```
-
-**Status:** Too complex for current needs. Consider only if required by specific use case.
-
----
-
-## State Management Considerations
-
-### Question: Should We Use Redux or External State Management?
-
-**Short Answer: No, not for this use case.**
-
-### Why Not Redux?
-
-The problem isn't about _where_ data is stored, but about **data derivation logic**:
+The popover system (`src/chart/edit/popover/`) is the primary editing paradigm for per-element customization.
 
 ```
-Table Changes → Derived Data → Need Smart Merge
+User clicks element in chart canvas
+  ↓
+wpEditorFunctions.{type}.onClick() fires
+  ↓
+handleElementClick() in edit/index.jsx
+  ↓
+setSelectedElement({ elementType, dataPoint, ... })
+  ↓
+ChartElementPopover renders appropriate panel (Label / Shape / LineSegment / TickLabel / ...)
+  ↓
+User makes changes → hook.handleStyleChange() updates local state
+  ↓
+onUpdate() → setAttributes() → chart re-renders
 ```
 
-Redux wouldn't change this fundamental flow. You'd still need merge logic.
+**Viewport awareness:** All customizations respect the current device preview context (Desktop / Tablet / Mobile) via `useViewportAttributes`. The same element can carry different overrides per viewport.
 
-### WordPress Already Has Redux-Like Patterns
+### State management
 
-WordPress uses `@wordpress/data` which is heavily inspired by Redux:
+The block editor tier uses only WordPress-native patterns:
 
-- Actions, selectors, stores (Redux concepts)
-- Already integrated with Gutenberg
-- Block attributes are already in this system
-- Provides real-time collaboration out of the box
+| Need | Solution |
+|---|---|
+| Persisting chart config | Block attributes on `prc-chart-builder/chart` |
+| Persisting per-element overrides | Separate top-level block attributes (key-based) |
+| Parent → child communication | Block Context via `ChartContext.Provider` in the controller |
+| Editor-only UI state (popover open/closed, selected element) | `src/chart/edit/store.js` — a local `@wordpress/data` store |
+| Frontend runtime state | WordPress Interactivity API (for freeform/interactive charts) |
+| Real-time collaboration | Automatic — Gutenberg syncs block attributes natively |
 
-```javascript
-// WordPress data API (similar to Redux)
-const { updateBlockAttributes } = useDispatch('core/block-editor');
-const blocks = useSelect((select) => select('core/block-editor').getBlocks());
-```
+No external Redux or React state management libraries are used.
 
 ---
 
-## Future Use Cases Analysis
+## Tier 3: Charting Library & Utilities
 
-### 1. Real-Time Collaboration
+### prc-charting-library
 
-**Answer: Already Handled by WordPress**
+React component library built on `@visx` and D3 that renders SVG charts. Consumed by `prc-chart-builder/chart` at render time (both in the editor and on the frontend via `view.js`).
 
-Gutenberg's data layer automatically syncs block attributes:
+Chart types available as of 3.5.0:
 
-```javascript
-// Editor A updates
-dispatch('core/block-editor').updateBlockAttributes(clientId, { chartData });
+| Type | Notes |
+|---|---|
+| Bar (vertical, horizontal, stacked, grouped) | |
+| Diverging Bar | |
+| Line | |
+| Scatter | Supports grouping and regression lines (3.5.0) |
+| Dot Plot | |
+| Pie | |
+| Stacked Area | |
+| US Block Map | Responsive scaling fixed in 3.5.0 |
+| US County Map | |
+| World Map | Missing territories (Somaliland, Western Sahara etc.) added in 3.5.0 |
+| Sankey | New in 3.5.0 |
+| Treemap | New in 3.5.0 |
+| Radar | Work in progress; not yet in type picker |
 
-// Editor B's UI updates automatically
-const chartData =
-	select('core/block-editor').getBlockAttributes(clientId).chartData;
-```
+### @prc/charting-utilities
 
-Custom positions in `__labelPositions` sync automatically because they're in block attributes.
+Shared utilities consumed by both `prc-charting-library` and `prc-chart-builder`. Includes:
 
-**No external store needed.**
-
----
-
-### 2. Cross-Block Communication
-
-**Example:** A button block elsewhere in the post updates chart data.
-
-#### Option A: Block Context (Simple, for related blocks)
-
-```javascript
-// Controller block provides context
-<ChartContext.Provider value={{ updateChartData }}>
-	<InnerBlocks />
-</ChartContext.Provider>;
-
-// Button consumes context
-const { updateChartData } = useBlockContext();
-```
-
-**Use when:** Blocks have parent-child relationship (already used in codebase).
-
-#### Option B: Custom WordPress Data Store (For unrelated blocks)
-
-```javascript
-import { createReduxStore, register } from '@wordpress/data';
-
-const chartStore = createReduxStore('prc/chart-data', {
-	reducer: (state = {}, action) => {
-		switch (action.type) {
-			case 'UPDATE_CHART':
-				return { ...state, [action.chartId]: action.data };
-			default:
-				return state;
-		}
-	},
-	actions: {
-		updateChart: (chartId, data) => ({
-			type: 'UPDATE_CHART',
-			chartId,
-			data,
-		}),
-	},
-	selectors: {
-		getChartData: (state, chartId) => state[chartId],
-	},
-});
-
-register(chartStore);
-
-// Button block (anywhere in post)
-const { updateChart } = useDispatch('prc/chart-data');
-updateChart('chart-123', newData);
-
-// Chart block
-const chartData = useSelect((select) =>
-	select('prc/chart-data').getChartData(clientId)
-);
-```
-
-**Use when:**
-
-- Blocks aren't parent-child related
-- Multiple blocks need same data
-- Complex interactions between blocks
-
-**Decision:** Implement only when this use case actually arises.
+- `chart-types.js` — centralized chart type constants (introduced 3.5.0; import from here, not locally)
+- Color resolution (`getColor`) — returns `light-dark(value, value)` CSS strings for dark mode support
+- Data formatting helpers (`formatNum`, `formatCellContent`)
+- Regression line calculation utilities
 
 ---
 
-### 3. Scrollytelling with Dynamic Data
+## Dark Mode
 
-**Architecture:**
+As of 3.5.0, charts respond automatically to the OS/browser dark mode preference via CSS `light-dark()`.
 
-#### Editor (Design Time)
+**How it works:** `getColor()` in charting-utilities checks if a resolved color is a plain hex. If so, it looks up that hex in `theme.json`'s color palette and returns the full `light-dark(light-value, dark-value)` string. No editor action is required.
 
-Store all possible datasets in block attributes:
-
-```javascript
-{
-	scrollytellingData: {
-		scenes: [
-			{
-				scroll: 0,
-				data: [
-					/* dataset 1 */
-				],
-				annotations: [
-					/* scene 1 annotations */
-				],
-				__labelPositions: {
-					/* scene 1 positions */
-				},
-			},
-			{
-				scroll: 500,
-				data: [
-					/* dataset 2 */
-				],
-				annotations: [
-					/* scene 2 annotations */
-				],
-				__labelPositions: {
-					/* scene 2 positions */
-				},
-			},
-			{
-				scroll: 1000,
-				data: [
-					/* dataset 3 */
-				],
-				annotations: [
-					/* scene 3 annotations */
-				],
-				__labelPositions: {
-					/* scene 3 positions */
-				},
-			},
-		];
-	}
-}
-```
-
-#### Frontend (Runtime)
-
-Use WordPress Interactivity API for runtime state:
-
-```javascript
-import { store } from '@wordpress/interactivity';
-
-store('prc-chart/scrollytelling', {
-	state: {
-		currentScene: 0,
-		get currentData() {
-			return state.scenes[state.currentScene].data;
-		},
-	},
-	actions: {
-		onScroll: () => {
-			const scrollY = window.scrollY;
-			state.currentScene = calculateScene(scrollY);
-			// Chart re-renders with new data
-		},
-	},
-});
-```
-
-**Key Insight:** Scrollytelling is a _frontend interaction_, not editor state.
-
-**Use:**
-
-- **Block attributes** for storing all scenes (persists with post)
-- **Interactivity API** for runtime state (which scene is currently active)
-- **No Redux needed**
+**Exception:** Linear (continuous gradient) map color scales do not participate in dark mode. Gradient interpolation doesn't translate cleanly to the light-dark swap approach.
 
 ---
 
-## Decision Matrix: When to Use What
+## PHP Rendering (Server Side)
 
-### Use Block Attributes When:
-
-- ✅ Data needs to persist with the post
-- ✅ Standard block-level data
-- ✅ Real-time collaboration needed (automatic)
-- ✅ Simple parent-child relationships
-
-### Use Block Context When:
-
-- ✅ Parent-child block communication
-- ✅ Sharing functions/callbacks to nested blocks
-- ✅ Temporary runtime state
-
-### Use WordPress Data Store When:
-
-- ✅ Complex state shared across 5+ unrelated blocks
-- ✅ Need centralized state management
-- ✅ Complex computed/derived state
-- ✅ Need middleware (logging, analytics, async operations)
-- ✅ Building interconnected "dashboard" of charts
-
-### Use WordPress Interactivity API When:
-
-- ✅ Frontend-only interactions
-- ✅ User-triggered state changes (scroll, click, hover)
-- ✅ Lightweight runtime state
-- ✅ No persistence needed
-
-### Use External Redux When:
-
-- ❌ **Almost never for WordPress blocks**
-- Only if you need features not provided by WordPress data stores
-- Consider if building a completely separate React app within WordPress
+- `class-chart.php` — registers the `prc-chart-builder/chart` block, handles render callback for freeform/static chart variants
+- `class-controller.php` — registers `prc-chart-builder/controller`, manages the synced chart relationship and data resolution
+- `class-markdown-for-agents-integration.php` — registers markdown callbacks with `prc-markdown-for-agents` so charts render as structured Markdown tables (title + data table + metadata) rather than SVG/HTML when processed by AI agent workflows
 
 ---
 
-## Recommendations
+## Decision Matrix
 
-### Immediate (v1.3.12)
+### Use block attributes when:
+- Data needs to persist with the post
+- Standard chart config (axes, colors, layout, metadata)
+- Per-element style overrides (key-based, separate from data)
 
-1. ✅ **Implement smart merge logic** (Option 1)
+### Use Block Context when:
+- Parent → child communication within the controller/chart relationship
+- Passing callbacks or functions to inner blocks
 
-    - Solves 90% of use cases
-    - Simple, maintainable
-    - Preserves unified data structure
+### Use the local `@wordpress/data` store (`edit/store.js`) when:
+- Editor-only ephemeral UI state (which element is selected, popover position)
+- State that should not persist across saves
 
-2. ✅ **Document architecture** (this file)
-    - Reference for future decisions
-    - Captures rationale
+### Use the Interactivity API when:
+- Frontend-only runtime interactions (hover, scroll, click on published charts)
+- Lightweight state that doesn't need to persist
 
-### Near Future (v1.4.x)
-
-3. **Add visual indicators** for customized labels
-
-    - Icon or highlight on labels with custom positions
-    - Helps users understand what they've changed
-
-4. **Enhance reset functionality**
-    - Per-label reset (individual undo)
-    - Bulk reset by category
-    - Reset all (already implemented)
-
-### Future Considerations (v2.x+)
-
-**Monitor for these pain points:**
-
-- Need to update charts from unrelated blocks → Consider WordPress data store
-- Complex scrollytelling features → Implement Interactivity API pattern
-- Users frequently lose positions on data updates → Enhance merge logic or add warnings
-
-**The WordPress Way:**
-
-> Start simple, add complexity only when needed, prefer platform-native solutions.
-
----
-
-## Current Implementation Status
-
-### Completed (v1.3.12)
-
-- ✅ Draggable annotations with `wpEditorFunctions` architecture
-- ✅ Draggable labels using `DraggableLabel` component
-- ✅ `__labelPositions` stored in chartData
-- ✅ Editor-only interactivity (frontend renders static)
-- ✅ Reset button for clearing custom positions
-- ✅ Refactored `wpEditorFunctions` into separate module
-- ✅ Smart merge logic to preserve positions on data updates (Option 1)
-
-### To Be Implemented
-
-- ⏳ Visual indicators for customized elements
-- ⏳ Per-element reset functionality
-
-### Future Enhancements
-
-- 📋 Cross-block communication patterns (when needed)
-- 📋 Scrollytelling support (when needed)
-- 📋 Advanced state management (only if pain points emerge)
+### Do not use:
+- External Redux or global React state — WordPress-native patterns cover all current needs
+- `__labelPositions` inside `chartData` — superseded by the key-based attribute approach in 3.5.0
 
 ---
 
 ## Related Documentation
 
+- [README.md](../README.md) — full block attribute reference
+- [docs/VIEWPORT_ATTRIBUTES.md](VIEWPORT_ATTRIBUTES.md) — viewport-aware attribute system
+- [docs/VIEWPORT_USAGE_GUIDE.md](VIEWPORT_USAGE_GUIDE.md) — practical guide to responsive customizations
+- [docs/release-notes/3_5_0.md](release-notes/3_5_0.md) — 3.5.0 release notes
+- [src/chart/edit/popover/panels/README.md](../src/chart/edit/popover/panels/README.md) — element popover system internals
 - [WordPress Data Package](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-data/)
 - [WordPress Interactivity API](https://developer.wordpress.org/block-editor/reference-guides/interactivity-api/)
-- [Block Context](https://developer.wordpress.org/block-editor/reference-guides/block-api/block-context/)
-- [Creating Custom Stores](https://developer.wordpress.org/block-editor/reference-guides/data/data-core-block-editor/)
-
----
-
-## Questions for Future Discussion
-
-1. Should we implement category rename detection for smarter merging?
-2. Do we need undo/redo beyond WordPress's native system?
-3. Should custom positions be exportable/importable separately?
-4. Would a "lock positions" toggle be useful during major data updates?
-
----
-
-_Last Updated: 2025-10-02_
-_Version: 1.3.12_
-_Implementation: Smart merge logic added to preserve custom label positions on data updates_
