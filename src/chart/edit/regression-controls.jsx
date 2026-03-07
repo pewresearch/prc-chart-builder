@@ -20,6 +20,7 @@ import { PanelColorSettings } from '@wordpress/block-editor';
  */
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './use-viewport-attributes';
+import { useFocusedPanel } from './inspector-focus-context';
 
 const REGRESSION_TYPE_OPTIONS = [
 	{ label: 'Linear', value: 'linear' },
@@ -39,6 +40,7 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 		attributes,
 		setAttributes
 	);
+	const { isOpen, panelRef, onToggle } = useFocusedPanel('regression');
 
 	const isActive = getCurrentValue('regression', 'active');
 	const regressionType = getCurrentValue('regression', 'type') || 'linear';
@@ -70,11 +72,21 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 	// Use stored values when available, otherwise derive live from chartData
 	// (matches how data-controls.jsx computes availableGroupValues).
 	const groupBreaksCategoryValues = useMemo(() => {
-		if (storedGroupBreaksCategoryValues.length) return storedGroupBreaksCategoryValues;
-		if (!groupBreaksActive || !groupBreaksCategory || !chartData?.length) return [];
-		return [ ...new Set( chartData.map((d) => d[groupBreaksCategory]).filter(Boolean) ) ];
-	}, [storedGroupBreaksCategoryValues, groupBreaksActive, groupBreaksCategory, chartData]);
-
+		if (storedGroupBreaksCategoryValues.length)
+			return storedGroupBreaksCategoryValues;
+		if (!groupBreaksActive || !groupBreaksCategory || !chartData?.length)
+			return [];
+		return [
+			...new Set(
+				chartData.map((d) => d[groupBreaksCategory]).filter(Boolean)
+			),
+		];
+	}, [
+		storedGroupBreaksCategoryValues,
+		groupBreaksActive,
+		groupBreaksCategory,
+		chartData,
+	]);
 
 	// Compute regression fit statistics for display in the editor.
 	// Only runs when groupBreaksActive, since that's when per-group lines are meaningful.
@@ -97,7 +109,10 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 						return { x: xVal, y: yVal };
 					})
 					.filter(Boolean);
-				statsByGroup[groupVal] = computeRegressionStats(points, regressionType);
+				statsByGroup[groupVal] = computeRegressionStats(
+					points,
+					regressionType
+				);
 			}
 			return statsByGroup;
 		}
@@ -126,271 +141,288 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 	]);
 
 	return (
-		<PanelBody title={__('Regression Line')} initialOpen={false}>
-			<ToolsPanel
-				label={__('Attributes')}
-				panelId={clientId}
-				style={{
-					paddingLeft: '0',
-					paddingRight: '0',
-				}}
+		<div ref={panelRef}>
+			<PanelBody
+				title={__('Regression Line')}
+				opened={isOpen}
+				onToggle={onToggle}
 			>
-				<ToolsPanelItem
-					hasValue={() => true}
-					label={__('Active')}
-					isShownByDefault
+				<ToolsPanel
+					label={__('Attributes')}
 					panelId={clientId}
-					style={{ gridColumn: 'span 2' }}
+					style={{
+						paddingLeft: '0',
+						paddingRight: '0',
+					}}
 				>
-					<ToggleControl
-						label={__('Show regression line')}
-						help={
-							isActive
-								? __('Regression line is visible on the chart.')
-								: __('No regression line.')
-						}
-						checked={isActive}
-						onChange={(newValue) =>
-							updateAttributeForDevice('regression', {
-								active: newValue,
-							})
-						}
-					/>
-				</ToolsPanelItem>
-				{/* Per-group options are only meaningful when group breaks are active */}
-				{isActive && groupBreaksActive && (
-					<>
-						<ToolsPanelItem
-							hasValue={() => true}
-							label={__('Per Group Break')}
-							isShownByDefault
-							panelId={clientId}
-							style={{ gridColumn: 'span 2' }}
-						>
-							<ToggleControl
-								label={__('One line per group break')}
-								help={
-									perGroupBreak
-										? __(
-												'A separate regression line is drawn for each group of data points, using its chart color (e.g. Democrats, Republicans).'
-										  )
-										: __(
-												'A single regression line is drawn across all data points.'
-										  )
-								}
-								checked={perGroupBreak}
-								onChange={(newValue) =>
-									updateAttributeForDevice('regression', {
-										perGroupBreak: newValue,
-									})
-								}
-							/>
-						</ToolsPanelItem>
-						<ToolsPanelItem
-							hasValue={() => true}
-							label={__('Fit Statistics')}
-							isShownByDefault
-							panelId={clientId}
-							style={{ gridColumn: 'span 2' }}
-						>
-							{'loess' === regressionType ? (
-								<p
-									style={{
-										fontSize: 11,
-										color: '#757575',
-										margin: '0 0 8px',
-										fontStyle: 'italic',
-									}}
-								>
-									{__(
-										'No equation or R² — LOESS is a local smoothing algorithm with no closed-form expression.'
-									)}
-								</p>
-							) : perGroupBreak &&
-							  typeof regressionStats === 'object' &&
-							  regressionStats !== null ? (
-								Object.entries(regressionStats).map(
-									([groupVal, stats]) => (
-										<div
-											key={groupVal}
-											style={{ marginBottom: 8 }}
-										>
-											<p
-												style={{
-													fontSize: 11,
-													fontWeight: 600,
-													color: '#444',
-													margin: '0 0 2px',
-												}}
-											>
-												{groupVal}
-											</p>
-											{stats?.equation && (
-												<p
-													style={{
-														fontSize: 11,
-														color: '#757575',
-														margin: '0 0 2px',
-														fontFamily: 'monospace',
-													}}
-												>
-													{stats.equation}
-												</p>
-											)}
-											{stats?.rSquared != null ? (
-												<p
-													style={{
-														fontSize: 11,
-														color: '#757575',
-														margin: 0,
-													}}
-												>
-													{`R² = ${Number(
-														stats.rSquared
-													).toFixed(4)}`}
-												</p>
-											) : (
-												<p
-													style={{
-														fontSize: 11,
-														color: '#757575',
-														margin: 0,
-														fontStyle: 'italic',
-													}}
-												>
-													{__('Insufficient data.')}
-												</p>
-											)}
-										</div>
-									)
-								)
-							) : regressionStats?.rSquared != null ? (
-								<>
-									{regressionStats?.equation && (
-										<p
-											style={{
-												fontSize: 11,
-												color: '#757575',
-												margin: '0 0 4px',
-												fontFamily: 'monospace',
-											}}
-										>
-											{regressionStats.equation}
-										</p>
-									)}
+					<ToolsPanelItem
+						hasValue={() => true}
+						label={__('Active')}
+						isShownByDefault
+						panelId={clientId}
+						style={{ gridColumn: 'span 2' }}
+					>
+						<ToggleControl
+							label={__('Show regression line')}
+							help={
+								isActive
+									? __(
+											'Regression line is visible on the chart.'
+										)
+									: __('No regression line.')
+							}
+							checked={isActive}
+							onChange={(newValue) =>
+								updateAttributeForDevice('regression', {
+									active: newValue,
+								})
+							}
+						/>
+					</ToolsPanelItem>
+					{/* Per-group options are only meaningful when group breaks are active */}
+					{isActive && groupBreaksActive && (
+						<>
+							<ToolsPanelItem
+								hasValue={() => true}
+								label={__('Per Group Break')}
+								isShownByDefault
+								panelId={clientId}
+								style={{ gridColumn: 'span 2' }}
+							>
+								<ToggleControl
+									label={__('One line per group break')}
+									help={
+										perGroupBreak
+											? __(
+													'A separate regression line is drawn for each group of data points, using its chart color (e.g. Democrats, Republicans).'
+												)
+											: __(
+													'A single regression line is drawn across all data points.'
+												)
+									}
+									checked={perGroupBreak}
+									onChange={(newValue) =>
+										updateAttributeForDevice('regression', {
+											perGroupBreak: newValue,
+										})
+									}
+								/>
+							</ToolsPanelItem>
+							<ToolsPanelItem
+								hasValue={() => true}
+								label={__('Fit Statistics')}
+								isShownByDefault
+								panelId={clientId}
+								style={{ gridColumn: 'span 2' }}
+							>
+								{'loess' === regressionType ? (
 									<p
 										style={{
 											fontSize: 11,
 											color: '#757575',
 											margin: '0 0 8px',
+											fontStyle: 'italic',
 										}}
 									>
-										{`R² = ${Number(
-											regressionStats.rSquared
-										).toFixed(4)}`}
+										{__(
+											'No equation or R² — LOESS is a local smoothing algorithm with no closed-form expression.'
+										)}
 									</p>
-								</>
-							) : (
-								<p
-									style={{
-										fontSize: 11,
-										color: '#757575',
-										margin: '0 0 8px',
-										fontStyle: 'italic',
-									}}
-								>
-									{__('Insufficient data to compute.')}
-								</p>
-							)}
-						</ToolsPanelItem>
-					</>
-				)}
-				<ToolsPanelItem
-					hasValue={() => true}
-					label={__('Regression Type')}
-					isShownByDefault
-					panelId={clientId}
-					style={{ gridColumn: 'span 2' }}
-				>
-					<SelectControl
+								) : perGroupBreak &&
+								  typeof regressionStats === 'object' &&
+								  regressionStats !== null ? (
+									Object.entries(regressionStats).map(
+										([groupVal, stats]) => (
+											<div
+												key={groupVal}
+												style={{ marginBottom: 8 }}
+											>
+												<p
+													style={{
+														fontSize: 11,
+														fontWeight: 600,
+														color: '#444',
+														margin: '0 0 2px',
+													}}
+												>
+													{groupVal}
+												</p>
+												{stats?.equation && (
+													<p
+														style={{
+															fontSize: 11,
+															color: '#757575',
+															margin: '0 0 2px',
+															fontFamily:
+																'monospace',
+														}}
+													>
+														{stats.equation}
+													</p>
+												)}
+												{stats?.rSquared != null ? (
+													<p
+														style={{
+															fontSize: 11,
+															color: '#757575',
+															margin: 0,
+														}}
+													>
+														{`R² = ${Number(
+															stats.rSquared
+														).toFixed(4)}`}
+													</p>
+												) : (
+													<p
+														style={{
+															fontSize: 11,
+															color: '#757575',
+															margin: 0,
+															fontStyle: 'italic',
+														}}
+													>
+														{__(
+															'Insufficient data.'
+														)}
+													</p>
+												)}
+											</div>
+										)
+									)
+								) : regressionStats?.rSquared != null ? (
+									<>
+										{regressionStats?.equation && (
+											<p
+												style={{
+													fontSize: 11,
+													color: '#757575',
+													margin: '0 0 4px',
+													fontFamily: 'monospace',
+												}}
+											>
+												{regressionStats.equation}
+											</p>
+										)}
+										<p
+											style={{
+												fontSize: 11,
+												color: '#757575',
+												margin: '0 0 8px',
+											}}
+										>
+											{`R² = ${Number(
+												regressionStats.rSquared
+											).toFixed(4)}`}
+										</p>
+									</>
+								) : (
+									<p
+										style={{
+											fontSize: 11,
+											color: '#757575',
+											margin: '0 0 8px',
+											fontStyle: 'italic',
+										}}
+									>
+										{__('Insufficient data to compute.')}
+									</p>
+								)}
+							</ToolsPanelItem>
+						</>
+					)}
+					<ToolsPanelItem
+						hasValue={() => true}
 						label={__('Regression Type')}
-						options={REGRESSION_TYPE_OPTIONS}
-						value={getCurrentValue('regression', 'type')}
-						disabled={!isActive}
-						onChange={(value) =>
-							updateAttributeForDevice('regression', {
-								type: value,
-							})
-						}
-					/>
-				</ToolsPanelItem>
-				<ToolsPanelItem
-					hasValue={() => true}
-					label={__('Line Color')}
-					isShownByDefault
-					panelId={clientId}
-					style={{ gridColumn: 'span 2' }}
-				>
-					<PanelColorSettings
-						__experimentalHasMultipleOrigins
-						__experimentalIsRenderedInSidebar
-						title={__('Line Color')}
-						initialOpen
-						colorSettings={[
-							{
-								value: getCurrentValue('regression', 'stroke'),
-								onChange: (value) =>
-									updateAttributeForDevice('regression', {
-										stroke: value ?? '#2a2a2a',
-									}),
-								label: __('Stroke color'),
-							},
-						]}
-					/>
-				</ToolsPanelItem>
-				<ToolsPanelItem
-					hasValue={() => true}
-					label={__('Stroke Width')}
-					isShownByDefault
-					panelId={clientId}
-					style={{ gridColumn: 'span 2' }}
-				>
-					<NumberControl
-						min={1}
+						isShownByDefault
+						panelId={clientId}
+						style={{ gridColumn: 'span 2' }}
+					>
+						<SelectControl
+							label={__('Regression Type')}
+							options={REGRESSION_TYPE_OPTIONS}
+							value={getCurrentValue('regression', 'type')}
+							disabled={!isActive}
+							onChange={(value) =>
+								updateAttributeForDevice('regression', {
+									type: value,
+								})
+							}
+						/>
+					</ToolsPanelItem>
+					<ToolsPanelItem
+						hasValue={() => true}
+						label={__('Line Color')}
+						isShownByDefault
+						panelId={clientId}
+						style={{ gridColumn: 'span 2' }}
+					>
+						<PanelColorSettings
+							__experimentalHasMultipleOrigins
+							__experimentalIsRenderedInSidebar
+							title={__('Line Color')}
+							initialOpen
+							colorSettings={[
+								{
+									value: getCurrentValue(
+										'regression',
+										'stroke'
+									),
+									onChange: (value) =>
+										updateAttributeForDevice('regression', {
+											stroke: value ?? '#2a2a2a',
+										}),
+									label: __('Stroke color'),
+								},
+							]}
+						/>
+					</ToolsPanelItem>
+					<ToolsPanelItem
+						hasValue={() => true}
 						label={__('Stroke Width')}
-						value={getCurrentValue('regression', 'strokeWidth')}
-						disabled={!isActive}
-						onChange={(value) =>
-							updateAttributeForDevice('regression', {
-								strokeWidth: formatNum(value, 'integer'),
-							})
-						}
-					/>
-				</ToolsPanelItem>
-				<ToolsPanelItem
-					hasValue={() => true}
-					label={__('Stroke Dash Array')}
-					isShownByDefault
-					panelId={clientId}
-					style={{ gridColumn: 'span 2' }}
-				>
-					<TextControl
+						isShownByDefault
+						panelId={clientId}
+						style={{ gridColumn: 'span 2' }}
+					>
+						<NumberControl
+							min={1}
+							label={__('Stroke Width')}
+							value={getCurrentValue('regression', 'strokeWidth')}
+							disabled={!isActive}
+							onChange={(value) =>
+								updateAttributeForDevice('regression', {
+									strokeWidth: formatNum(value, 'integer'),
+								})
+							}
+						/>
+					</ToolsPanelItem>
+					<ToolsPanelItem
+						hasValue={() => true}
 						label={__('Stroke Dash Array')}
-						help={__(
-							'Alternating dash and gap lengths, e.g. "4,2" or "5,3,2". Leave empty for a solid line.'
-						)}
-						value={getCurrentValue('regression', 'strokeDasharray')}
-						placeholder=""
-						disabled={!isActive}
-						onChange={(val) =>
-							updateAttributeForDevice('regression', {
-								strokeDasharray: val,
-							})
-						}
-					/>
-				</ToolsPanelItem>
-			</ToolsPanel>
-		</PanelBody>
+						isShownByDefault
+						panelId={clientId}
+						style={{ gridColumn: 'span 2' }}
+					>
+						<TextControl
+							label={__('Stroke Dash Array')}
+							help={__(
+								'Alternating dash and gap lengths, e.g. "4,2" or "5,3,2". Leave empty for a solid line.'
+							)}
+							value={getCurrentValue(
+								'regression',
+								'strokeDasharray'
+							)}
+							placeholder=""
+							disabled={!isActive}
+							onChange={(val) =>
+								updateAttributeForDevice('regression', {
+									strokeDasharray: val,
+								})
+							}
+						/>
+					</ToolsPanelItem>
+				</ToolsPanel>
+			</PanelBody>
+		</div>
 	);
 }
 

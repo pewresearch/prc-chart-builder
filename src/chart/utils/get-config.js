@@ -2,11 +2,11 @@
 /* eslint-disable max-lines-per-function */
 import { colors as colorPalette } from './colors';
 import {
+	generateDefaultAltText,
 	getDomain,
 	getTicks,
-	stringToArrayOfNums,
 	stringToArray,
-	generateDefaultAltText,
+	stringToArrayOfNums,
 } from './helpers';
 import { resolveColor, resolveColorInString } from './resolve-color';
 
@@ -97,11 +97,34 @@ const getConfig = (
 		colorValue,
 		elementHasStroke,
 		isCustomChart,
+		isFreeformChart,
 		customAttributes,
 		availableCategories,
 	} = io;
 	const { type: chartType } = layout;
 	const { alt, title } = metadata;
+
+	// Freeform charts are block containers — they have no chart data, no color palette,
+	// and no axis/tooltip/legend config. Return only what the editor wrapper needs.
+	if (isFreeformChart) {
+		return {
+			...baseConfig,
+			layout: {
+				...baseConfig.layout,
+				...layout,
+				name: `chart-builder-chart-${clientId}`,
+			},
+			metadata: {
+				...baseConfig.metadata,
+				...metadata,
+				alt:
+					alt && alt.length > 0
+						? alt
+						: generateDefaultAltText(chartType, title),
+			},
+		};
+	}
+
 	const { scale: iScale, domain: iDomain } = independentAxis;
 	const { scale: dScale, domain: dDomain } = dependentAxis;
 	const { neutralBar } = divergingBar;
@@ -143,8 +166,7 @@ const getConfig = (
 		independentAxis: {
 			...baseConfig.independentAxis,
 			...independentAxis,
-			customTickLabels:
-				customTickLabels?.independent ?? {},
+			customTickLabels: customTickLabels?.independent ?? {},
 			domain: getDomain(iDomain[0], iDomain[1], chartType, iScale, 'x'),
 			tickValues:
 				0 >= independentAxisTickValues.length
@@ -195,8 +217,7 @@ const getConfig = (
 		dependentAxis: {
 			...baseConfig.dependentAxis,
 			...dependentAxis,
-			customTickLabels:
-				customTickLabels?.dependent ?? {},
+			customTickLabels: customTickLabels?.dependent ?? {},
 			domain: getDomain(dDomain[0], dDomain[1], chartType, dScale, 'y'),
 			tickValues:
 				0 >= dependentAxisTickValues.length
@@ -416,6 +437,7 @@ const getConfig = (
 		shapes: {
 			customStyles: shapes?.customStyles || {},
 			segmentStyles: shapes?.segmentStyles || {},
+			segmentsActive: shapes?.segmentsActive ?? false,
 		},
 		voronoi: {
 			...baseConfig.voronoi,

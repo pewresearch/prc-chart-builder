@@ -19,6 +19,7 @@ import {
  */
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './use-viewport-attributes';
+import { useFocusedPanel } from './inspector-focus-context';
 
 // const PanelDescription = styled.div`
 // 	grid-column: span 2;
@@ -33,94 +34,107 @@ function BarControls({ attributes, setAttributes, clientId }) {
 		attributes,
 		setAttributes
 	);
+	const { isOpen, panelRef, onToggle } = useFocusedPanel('bar');
 
 	const layout = getCurrentValue('layout') || {};
 	const { type: chartType } = layout;
 
 	return (
-		<PanelBody title={__('Bar Configuration')} initialOpen={false}>
-			<ToolsPanel
-				label={__('Attributes')}
-				panelId={clientId}
-				style={{
-					paddingLeft: '0',
-					paddingRight: '0',
-				}}
+		<div ref={panelRef}>
+			<PanelBody
+				title={__('Bar Configuration')}
+				opened={isOpen}
+				onToggle={onToggle}
 			>
-				{chartType === 'bar' && (
+				<ToolsPanel
+					label={__('Attributes')}
+					panelId={clientId}
+					style={{
+						paddingLeft: '0',
+						paddingRight: '0',
+					}}
+				>
+					{chartType === 'bar' && (
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Bar Group Padding')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<NumberControl
+								label={__('Bar Group Padding')}
+								withInputField
+								min={0}
+								max={10}
+								step={0.05}
+								value={parseFloat(
+									getCurrentValue('bar', 'barGroupPadding') ||
+										0,
+									10
+								)}
+								onChange={(value) => {
+									updateAttributeForDevice('bar', {
+										barGroupPadding: formatNum(
+											value,
+											'float'
+										),
+									});
+								}}
+							/>
+						</WidePanelItem>
+					)}
 					<WidePanelItem
 						hasValue={() => true}
-						label={__('Bar Group Padding')}
+						label={__('Individual Bar Padding')}
 						isShownByDefault
 						panelId={clientId}
 					>
 						<NumberControl
-							label={__('Bar Group Padding')}
+							label={__('Individual Bar Padding')}
 							withInputField
 							min={0}
 							max={10}
 							step={0.05}
 							value={parseFloat(
-								getCurrentValue('bar', 'barGroupPadding') || 0,
+								getCurrentValue('bar', 'barPadding') || 0,
 								10
 							)}
 							onChange={(value) => {
 								updateAttributeForDevice('bar', {
-									barGroupPadding: formatNum(value, 'float'),
+									barPadding: formatNum(value, 'float'),
 								});
 							}}
 						/>
 					</WidePanelItem>
-				)}
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Individual Bar Padding')}
-					isShownByDefault
-					panelId={clientId}
-				>
-					<NumberControl
-						label={__('Individual Bar Padding')}
-						withInputField
-						min={0}
-						max={10}
-						step={0.05}
-						value={parseFloat(
-							getCurrentValue('bar', 'barPadding') || 0,
-							10
-						)}
-						onChange={(value) => {
-							updateAttributeForDevice('bar', {
-								barPadding: formatNum(value, 'float'),
-							});
-						}}
-					/>
-				</WidePanelItem>
-				{chartType === 'exploded-bar' && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Exploded Bar Column Gap')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<NumberControl
+					{chartType === 'exploded-bar' && (
+						<WidePanelItem
+							hasValue={() => true}
 							label={__('Exploded Bar Column Gap')}
-							withInputField
-							step={1}
-							value={parseInt(
-								getCurrentValue('explodedBar', 'columnGap') ||
-									0,
-								10
-							)}
-							onChange={(value) => {
-								updateAttributeForDevice('explodedBar', {
-									columnGap: formatNum(value, 'integer'),
-								});
-							}}
-						/>
-					</WidePanelItem>
-				)}
-			</ToolsPanel>
-		</PanelBody>
+							isShownByDefault
+							panelId={clientId}
+						>
+							<NumberControl
+								label={__('Exploded Bar Column Gap')}
+								withInputField
+								step={1}
+								value={parseInt(
+									getCurrentValue(
+										'explodedBar',
+										'columnGap'
+									) || 0,
+									10
+								)}
+								onChange={(value) => {
+									updateAttributeForDevice('explodedBar', {
+										columnGap: formatNum(value, 'integer'),
+									});
+								}}
+							/>
+						</WidePanelItem>
+					)}
+				</ToolsPanel>
+			</PanelBody>
+		</div>
 	);
 }
 

@@ -449,6 +449,22 @@ export function createWpEditorFunctions({
 				};
 			},
 		},
+		line: {
+			/**
+			 * Handle click on a LinePath or AreaClosed to focus the Line inspector panel.
+			 * Does not open a popover — panel focus only.
+			 *
+			 * @param {HTMLElement} anchorEl - The DOM element that was clicked
+			 */
+			onClick: onElementClick
+				? (anchorEl) => {
+						onElementClick({
+							elementType: 'line',
+							anchorEl,
+						});
+					}
+				: undefined,
+		},
 		regression: {
 			/**
 			 * Handle click on a regression line to open customization popover.
@@ -494,21 +510,28 @@ export function createWpEditorFunctions({
 		tickLabels:
 			tickLabelPopoverEnabled && onElementClick
 				? {
-						onClick: (axisKey, tickValue, formattedValue, anchorEl) => {
+						onClick: (
+							axisKey,
+							tickValue,
+							formattedValue,
+							anchorEl
+						) => {
 							onElementClick({
 								elementType: 'tickLabel',
 								axisKey,
 								tickValue,
-								defaultLabel: formattedValue ?? String(tickValue),
+								defaultLabel:
+									formattedValue ?? String(tickValue),
 								anchorEl,
 							});
 						},
 						updateCustomizations: (updates) => {
-							const current =
-								getCurrentValue('customTickLabels') || {
-									independent: {},
-									dependent: {},
-								};
+							const current = getCurrentValue(
+								'customTickLabels'
+							) || {
+								independent: {},
+								dependent: {},
+							};
 							const next = {
 								independent:
 									updates.independent !== undefined
@@ -540,13 +563,13 @@ export function createWpEditorFunctions({
 					 * @param {string}      defaultLabel  - The default rendered label text
 					 * @param {HTMLElement} anchorEl      - The DOM element to anchor the popover to
 					 */
-					onClick: ( categoryValue, defaultLabel, anchorEl ) => {
-						onElementClick( {
+					onClick: (categoryValue, defaultLabel, anchorEl) => {
+						onElementClick({
 							elementType: 'legendItem',
 							categoryValue,
 							defaultLabel,
 							anchorEl,
-						} );
+						});
 					},
 
 					/**
@@ -555,12 +578,12 @@ export function createWpEditorFunctions({
 					 *
 					 * @param {Object} updates - Object with customLegendLabels updates
 					 */
-				updateCustomizations: ( updates ) => {
-					if ( updates.customLegendLabels !== undefined ) {
-						// customLegendLabels is a flat object -- handled directly in handleLegendItemCustomizationUpdate
-						// This path should not be used; legend updates go through onElementClick -> onUpdate
-					}
-				},
+					updateCustomizations: (updates) => {
+						if (updates.customLegendLabels !== undefined) {
+							// customLegendLabels is a flat object -- handled directly in handleLegendItemCustomizationUpdate
+							// This path should not be used; legend updates go through onElementClick -> onUpdate
+						}
+					},
 
 					/**
 					 * Get current legend item customizations from attributes.
@@ -568,7 +591,7 @@ export function createWpEditorFunctions({
 					 * @return {Object} Current customLegendLabels: { [categoryValue]: { text? } }
 					 */
 					getCustomizations: () => {
-						return getCurrentValue( 'customLegendLabels' ) || {};
+						return getCurrentValue('customLegendLabels') || {};
 					},
 				}
 			: undefined,

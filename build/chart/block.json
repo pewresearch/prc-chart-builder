@@ -306,7 +306,8 @@
       "type": "object",
       "default": {
         "customStyles": {},
-        "segmentStyles": {}
+        "segmentStyles": {},
+        "segmentsActive": false
       }
     },
     "bar": {

@@ -21,6 +21,7 @@ import {
  */
 import { colorNames, colors } from '../utils/colors';
 import ColorSorter from './color-sorter';
+import { useFocusedPanel } from './inspector-focus-context';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -29,119 +30,122 @@ const PanelDescription = styled.div`
 function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 	// Content attribute - NOT viewport-aware (colors are consistent across all viewports)
 	const { io } = attributes;
+	const { isOpen, panelRef, onToggle } = useFocusedPanel('colors');
 	return (
-		<PanelBody title={__('Colors')} initialOpen={false}>
-			<ToolsPanel
-				panelId={clientId}
-				style={{
-					paddingLeft: '0',
-					paddingRight: '0',
-				}}
-			>
-				{' '}
-				<PanelDescription>
-					{__(
-						'Use the Color Palette selector to choose a predefined color pallette for the chart. Use the Custom Colors input to define your own colors. The color sorter will allow you to reorder the colors in the color scale.'
-					)}
-				</PanelDescription>
-				<ToolsPanelItem
-					hasValue={() => io.colorValue}
-					label={__('Color Pallette')}
-					isShownByDefault
-					panelId={clientId}
-				>
-					<SelectControl
-						label={__('Color Palette')}
-						value={io.colorValue}
-						options={colorNames}
-						onChange={(c) => {
-							setAttributes({
-								io: {
-									...io,
-									colorValue: c,
-									customColors: [],
-								},
-							});
-						}}
-					/>
-				</ToolsPanelItem>
-				<ToolsPanelItem
-					hasValue={() => io.customColors}
-					label={__('Custom Colors')}
-					panelId={clientId}
-				>
-					<FormTokenField
-						label={__('Custom Colors')}
-						value={io.customColors || []}
-						placeholder="#000000"
-						onChange={(c) => {
-							setAttributes({
-								io: {
-									...io,
-									customColors: c,
-								},
-							});
-						}}
-						help={__('Separate with commas or the Enter key.')}
-					/>
-				</ToolsPanelItem>
-				<ToolsPanelItem
-					hasValue={() => io.customColors}
-					label={__('Color Sorter')}
-					panelId={clientId}
-					isShownByDefault
-				>
-					<ColorSorter
-						colors={
-							0 < (io.customColors || []).length
-								? io.customColors
-								: colors[io.colorValue]
-						}
-						setAttributes={setAttributes}
-						io={io}
-					/>
-				</ToolsPanelItem>
-				<PanelDescription>
-					<ExternalLink href="https://codepen.io/benjiwo/pen/GdBNPP">
-						Pew Research Color Guide
-					</ExternalLink>
-				</PanelDescription>
-			</ToolsPanel>
-			{(chartType === 'pie' ||
-				chartType === 'diverging-bar' ||
-				chartType === 'stacked-bar' ||
-				chartType === 'stacked-column') && (
+		<div ref={panelRef}>
+			<PanelBody title={__('Colors')} opened={isOpen} onToggle={onToggle}>
 				<ToolsPanel
-					label={__('Stroke')}
 					panelId={clientId}
 					style={{
 						paddingLeft: '0',
 						paddingRight: '0',
 					}}
 				>
+					{' '}
+					<PanelDescription>
+						{__(
+							'Use the Color Palette selector to choose a predefined color pallette for the chart. Use the Custom Colors input to define your own colors. The color sorter will allow you to reorder the colors in the color scale.'
+						)}
+					</PanelDescription>
 					<ToolsPanelItem
-						hasValue={() => io.elementHasStroke}
-						label={__('Stroke')}
-						panelId={clientId}
+						hasValue={() => io.colorValue}
+						label={__('Color Pallette')}
 						isShownByDefault
+						panelId={clientId}
 					>
-						<ToggleControl
-							label={__('Stroke')}
-							checked={io.elementHasStroke || false}
-							help="If selected, the slices of a pie or bar segements will have a stroke applied."
-							onChange={(newValue) => {
+						<SelectControl
+							label={__('Color Palette')}
+							value={io.colorValue}
+							options={colorNames}
+							onChange={(c) => {
 								setAttributes({
 									io: {
 										...io,
-										elementHasStroke: newValue,
+										colorValue: c,
+										customColors: [],
 									},
 								});
 							}}
 						/>
 					</ToolsPanelItem>
+					<ToolsPanelItem
+						hasValue={() => io.customColors}
+						label={__('Custom Colors')}
+						panelId={clientId}
+					>
+						<FormTokenField
+							label={__('Custom Colors')}
+							value={io.customColors || []}
+							placeholder="#000000"
+							onChange={(c) => {
+								setAttributes({
+									io: {
+										...io,
+										customColors: c,
+									},
+								});
+							}}
+							help={__('Separate with commas or the Enter key.')}
+						/>
+					</ToolsPanelItem>
+					<ToolsPanelItem
+						hasValue={() => io.customColors}
+						label={__('Color Sorter')}
+						panelId={clientId}
+						isShownByDefault
+					>
+						<ColorSorter
+							colors={
+								0 < (io.customColors || []).length
+									? io.customColors
+									: colors[io.colorValue]
+							}
+							setAttributes={setAttributes}
+							io={io}
+						/>
+					</ToolsPanelItem>
+					<PanelDescription>
+						<ExternalLink href="https://codepen.io/benjiwo/pen/GdBNPP">
+							Pew Research Color Guide
+						</ExternalLink>
+					</PanelDescription>
 				</ToolsPanel>
-			)}
-		</PanelBody>
+				{(chartType === 'pie' ||
+					chartType === 'diverging-bar' ||
+					chartType === 'stacked-bar' ||
+					chartType === 'stacked-column') && (
+					<ToolsPanel
+						label={__('Stroke')}
+						panelId={clientId}
+						style={{
+							paddingLeft: '0',
+							paddingRight: '0',
+						}}
+					>
+						<ToolsPanelItem
+							hasValue={() => io.elementHasStroke}
+							label={__('Stroke')}
+							panelId={clientId}
+							isShownByDefault
+						>
+							<ToggleControl
+								label={__('Stroke')}
+								checked={io.elementHasStroke || false}
+								help="If selected, the slices of a pie or bar segements will have a stroke applied."
+								onChange={(newValue) => {
+									setAttributes({
+										io: {
+											...io,
+											elementHasStroke: newValue,
+										},
+									});
+								}}
+							/>
+						</ToolsPanelItem>
+					</ToolsPanel>
+				)}
+			</PanelBody>
+		</div>
 	);
 }
 

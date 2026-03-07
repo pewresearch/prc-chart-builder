@@ -329,7 +329,8 @@ return array(
 					),
 					'segmentStyles' => array(
 						
-					)
+					),
+					'segmentsActive' => false
 				)
 			),
 			'bar' => array(

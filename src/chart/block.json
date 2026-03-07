@@ -295,7 +295,8 @@
 			"type": "object",
 			"default": {
 				"customStyles": {},
-				"segmentStyles": {}
+				"segmentStyles": {},
+				"segmentsActive": false
 			}
 		},
 		"bar": {
@@ -566,12 +567,12 @@
 				"tabsActive": false,
 				"allowDataDownload": true,
 				"elementHasStroke": false,
-			"isCustomChart": false,
-			"customAttributes": {},
-			"preserveStringKeys": []
-		}
-	},
-	"_legacy": {
+				"isCustomChart": false,
+				"customAttributes": {},
+				"preserveStringKeys": []
+			}
+		},
+		"_legacy": {
 			"type": "object",
 			"default": {}
 		},

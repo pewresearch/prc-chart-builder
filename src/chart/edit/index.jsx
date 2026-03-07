@@ -40,6 +40,16 @@ import { DrawingLayer } from './drawing-layer';
 import { DrawingSelectionLayer } from './drawing-selection-layer';
 import { useViewportAttributes } from './use-viewport-attributes';
 import { ChartElementPopover, ELEMENT_TYPES } from './popover';
+import {
+	InspectorFocusProvider,
+	useInspectorFocus,
+} from './inspector-focus-context';
+import {
+	BAR_CHART_TYPES,
+	LINE_CHART_TYPES,
+	NODE_CHART_TYPES,
+	MAP_CHART_TYPES,
+} from '../utils/chart-types';
 
 const getCellContent = (cell) => {
 	return (
@@ -65,7 +75,7 @@ const MemoizedChartBuilder = memo(
 	)
 );
 
-export default function Edit({
+function EditInner({
 	attributes: attrs,
 	setAttributes,
 	toggleSelection,
@@ -73,6 +83,7 @@ export default function Edit({
 	isSelected,
 	context,
 }) {
+	const { focusPanels } = useInspectorFocus();
 	const { id, io, metadata, dataRender, drawings = [] } = attrs;
 
 	const { chartData, isStaticChart, isFreeformChart, preserveStringKeys } =
@@ -233,7 +244,30 @@ export default function Edit({
 	// Track drag state to disable tooltips during drag
 	const [isDragging, setIsDragging] = useState(false);
 
+	// Resolve which inspector panel(s) to open when a SHAPE element is clicked,
+	// based on the current chart type.
+	const resolveShapePanels = (type) => {
+		if (BAR_CHART_TYPES.includes(type)) return ['bar', 'colors'];
+		if (LINE_CHART_TYPES.includes(type)) return ['line', 'colors'];
+		if (NODE_CHART_TYPES.includes(type)) return ['nodes', 'colors'];
+		if (type === 'pie') return ['pie', 'colors'];
+		if (type === 'treemap') return ['treemap', 'colors'];
+		if (type === 'sankey') return ['sankey', 'colors'];
+		if (MAP_CHART_TYPES.includes(type)) return ['map', 'colors'];
+		return ['colors'];
+	};
+
+	// Static map for non-shape element types → panel ID
+	const ELEMENT_TYPE_TO_PANEL = {
+		[ELEMENT_TYPES.LABEL]: 'labels',
+		[ELEMENT_TYPES.SEGMENT]: 'line',
+		[ELEMENT_TYPES.REGRESSION]: 'regression',
+		[ELEMENT_TYPES.ANNOTATION]: 'annotations',
+		[ELEMENT_TYPES.LEGEND_ITEM]: 'legend',
+	};
+
 	// Handle element click for customization popover (labels, shapes, segments, annotations, tick labels, etc.)
+	// Also focuses the matching inspector sidebar panel(s).
 	const handleElementClick = ({
 		elementType,
 		dataPoint,
@@ -249,6 +283,26 @@ export default function Edit({
 		tickValue = null,
 		categoryValue = null,
 	}) => {
+		// Determine which panel(s) to focus based on element type and chart type
+		let panelIds;
+		if (elementType === ELEMENT_TYPES.SHAPE) {
+			panelIds = resolveShapePanels(attrs?.layout?.type || 'bar');
+		} else if (elementType === ELEMENT_TYPES.LINE) {
+			// Line/area clicks only focus the inspector — no popover
+			panelIds = ['line', 'colors'];
+			if (panelIds.length) {
+				focusPanels(panelIds);
+			}
+			return;
+		} else if (elementType === ELEMENT_TYPES.TICK_LABEL) {
+			panelIds = [
+				axisKey === 'dependent' ? 'dependentAxis' : 'independentAxis',
+			];
+		} else {
+			const panelId = ELEMENT_TYPE_TO_PANEL[elementType];
+			panelIds = panelId ? [panelId] : [];
+		}
+
 		setSelectedElement({
 			elementType,
 			dataPoint,
@@ -264,6 +318,10 @@ export default function Edit({
 			tickValue,
 			categoryValue,
 		});
+
+		if (panelIds.length) {
+			focusPanels(panelIds);
+		}
 	};
 
 	// Handle popover close
@@ -375,17 +433,16 @@ export default function Edit({
 	// updateAttributeForDevice which would merge via spread and prevent deletions.
 	const handleLegendItemCustomizationUpdate = (updates) => {
 		if (updates.customLegendLabels !== undefined) {
-			setAttributes( { customLegendLabels: updates.customLegendLabels } );
+			setAttributes({ customLegendLabels: updates.customLegendLabels });
 		}
 	};
 
 	// Handle tick label customization updates from popover
 	const handleTickLabelCustomizationUpdate = (updates) => {
-		const current =
-			getCurrentValue('customTickLabels') || {
-				independent: {},
-				dependent: {},
-			};
+		const current = getCurrentValue('customTickLabels') || {
+			independent: {},
+			dependent: {},
+		};
 		const next = {
 			independent:
 				updates.independent !== undefined
@@ -752,13 +809,15 @@ export default function Edit({
 											axisKey={
 												selectedElement.axisKey ?? null
 											}
-										tickValue={
-											selectedElement.tickValue ?? null
-										}
-										categoryValue={
-											selectedElement.categoryValue ?? null
-										}
-										annotation={
+											tickValue={
+												selectedElement.tickValue ??
+												null
+											}
+											categoryValue={
+												selectedElement.categoryValue ??
+												null
+											}
+											annotation={
 												selectedElement.elementType ===
 													ELEMENT_TYPES.ANNOTATION &&
 												selectedElement.annotationId !=
@@ -908,5 +967,13 @@ export default function Edit({
 				</figure>
 			</div>
 		</>
+	);
+}
+
+export default function Edit(props) {
+	return (
+		<InspectorFocusProvider>
+			<EditInner {...props} />
+		</InspectorFocusProvider>
 	);
 }

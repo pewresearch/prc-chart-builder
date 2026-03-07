@@ -33,6 +33,7 @@ import {
 export const ELEMENT_TYPES = {
 	LABEL: 'label',
 	SHAPE: 'shape',
+	LINE: 'line',
 	SEGMENT: 'segment',
 	REGRESSION: 'regression',
 	ANNOTATION: 'annotation',
@@ -120,9 +121,14 @@ export function ChartElementPopover({
 	useEffect(() => {
 		const handleClickOutside = (event) => {
 			// Check if click is outside the popover content
-			if (popoverRef.current && !popoverRef.current.contains(event.target)) {
+			if (
+				popoverRef.current &&
+				!popoverRef.current.contains(event.target)
+			) {
 				// Also check if the click is on a nested popover (like color picker)
-				const isNestedPopover = event.target.closest?.('.components-popover');
+				const isNestedPopover = event.target.closest?.(
+					'.components-popover'
+				);
 				if (!isNestedPopover) {
 					onClose();
 				}
@@ -162,27 +168,27 @@ export function ChartElementPopover({
 						onUpdate={onUpdate}
 					/>
 				);
-		case ELEMENT_TYPES.SEGMENT:
-			return (
-				<LineSegmentPanel
-					startPoint={startPoint}
-					endPoint={endPoint}
-					category={category}
-					defaultColor={defaultColor}
-					currentCustomizations={currentCustomizations}
-					onUpdate={onUpdate}
-				/>
-			);
-		case ELEMENT_TYPES.REGRESSION:
-			return (
-				<RegressionLinePanel
-					category={category}
-					defaultColor={defaultColor}
-					currentCustomizations={currentCustomizations}
-					onUpdate={onUpdate}
-				/>
-			);
-		case ELEMENT_TYPES.ANNOTATION:
+			case ELEMENT_TYPES.SEGMENT:
+				return (
+					<LineSegmentPanel
+						startPoint={startPoint}
+						endPoint={endPoint}
+						category={category}
+						defaultColor={defaultColor}
+						currentCustomizations={currentCustomizations}
+						onUpdate={onUpdate}
+					/>
+				);
+			case ELEMENT_TYPES.REGRESSION:
+				return (
+					<RegressionLinePanel
+						category={category}
+						defaultColor={defaultColor}
+						currentCustomizations={currentCustomizations}
+						onUpdate={onUpdate}
+					/>
+				);
+			case ELEMENT_TYPES.ANNOTATION:
 				return (
 					<AnnotationPanel
 						annotationId={annotationId}
@@ -191,38 +197,38 @@ export function ChartElementPopover({
 						onDelete={onDelete}
 					/>
 				);
-		case ELEMENT_TYPES.TICK_LABEL:
-			return (
-				<TickLabelPanel
-					axisKey={axisKey}
-					tickValue={tickValue}
-					defaultLabel={defaultLabel}
-					currentCustomizations={currentCustomizations}
-					onUpdate={onUpdate}
-				/>
-			);
-		case ELEMENT_TYPES.LEGEND_ITEM:
-			return (
-				<LegendItemPanel
-					categoryValue={categoryValue}
-					defaultLabel={defaultLabel}
-					currentCustomizations={currentCustomizations}
-					onUpdate={onUpdate}
-				/>
-			);
-	case ELEMENT_TYPES.LABEL:
-		default:
-			return (
-				<LabelPanel
-					dataPoint={dataPoint}
-					category={category}
-					defaultLabel={defaultLabel}
-					groupValue={groupValue}
-					chartType={chartType}
-					currentCustomizations={currentCustomizations}
-					onUpdate={onUpdate}
-				/>
-			);
+			case ELEMENT_TYPES.TICK_LABEL:
+				return (
+					<TickLabelPanel
+						axisKey={axisKey}
+						tickValue={tickValue}
+						defaultLabel={defaultLabel}
+						currentCustomizations={currentCustomizations}
+						onUpdate={onUpdate}
+					/>
+				);
+			case ELEMENT_TYPES.LEGEND_ITEM:
+				return (
+					<LegendItemPanel
+						categoryValue={categoryValue}
+						defaultLabel={defaultLabel}
+						currentCustomizations={currentCustomizations}
+						onUpdate={onUpdate}
+					/>
+				);
+			case ELEMENT_TYPES.LABEL:
+			default:
+				return (
+					<LabelPanel
+						dataPoint={dataPoint}
+						category={category}
+						defaultLabel={defaultLabel}
+						groupValue={groupValue}
+						chartType={chartType}
+						currentCustomizations={currentCustomizations}
+						onUpdate={onUpdate}
+					/>
+				);
 		}
 	};
 
@@ -245,10 +251,7 @@ export function ChartElementPopover({
 					overflowY: 'auto',
 				}}
 			>
-				<HStack
-					alignment="edge"
-					style={{ marginBottom: '12px' }}
-				>
+				<HStack alignment="edge" style={{ marginBottom: '12px' }}>
 					<Text weight="600" size="13px">
 						{getPanelTitle(elementType)}
 					</Text>
@@ -275,7 +278,15 @@ export {
 	RegressionLinePanel,
 	AnnotationPanel,
 } from './panels';
-export { useLabelCustomizations, useShapeCustomizations, useSegmentCustomizations } from './hooks';
-export { generateElementKey, generateSegmentKey, formatDisplayValue } from './utils';
+export {
+	useLabelCustomizations,
+	useShapeCustomizations,
+	useSegmentCustomizations,
+} from './hooks';
+export {
+	generateElementKey,
+	generateSegmentKey,
+	formatDisplayValue,
+} from './utils';
 
 export default ChartElementPopover;
