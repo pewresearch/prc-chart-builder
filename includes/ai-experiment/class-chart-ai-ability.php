@@ -318,12 +318,13 @@ class Chart_AI_Ability {
 
 		$system_instructions = self::get_system_instructions( $chart_type );
 		$user_prompt         = self::build_user_prompt( $chart_type, $description, $csv_data );
+		$output_schema       = self::get_output_schema();
 
 		try {
-		$builder = AiClient::prompt( $user_prompt )
-			->usingSystemInstruction( $system_instructions )
-			->usingModelPreference( $model )
-			->asJsonResponse();
+			$builder = AiClient::prompt( $user_prompt )
+				->usingSystemInstruction( $system_instructions )
+				->usingModelPreference( $model )
+				->asJsonResponse( $output_schema );
 
 			// Attach image if provided.
 			if ( ! empty( $image_b64 ) ) {
@@ -833,6 +834,40 @@ class Chart_AI_Ability {
 	}
 
 	// ── Prompts ───────────────────────────────────────────────────────────
+
+	/**
+	 * Build JSON schema for structured chart generation output.
+	 *
+	 * Ensures providers that require `response_format.type = json_schema`
+	 * can accept this request while still allowing flexible chart attributes.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function get_output_schema(): array {
+		return array(
+			'name'   => 'chart_generation_response',
+			'schema' => array(
+				'type'                 => 'object',
+				'properties'           => array(
+					'tableData'       => array(
+						'type'                 => 'object',
+						'properties'           => array(
+							'head' => array( 'type' => 'array' ),
+							'body' => array( 'type' => 'array' ),
+						),
+						'required'             => array( 'head', 'body' ),
+						'additionalProperties' => true,
+					),
+					'chartAttributes' => array(
+						'type'                 => 'object',
+						'additionalProperties' => true,
+					),
+				),
+				'required'             => array( 'tableData', 'chartAttributes' ),
+				'additionalProperties' => false,
+			),
+		);
+	}
 
 	/**
 	 * Build the system instructions for the AI.
