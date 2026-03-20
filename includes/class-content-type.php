@@ -40,6 +40,7 @@ class Content_Type {
 		$loader->add_action( 'init', $this, 'register_types' );
 		$loader->add_action( 'init', $this, 'register_chart_meta' );
 		$loader->add_action( 'init', $this, 'register_chart_type_taxonomy' );
+		$loader->add_action( 'init', $this, 'register_export_endpoint' );
 		$loader->add_action( 'save_post_' . self::$post_type, $this, 'sync_chart_type_on_save', 10, 3 );
 		$loader->add_filter( 'prc_platform_post_publish_pipeline_post_types', $this, 'opt_into_publish_pipeline' );
 		$loader->add_filter( 'oembed_response_data', $this, 'modify_oembed_response', 10, 4 );
@@ -253,6 +254,18 @@ class Content_Type {
 	}
 
 	/**
+	 * Register the /export/ rewrite endpoint on chart post permalinks.
+	 *
+	 * Creates URLs like /chart/my-chart-slug/export/ which are intercepted
+	 * by Chart_Export_Endpoint to render a minimal page for screenshot capture.
+	 *
+	 * @hook init
+	 */
+	public function register_export_endpoint() {
+		add_rewrite_endpoint( 'export', EP_PERMALINK );
+	}
+
+	/**
 	 * Get the labels for the post type.
 	 *
 	 * @return array
@@ -338,6 +351,50 @@ class Content_Type {
 				'auth_callback'     => function () {
 					return current_user_can( 'edit_posts' );
 				},
+			)
+		);
+
+		register_post_meta(
+			self::$post_type,
+			'_chart_png_attachment_id',
+			array(
+				'type'              => 'integer',
+				'description'       => __( 'Attachment ID of the server-generated PNG for this chart.', 'prc-chart-builder' ),
+				'single'            => true,
+				'show_in_rest'      => true,
+				'default'           => 0,
+				'sanitize_callback' => 'absint',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+
+		register_post_meta(
+			self::$post_type,
+			'_chart_png_url',
+			array(
+				'type'              => 'string',
+				'description'       => __( 'URL of the server-generated PNG for this chart.', 'prc-chart-builder' ),
+				'single'            => true,
+				'show_in_rest'      => true,
+				'default'           => '',
+				'sanitize_callback' => 'esc_url_raw',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
+			)
+		);
+
+		register_post_meta(
+			self::$post_type,
+			'_chart_attributes_hash',
+			array(
+				'type'         => 'string',
+				'description'  => __( 'MD5 hash of chart-affecting block attributes at time of last PNG generation.', 'prc-chart-builder' ),
+				'single'       => true,
+				'show_in_rest' => false,
+				'default'      => '',
 			)
 		);
 	}

@@ -10,6 +10,7 @@ import {
 	CardHeader,
 	CardBody,
 } from '@wordpress/components';
+import { useCallback, useState } from '@wordpress/element';
 
 /**
  * Internal Dependencies
@@ -17,6 +18,29 @@ import {
 import { DataViews, CreateNewChartModal, DropZone } from './components';
 
 export default function ChartLibrary() {
+	const [isOpen, setIsOpen] = useState(false);
+	const [initialCsvText, setInitialCsvText] = useState('');
+
+	const handleFileDrop = useCallback((files) => {
+		const csvFile = files.find(
+			(f) => f.name.endsWith('.csv') || f.type === 'text/csv'
+		);
+		if (!csvFile) return;
+		const reader = new FileReader();
+		reader.onload = (e) => {
+			setInitialCsvText(e.target.result);
+			setIsOpen(true);
+		};
+		reader.readAsText(csvFile);
+	}, []);
+
+	const handleOpen = useCallback(() => setIsOpen(true), []);
+
+	const handleClose = useCallback(() => {
+		setIsOpen(false);
+		setInitialCsvText('');
+	}, []);
+
 	return (
 		<Card>
 			<CardHeader>
@@ -33,13 +57,18 @@ export default function ChartLibrary() {
 						</p>
 					</FlexBlock>
 					<FlexItem>
-						<CreateNewChartModal />
+						<CreateNewChartModal
+							isOpen={isOpen}
+							onOpen={handleOpen}
+							onClose={handleClose}
+							initialCsvText={initialCsvText}
+						/>
 					</FlexItem>
 				</Flex>
 			</CardHeader>
 			<CardBody>
 				<DataViews />
-				<DropZone />
+				<DropZone onFilesDrop={handleFileDrop} />
 			</CardBody>
 		</Card>
 	);

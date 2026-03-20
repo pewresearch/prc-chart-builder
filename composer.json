@@ -1,0 +1,22 @@
+{
+	"name": "prc/chart-builder",
+	"description": "Chart Builder is a chart building tool for the PRC Platform",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"require": {
+		"php": ">=8.2"
+	},
+	"require-dev": {
+		"phpunit/phpunit": "^9.6",
+		"yoast/phpunit-polyfills": "^1.0",
+		"wp-phpunit/wp-phpunit": "^6.1"
+	},
+	"scripts": {
+		"test": [
+			"phpunit"
+		],
+		"test-ms": [
+			"WP_MULTISITE=1 phpunit"
+		]
+	}
+}

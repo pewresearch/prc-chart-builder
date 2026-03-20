@@ -153,7 +153,17 @@ class Synced_Chart {
 		$content = $wp_embed->run_shortcode( $synced_chart_block->post_content );
 		$content = $wp_embed->autoembed( $content );
 
-		$content = do_blocks( $content );
+		// Render blocks manually so we can pass refId context through to child
+		// blocks (e.g. the controller block). do_blocks() discards parent context,
+		// but WP_Block::render() with $available_context propagates it correctly.
+		$parsed  = parse_blocks( $content );
+		$content = '';
+		foreach ( $parsed as $parsed_block ) {
+			$content .= ( new \WP_Block(
+				$parsed_block,
+				array( 'refId' => $attributes['ref'] )
+			) )->render();
+		}
 
 		if ( $is_fork_preview && class_exists( '\PRC\Platform\Revisions\Future_Revisions' ) ) {
 			$content = \PRC\Platform\Revisions\Future_Revisions::get_future_revision_banner_html(

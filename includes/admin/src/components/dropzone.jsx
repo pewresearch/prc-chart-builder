@@ -7,16 +7,11 @@ import { DropZone as WPDropZone } from '@wordpress/components';
  * Internal Dependencies
  */
 
-export default function DropZone() {
+export default function DropZone({ onFilesDrop }) {
 	return (
 		<WPDropZone
-			label="Drop a CSV data file here to get started on a new chart."
-			onFilesDrop={(droppedFiles) =>
-				console.log(
-					'chart library drop csv to new cahrt...',
-					droppedFiles
-				)
-			}
+			label="Drop a CSV to create a new chart"
+			onFilesDrop={onFilesDrop}
 		/>
 	);
 }

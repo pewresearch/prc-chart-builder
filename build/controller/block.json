@@ -49,6 +49,10 @@
       "type": "boolean",
       "default": true
     },
+    "enableSchemaOutput": {
+      "type": "boolean",
+      "default": true
+    },
     "chartPreformattedData": {
       "type": "array"
     },

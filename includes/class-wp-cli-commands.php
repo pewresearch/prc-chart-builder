@@ -27,13 +27,13 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Run the block migration
-	 *     wp prc-chart-builder migrate-blocks
+	 *     wp prc-chart-builder migrate_blocks
 	 *
 	 *     # Run migration with dry-run to see what would be changed
-	 *     wp prc-chart-builder migrate-blocks --dry-run
+	 *     wp prc-chart-builder migrate_blocks --dry-run
 	 *
 	 *     # Force re-run migration (reset and run again)
-	 *     wp prc-chart-builder migrate-blocks --force
+	 *     wp prc-chart-builder migrate_blocks --force
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -104,7 +104,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Migrate a specific post
-	 *     wp prc-chart-builder migrate-single-post 12345
+	 *     wp prc-chart-builder migrate_single_post 12345
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -275,8 +275,8 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-chart-builder backfill-chart-types --dry-run
-	 *     wp prc-chart-builder backfill-chart-types
+	 *     wp prc-chart-builder backfill_chart_types --dry-run
+	 *     wp prc-chart-builder backfill_chart_types
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -457,6 +457,250 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 		$label = $known[ $slug ] ?? ucfirst( str_replace( '-', ' ', $slug ) );
 		wp_insert_term( $label, $taxonomy, array( 'slug' => $slug ) );
 		return $this->build_term_map( $taxonomy );
+	}
+
+	/**
+	 * Backfill server-generated PNGs for existing published chart posts.
+	 *
+	 * The async Action Scheduler pipeline handles all future publishes automatically.
+	 * This command is for one-time (or occasional) backfilling of charts that were
+	 * published before the PNG export pipeline existed.
+	 *
+	 * Skips charts that already have an up-to-date PNG (hash match) by default.
+	 * Always dry-runs unless --force is passed.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--post-id=<id>]
+	 * : Target a single chart post by ID instead of processing all charts.
+	 *
+	 * [--dry-run]
+	 * : Preview which charts would be processed without making any API calls
+	 *   or DB writes.
+	 *
+	 * [--force-regenerate]
+	 * : Re-generate PNGs even for charts that already have a current PNG.
+	 *
+ * [--base-url=<url>]
+ * : Override the site base URL used to build export URLs. Useful when the
+ *   site is not publicly reachable (e.g. local dev via ngrok) or when
+ *   targeting a password-protected environment like alpha. HTTP basic auth
+ *   credentials can be embedded directly in the URL.
+ *   Example: --base-url=https://abc123.ngrok-free.app/pewresearch-org
+ *   Example: --base-url=https://guest:prcguest@alpha.pewresearch.org/pewresearch-org
+ *
+ * [--export-url=<url>]
+ * : Bypass permalink construction entirely and pass this exact URL to
+ *   ScreenshotOne. Useful for local testing against a specific remote URL
+ *   (e.g. an alpha chart export page) without needing the post to exist
+ *   on the local environment. Requires --post-id so the resulting PNG has
+ *   a local post to attach to.
+ *   Example: --export-url=https://guest:prcguest@alpha.pewresearch.org/pewresearch-org/chart/some-slug/export/
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     # Preview which charts would be processed (no API calls)
+	 *     wp prc-chart-builder backfill_pngs --dry-run
+	 *
+	 *     # Backfill a single chart
+	 *     wp prc-chart-builder backfill_pngs --post-id=123
+	 *
+	 *     # Backfill all charts missing a PNG
+	 *     wp prc-chart-builder backfill_pngs
+	 *
+	 *     # Re-generate all PNGs regardless of current state
+	 *     wp prc-chart-builder backfill_pngs --force-regenerate
+	 *
+	 *     # Backfill via ngrok tunnel (local dev)
+	 *     wp prc-chart-builder backfill_pngs --post-id=123 --base-url=https://abc123.ngrok-free.app/pewresearch-org
+	 *
+	 *     # Backfill against alpha (password-protected)
+	 *     wp prc-chart-builder backfill_pngs --post-id=123 --base-url=https://guest:prcguest@alpha.pewresearch.org/pewresearch-org
+	 *
+	 *     # Test against a specific remote export URL from local
+	 *     wp prc-chart-builder backfill_pngs --post-id=123 --export-url=https://guest:prcguest@alpha.pewresearch.org/pewresearch-org/chart/some-slug/export/
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Associative arguments.
+	 * @when after_wp_load
+	 */
+	public function backfill_pngs( $args, $assoc_args ) {
+		global $wpdb;
+
+		$dry_run          = isset( $assoc_args['dry-run'] );
+		$force_regenerate = isset( $assoc_args['force-regenerate'] );
+		$single_id        = isset( $assoc_args['post-id'] ) ? (int) $assoc_args['post-id'] : 0;
+		$base_url         = isset( $assoc_args['base-url'] ) ? rtrim( $assoc_args['base-url'], '/' ) : '';
+		$export_url       = isset( $assoc_args['export-url'] ) ? $assoc_args['export-url'] : '';
+
+		if ( $export_url && ! $single_id ) {
+			\WP_CLI::error( '--export-url requires --post-id so the PNG has a local post to attach to.' );
+			return;
+		}
+
+		if ( $dry_run ) {
+			\WP_CLI::log( 'Dry-run mode — no API calls or DB writes will be made.' );
+		}
+		if ( $base_url ) {
+			\WP_CLI::log( sprintf( 'Base URL override: %s', $base_url ) );
+		}
+		if ( $export_url ) {
+			\WP_CLI::log( sprintf( 'Export URL override: %s', $export_url ) );
+		}
+
+		$service = new Screenshot_Service();
+		if ( ! $dry_run && ! $service->is_configured() ) {
+			\WP_CLI::error( 'ScreenshotOne credentials are not configured. Set PRC_PLATFORM_SCREENSHOTONE_ACCESS_KEY and PRC_PLATFORM_SCREENSHOTONE_SECRET_KEY constants.' );
+			return;
+		}
+
+		$loader     = new Loader();
+		$png_export = new PNG_Export( $loader, $service );
+
+		$posts_per_page  = 50;
+		$paged           = 1;
+		$total_processed = 0;
+		$generated       = 0;
+		$skipped         = 0;
+		$failed          = 0;
+
+		do {
+			if ( $single_id ) {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				$posts = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT ID, post_title, post_content FROM {$wpdb->posts}
+						WHERE ID = %d AND post_type = %s AND post_status = 'publish'",
+						$single_id,
+						Content_Type::$post_type
+					)
+				);
+			} else {
+				// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
+				$posts = $wpdb->get_results(
+					$wpdb->prepare(
+						"SELECT ID, post_title, post_content FROM {$wpdb->posts}
+						WHERE post_type = %s AND post_status = 'publish'
+						ORDER BY ID
+						LIMIT %d OFFSET %d",
+						Content_Type::$post_type,
+						$posts_per_page,
+						( $paged - 1 ) * $posts_per_page
+					)
+				);
+			}
+
+			if ( empty( $posts ) ) {
+				break;
+			}
+
+			foreach ( $posts as $post ) {
+				++$total_processed;
+
+				$blocks      = parse_blocks( $post->post_content );
+				$chart_block = $this->find_chart_block( $blocks );
+
+				if ( ! $chart_block ) {
+					\WP_CLI::log( sprintf( '  [skip]  %d "%s" — no chart block found', $post->ID, $post->post_title ) );
+					++$skipped;
+					continue;
+				}
+
+				// Skip if PNG is already current, unless --force-regenerate is set.
+				if ( ! $force_regenerate ) {
+					$new_hash    = $png_export->compute_attributes_hash( $chart_block['attrs'] ?? array() );
+					$stored_hash = get_post_meta( $post->ID, '_chart_attributes_hash', true );
+					if ( $new_hash === $stored_hash ) {
+						\WP_CLI::log( sprintf( '  [skip]  %d "%s" — PNG already up to date', $post->ID, $post->post_title ) );
+						++$skipped;
+						continue;
+					}
+				}
+
+			$permalink        = get_permalink( $post->ID );
+			if ( $base_url ) {
+				$site_url  = untrailingslashit( get_site_url() );
+				$permalink = $base_url . substr( $permalink, strlen( $site_url ) );
+			}
+			$display_export_url = ! empty( $export_url ) ? $export_url : trailingslashit( $permalink ) . 'export/';
+
+			$layout = $chart_block['attrs']['layout'] ?? array();
+			$width  = isset( $layout['width'] )  ? (int) $layout['width']  : Screenshot_Service::DEFAULT_CHART_WIDTH;
+			$height = isset( $layout['height'] ) ? (int) $layout['height'] : Screenshot_Service::DEFAULT_CHART_HEIGHT;
+
+			if ( $dry_run ) {
+				\WP_CLI::log( sprintf(
+					'  [would] %d "%s" — %s (%dpx × %dpx)',
+					$post->ID,
+					$post->post_title,
+					$display_export_url,
+					$width,
+					$height
+				) );
+					++$generated;
+					continue;
+				}
+
+			try {
+				$png_export->generate_png( $post->ID, $base_url, $export_url );
+				$png_url = get_post_meta( $post->ID, '_chart_png_url', true );
+					\WP_CLI::log( sprintf( '  [done]  %d "%s" — %s', $post->ID, $post->post_title, $png_url ) );
+					++$generated;
+				} catch ( \Exception $e ) {
+					\WP_CLI::warning( sprintf( '  [fail]  %d "%s" — %s', $post->ID, $post->post_title, $e->getMessage() ) );
+					++$failed;
+				}
+			}
+
+			$paged++;
+
+			if ( ! $single_id && count( $posts ) === $posts_per_page ) {
+				\WP_CLI::log( sprintf( '  ... %d processed so far, pausing 3s ...', $total_processed ) );
+				sleep( 3 );
+			}
+
+			if ( method_exists( $this, 'vip_inmemory_cleanup' ) ) {
+				$this->vip_inmemory_cleanup();
+			}
+
+		} while ( ! $single_id && count( $posts ) === $posts_per_page );
+
+		\WP_CLI::log( '' );
+		\WP_CLI::log( sprintf(
+			'Processed: %d | %s: %d | Skipped: %d | Failed: %d',
+			$total_processed,
+			$dry_run ? 'Would generate' : 'Generated',
+			$generated,
+			$skipped,
+			$failed
+		) );
+
+		if ( $dry_run ) {
+			\WP_CLI::log( 'Dry run complete. Pass --force to execute.' );
+		} else {
+			\WP_CLI::success( 'PNG backfill complete.' );
+		}
+	}
+
+	/**
+	 * Find the first prc-chart-builder/chart block in a parsed blocks array,
+	 * searching one level of inner blocks (e.g. inside a controller block).
+	 *
+	 * @param array $blocks Parsed blocks from parse_blocks().
+	 * @return array|null Block array or null.
+	 */
+	private function find_chart_block( array $blocks ): ?array {
+		foreach ( $blocks as $block ) {
+			if ( 'prc-chart-builder/chart' === ( $block['blockName'] ?? '' ) ) {
+				return $block;
+			}
+			foreach ( $block['innerBlocks'] ?? array() as $inner ) {
+				if ( 'prc-chart-builder/chart' === ( $inner['blockName'] ?? '' ) ) {
+					return $inner;
+				}
+			}
+		}
+		return null;
 	}
 
 	/**

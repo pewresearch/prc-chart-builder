@@ -155,10 +155,18 @@ class Plugin_Bootstrap {
 		$this->include( 'class-wp-cli-commands.php' );
 		$this->include( 'class-distributor.php' );
 		$this->include( 'class-markdown-for-agents-integration.php' );
+		$this->include( 'class-json-ld.php' );
 		$this->include( 'class-print-engine-integration.php' );
 		$this->include( 'admin/class-admin.php' );
 		$this->include( 'class-chart-patterns.php' );
 		$this->include( 'inspector-sidebar-panel/class-inspector-sidebar-panel.php' );
+		$this->include( 'class-chart-export-endpoint.php' );
+		if ( file_exists( plugin_dir_path( __DIR__ ) . 'includes/class-screenshot-service.php' ) ) {
+			$this->include( 'class-screenshot-service.php' );
+		}
+		if ( file_exists( plugin_dir_path( __DIR__ ) . 'includes/class-png-export.php' ) ) {
+			$this->include( 'class-png-export.php' );
+		}
 
 		// Conditionally load the AI experiment if the Abstracts_Experiment base class is available.
 		if ( class_exists( '\WordPress\AI\Abstracts\Abstract_Experiment' ) ) {
@@ -186,10 +194,16 @@ class Plugin_Bootstrap {
 		new Block_Migration( $this->get_loader() );
 		new Distributor( $this->get_loader() );
 		new Markdown_For_Agents_Integration( $this->get_loader() );
+		new JSON_LD( $this->get_loader() );
 		new Print_Engine_Integration( $this->get_loader() );
 		new Admin( $this->get_loader() );
 		new Chart_Patterns( $this->get_loader() );
 		new Inspector_Sidebar_Panel( $this->get_loader() );
+		new Chart_Export_Endpoint( $this->get_loader() );
+		if ( class_exists( __NAMESPACE__ . '\Screenshot_Service' ) && class_exists( __NAMESPACE__ . '\PNG_Export' ) ) {
+			$screenshot_service = new Screenshot_Service();
+			new PNG_Export( $this->get_loader(), $screenshot_service );
+		}
 
 		// Register the AI experiment if the base class is available.
 		if ( class_exists( '\WordPress\AI\Abstracts\Abstract_Experiment' ) && class_exists( '\PRC\Platform\Chart_Builder\Chart_AI_Experiment' ) ) {

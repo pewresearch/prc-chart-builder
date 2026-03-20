@@ -1,6 +1,8 @@
 .vscode
 node_modules
 node_modules/
+vendor/
+composer.lock
 
 # Yarn v2
 .pnp.*
@@ -15,3 +17,15 @@ node_modules/
 
 # Testing
 artifacts/
+
+# Composer
+/vendor/
+composer.lock
+
+# PHPUnit
+/coverage/
+.phpunit.result.cache
+
+# WordPress Tests
+/tmp/
+/wordpress-tests-lib/

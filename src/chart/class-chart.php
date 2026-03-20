@@ -117,7 +117,22 @@ class Chart {
 		}
 
 		$target_namespace = array_key_exists( 'interactiveNamespace', $attributes ) ? $attributes['interactiveNamespace'] : 'prc-chart-builder/chart';
-		$svg_fallback     = $block_attributes['io']['svgUrl'] ?? '';
+
+		// Resolve the static fallback image shown before JS hydrates and on error.
+		// Priority: server-generated PNG (post meta) → io.pngUrl (block attr) → io.svgUrl (legacy).
+		// When synced into another post, refId is the chart CPT post ID — use it
+		// so we read meta from the chart post, not the parent article.
+		$chart_post_id       = $block->context['refId'] ?? get_the_ID();
+		$static_fallback_url = '';
+		if ( $chart_post_id ) {
+			$static_fallback_url = (string) get_post_meta( $chart_post_id, '_chart_png_url', true );
+		}
+		if ( ! $static_fallback_url ) {
+			$static_fallback_url = $block_attributes['io']['pngUrl'] ?? '';
+		}
+		if ( ! $static_fallback_url ) {
+			$static_fallback_url = $block_attributes['io']['svgUrl'] ?? '';
+		}
 
 		$chart_data            = $block_attributes['io']['chartData'] ?? array();
 		$is_static_chart       = $block_attributes['io']['isStaticChart'] ?? false;
@@ -177,11 +192,25 @@ class Chart {
 
 		$block_wrapper_attrs = get_block_wrapper_attributes( $block_attrs );
 
-		$chart = wp_sprintf(
-			'<div id="%1$s"><img src="%2$s" alt="Chart" class="chart-fallback" /></div>',
-			$block_id,
-			$svg_fallback
-		);
+		$fallback_width = isset( $block_attributes['layout']['width'] ) ? (int) $block_attributes['layout']['width'] : null;
+		$fallback_style = $fallback_width ? sprintf( ' style="width:%dpx;height:auto;"', $fallback_width ) : '';
+		if ( $static_fallback_url ) {
+			$chart = wp_sprintf(
+				'<div id="%1$s"><img src="%2$s" alt="Chart" class="chart-fallback chart-fallback--png"%3$s /></div>',
+				$block_id,
+				esc_url( $static_fallback_url ),
+				$fallback_style
+			);
+		} else {
+			$placeholder_style = $fallback_width
+				? sprintf( ' style="width:%dpx;min-height:200px;"', $fallback_width )
+				: ' style="min-height:200px;"';
+			$chart = wp_sprintf(
+				'<div id="%1$s"><div class="chart-fallback chart-fallback--placeholder"%2$s></div></div>',
+				$block_id,
+				$placeholder_style
+			);
+		}
 
 		$static_chart = '';
 		if ( $is_static_chart ) {

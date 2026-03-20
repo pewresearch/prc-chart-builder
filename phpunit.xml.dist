@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<phpunit
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
+	bootstrap="tests/bootstrap.php"
+	backupGlobals="false"
+	colors="true"
+	beStrictAboutOutputDuringTests="true"
+	beStrictAboutTestsThatDoNotTestAnything="true"
+	>
+	<testsuites>
+		<testsuite name="PRC Chart Builder Test Suite">
+			<directory>./tests/</directory>
+			<exclude>./tests/class-test-block-migration.php</exclude>
+		</testsuite>
+	</testsuites>
+	<coverage processUncoveredFiles="true">
+		<include>
+			<directory suffix=".php">./includes</directory>
+			<file>./prc-chart-builder.php</file>
+		</include>
+		<exclude>
+			<directory>./tests</directory>
+			<directory>./vendor</directory>
+		</exclude>
+	</coverage>
+	<php>
+		<ini name="error_reporting" value="32767"/>
+		<ini name="display_errors" value="1"/>
+	</php>
+</phpunit>

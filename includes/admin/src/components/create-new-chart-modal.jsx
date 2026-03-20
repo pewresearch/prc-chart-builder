@@ -566,19 +566,19 @@ function CreateStep({ chartType, pattern, initialCsvText = '', onBack }) {
 				__nextHasNoMarginBottom
 			/>
 
-		{!isAiGenerated && (
-			<div style={{ marginTop: '16px' }}>
-				<CsvDataInput
-					csvText={csvText}
-					onCsvChange={setCsvText}
-					disabled={isCreating}
-					label={__(
-						'Your data (optional — replaces sample data)',
-						'prc-chart-builder'
-					)}
-				/>
-			</div>
-		)}
+			{!isAiGenerated && (
+				<div style={{ marginTop: '16px' }}>
+					<CsvDataInput
+						csvText={csvText}
+						onCsvChange={setCsvText}
+						disabled={isCreating}
+						label={__(
+							'Your data (optional — replaces sample data)',
+							'prc-chart-builder'
+						)}
+					/>
+				</div>
+			)}
 
 			<Flex justify="flex-start" gap={3} style={{ marginTop: '16px' }}>
 				<FlexItem>
@@ -615,8 +615,12 @@ function CreateStep({ chartType, pattern, initialCsvText = '', onBack }) {
 
 // ── Root Modal Component ──────────────────────────────────────────────────────
 
-export default function CreateNewChartModal() {
-	const [isOpen, setIsOpen] = useState(false);
+export default function CreateNewChartModal({
+	isOpen,
+	onOpen,
+	onClose,
+	initialCsvText = '',
+}) {
 	const [selectedType, setSelectedType] = useState(null);
 	const [selectedPattern, setSelectedPattern] = useState(null);
 	const [patterns, setPatterns] = useState([]);
@@ -702,12 +706,12 @@ export default function CreateNewChartModal() {
 	}, [selectedType, allPatterns, termIdToSlug]);
 
 	const handleClose = useCallback(() => {
-		setIsOpen(false);
 		setSelectedType(null);
 		setSelectedPattern(null);
 		setPatterns([]);
 		setActiveTab('pattern');
-	}, []);
+		onClose();
+	}, [onClose]);
 
 	const handleSelectType = useCallback((term) => {
 		setSelectedType(term);
@@ -765,7 +769,7 @@ export default function CreateNewChartModal() {
 		<>
 			<Button
 				variant="primary"
-				onClick={() => setIsOpen(true)}
+				onClick={onOpen}
 				icon={plus}
 				__next40pxDefaultSize
 			>
@@ -816,14 +820,18 @@ export default function CreateNewChartModal() {
 							</>
 						)}
 
-					{selectedType && selectedPattern && (
-						<CreateStep
-							chartType={selectedType}
-							pattern={selectedPattern}
-							initialCsvText={selectedPattern.csvText || ''}
-							onBack={handleBackToPatterns}
-						/>
-					)}
+						{selectedType && selectedPattern && (
+							<CreateStep
+								chartType={selectedType}
+								pattern={selectedPattern}
+								initialCsvText={
+									selectedPattern.csvText ||
+									initialCsvText ||
+									''
+								}
+								onBack={handleBackToPatterns}
+							/>
+						)}
 					</Modal>
 				</BlockEditorProvider>
 			)}

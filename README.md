@@ -1,6 +1,6 @@
 # PRC Chart Builder
 
-Version 3.5.0
+Version 3.5.1
 
 A WordPress plugin for building, managing, and embedding interactive SVG charts on the Pew Research Center platform. Charts are authored as a custom post type (`chart`) using the Gutenberg block editor and rendered via the PRC Charting Library (`prc-charting-library`), which is built on `@visx` and D3.
 
@@ -31,19 +31,21 @@ When embedding a chart into an article, editors use `prc-chart-builder/synced-ch
 
 ### Key systems introduced in 3.5.0
 
-| System | What it does |
-|---|---|
-| Chart Library admin | DataViews-based gallery with filtering, previews, and multi-path creation |
-| AI generation | Text + image + CSV → complete chart block, with live preview before accepting |
-| Element popover | Click any chart element in the editor to open a per-element style panel |
-| Dark mode | Charts automatically respond to OS/browser color scheme via CSS `light-dark()` |
-| Sankey chart | New chart type for flow/allocation data |
-| Treemap chart | New chart type for hierarchical part-to-whole data |
-| Scatter grouping | Color-code scatter points by a secondary variable; legend reflects groups |
-| Regression lines | Overlay linear/exponential/polynomial/log/power/quadratic fits on scatter plots |
-| Map improvements | US block map responsive scaling, missing world map territories, per-region popover |
 
-See [`docs/release-notes/3_5_0.md`](docs/release-notes/3_5_0.md) for the full release notes.
+| System              | What it does                                                                       |
+| ------------------- | ---------------------------------------------------------------------------------- |
+| Chart Library admin | DataViews-based gallery with filtering, previews, and multi-path creation          |
+| AI generation       | Text + image + CSV → complete chart block, with live preview before accepting      |
+| Element popover     | Click any chart element in the editor to open a per-element style panel            |
+| Dark mode           | Charts automatically respond to OS/browser color scheme via CSS `light-dark()`     |
+| Sankey chart        | New chart type for flow/allocation data                                            |
+| Treemap chart       | New chart type for hierarchical part-to-whole data                                 |
+| Scatter grouping    | Color-code scatter points by a secondary variable; legend reflects groups          |
+| Regression lines    | Overlay linear/exponential/polynomial/log/power/quadratic fits on scatter plots    |
+| Map improvements    | US block map responsive scaling, missing world map territories, per-region popover |
+
+
+See `[docs/release-notes/3_5_0.md](docs/release-notes/3_5_0.md)` for the full release notes.
 
 ---
 
@@ -57,11 +59,11 @@ Use the `prc-chart-builder/synced-chart` block and select the chart post to embe
 
 **Viewport-responsive customization:**
 
-All chart attributes support per-viewport overrides via the `mobile` and `tablet` top-level attribute groups. Switch the editor to Tablet or Mobile preview to apply breakpoint-specific values. See [`docs/VIEWPORT_USAGE_GUIDE.md`](docs/VIEWPORT_USAGE_GUIDE.md).
+All chart attributes support per-viewport overrides via the `mobile` and `tablet` top-level attribute groups. Switch the editor to Tablet or Mobile preview to apply breakpoint-specific values. See `[docs/VIEWPORT_USAGE_GUIDE.md](docs/VIEWPORT_USAGE_GUIDE.md)`.
 
 **Per-element styling:**
 
-Click any bar, label, line segment, pie slice, map region, or axis tick label in the editor canvas to open the element popover. Changes update live and are stored in the `labels.custom*` and `shapes.custom*` block attributes using a `{x}::{category}` key.
+Click any bar, label, line segment, pie slice, map region, or axis tick label in the editor canvas to open the element popover. Changes update live and are stored in the `labels.custom`* and `shapes.custom*` block attributes using a `{x}::{category}` key.
 
 ---
 
@@ -88,13 +90,15 @@ The plugin depends on `prc-charting-library` and `@prc/charting-utilities`. Chan
 
 ## Documentation
 
-| Document | Description |
-|---|---|
-| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System architecture, data flow, state management, decision matrix |
-| [`docs/VIEWPORT_ATTRIBUTES.md`](docs/VIEWPORT_ATTRIBUTES.md) | Viewport-aware attribute system internals |
-| [`docs/VIEWPORT_USAGE_GUIDE.md`](docs/VIEWPORT_USAGE_GUIDE.md) | Practical guide to responsive chart customization |
-| [`docs/release-notes/3_5_0.md`](docs/release-notes/3_5_0.md) | Chart Builder 3.5.0 release notes |
-| [`src/chart/edit/popover/panels/README.md`](src/chart/edit/popover/panels/README.md) | Element popover system internals and extension guide |
+
+| Document                                                                             | Description                                                       |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)`                                       | System architecture, data flow, state management, decision matrix |
+| `[docs/VIEWPORT_ATTRIBUTES.md](docs/VIEWPORT_ATTRIBUTES.md)`                         | Viewport-aware attribute system internals                         |
+| `[docs/VIEWPORT_USAGE_GUIDE.md](docs/VIEWPORT_USAGE_GUIDE.md)`                       | Practical guide to responsive chart customization                 |
+| `[docs/release-notes/3_5_0.md](docs/release-notes/3_5_0.md)`                         | Chart Builder 3.5.0 release notes                                 |
+| `[src/chart/edit/popover/panels/README.md](src/chart/edit/popover/panels/README.md)` | Element popover system internals and extension guide              |
+
 
 ---
 
@@ -114,6 +118,7 @@ All chart configuration is stored as a single `chart` block attribute object. Th
 
 Controls chart dimensions, type, orientation, and overflow behaviour.
 
+
 | Attribute                 | Type           | Default                                         | Notes                                                                  |
 | ------------------------- | -------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
 | `layout.name`             | string         | `"wp-block-prc-block-chart-builder-controller"` | Internal block name identifier; not user-editable                      |
@@ -131,11 +136,13 @@ Controls chart dimensions, type, orientation, and overflow behaviour.
 | `layout.horizontalRules`  | boolean        | `true`                                          | Show horizontal grid rules behind the chart                            |
 | `layout.parentClass`      | string         | `"wp-chart-builder-wrapper"`                    | CSS class applied to the outermost wrapper element                     |
 
+
 ---
 
 ### `metadata` — Chart Titles & Attribution
 
 Text displayed above/below the chart canvas.
+
 
 | Attribute           | Type    | Default                 | Notes                                        |
 | ------------------- | ------- | ----------------------- | -------------------------------------------- |
@@ -147,19 +154,23 @@ Text displayed above/below the chart canvas.
 | `metadata.tag`      | string  | `"PEW RESEARCH CENTER"` | Institutional tag/brand label                |
 | `metadata.alt`      | string  | `""`                    | Accessible alt-text for static image exports |
 
+
 ---
 
 ### `colors` — color Palette
 
+
 | Attribute | Type     | Default                                                         | Notes                                             |
 | --------- | -------- | --------------------------------------------------------------- | ------------------------------------------------- |
 | `colors`  | string[] | `["#456A83","#BF3B27","#756a7e","#ea9e2c","#BB792A","#eeece4"]` | Ordered list of hex colors applied to data series |
+
 
 ---
 
 ### `plotBands` — Reference Bands
 
 Shaded regions overlaid on the chart to highlight ranges.
+
 
 | Attribute               | Type     | Default | Notes                                              |
 | ----------------------- | -------- | ------- | -------------------------------------------------- |
@@ -169,9 +180,11 @@ Shaded regions overlaid on the chart to highlight ranges.
 | `plotBands.dimension`   | `'x'`    | `'y'`   | `"x"`                                              |
 | `plotBands.bands`       | object[] | `[]`    | Array of band objects (`{ from, to, color, ... }`) |
 
+
 ---
 
 ### `independentAxis` — X-Axis (Category / Independent)
+
 
 | Attribute                                   | Type              | Default                   | Notes                                                          |
 | ------------------------------------------- | ----------------- | ------------------------- | -------------------------------------------------------------- |
@@ -221,9 +234,11 @@ Shaded regions overlaid on the chart to highlight ranges.
 | `independentAxis.grid.strokeWidth`          | number            | `2`                       | Width of grid lines (px)                                       |
 | `independentAxis.grid.strokeDasharray`      | string            | `""`                      | SVG dash pattern for grid lines                                |
 
+
 ---
 
 ### `dependentAxis` — Y-Axis (Value / Dependent)
+
 
 | Attribute                                 | Type             | Default                   | Notes                                                       |
 | ----------------------------------------- | ---------------- | ------------------------- | ----------------------------------------------------------- |
@@ -271,11 +286,13 @@ Shaded regions overlaid on the chart to highlight ranges.
 | `dependentAxis.grid.strokeWidth`          | number           | `1`                       | Width of grid lines (px)                                    |
 | `dependentAxis.grid.strokeDasharray`      | string           | `""`                      | SVG dash pattern for grid lines                             |
 
+
 ---
 
 ### `dataRender` — Data Binding & Sorting
 
 Maps data columns to chart axes and controls sort order, group breaks, and scale types.
+
 
 | Attribute                                            | Type                   | Default            | Notes                                                 |
 | ---------------------------------------------------- | ---------------------- | ------------------ | ----------------------------------------------------- |
@@ -303,9 +320,11 @@ Maps data columns to chart axes and controls sort order, group breaks, and scale
 | `dataRender.groupBreaks.labelStyles.fill`            | string                 | `"black"`          | color of the group break label text                   |
 | `dataRender.groupBreaks.labelStyles.fontStyle`       | `'normal'`             | `'italic'`         | `'bold'`                                              |
 
+
 ---
 
 ### `tooltip` — Hover Tooltips
+
 
 | Attribute                       | Type              | Default                | Notes                                                 |
 | ------------------------------- | ----------------- | ---------------------- | ----------------------------------------------------- |
@@ -340,9 +359,11 @@ Maps data columns to chart axes and controls sort order, group breaks, and scale
 | `tooltip.style.borderRadius`    | string            | `"0px"`                | Tooltip corner radius CSS shorthand                   |
 | `tooltip.style.color`           | string            | `"black"`              | Tooltip text color                                    |
 
+
 ---
 
 ### `legend` — Chart Legend
+
 
 | Attribute               | Type           | Default        | Notes                                                               |
 | ----------------------- | -------------- | -------------- | ------------------------------------------------------------------- |
@@ -365,11 +386,13 @@ Maps data columns to chart axes and controls sort order, group breaks, and scale
 | `legend.margin.bottom`  | number         | `0`            | Bottom margin around the legend (px)                                |
 | `legend.margin.left`    | number         | `0`            | Left margin around the legend (px)                                  |
 
+
 ---
 
 ### `labels` — Data Labels
 
 Inline value labels rendered on chart elements.
+
 
 | Attribute                        | Type        | Default                   | Notes                                                             |
 | -------------------------------- | ----------- | ------------------------- | ----------------------------------------------------------------- |
@@ -399,26 +422,31 @@ Inline value labels rendered on chart elements.
 | `labels.customVisibility`        | object      | `{}`                      | Per-datum visibility overrides keyed by data row index            |
 | `labels.customStyles`            | object      | `{}`                      | Per-datum inline style overrides keyed by data row index          |
 
+
 ---
 
 ### `shapes` — Element Style Overrides
 
 Per-series or per-segment style customisation applied to rendered shapes.
 
+
 | Attribute              | Type   | Default | Notes                                                          |
 | ---------------------- | ------ | ------- | -------------------------------------------------------------- |
 | `shapes.customStyles`  | object | `{}`    | Style overrides keyed by series/category name                  |
 | `shapes.segmentStyles` | object | `{}`    | Style overrides keyed by segment identifier (e.g. stacked bar) |
 
+
 ---
 
 ### `animate` — Animations
 
-| Attribute                    | Type     | Default | Notes                                                       |
-| ---------------------------- | -------- | ------- | ----------------------------------------------------------- |
-| `animate.active`             | boolean  | `false` | Enable chart entrance animations                            |
-| `animate.animationWhitelist` | string[] | `[]`    | Restrict animations to named chart components               |
-| `animate.duration`           | number   | `2000`  | Animation duration in milliseconds                          |
+
+| Attribute                    | Type     | Default | Notes                                         |
+| ---------------------------- | -------- | ------- | --------------------------------------------- |
+| `animate.active`             | boolean  | `false` | Enable chart entrance animations              |
+| `animate.animationWhitelist` | string[] | `[]`    | Restrict animations to named chart components |
+| `animate.duration`           | number   | `2000`  | Animation duration in milliseconds            |
+
 
 ---
 
@@ -430,6 +458,7 @@ Each group below only affects rendering when `layout.type` matches the indicated
 
 Applies to: `bar`, `stacked-bar`, `single-stacked-bar`, `grouped-bar`.
 
+
 | Attribute             | Type     | Default    | Notes                                                       |
 | --------------------- | -------- | ---------- | ----------------------------------------------------------- |
 | `bar.barPadding`      | number   | `0.2`      | Inner padding between individual bars (0–1 fraction)        |
@@ -437,11 +466,13 @@ Applies to: `bar`, `stacked-bar`, `single-stacked-bar`, `grouped-bar`.
 | `bar.hasRectStroke`   | boolean  | `false`    | Apply a border stroke around each bar rectangle             |
 | `bar.stackOffset`     | `'none'` | `'expand'` | `'wiggle'`                                                  |
 
+
 > `rectStrokeColor` and `rectStrokeWidth` are defined in `baseConfig.ts` (`"white"`, `1`) but are not stored in `block.json`; they use their runtime defaults.
 
 #### `line` — Line & Area Charts
 
 Applies to: `line`, `area`, `stacked-area`.
+
 
 | Attribute              | Type    | Default         | Notes                                                           |
 | ---------------------- | ------- | --------------- | --------------------------------------------------------------- |
@@ -452,9 +483,11 @@ Applies to: `line`, `area`, `stacked-area`.
 | `line.showArea`        | boolean | `false`         | Fill the area beneath the line                                  |
 | `line.areaFillOpacity` | number  | `0.4`           | Opacity of the area fill (0–1)                                  |
 
+
 #### `dotPlot` — Dot Plot Charts
 
 Applies to: `dot-plot`.
+
 
 | Attribute                                | Type    | Default     | Notes                                    |
 | ---------------------------------------- | ------- | ----------- | ---------------------------------------- |
@@ -464,9 +497,11 @@ Applies to: `dot-plot`.
 | `dotPlot.connectingLine.strokeDasharray` | string  | `""`        | SVG dash pattern for the connecting line |
 | `dotPlot.connectingLine.strokeOpacity`   | number  | `1`         | Opacity of the connecting line (0–1)     |
 
+
 #### `nodes` — Scatter & Dot Plot Markers
 
 Applies to: `scatter`, `dot-plot`.
+
 
 | Attribute                | Type   | Default     | Notes                                                 |
 | ------------------------ | ------ | ----------- | ----------------------------------------------------- |
@@ -475,17 +510,21 @@ Applies to: `scatter`, `dot-plot`.
 | `nodes.pointStrokeWidth` | number | `1`         | Stroke width around markers (px)                      |
 | `nodes.pointStroke`      | string | `"inherit"` | Stroke color of markers                               |
 
+
 #### `explodedBar` — Exploded Bar Charts
 
 Applies to: `exploded-bar`.
+
 
 | Attribute               | Type   | Default | Notes                                            |
 | ----------------------- | ------ | ------- | ------------------------------------------------ |
 | `explodedBar.columnGap` | number | `16`    | Horizontal gap between exploded bar columns (px) |
 
+
 #### `pie` — Pie Charts
 
 Applies to: `pie`.
+
 
 | Attribute                           | Type    | Default     | Notes                                                        |
 | ----------------------------------- | ------- | ----------- | ------------------------------------------------------------ |
@@ -503,9 +542,11 @@ Applies to: `pie`.
 | `pie.groupArcStyle.strokeWidth`     | number  | `1`         | Width of group arc lines (px)                                |
 | `pie.groupArcStyle.strokeDasharray` | string  | `"4,4"`     | Dash pattern for group arc lines                             |
 
+
 #### `divergingBar` — Diverging Bar Charts
 
 Applies to: `diverging-bar`.
+
 
 | Attribute                                  | Type     | Default | Notes                                                      |
 | ------------------------------------------ | -------- | ------- | ---------------------------------------------------------- |
@@ -520,9 +561,11 @@ Applies to: `diverging-bar`.
 | `divergingBar.neutralBar.separator`        | boolean  | `true`  | Draw a separator line at the neutral bar                   |
 | `divergingBar.neutralBar.separatorOffsetX` | number   | `-1`    | Horizontal offset of the separator line (px)               |
 
+
 #### `regression` — Regression Lines
 
 Applies to: `scatter`.
+
 
 | Attribute                     | Type       | Default        | Notes                                              |
 | ----------------------------- | ---------- | -------------- | -------------------------------------------------- |
@@ -534,9 +577,11 @@ Applies to: `scatter`.
 | `regression.perGroupBreak`    | boolean    | `false`        | Compute a separate regression for each group break |
 | `regression.groupBreakStyles` | object     | `{}`           | Per-group style overrides for regression lines     |
 
+
 #### `diffColumn` — Difference Column
 
 Renders a calculated difference column alongside bar/grouped-bar charts.
+
 
 | Attribute                          | Type    | Default     | Notes                                                    |
 | ---------------------------------- | ------- | ----------- | -------------------------------------------------------- |
@@ -557,9 +602,11 @@ Renders a calculated difference column alongside bar/grouped-bar charts.
 | `diffColumn.style.width`           | number  | `30`        | Column width (px)                                        |
 | `diffColumn.style.heightOffset`    | number  | `0`         | Vertical adjustment to cell height (px)                  |
 
+
 #### `treemap` — Treemap Charts
 
 Applies to: `treemap`.
+
 
 | Attribute                 | Type             | Default        | Notes                                             |
 | ------------------------- | ---------------- | -------------- | ------------------------------------------------- |
@@ -575,9 +622,11 @@ Applies to: `treemap`.
 | `treemap.borderRadius`    | number           | `0`            | Corner radius for treemap cells (px)              |
 | `treemap.showValues`      | boolean          | `false`        | Render the numeric value inside each cell         |
 
+
 #### `sankey` — Sankey / Flow Diagrams
 
 Applies to: `sankey`.
+
 
 | Attribute            | Type         | Default    | Notes                                    |
 | -------------------- | ------------ | ---------- | ---------------------------------------- |
@@ -590,11 +639,13 @@ Applies to: `sankey`.
 | `sankey.targetKey`   | string       | `"target"` | Data column key for the link target node |
 | `sankey.valueKey`    | string       | `"value"`  | Data column key for the link flow value  |
 
+
 ---
 
 ### `map` — Map Charts
 
 Applies to: `map-usa`, `map-usa-counties`, `map-usa-block`, `map-world`.
+
 
 | Attribute                    | Type     | Default     | Notes                                                                         |
 | ---------------------------- | -------- | ----------- | ----------------------------------------------------------------------------- |
@@ -617,11 +668,13 @@ Applies to: `map-usa`, `map-usa-counties`, `map-usa-block`, `map-world`.
 | `map.rotateGamma`            | number   | `0`         | Projection γ (roll) rotation                                                  |
 | `map.customScale`            | number   | `1`         | Scale multiplier applied on top of the projection's default scale             |
 
+
 ---
 
 ### `annotations` — Chart Annotations
 
 Text or arrow callouts drawn on top of the chart.
+
 
 | Attribute                    | Type     | Default | Notes                                |
 | ---------------------------- | -------- | ------- | ------------------------------------ |
@@ -629,15 +682,18 @@ Text or arrow callouts drawn on top of the chart.
 | `annotations.activeOnMobile` | boolean  | `false` | Show annotations on mobile viewports |
 | `annotations.items`          | object[] | `[]`    | Array of annotation objects          |
 
+
 ---
 
 ### `drawings` — Free-Form Drawings
 
 SVG drawing elements overlaid on the chart.
 
+
 | Attribute  | Type     | Default | Notes                                     |
 | ---------- | -------- | ------- | ----------------------------------------- |
 | `drawings` | object[] | `[]`    | Array of drawing shape definition objects |
+
 
 ---
 
@@ -645,10 +701,12 @@ SVG drawing elements overlaid on the chart.
 
 Replace auto-generated axis tick labels with custom text.
 
+
 | Attribute                      | Type   | Default | Notes                                               |
 | ------------------------------ | ------ | ------- | --------------------------------------------------- |
 | `customTickLabels.independent` | object | `{}`    | Key-value map of tick value → custom label (X-axis) |
 | `customTickLabels.dependent`   | object | `{}`    | Key-value map of tick value → custom label (Y-axis) |
+
 
 ---
 
@@ -656,15 +714,18 @@ Replace auto-generated axis tick labels with custom text.
 
 Replace auto-generated legend item labels with custom text.
 
+
 | Attribute            | Type   | Default | Notes                                         |
 | -------------------- | ------ | ------- | --------------------------------------------- |
 | `customLegendLabels` | object | `{}`    | Key-value map of category key → display label |
+
 
 ---
 
 ### `io` — Input / Output & Chart State
 
 Stores the chart's data payload, static image fallback, and miscellaneous I/O flags.
+
 
 | Attribute                     | Type     | Default     | Notes                                                                                  |
 | ----------------------------- | -------- | ----------- | -------------------------------------------------------------------------------------- |
@@ -699,22 +760,26 @@ Stores the chart's data payload, static image fallback, and miscellaneous I/O fl
 | `io.customAttributes`         | object   | `{}`        | Free-form attributes passed to a custom chart renderer                                 |
 | `io.preserveStringKeys`       | string[] | `[]`        | Column keys that should remain as strings during data parsing                          |
 
+
 ---
 
 ### `mobile` / `tablet` — Responsive Breakpoint Overrides
 
 Deep-partial overrides applied at mobile (`≤ layout.mobileBreakpoint`) and tablet breakpoints. Any attribute from the groups above can be nested here to override its value at that breakpoint.
 
+
 | Attribute | Type   | Default | Notes                                            |
 | --------- | ------ | ------- | ------------------------------------------------ |
 | `mobile`  | object | `{}`    | Partial attribute overrides for mobile viewports |
 | `tablet`  | object | `{}`    | Partial attribute overrides for tablet viewports |
+
 
 ---
 
 ### Internal / Migration Attributes
 
 These attributes are managed automatically and should not be edited directly.
+
 
 | Attribute                         | Type    | Default   | Notes                                                     |
 | --------------------------------- | ------- | --------- | --------------------------------------------------------- |
@@ -725,6 +790,7 @@ These attributes are managed automatically and should not be edited directly.
 | `_migrationMeta.migratedAt`       | string  | `""`      | ISO timestamp of the last migration run                   |
 | `_migrationMeta.migrationVersion` | string  | `"1.0.0"` | Version of the migration script applied                   |
 | `_migrationMeta.forceRemigrate`   | boolean | `false`   | Set to `true` to force a re-run of migration on next load |
+
 
 ## License
 

@@ -2,10 +2,10 @@
  * WordPress Dependencies
  */
 import {
-	store,
-	getElement,
 	getContext,
+	getElement,
 	getServerState,
+	store,
 } from '@wordpress/interactivity';
 
 /**
@@ -15,6 +15,33 @@ import { logMigrationComparison } from './utils/log-migration';
 
 const { addQueryArgs } = window.wp.url;
 const { innerWidth, innerHeight } = window;
+
+/**
+ * Resolve light-dark() CSS function values in SVG presentation attributes.
+ *
+ * SVG path fill/stroke attributes don't support CSS color functions like
+ * light-dark(), so browsers render them as black. This clones the SVG and
+ * replaces every light-dark(light, dark) attribute value with the light value,
+ * making the exported SVG self-contained and renderable everywhere.
+ *
+ * @param {SVGSVGElement} svg
+ * @return {SVGSVGElement} A cloned SVG with resolved color attributes.
+ */
+function resolveLightDarkInSVG(svg) {
+	const clone = svg.cloneNode(true);
+	const LIGHT_DARK_RE = /light-dark\(\s*([^,]+?)\s*,\s*[^)]+?\s*\)/gi;
+	const ATTRS_TO_CHECK = ['fill', 'stroke', 'color', 'stop-color'];
+	clone.querySelectorAll('*').forEach((el) => {
+		ATTRS_TO_CHECK.forEach((attr) => {
+			const val = el.getAttribute(attr);
+			if (val && LIGHT_DARK_RE.test(val)) {
+				LIGHT_DARK_RE.lastIndex = 0;
+				el.setAttribute(attr, val.replace(LIGHT_DARK_RE, '$1'));
+			}
+		});
+	});
+	return clone;
+}
 
 // convert array of arrays to formatted csv, with optional metadata
 // @see https://github.com/pewresearch/prc-scripts/blob/main/src/@prc/functions/functions.js#L145
@@ -56,6 +83,146 @@ function arrayToCSV(objArray, metadata) {
 	}
 	return str;
 }
+
+/**
+ * Context menu — vanilla JS, no Interactivity API store involvement.
+ * Data is read from data-* attributes set by the PHP render callback.
+ */
+
+let activeMenu = null;
+let dismissMousedown = null;
+let dismissKeydown = null;
+
+function removeContextMenu() {
+	if (activeMenu) {
+		activeMenu.remove();
+		activeMenu = null;
+	}
+	if (dismissMousedown) {
+		document.removeEventListener('mousedown', dismissMousedown);
+		dismissMousedown = null;
+	}
+	if (dismissKeydown) {
+		document.removeEventListener('keydown', dismissKeydown);
+		dismissKeydown = null;
+	}
+}
+
+function buildContextMenu(wrapper, event) {
+	const pngUrl = wrapper.dataset.pngUrl || '';
+	const hasCsv = wrapper.dataset.hasCsv === 'true';
+	const postUrl = wrapper.dataset.postUrl || '';
+	const chartUrl = wrapper.dataset.chartUrl || '';
+	const chartTitle = wrapper.dataset.chartTitle || '';
+
+	const menu = document.createElement('div');
+	menu.className = 'wp-chart-builder-context-menu';
+
+	function makeItem(label, onClick) {
+		const btn = document.createElement('button');
+		btn.className = 'wp-chart-builder-context-menu__item';
+		btn.type = 'button';
+		btn.textContent = label;
+		btn.addEventListener('click', () => {
+			onClick();
+			removeContextMenu();
+		});
+		return btn;
+	}
+
+	if (pngUrl) {
+		menu.appendChild(
+			makeItem('Download image (.png)', () => {
+				fetch(pngUrl)
+					.then((res) => res.blob())
+					.then((blob) => {
+						const url = URL.createObjectURL(blob);
+						const a = document.createElement('a');
+						const slug = chartTitle
+							? chartTitle.toLowerCase().replace(/\s+/g, '_')
+							: 'chart';
+						a.href = url;
+						a.download = `${slug}.png`;
+						a.click();
+						URL.revokeObjectURL(url);
+					});
+			})
+		);
+	}
+
+	if (hasCsv) {
+		menu.appendChild(
+			makeItem('Download data (.csv)', () => {
+				// Re-use the existing downloadData action by finding and
+				// clicking the hidden download button already in the DOM,
+				// or dispatch a synthetic click on the controller element.
+				const downloadBtn = wrapper.querySelector(
+					'[data-wp-on--click="actions.downloadData"]'
+				);
+				if (downloadBtn) {
+					downloadBtn.click();
+				}
+			})
+		);
+	}
+
+	if (chartUrl && chartUrl !== postUrl) {
+		menu.appendChild(
+			makeItem('Open chart in new tab', () => {
+				window.open(chartUrl, '_blank', 'noopener');
+			})
+		);
+	}
+
+	// Do we want to add this option to copy the link to the current page?
+	// seems kinda useless
+	// menu.appendChild(
+	// 	makeItem('Copy link to this page', () => {
+	// 		navigator.clipboard.writeText(postUrl);
+	// 	})
+	// );
+
+	// Position at cursor, clamped to viewport.
+	const menuWidth = 180;
+	const menuHeight = 100; // approximate before render
+	const x = Math.min(event.clientX, window.innerWidth - menuWidth - 8);
+	const y = Math.min(event.clientY, window.innerHeight - menuHeight - 8);
+	menu.style.left = `${x}px`;
+	menu.style.top = `${y}px`;
+
+	document.body.appendChild(menu);
+	activeMenu = menu;
+
+	// Dismiss on outside click.
+	dismissMousedown = (e) => {
+		if (!menu.contains(e.target)) {
+			removeContextMenu();
+		}
+	};
+	// Dismiss on Escape.
+	dismissKeydown = (e) => {
+		if (e.key === 'Escape') {
+			removeContextMenu();
+		}
+	};
+
+	document.addEventListener('mousedown', dismissMousedown);
+	document.addEventListener('keydown', dismissKeydown);
+}
+
+// Attach to all controller wrappers after DOM is ready.
+document.addEventListener('DOMContentLoaded', () => {
+	if (navigator.maxTouchPoints > 0) return; // suppress on touch devices
+
+	document.querySelectorAll('.wp-chart-builder-chart').forEach((chartEl) => {
+		chartEl.addEventListener('contextmenu', (event) => {
+			event.preventDefault();
+			removeContextMenu();
+			const wrapper = chartEl.closest('.wp-chart-builder-wrapper');
+			if (wrapper) buildContextMenu(wrapper, event);
+		});
+	});
+});
 
 const { state, actions } = store('prc-chart-builder/controller', {
 	state: {
@@ -288,7 +455,8 @@ const { state, actions } = store('prc-chart-builder/controller', {
 			// If the event is a keydown event and the key is not Enter or space, return
 			if (
 				event.type === 'keydown' &&
-				(event.key !== 'Enter' || event.key !== ' ')
+				event.key !== 'Enter' &&
+				event.key !== ' '
 			) {
 				return;
 			}
@@ -313,14 +481,38 @@ const { state, actions } = store('prc-chart-builder/controller', {
 			);
 			downloadLink.click();
 		},
+		downloadImage() {
+			const context = getContext();
+			const { featuredImageUrl, title } = context;
+			if (!featuredImageUrl) return;
+			fetch(featuredImageUrl)
+				.then((res) => res.blob())
+				.then((blob) => {
+					const url = URL.createObjectURL(blob);
+					const a = document.createElement('a');
+					const slug = title
+						? title.toLowerCase().replace(/\s+/g, '_')
+						: 'chart';
+					a.href = url;
+					a.download = `${slug}.png`;
+					a.click();
+					URL.revokeObjectURL(url);
+				});
+		},
 		downloadSVG() {
 			const context = getContext();
 			const { id } = context;
 			const controllerEl = document.getElementById(id);
 			const svg = controllerEl.querySelector('svg');
-			svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-			svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-			const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });
+			const resolvedSvg = resolveLightDarkInSVG(svg);
+			resolvedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+			resolvedSvg.setAttribute(
+				'xmlns:xlink',
+				'http://www.w3.org/1999/xlink'
+			);
+			const blob = new Blob([resolvedSvg.outerHTML], {
+				type: 'image/svg+xml',
+			});
 			const url = URL.createObjectURL(blob);
 			const downloadLink = document.createElement('a');
 			downloadLink.href = url;

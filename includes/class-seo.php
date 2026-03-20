@@ -141,11 +141,17 @@ class SEO {
 		if ( ! is_singular( 'chart' ) ) {
 			return $image;
 		}
-		$id     = $post->ID;
-		$png_id = $this->get_chart_attribute( $id, 'pngId' );
-		$image  = wp_get_attachment_url( $png_id );
 
-		return $image;
+		// Post meta is set by the async PNG export pipeline and is authoritative.
+		$png_url = get_post_meta( $post->ID, '_chart_png_url', true );
+		if ( $png_url ) {
+			return $png_url;
+		}
+
+		// Fall back to the block attribute path (covers dynamic charts or
+		// charts that haven't been through the export pipeline yet).
+		$png_id = $this->get_chart_attribute( $post->ID, 'pngId' );
+		return $png_id ? wp_get_attachment_url( $png_id ) : $image;
 	}
 
 	/**

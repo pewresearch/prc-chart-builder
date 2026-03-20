@@ -11,6 +11,33 @@ import { uploadMedia } from '@wordpress/media-utils';
 import html2canvas from 'html2canvas';
 
 /**
+ * Resolve light-dark() CSS function values in SVG presentation attributes.
+ *
+ * SVG path fill/stroke attributes don't support CSS color functions like
+ * light-dark(), so browsers render them as black. This clones the SVG and
+ * replaces every light-dark(light, dark) attribute value with the light value,
+ * making the exported SVG self-contained and renderable everywhere.
+ *
+ * @param {SVGSVGElement} svg
+ * @return {SVGSVGElement} A cloned SVG with resolved color attributes.
+ */
+function resolveLightDarkInSVG(svg) {
+	const clone = svg.cloneNode(true);
+	const LIGHT_DARK_RE = /light-dark\(\s*([^,]+?)\s*,\s*[^)]+?\s*\)/gi;
+	const ATTRS_TO_CHECK = ['fill', 'stroke', 'color', 'stop-color'];
+	clone.querySelectorAll('*').forEach((el) => {
+		ATTRS_TO_CHECK.forEach((attr) => {
+			const val = el.getAttribute(attr);
+			if (val && LIGHT_DARK_RE.test(val)) {
+				LIGHT_DARK_RE.lastIndex = 0;
+				el.setAttribute(attr, val.replace(LIGHT_DARK_RE, '$1'));
+			}
+		});
+	});
+	return clone;
+}
+
+/**
  * Create a hash of block attributes for change detection
  * Only includes attributes that affect chart rendering
  *
@@ -41,11 +68,17 @@ export function createAttributesHash(attributes) {
  * @param {string} clientId - The block client ID
  * @return {HTMLElement|null} The block element or null if not found
  */
+
+// additionally, make sure never to return an element from the Overview tree (.block-editor-list-view-leaf)
 export const getBlockElement = (clientId) => {
+	let blockEl = null;
 	// Strategy 1: Try standard selectors in current document
-	let blockEl =
+	blockEl =
 		document.getElementById(`block-${clientId}`) ||
 		document.querySelector(`[data-block="${clientId}"]`);
+	if (blockEl && blockEl.closest('.block-editor-list-view-leaf')) {
+		blockEl = null;
+	}
 
 	// Strategy 2: Check iframes (for site editor)
 	if (!blockEl) {
@@ -158,13 +191,13 @@ export const uploadChartImage = ({
 								svgId: fileObj.id,
 								svgGeneratedAt: new Date().toISOString(),
 								svgAttributesHash: attributesHash,
-							}
+						  }
 						: {
 								pngUrl: fileObj.url,
 								pngId: fileObj.id,
 								pngGeneratedAt: new Date().toISOString(),
 								pngAttributesHash: attributesHash,
-							}),
+						  }),
 				},
 			};
 
@@ -214,7 +247,9 @@ export const createSVG = ({
 		return;
 	}
 
-	const svg = blockEl.querySelector('svg');
+	// that may be present in the editor UI (e.g. Document Overview caret icons).
+	const chartContainer = blockEl.querySelector('.cb__chart') || blockEl;
+	const svg = chartContainer.querySelector('svg');
 	if (!svg) {
 		const error = new Error('SVG element not found within block');
 		// eslint-disable-next-line no-console
@@ -223,9 +258,10 @@ export const createSVG = ({
 		return;
 	}
 
-	svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-	svg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
-	const blob = new Blob([svg.outerHTML], { type: 'image/svg+xml' });
+	const resolvedSvg = resolveLightDarkInSVG(svg);
+	resolvedSvg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+	resolvedSvg.setAttribute('xmlns:xlink', 'http://www.w3.org/1999/xlink');
+	const blob = new Blob([resolvedSvg.outerHTML], { type: 'image/svg+xml' });
 
 	if (upload) {
 		uploadChartImage({

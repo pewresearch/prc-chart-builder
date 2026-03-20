@@ -27,7 +27,14 @@ import HideTableHandler from './hide-table-handler';
 import Placeholder from './placeholder';
 
 export default function Edit({ attributes, setAttributes, clientId }) {
-	const { id, tabsActive, shareActive, align, chartType } = attributes;
+	const {
+		id,
+		tabsActive,
+		shareActive,
+		align,
+		chartType,
+		enableSchemaOutput,
+	} = attributes;
 
 	// Track if we've already initialized the ID in this component lifecycle
 	// This prevents repeated setAttributes calls when the component remounts
@@ -291,6 +298,18 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 						onChange={() =>
 							setAttributes({
 								shareActive: !shareActive,
+							})
+						}
+					/>
+					<ToggleControl
+						label={__('Include in structured data (schema.org)')}
+						help={__(
+							"When enabled, this chart will be included in the page's JSON-LD schema as a Dataset. Disable for decorative or supplementary charts that should not appear in search results."
+						)}
+						checked={enableSchemaOutput}
+						onChange={() =>
+							setAttributes({
+								enableSchemaOutput: !enableSchemaOutput,
 							})
 						}
 					/>

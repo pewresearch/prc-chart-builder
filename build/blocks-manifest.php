@@ -762,6 +762,10 @@ return array(
 				'type' => 'boolean',
 				'default' => true
 			),
+			'enableSchemaOutput' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
 			'chartPreformattedData' => array(
 				'type' => 'array'
 			),

@@ -40,7 +40,7 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 	.wp-chart-builder-table {
 		display: none;
 		&.active {
-			display: inline-block;
+			display: block;
 			position: relative;
 			width: 100%;
 			height: auto;
@@ -51,6 +51,27 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 			align-items: center;
 		}
 	}
+	// When the PNG fallback is showing (JS hasn't hydrated yet), hide the
+	// PHP-rendered metadata — it's already baked into the PNG itself.
+	// Only applies when a real PNG exists (.chart-fallback--png), not the
+	// placeholder, so charts without a PNG still show their metadata.
+	.wp-chart-builder-inner:has(.chart-fallback--png) {
+		.cb__title,
+		.cb__subtitle,
+		.cb__note,
+		.cb__tag,
+		.cb__hr {
+			display: none;
+		}
+	}
+
+	// Placeholder shown before JS hydrates when no server PNG exists yet.
+	.chart-fallback--placeholder {
+		background-color: var(--wp--preset--color--ui-beige-very-light);
+		border-radius: 3px;
+		width: 100%;
+	}
+
 	.cb__hr {
 		height: 1px;
 		background-color: $gray-very-dark;
@@ -71,7 +92,7 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		color: $gray-very-dark !important;
 		font-style: italic !important;
 		font-family: $georgia !important;
-		margin-bottom: 20px;
+		margin-bottom: 4px;
 	}
 	.cb__download-data-button-hr {
 		margin: 5px 0px 10px;
@@ -100,7 +121,7 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		line-height: 125%;
 		color: $gray !important;
 		font-family: var(--wp--preset--font-family--sans-serif) !important;
-		margin-top: 20px;
+		margin-top: 4px;
 		&.cb__note--question-wording {
 			margin: 10px 0 !important;
 		}
@@ -134,24 +155,26 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 			max-width: 100%;
 			overflow-y: scroll;
 			overflow-x: scroll;
-			border-bottom: 1px #e5e5e5 !important;
+			border-bottom: 1px var(--wp--preset--color--ui-gray-light) !important;
 			tr th {
 				font-family: $franklin !important;
 				font-weight: 700 !important;
-				background-color: #fff !important;
-				font-size: 13px;
+				background-color: var(--wp--preset--color--ui-white) !important;
+				font-size: 13px !important;
 				border: none !important;
-				border-bottom: 1px dotted #e5e5e5 !important;
+				border-bottom: 1px dotted
+					var(--wp--preset--color--ui-gray-light) !important;
 			}
 			tr td:first-child,
 			tr th:first-child {
-				background-color: #fff !important;
+				background-color: var(--wp--preset--color--ui-white) !important;
 			}
 			tr td {
 				font-family: $franklin !important;
 				font-size: 13px !important;
 				border: none !important;
-				border-bottom: 1px dotted #e5e5e5 !important;
+				border-bottom: 1px dotted
+					var(--wp--preset--color--ui-gray-light) !important;
 			}
 		}
 	}
@@ -161,7 +184,7 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		position: absolute;
 		top: 0;
 		left: 0;
-		background-color: rgba(0, 0, 0, 0.2);
+		background-color: var(--wp--preset--color--ui-gray-dark);
 		z-index: 999;
 		display: flex;
 		justify-content: center;
@@ -201,10 +224,10 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		}
 	}
 	.share-modal__inner {
-		border: 1px solid #dadbdb;
+		border: 1px solid var(--wp--preset--color--ui-gray-light);
 		border-radius: 3px;
 		box-shadow: 0px 0px 2px 0px #63646480;
-		background-color: #fff;
+		background-color: var(--wp--preset--color--white);
 		padding: 20px;
 		display: flex;
 		flex-direction: column;
@@ -218,7 +241,7 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 			right: 10px;
 			font-size: 20px;
 			line-height: 100%;
-			color: #636464;
+			color: var(--wp--preset--color--ui-gray-dark);
 			background-color: transparent;
 			border: none;
 			&:hover {
@@ -244,7 +267,7 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		}
 		.share-modal__button {
 			border-radius: 3px;
-			border: 1px solid #dadbdb;
+			border: 1px solid var(--wp--preset--color--ui-gray-light);
 			background-color: transparent;
 			transition: all 0.2s ease-in-out;
 			padding: 5px 10px;
@@ -254,10 +277,10 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 			font-weight: 500;
 			width: 200px;
 			&.share-modal__button--twitter {
-				color: #000;
+				color: var(--wp--preset--color--black);
 				&:hover {
 					background-color: #000;
-					color: #fff;
+					color: var(--wp--preset--color--white);
 					cursor: pointer;
 				}
 			}
@@ -265,7 +288,7 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 				color: $bluesky;
 				&:hover {
 					background-color: $bluesky;
-					color: #fff;
+					color: var(--wp--preset--color--white);
 					cursor: pointer;
 				}
 			}
@@ -274,7 +297,7 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 				transition: all 0.2s ease-in-out;
 				&:hover {
 					background-color: $facebook;
-					color: #fff;
+					color: var(--wp--preset--color--white);
 					cursor: pointer;
 				}
 			}
@@ -287,11 +310,53 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		}
 	}
 }
+.wp-chart-builder-context-menu {
+	position: fixed;
+	z-index: 9999;
+	background-color: var(--wp--preset--color--ui-white);
+	border: 1px solid var(--wp--preset--color--ui-gray-light);
+	border-radius: 5px;
+	padding: 4px 0;
+	min-width: 180px;
+	font-family: var(--wp--preset--font-family--sans-serif);
+	font-size: 13px;
+
+	&__item {
+		display: block;
+		width: 100%;
+		padding: 6px 16px;
+		text-align: left;
+		cursor: pointer;
+		color: var(--wp--preset--color--ui-text-color);
+		white-space: nowrap;
+		font-family: var(--wp--preset--font-family--sans-serif);
+		font-size: 13px;
+		line-height: 1.4;
+		background: none;
+		border: none;
+		&:hover {
+			background-color: var(--wp--preset--color--ui-link-color);
+			color: var(--wp--preset--color--white);
+		}
+	}
+}
+
+figure.wp-chart-builder {
+	margin: 0;
+}
+
 .wp-chart-builder-view-buttons {
 	display: flex;
-	justify-content: flex-end;
+	justify-content: space-between;
 	align-items: center;
 	margin-bottom: 1em;
+
+	&__tabs,
+	&__actions {
+		display: flex;
+		align-items: center;
+	}
+
 	button {
 		border: none;
 		background-color: transparent;
@@ -302,15 +367,17 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		font-family: $franklin !important;
 		line-height: 100%;
 		letter-spacing: 0.2px;
-		font-weight: 500;
-		width: 60px;
+		font-weight: normal;
 		text-wrap: nowrap;
+		width: auto;
+		height: 2em;
 		color: $thunder !important;
 		&:hover {
 			font-weight: 700;
 		}
 		&.active {
 			font-weight: 700;
+			background-color: var(--wp--preset--color--grey-spectrum-light-one);
 		}
 	}
 }
