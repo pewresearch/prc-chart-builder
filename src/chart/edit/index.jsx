@@ -5,8 +5,9 @@
 /**
  * WordPress Dependencies
  */
-// import { ResizableBox, Spinner } from '@wordpress/components';
+import { Notice } from '@wordpress/components';
 import { useSelect } from '@wordpress/data';
+import { __ } from '@wordpress/i18n';
 import {
 	useBlockProps,
 	useInnerBlocksProps,
@@ -27,8 +28,9 @@ import { memo, useEffect, useMemo, useState, useRef } from 'react';
 /**
  * Internal Dependencies
  */
-import { formatCellContent } from '../utils/helpers';
+import { formatCellContentTyped } from '../utils/helpers';
 import { mergeCustomLabelData } from '../utils/merge-custom-label-data';
+import { mergeCustomTooltipData } from '../utils/merge-custom-tooltip-data';
 import ChartControls from './chart-controls';
 import getConfig from '../utils/get-config';
 import CopyPasteStylesHandler from './copy-paste-styles-handler';
@@ -114,7 +116,7 @@ function EditInner({
 
 	// Memoized chartData with all label customizations merged in
 	// This merges labels.custom* attributes into chartData as __label* hidden attributes
-	const chartDataWithCustomizations = useMemo(
+	const chartDataWithLabelCustomizations = useMemo(
 		() =>
 			mergeCustomLabelData(
 				chartData,
@@ -134,6 +136,60 @@ function EditInner({
 			customStyles,
 			activeGroupBreaksCategory,
 		]
+	);
+
+	// Enrich chart data with __errorBars from column mappings (dot-plot only)
+	const isDotPlot = attrs?.layout?.type === 'dot-plot';
+	const errorBarsAttr = getCurrentValue('errorBars') || {};
+	const errorBarsCategories = errorBarsAttr.categories || {};
+	const errorBarsDefaultStyles = errorBarsAttr.defaultStyles || {};
+	const chartDataWithCustomizations = useMemo(() => {
+		const source = chartDataWithLabelCustomizations || chartData;
+		if (!isDotPlot || !errorBarsAttr.enabled || !source) return source;
+
+		const mappingEntries = Object.entries(errorBarsCategories);
+		if (mappingEntries.length === 0) return source;
+
+		return source.map((row) => {
+			const bars = {};
+			for (const [catKey, mapping] of mappingEntries) {
+				if (mapping.lowColumn && mapping.highColumn) {
+					const low = parseFloat(row[mapping.lowColumn]);
+					const high = parseFloat(row[mapping.highColumn]);
+					if (!isNaN(low) && !isNaN(high)) {
+						bars[catKey] = {
+							min: low,
+							max: high,
+							...errorBarsDefaultStyles,
+							...(mapping.styles || {}),
+						};
+					}
+				}
+			}
+			return Object.keys(bars).length > 0
+				? { ...row, __errorBars: bars }
+				: row;
+		});
+	}, [
+		chartDataWithLabelCustomizations,
+		chartData,
+		isDotPlot,
+		errorBarsAttr.enabled,
+		errorBarsCategories,
+		errorBarsDefaultStyles,
+	]);
+
+	// Merge customTooltips (top-level block attribute) as a final pass so it
+	// sees rows with any upstream label/errorBar customizations already applied.
+	const customTooltips = attrs.customTooltips || {};
+	const chartDataWithAllCustomizations = useMemo(
+		() =>
+			mergeCustomTooltipData(
+				chartDataWithCustomizations,
+				customTooltips,
+				activeGroupBreaksCategory
+			),
+		[chartDataWithCustomizations, customTooltips, activeGroupBreaksCategory]
 	);
 
 	// State for chart element customization popover (labels, shapes, etc.)
@@ -169,7 +225,14 @@ function EditInner({
 	// Get table data from the chart's own parent controller's innerBlocks.
 	// Each chart block is always bound to its nearest non-freeform controller.
 	// Table data is never inherited from ancestor controllers or external context.
-	const { tableData, parentBlockId, refId } = useSelect(
+	const {
+		tableData,
+		columnMeta,
+		tableIsValid,
+		tableValidationSchema,
+		parentBlockId,
+		refId,
+	} = useSelect(
 		(select) => {
 			const { getBlock, getBlockParentsByBlockName } =
 				select(blockEditorStore);
@@ -228,6 +291,9 @@ function EditInner({
 
 			return {
 				tableData: tableAttributes,
+				columnMeta: tableAttributes?.columnMeta || [],
+				tableIsValid: tableAttributes?.isValid ?? true,
+				tableValidationSchema: tableAttributes?.validationSchema || '',
 				parentBlockId: parentControllerId || controllerId,
 				refId: postId,
 			};
@@ -260,10 +326,12 @@ function EditInner({
 	// Static map for non-shape element types → panel ID
 	const ELEMENT_TYPE_TO_PANEL = {
 		[ELEMENT_TYPES.LABEL]: 'labels',
+		[ELEMENT_TYPES.NET_VALUE_LABEL]: 'netValues',
 		[ELEMENT_TYPES.SEGMENT]: 'line',
 		[ELEMENT_TYPES.REGRESSION]: 'regression',
 		[ELEMENT_TYPES.ANNOTATION]: 'annotations',
 		[ELEMENT_TYPES.LEGEND_ITEM]: 'legend',
+		[ELEMENT_TYPES.ERROR_BAR]: 'dotPlot',
 	};
 
 	// Handle element click for customization popover (labels, shapes, segments, annotations, tick labels, etc.)
@@ -364,6 +432,15 @@ function EditInner({
 		}
 	};
 
+	// Handle error bar customization updates from popover
+	const handleErrorBarCustomizationUpdate = (updates) => {
+		if (updates.customStyles !== undefined) {
+			updateAttributeForDevice('errorBars', {
+				customStyles: updates.customStyles,
+			});
+		}
+	};
+
 	// Handle segment customization updates from popover
 	const handleSegmentCustomizationUpdate = (updates) => {
 		// Merge updates into the shapes.segmentStyles attribute viewport-aware
@@ -437,6 +514,16 @@ function EditInner({
 		}
 	};
 
+	// Handle per-element tooltip customization updates from popover.
+	// customTooltips is a flat top-level object attribute (not viewport-aware —
+	// tooltip content is the same across viewports), so we use setAttributes
+	// directly to allow deletions to propagate (spread-merge would mask them).
+	const handleTooltipCustomizationUpdate = (updates) => {
+		if (updates.customTooltips !== undefined) {
+			setAttributes({ customTooltips: updates.customTooltips });
+		}
+	};
+
 	// Handle tick label customization updates from popover
 	const handleTickLabelCustomizationUpdate = (updates) => {
 		const current = getCurrentValue('customTickLabels') || {
@@ -470,6 +557,9 @@ function EditInner({
 		if (elementType === ELEMENT_TYPES.SHAPE) {
 			return handleShapeCustomizationUpdate;
 		}
+		if (elementType === ELEMENT_TYPES.ERROR_BAR) {
+			return handleErrorBarCustomizationUpdate;
+		}
 		if (elementType === ELEMENT_TYPES.SEGMENT) {
 			return handleSegmentCustomizationUpdate;
 		}
@@ -502,6 +592,12 @@ function EditInner({
 				getCurrentValue('shapes', 'customStyles') || {};
 			return {
 				customStyles: shapeCustomStyles,
+			};
+		}
+		if (elementType === ELEMENT_TYPES.ERROR_BAR) {
+			return {
+				customStyles:
+					getCurrentValue('errorBars', 'customStyles') || {},
 			};
 		}
 		if (elementType === ELEMENT_TYPES.SEGMENT) {
@@ -549,6 +645,7 @@ function EditInner({
 				deviceType,
 				getCurrentValue,
 				updateAttributeForDevice,
+				setAttributes,
 				toggleSelection,
 				setAlignments, // Pass alignment setter (stable reference)
 				setIsDragging, // Pass drag state setter (stable reference)
@@ -560,6 +657,7 @@ function EditInner({
 			deviceType,
 			getCurrentValue,
 			updateAttributeForDevice,
+			setAttributes,
 			toggleSelection,
 		] // setAlignments, setIsDragging, handleElementClick intentionally excluded
 	);
@@ -614,9 +712,11 @@ function EditInner({
 					const key = 0 === index ? 'x' : headers[index];
 					return {
 						...acc,
-						[key]: formatCellContent(
+						[key]: formatCellContentTyped(
 							getCellContent(cell),
 							key,
+							columnMeta,
+							index,
 							mapScale,
 							groupBreaksCategory,
 							dataRender?.xScale,
@@ -629,6 +729,7 @@ function EditInner({
 		[
 			body,
 			headers,
+			columnMeta,
 			mapScale,
 			groupBreaksCategory,
 			dataRender?.xScale,
@@ -636,6 +737,13 @@ function EditInner({
 			preserveStringKeys,
 		]
 	);
+
+	// Determine whether the sibling table has meaningful validation configured.
+	// If it does but the table is invalid, we hold the last known-good chart data.
+	const hasValidation =
+		columnMeta.some((m) => m?.dataType && m.dataType !== 'auto') ||
+		!!tableValidationSchema;
+	const shouldSync = !hasValidation || tableIsValid;
 
 	// Track if initial data sync has completed to prevent loops during entity initialization
 	const hasCompletedInitialDataSync = useRef(false);
@@ -645,6 +753,9 @@ function EditInner({
 			return;
 		}
 		if (!memoizedChartData || memoizedChartData.length === 0) {
+			return;
+		}
+		if (!shouldSync) {
 			return;
 		}
 
@@ -695,7 +806,7 @@ function EditInner({
 		// when controller ID changed during entity initialization.
 		// This effect should only run when actual table data changes.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [headers, memoizedChartData, setAttributes]);
+	}, [headers, memoizedChartData, shouldSync, setAttributes]);
 
 	const blockProps = useBlockProps({
 		className: 'active',
@@ -746,6 +857,14 @@ function EditInner({
 				attributes={attrs}
 				setAttributes={setAttributes}
 			/>
+			{hasValidation && !tableIsValid && (
+				<Notice status="warning" isDismissible={true}>
+					{__(
+						'The source table has validation errors. The chart is showing the last valid data.',
+						'prc-chart-builder'
+					)}
+				</Notice>
+			)}
 			<div {...blockProps}>
 				<figure>
 					<ChartBuilderTextWrapper
@@ -765,11 +884,28 @@ function EditInner({
 						{!isStaticChart &&
 							!isFreeformChart &&
 							memoizedChartData && (
-								<div style={{ position: 'relative' }}>
+								<div
+									style={{ position: 'relative' }}
+									onClick={(event) => {
+										if (!selectedElement) return;
+										// Close the popover when clicking the chart background,
+										// but not when clicking a label, shape, or the popover itself.
+										const isLabel =
+											event.target.closest?.('text');
+										const isPopover =
+											event.target.closest?.(
+												'.components-popover'
+											);
+										if (!isLabel && !isPopover) {
+											handlePopoverClose();
+										}
+									}}
+								>
 									<MemoizedChartBuilder
 										className="cb__chart"
 										config={config}
 										data={
+											chartDataWithAllCustomizations ||
 											chartDataWithCustomizations ||
 											memoizedChartData
 										}
@@ -845,6 +981,13 @@ function EditInner({
 												selectedElement.elementType,
 												selectedElement
 											)}
+											currentTooltipCustomizations={{
+												customTooltips:
+													attrs?.customTooltips || {},
+											}}
+											onTooltipUpdate={
+												handleTooltipCustomizationUpdate
+											}
 											onDelete={
 												selectedElement.elementType ===
 												ELEMENT_TYPES.ANNOTATION

@@ -84,6 +84,7 @@ const getConfig = (
 		customTickLabels,
 		customLegendLabels,
 		diffColumn,
+		netValues,
 		dataRender,
 		legend,
 		nodes,
@@ -91,6 +92,7 @@ const getConfig = (
 		treemap,
 		sankey,
 		regression,
+		errorBars,
 	} = mergedAttributes;
 	const {
 		customColors,
@@ -139,7 +141,7 @@ const getConfig = (
 			? stringToArray(dependentAxis.tickValues)
 			: stringToArrayOfNums(dependentAxis.tickValues);
 
-	return {
+	const renderedConfig = {
 		...baseConfig,
 		layout: {
 			...baseConfig.layout,
@@ -395,12 +397,28 @@ const getConfig = (
 				),
 			},
 		},
+		errorBars: {
+			...baseConfig.errorBars,
+			...errorBars,
+			defaultStyles: {
+				...baseConfig.errorBars?.defaultStyles,
+				...errorBars?.defaultStyles,
+				stroke: resolveColor(
+					errorBars?.defaultStyles?.stroke ??
+						baseConfig.errorBars?.defaultStyles?.stroke
+				),
+			},
+		},
 		pie: {
 			...baseConfig.pie,
 			...pie,
-			hasPathStroke: elementHasStroke,
+			// Prefer pie-specific attribute (pie-controls.jsx "Show Slice Stroke"),
+			// fall back to legacy io.elementHasStroke toggle from color-controls.jsx
+			// for backward compatibility with blocks saved before the pie control existed.
+			hasPathStroke: pie?.hasPathStroke ?? elementHasStroke ?? false,
 			pathStrokeColor: resolveColor(pie?.pathStrokeColor ?? 'white'),
-			pathStrokeWidth: 1,
+			pathStrokeWidth:
+				pie?.pathStrokeWidth ?? baseConfig.pie?.pathStrokeWidth ?? 1,
 			groupArcStyle: {
 				...baseConfig.pie.groupArcStyle,
 				...pie?.groupArcStyle,
@@ -432,7 +450,11 @@ const getConfig = (
 		labels: {
 			...baseConfig.labels,
 			...labels,
-			color: resolveColor(labels.color ?? baseConfig.labels?.color),
+			// Pass color as-is: getBarLabelFill() in charting-utilities expects the
+			// raw semantic token ('contrast' | 'black' | 'white' | 'inherit') to
+			// branch its logic. Resolving it here to a light-dark() string breaks
+			// the === comparisons inside getBarLabelFill.
+			color: labels.color ?? baseConfig.labels?.color ?? 'inherit',
 		},
 		shapes: {
 			customStyles: shapes?.customStyles || {},
@@ -475,6 +497,24 @@ const getConfig = (
 				),
 			},
 		},
+		netValues: {
+			...baseConfig.netValues,
+			...netValues,
+			positive: {
+				...baseConfig.netValues.positive,
+				...netValues?.positive,
+				color:
+					netValues?.positive?.color ??
+					baseConfig.netValues?.positive?.color,
+			},
+			negative: {
+				...baseConfig.netValues.negative,
+				...netValues?.negative,
+				color:
+					netValues?.negative?.color ??
+					baseConfig.netValues?.negative?.color,
+			},
+		},
 		custom: {
 			isCustomChart,
 			attributes: {
@@ -498,6 +538,7 @@ const getConfig = (
 			items: drawings || [],
 		},
 	};
+	return renderedConfig;
 };
 
 export default getConfig;

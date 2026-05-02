@@ -19,6 +19,7 @@ import { PanelColorSettings } from '@wordpress/block-editor';
 
 import { useShapeCustomizations } from '../hooks';
 import { generateElementKey } from '../utils';
+import { TooltipPanelSection } from './TooltipPanelSection';
 
 /**
  * ShapePanel Component
@@ -30,6 +31,8 @@ import { generateElementKey } from '../utils';
  * @param {string|null} props.groupValue            - The group value (when groupBreaksActive), or null
  * @param {Object}      props.currentCustomizations - Current customizations
  * @param {Function}    props.onUpdate              - Callback to update
+ * @param {Object}      props.currentTooltipCustomizations - { customTooltips }
+ * @param {Function}    props.onTooltipUpdate       - Callback to update customTooltips
  */
 export function ShapePanel({
 	dataPoint,
@@ -38,8 +41,11 @@ export function ShapePanel({
 	groupValue = null,
 	currentCustomizations = {},
 	onUpdate,
+	currentTooltipCustomizations = {},
+	onTooltipUpdate,
 }) {
 	const shapeKey = generateElementKey(dataPoint.x, category, groupValue);
+	const defaultTooltipHeader = '';
 
 	const {
 		fill,
@@ -130,6 +136,15 @@ export function ShapePanel({
 				>
 					{__('Reset to defaults', 'prc-chart-builder')}
 				</Button>
+			)}
+
+			{onTooltipUpdate && (
+				<TooltipPanelSection
+					tooltipKey={shapeKey}
+					currentCustomizations={currentTooltipCustomizations}
+					onUpdate={onTooltipUpdate}
+					defaultHeader={defaultTooltipHeader}
+				/>
 			)}
 		</VStack>
 	);

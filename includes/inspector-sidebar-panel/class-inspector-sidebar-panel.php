@@ -90,7 +90,20 @@ class Inspector_Sidebar_Panel {
 		$posts_data = array();
 		foreach ( $referencing_post_ids as $post_id ) {
 			$post = get_post( $post_id );
+			// Skip if the post is not found.
 			if ( ! $post ) {
+				continue;
+			}
+			// Skip if the post is in the trash.
+			if ( 'trash' === $post->post_status ) {
+				continue;
+			}
+			// Skip if the post is a revision.
+			if ( wp_is_post_revision( $post_id ) ) {
+				continue;
+			}
+			// Skip if the post is an autosave.
+			if ( wp_is_post_autosave( $post_id ) ) {
 				continue;
 			}
 

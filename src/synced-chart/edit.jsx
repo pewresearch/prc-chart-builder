@@ -3,12 +3,11 @@
 /**
  * WordPress Dependencies
  */
-import { useMemo } from '@wordpress/element';
-import { __ } from '@wordpress/i18n';
-import { Notice, withNotices, KeyboardShortcuts } from '@wordpress/components';
+import { useMemo, useEffect } from '@wordpress/element';
+import { __, sprintf } from '@wordpress/i18n';
+import { Notice, withNotices, Disabled } from '@wordpress/components';
 import { useEntityBlockEditor, useEntityRecord } from '@wordpress/core-data';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { useCommand } from '@wordpress/commands';
 import {
 	useInnerBlocksProps,
 	RecursionProvider,
@@ -23,9 +22,36 @@ import {
  */
 import Controls from './controls';
 import Placeholder from './placeholder';
-import controllerStore from '../controller/store';
+import useChartPresence from './use-chart-presence';
 
-function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
+/**
+ * Maps stable panel ids from `useFocusedPanel(panelId)` to user-facing labels.
+ * Unknown ids (including localized title-text fallbacks from panels that don't
+ * use `useFocusedPanel`) are passed through unchanged.
+ */
+const PANEL_LABELS = {
+	annotations: __('Annotations', 'prc-chart-builder'),
+	bar: __('Bar', 'prc-chart-builder'),
+	colors: __('Colors', 'prc-chart-builder'),
+	dependentAxis: __('Dependent Axis', 'prc-chart-builder'),
+	independentAxis: __('Independent Axis', 'prc-chart-builder'),
+	labels: __('Labels', 'prc-chart-builder'),
+	legend: __('Legend', 'prc-chart-builder'),
+	line: __('Line', 'prc-chart-builder'),
+	map: __('Map', 'prc-chart-builder'),
+	netValues: __('Net Values', 'prc-chart-builder'),
+	nodes: __('Nodes', 'prc-chart-builder'),
+	pie: __('Pie', 'prc-chart-builder'),
+	regression: __('Regression', 'prc-chart-builder'),
+	sankey: __('Sankey', 'prc-chart-builder'),
+	treemap: __('Treemap', 'prc-chart-builder'),
+};
+
+function panelLabel(id) {
+	return PANEL_LABELS[id] || id;
+}
+
+function SyncedChartEdit({ attributes, setAttributes, clientId }) {
 	const { ref } = attributes;
 	const isNew = !ref;
 
@@ -49,97 +75,114 @@ function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
 		{ id: effectiveRef }
 	);
 
-	// Get the controller block's id attribute for keyboard shortcuts
-	const controllerId = useMemo(() => {
-		const controllerBlock = blocks?.find(
-			(block) => block.name === 'prc-chart-builder/controller'
-		);
-		return controllerBlock?.attributes?.id;
-	}, [blocks]);
+	const { isLocked, editors } = useChartPresence(effectiveRef);
 
-	const { set } = useDispatch('core/preferences');
-	const { toggleAllTableVisibility } = useDispatch(controllerStore);
+	// Resolve the controller's clientId so we can apply the editing mode to it
+	// (and its descendants) rather than to the synced-chart wrapper itself.
+	// This keeps the wrapper selectable/deletable while locking the inner content.
+	const controllerClientId = useSelect(
+		(select) =>
+			select('core/block-editor')
+				.getBlocks(clientId)
+				?.find((b) => b.name === 'prc-chart-builder/controller')
+				?.clientId,
+		[clientId]
+	);
 
-	const { userHidesThisTable, tempHideAllTables, hasChildSelected } =
-		useSelect(
-			(select) => {
-				const { get } = select('core/preferences');
-				const { getAllTableVisibility } = select(controllerStore);
-				const { hasSelectedInnerBlock } = select('core/block-editor');
-				const persistentHiddenTables = get(
-					'prc-chart-builder/controller',
-					'persistentHiddenTables'
-				);
+	const { setBlockEditingMode, unsetBlockEditingMode } =
+		useDispatch('core/block-editor');
 
-				return {
-					userHidesThisTable:
-						persistentHiddenTables &&
-						controllerId &&
-						persistentHiddenTables.includes(controllerId),
-					tempHideAllTables: getAllTableVisibility(),
-					hasChildSelected: hasSelectedInnerBlock(clientId, true),
-				};
-			},
-			[controllerId, clientId]
-		);
-
-	// Register the command for hiding/showing all tables
-	useCommand({
-		name: 'prc-chart-builder/synced-chart-toggle-all-tables',
-		label: tempHideAllTables
-			? __('Show ALL Tables (Temporary)')
-			: __('Hide ALL Tables (Temporary)'),
-		callback: ({ close }) => {
-			toggleAllTableVisibility();
-			close();
-		},
-	});
-
-	const handlePersistentTableVisibility = () => {
-		if (!controllerId) {
-			return;
-		}
-
-		const { get } = wp.data.select('core/preferences');
-		const persistentHiddenTables = get(
-			'prc-chart-builder/controller',
-			'persistentHiddenTables'
-		);
-
-		if (userHidesThisTable) {
-			// Show this table
-			const newHiddenTables = persistentHiddenTables.filter(
-				(tableId) => tableId !== controllerId
-			);
-			set('prc-chart-builder/controller', 'persistentHiddenTables', [
-				...newHiddenTables,
-			]);
-		} else if (!persistentHiddenTables) {
-			set('prc-chart-builder/controller', 'persistentHiddenTables', [
-				controllerId,
-			]);
+	useEffect(() => {
+		if (!controllerClientId) return;
+		if (isLocked) {
+			setBlockEditingMode(controllerClientId, 'disabled');
 		} else {
-			const newHiddenTables = [...persistentHiddenTables, controllerId];
-			set('prc-chart-builder/controller', 'persistentHiddenTables', [
-				...newHiddenTables,
-			]);
+			unsetBlockEditingMode(controllerClientId);
 		}
-	};
+		return () => unsetBlockEditingMode(controllerClientId);
+	}, [
+		isLocked,
+		controllerClientId,
+		setBlockEditingMode,
+		unsetBlockEditingMode,
+	]);
 
-	const handleTemporaryTableVisibility = () => {
-		toggleAllTableVisibility();
-	};
+	const lockMessage = useMemo(() => {
+		if (!isLocked || !editors.length) return null;
+		if (editors.length === 1) {
+			const { displayName, data } = editors[0];
+
+			// Panel-level granularity wins when we have it.
+			if (data?.panel) {
+				return sprintf(
+					/* translators: 1: display name of the user editing, 2: inspector panel name */
+					__(
+						'%1$s is editing the %2$s panel. Changes are disabled.',
+						'prc-chart-builder'
+					),
+					displayName,
+					panelLabel(data.panel)
+				);
+			}
+
+			// Fall back to coarse section-level labels.
+			switch (data?.section) {
+				case 'data':
+					return sprintf(
+						/* translators: %s: display name of the user currently editing the chart */
+						__(
+							'%s is editing the data table. Changes are disabled.',
+							'prc-chart-builder'
+						),
+						displayName
+					);
+				case 'controls':
+					return sprintf(
+						/* translators: %s: display name of the user currently editing the chart */
+						__(
+							'%s is adjusting chart settings. Changes are disabled.',
+							'prc-chart-builder'
+						),
+						displayName
+					);
+				case 'chart':
+				default:
+					return sprintf(
+						/* translators: %s: display name of the user currently editing the chart */
+						__(
+							'%s is editing this chart. Changes are disabled.',
+							'prc-chart-builder'
+						),
+						displayName
+					);
+			}
+		}
+		const names = editors.map((e) => e.displayName);
+		const last = names.pop();
+		return sprintf(
+			/* translators: 1: comma-separated list of names, 2: last name in the list */
+			__(
+				'%1$s and %2$s are editing this chart. Changes are disabled.',
+				'prc-chart-builder'
+			),
+			names.join(', '),
+			last
+		);
+	}, [isLocked, editors]);
 
 	const blockProps = useBlockProps();
 
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
 		value: blocks,
-		onInput,
-		onChange,
+		onInput: isLocked ? () => {} : onInput,
+		onChange: isLocked ? () => {} : onChange,
 		allowedBlocks: ['prc-chart-builder/controller'],
-		renderAppender: blocks?.length
-			? undefined
-			: InnerBlocks.ButtonBlockAppender,
+		renderAppender:
+			!isLocked && blocks?.length
+				? undefined
+				: isLocked
+					? false
+					: InnerBlocks.ButtonBlockAppender,
 	});
 
 	if (hasAlreadyRendered) {
@@ -178,16 +221,32 @@ function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
 		);
 	}
 
-	// Only bind keyboard shortcuts when the synced chart itself is selected,
-	// not when a child block (like controller) is selected.
-	// This allows the controller's own keyboard shortcuts to work.
-	const keyboardShortcuts =
-		isSelected && !hasChildSelected
-			? {
-					'option+shift+h': () => handlePersistentTableVisibility(),
-					'option+h': () => handleTemporaryTableVisibility(),
-				}
-			: {};
+	if (isLocked) {
+		return (
+			<RecursionProvider uniqueId={effectiveRef}>
+				<Notice
+					status="warning"
+					isDismissible={false}
+					className="synced-chart-presence-lock__notice"
+				>
+					{lockMessage}
+				</Notice>
+				<Controls
+					{...{
+						attributes,
+						clientId,
+						blocks,
+						effectiveRef,
+						isForkActive,
+						isLocked,
+					}}
+				/>
+				<Disabled>
+					<div {...innerBlocksProps} />
+				</Disabled>
+			</RecursionProvider>
+		);
+	}
 
 	return (
 		<RecursionProvider uniqueId={effectiveRef}>
@@ -203,11 +262,10 @@ function SyncedChartEdit({ attributes, setAttributes, clientId, isSelected }) {
 					blocks,
 					effectiveRef,
 					isForkActive,
+					isLocked: false,
 				}}
 			/>
-			<KeyboardShortcuts bindGlobal shortcuts={keyboardShortcuts}>
-				<div {...innerBlocksProps} />
-			</KeyboardShortcuts>
+			<div {...innerBlocksProps} />
 		</RecursionProvider>
 	);
 }

@@ -8,7 +8,6 @@ import { uploadMedia } from '@wordpress/media-utils';
 /**
  * External dependencies
  */
-import html2canvas from 'html2canvas';
 
 /**
  * Resolve light-dark() CSS function values in SVG presentation attributes.
@@ -153,7 +152,7 @@ export const uploadChartImage = ({
 	uploadMedia({
 		additionalData: {
 			meta: {
-				isChartBuilderImage: true,
+				prc_hide_media: true,
 			},
 		},
 		filesList: [
@@ -191,13 +190,13 @@ export const uploadChartImage = ({
 								svgId: fileObj.id,
 								svgGeneratedAt: new Date().toISOString(),
 								svgAttributesHash: attributesHash,
-						  }
+							}
 						: {
 								pngUrl: fileObj.url,
 								pngId: fileObj.id,
 								pngGeneratedAt: new Date().toISOString(),
 								pngAttributesHash: attributesHash,
-						  }),
+							}),
 				},
 			};
 
@@ -287,217 +286,4 @@ export const createSVG = ({
 		URL.revokeObjectURL(url);
 		if (onComplete) onComplete();
 	}
-};
-
-/**
- * Create a PNG from a chart block and upload to media library
- *
- * @param {Object}   options            Options
- * @param {string}   options.clientId   Block client ID
- * @param {Function} options.onStart    Callback when process starts
- * @param {Function} options.onComplete Callback when process completes (receives fileObj)
- * @param {Function} options.onError    Callback when an error occurs
- * @return {void}
- */
-export const createPNG = ({ clientId, onStart, onComplete, onError }) => {
-	if (onStart) onStart();
-
-	// Try to ensure the block is selected for better rendering
-	// This can help ensure all elements are properly rendered
-	try {
-		const { selectBlock } = dispatch('core/block-editor');
-		selectBlock(clientId);
-	} catch (e) {
-		// Non-critical if we can't select the block
-	}
-
-	// Give the block a moment to fully render if we just selected it
-	setTimeout(() => {
-		const blockEl = getBlockElement(clientId);
-		if (!blockEl) {
-			const error = new Error('Block element not found');
-			if (onError) onError(error);
-			return;
-		}
-
-		// Find chart elements using flexible selectors
-		const { chartEl, textWrapper, tag } = findChartElements(blockEl);
-
-		if (!tag) {
-			const error = new Error('Required element not found: .cb__tag');
-			// eslint-disable-next-line no-console
-			console.warn(error.message, {
-				clientId,
-				blockEl,
-				availableClasses: Array.from(
-					blockEl.querySelectorAll('[class]')
-				).map((el) => el.className),
-			});
-			if (onError) onError(error);
-			return;
-		}
-
-		if (!chartEl) {
-			const error = new Error(
-				'Chart container not found (.cb__text-wrapper or .cb__chart)'
-			);
-			// eslint-disable-next-line no-console
-			console.warn(error.message, {
-				clientId,
-				blockEl,
-				availableClasses: Array.from(
-					blockEl.querySelectorAll('[class]')
-				).map((el) => el.className),
-			});
-			if (onError) onError(error);
-			return;
-		}
-
-		// ResizableBox is optional - may not exist in all contexts
-		const resizerEl = blockEl.querySelector(
-			'.components-resizable-box__container'
-		);
-
-		// Store original values for restoration
-		const originalTagText = tag.innerHTML;
-		const originalStyles = {
-			padding: chartEl.style.padding,
-		};
-
-		// Prepare element for capture
-		tag.innerHTML = `© ${originalTagText}`;
-
-		// Add 48px padding for social media whitespace (better presentation on social platforms)
-		const socialPadding = '48px';
-		chartEl.style.padding = socialPadding;
-
-		// Apply letter-spacing to text elements for better readability in PNG
-		// Target specific text elements instead of entire chart
-		const textElements = chartEl.querySelectorAll(
-			'.cb__title, .cb__subtitle, .cb__note, .cb__source, .cb__tag'
-		);
-		const originalLetterSpacing = [];
-		textElements.forEach((el, index) => {
-			originalLetterSpacing[index] = el.style.letterSpacing;
-			el.style.letterSpacing = '0.5px';
-		});
-
-		if (resizerEl) {
-			resizerEl.classList.remove('has-show-handle');
-		}
-
-		// Restore function to clean up DOM changes
-		const restore = () => {
-			if (resizerEl) {
-				resizerEl.classList.add('has-show-handle');
-			}
-			chartEl.style.padding = originalStyles.padding;
-			// Restore letter-spacing to text elements
-			textElements.forEach((el, index) => {
-				el.style.letterSpacing = originalLetterSpacing[index];
-			});
-			tag.innerHTML = originalTagText;
-		};
-
-		// Allow DOM to settle before capture
-		setTimeout(() => {
-			// html2canvas will capture the element including its padding
-			// Use minimal buffer to avoid extra whitespace
-			html2canvas(chartEl, {
-				height: chartEl.scrollHeight + 10,
-				width: chartEl.scrollWidth + 10,
-				backgroundColor: '#ffffff', // Ensure white background
-			})
-				.then((canvas) => {
-					canvas.toBlob(
-						(blob) => {
-							uploadChartImage({
-								blob,
-								name: `chart-${clientId}-${Date.now()}.png`,
-								type: 'image/png',
-								clientId,
-								isSVG: false,
-								onSuccess: (fileObj) => {
-									restore();
-									if (onComplete) onComplete(fileObj);
-								},
-								onError: (error) => {
-									restore();
-									if (onError) onError(error);
-								},
-							});
-						},
-						'image/png',
-						1
-					);
-				})
-				.catch((error) => {
-					// eslint-disable-next-line no-console
-					console.error('Error creating canvas:', error);
-					restore();
-					if (onError) onError(error);
-				});
-		}, 1000);
-	}, 100); // Brief delay after selecting block
-};
-
-/**
- * Generate PNGs for multiple chart blocks
- *
- * @param {Object}   options            Options
- * @param {Array}    options.clientIds  Array of block client IDs
- * @param {Function} options.onProgress Callback for progress updates (receives { completed, total, currentClientId })
- * @param {Function} options.onComplete Callback when all charts are processed
- * @param {Function} options.onError    Callback when an error occurs
- * @return {void}
- */
-export const createPNGsForMultipleCharts = ({
-	clientIds,
-	onProgress,
-	onComplete,
-	onError,
-}) => {
-	if (!clientIds || clientIds.length === 0) {
-		if (onComplete) onComplete([]);
-		return;
-	}
-
-	const results = [];
-	let completed = 0;
-
-	const processNext = (index) => {
-		if (index >= clientIds.length) {
-			if (onComplete) onComplete(results);
-			return;
-		}
-
-		const clientId = clientIds[index];
-
-		if (onProgress) {
-			onProgress({
-				completed,
-				total: clientIds.length,
-				currentClientId: clientId,
-			});
-		}
-
-		createPNG({
-			clientId,
-			onComplete: (fileObj) => {
-				completed++;
-				results.push({ clientId, success: true, fileObj });
-				// Add longer delay between charts to ensure proper rendering
-				setTimeout(() => processNext(index + 1), 1500);
-			},
-			onError: (error) => {
-				completed++;
-				results.push({ clientId, success: false, error });
-				if (onError) onError(error, clientId);
-				// Continue with next chart even if one fails
-				setTimeout(() => processNext(index + 1), 1500);
-			},
-		});
-	};
-
-	processNext(0);
 };

@@ -53,6 +53,7 @@ const HEX_TO_LIGHT_DARK = new Map([
 	['#7591b7', 'light-dark(#7591B7, #476792)'],
 	['#9daecb', 'light-dark(#9DAECB, #374C70)'],
 	['#006699', 'light-dark(#006699, #56C7FF)'],
+	['#1F497D', 'light-dark(#1F497D, #4BC9FF)'],
 
 	// Gray Blue Spectrum (blue)
 	['#335062', 'light-dark(#335062, #8FB3C9)'],
@@ -158,7 +159,8 @@ const NAMED_COLOR_MAP = {
  * Normalized by stripping whitespace within the rgba() function.
  */
 const RGBA_MAP = {
-	'rgba(35,31,32,0.7)': 'light-dark(rgba(35, 31, 32, 0.7), rgba(217, 217, 217, 0.7))',
+	'rgba(35,31,32,0.7)':
+		'light-dark(rgba(35, 31, 32, 0.7), rgba(217, 217, 217, 0.7))',
 	'rgba(35,31,32,1)': 'light-dark(#2a2a2a, #d9d9d9)',
 };
 

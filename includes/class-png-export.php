@@ -8,9 +8,8 @@
  * media library as the chart's featured image and pre-JS fallback.
  *
  * Storage model:
- *  - _chart_png_attachment_id  Post meta on chart CPT post
- *  - _chart_png_url            Post meta on chart CPT post
- *  - _chart_attributes_hash    Post meta on chart CPT post (change detection)
+ *  - _thumbnail_id          WordPress featured image (set via set_post_thumbnail())
+ *  - _chart_attributes_hash Post meta on chart CPT post (change detection)
  *
  * @package PRC\Platform\Chart_Builder
  */
@@ -134,6 +133,22 @@ class PNG_Export {
 	}
 
 	/**
+	 * Build a safe filename stem from chart post title for PNG media uploads.
+	 * Strips punctuation; keeps letters, digits, hyphens, and underscores.
+	 *
+	 * @param string $raw Chart title or empty string.
+	 * @return string Non-empty slug.
+	 */
+	private function sanitize_png_filename_stem( string $raw ): string {
+		$s = strtolower( $raw );
+		$s = preg_replace( '/\s+/u', '_', $s );
+		$s = preg_replace( '/[^\p{L}\p{N}\-_]/u', '', $s );
+		$s = preg_replace( '/_+/u', '_', $s );
+		$s = preg_replace( '/^[\-_]+|[\-_]+$/u', '', $s );
+		return '' !== $s ? $s : 'chart';
+	}
+
+	/**
 	 * Compute a change-detection hash from chart block attributes.
 	 *
 	 * Strips image/export-related io keys that don't affect visual rendering
@@ -218,8 +233,8 @@ class PNG_Export {
 			return;
 		}
 
-		$new_hash     = $this->compute_attributes_hash( $chart_block['attrs'] ?? array() );
-		$stored_hash  = get_post_meta( $post_id, '_chart_attributes_hash', true );
+		$new_hash    = $this->compute_attributes_hash( $chart_block['attrs'] ?? array() );
+		$stored_hash = get_post_meta( $post_id, '_chart_attributes_hash', true );
 
 		// No change -- skip.
 		if ( $new_hash === $stored_hash ) {
@@ -267,7 +282,10 @@ class PNG_Export {
 		}
 
 		// Extract chart dimensions from block attributes.
-		$chart_block  = $this->get_chart_block( $post->post_content );
+		$chart_block = $this->get_chart_block( $post->post_content );
+		if ( null === $chart_block ) {
+			throw new \RuntimeException( 'Chart block not found in post content.' );
+		}
 		$layout       = $chart_block['attrs']['layout'] ?? array();
 		$chart_width  = isset( $layout['width'] ) ? (int) $layout['width'] : Screenshot_Service::DEFAULT_CHART_WIDTH;
 		$chart_height = isset( $layout['height'] ) ? (int) $layout['height'] : Screenshot_Service::DEFAULT_CHART_HEIGHT;
@@ -280,11 +298,13 @@ class PNG_Export {
 
 		if ( is_wp_error( $png_binary ) ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( sprintf(
-				'prc-chart-builder: PNG generation failed for post %d: %s',
-				$post_id,
-				$png_binary->get_error_message()
-			) );
+			error_log(
+				sprintf(
+					'prc-chart-builder: PNG generation failed for post %d: %s',
+					$post_id,
+					$png_binary->get_error_message()
+				)
+			);
 			throw new \RuntimeException( $png_binary->get_error_message() );
 		}
 
@@ -293,8 +313,11 @@ class PNG_Export {
 		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
 		file_put_contents( $tmp_file, $png_binary );
 
-		$file_array = array(
-			'name'     => sprintf( 'chart-%d-%d.png', $post_id, time() ),
+		$chart_title = isset( $chart_block['attrs']['metadata']['title'] ) ? (string) $chart_block['attrs']['metadata']['title'] : '';
+		$raw         = '' !== trim( $chart_title ) ? $chart_title : (string) $post->post_title;
+		$stem        = $this->sanitize_png_filename_stem( $raw );
+		$file_array  = array(
+			'name'     => sprintf( '%s-%d-%d.png', $stem, $post_id, time() ),
 			'tmp_name' => $tmp_file,
 			'type'     => 'image/png',
 			'error'    => 0,
@@ -309,30 +332,28 @@ class PNG_Export {
 
 		if ( is_wp_error( $attachment_id ) ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
-			error_log( sprintf(
-				'prc-chart-builder: media_handle_sideload failed for post %d: %s',
-				$post_id,
-				$attachment_id->get_error_message()
-			) );
+			error_log(
+				sprintf(
+					'prc-chart-builder: media_handle_sideload failed for post %d: %s',
+					$post_id,
+					$attachment_id->get_error_message()
+				)
+			);
 			throw new \RuntimeException( $attachment_id->get_error_message() );
 		}
 
-		// Flag attachment as a chart image so it's hidden from the media library UI.
-		update_post_meta( $attachment_id, 'isChartBuilderImage', true );
+		// Tag the attachment as hidden so it is excluded from the media library UI.
+		wp_set_object_terms( $attachment_id, 'hidden', '_media_visibility' );
 
 		// Delete the previous server-generated PNG attachment if one exists.
-		$previous_attachment_id = (int) get_post_meta( $post_id, '_chart_png_attachment_id', true );
+		$previous_attachment_id = (int) get_post_thumbnail_id( $post_id );
 		if ( $previous_attachment_id && $previous_attachment_id !== $attachment_id ) {
 			wp_delete_attachment( $previous_attachment_id, true );
 		}
 
-		// Persist meta.
-		$png_url = wp_get_attachment_url( $attachment_id );
-		update_post_meta( $post_id, '_chart_png_attachment_id', $attachment_id );
-		update_post_meta( $post_id, '_chart_png_url', $png_url );
 		update_post_meta( $post_id, '_chart_attributes_hash', $new_hash );
 
-		// Set as the chart post's featured image.
+		// The featured image is the canonical reference to the server-generated PNG.
 		set_post_thumbnail( $post_id, $attachment_id );
 	}
 }

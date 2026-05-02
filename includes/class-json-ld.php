@@ -290,7 +290,7 @@ class JSON_LD {
 		$table_block = $this->find_table_block( $controller_block );
 		$table_data  = null;
 		if ( $table_block && ! empty( $table_block['innerHTML'] ) ) {
-			$table_data = \PRC\Platform\Core\WP_HTML_Sub_Processors\parse_table_block_into_array( $table_block['innerHTML'] );
+			$table_data = \PRC\Html\parse_table_block_into_array( $table_block['innerHTML'] );
 		}
 
 		$image_url = $io['pngUrl'] ?? '';
@@ -305,6 +305,7 @@ class JSON_LD {
 			'note'           => wp_strip_all_tags( $metadata['note'] ?? '' ),
 			'source'         => wp_strip_all_tags( $metadata['source'] ?? '' ),
 			'tag'            => wp_strip_all_tags( $metadata['tag'] ?? '' ),
+			'alt_text'       => wp_strip_all_tags( $metadata['alt'] ?? '' ),
 			'chart_type'     => $chart_type,
 			'image_url'      => $image_url,
 			'table_data'     => $table_data,
@@ -383,7 +384,7 @@ class JSON_LD {
 
 				$table_data = null;
 				if ( $table_block && ! empty( $table_block['innerHTML'] ) ) {
-					$table_data = \PRC\Platform\Core\WP_HTML_Sub_Processors\parse_table_block_into_array( $table_block['innerHTML'] );
+					$table_data = \PRC\Html\parse_table_block_into_array( $table_block['innerHTML'] );
 				}
 
 				$image_url = $io['pngUrl'] ?? '';
@@ -391,20 +392,21 @@ class JSON_LD {
 					$image_url = wp_get_attachment_url( $io['pngId'] ) ?: '';
 				}
 
-				$results[] = array(
-					'post_id'        => 0,
-					'title'          => wp_strip_all_tags( $metadata['title'] ?? '' ),
-					'subtitle'       => wp_strip_all_tags( $metadata['subtitle'] ?? '' ),
-					'note'           => wp_strip_all_tags( $metadata['note'] ?? '' ),
-					'source'         => wp_strip_all_tags( $metadata['source'] ?? '' ),
-					'tag'            => wp_strip_all_tags( $metadata['tag'] ?? '' ),
-					'chart_type'     => $chart_type,
-					'image_url'      => $image_url,
-					'table_data'     => $table_data,
-					'permalink'      => $permalink,
-					'date_published' => $pub_date,
-					'date_modified'  => $mod_date,
-				);
+			$results[] = array(
+				'post_id'        => 0,
+				'title'          => wp_strip_all_tags( $metadata['title'] ?? '' ),
+				'subtitle'       => wp_strip_all_tags( $metadata['subtitle'] ?? '' ),
+				'note'           => wp_strip_all_tags( $metadata['note'] ?? '' ),
+				'source'         => wp_strip_all_tags( $metadata['source'] ?? '' ),
+				'tag'            => wp_strip_all_tags( $metadata['tag'] ?? '' ),
+				'alt_text'       => wp_strip_all_tags( $metadata['alt'] ?? '' ),
+				'chart_type'     => $chart_type,
+				'image_url'      => $image_url,
+				'table_data'     => $table_data,
+				'permalink'      => $permalink,
+				'date_published' => $pub_date,
+				'date_modified'  => $mod_date,
+			);
 				// Never recurse into a controller's children — freeform sub-charts
 				// are implementation details of the parent, not separate datasets.
 				continue;
@@ -563,6 +565,34 @@ class JSON_LD {
 	// ------------------------------------------------------------------
 
 	/**
+	 * Get permalinks of all published posts that reference a chart CPT.
+	 *
+	 * Uses the same synced-chart usage meta that powers the editor's
+	 * "Referencing Posts" sidebar panel, filtered to published posts only.
+	 *
+	 * @param int $chart_post_id Chart post ID.
+	 * @return string[] Array of permalink URLs (may be empty).
+	 */
+	private function get_published_referencing_urls( int $chart_post_id ): array {
+		$post_ids = Synced_Chart::get_chart_usage_post_ids( $chart_post_id );
+		if ( empty( $post_ids ) ) {
+			return array();
+		}
+
+		$urls = array();
+		foreach ( $post_ids as $ref_id ) {
+			if ( 'publish' === get_post_status( $ref_id ) ) {
+				$url = get_permalink( $ref_id );
+				if ( $url ) {
+					$urls[] = $url;
+				}
+			}
+		}
+
+		return $urls;
+	}
+
+	/**
 	 * Build a schema.org Dataset array for a single chart.
 	 *
 	 * @param array $chart_data Chart metadata from extract_chart_from_post().
@@ -577,22 +607,27 @@ class JSON_LD {
 		// Mirror the ARIA label pattern: "A {type} chart that shows {subtitle}".
 		// Falls back gracefully when either piece is missing.
 		$chart_type = $chart_data['chart_type'] ?? '';
+		$title      = $chart_data['title'] ?? '';
 		$subtitle   = $chart_data['subtitle'];
-		if ( $chart_type && $subtitle ) {
-			$description = sprintf( 'A %s chart that shows %s', $chart_type, $subtitle );
-		} elseif ( $subtitle ) {
-			$description = $subtitle;
+		$alt_text   = $chart_data['alt_text'] ?? '';
+		$tag        = $chart_data['tag'] ?: 'Pew Research Center';
+		if ( $alt_text ) {
+			$description = $alt_text;
 		} else {
-			// For inline charts (no CPT post), avoid get_the_title(0) which returns the blog name.
-			$fallback    = $has_cpt ? get_the_title( $post_id ) : '';
-			$description = ( $chart_data['title'] ?: $fallback ) . ' – data';
+			if ( $chart_type && $subtitle ) {
+				$description = sprintf( 'A %s chart that shows %s', $chart_type, $subtitle );
+			} elseif ( $subtitle ) {
+				$description = $subtitle;
+			} else {
+				$description = $title . ' – data.';
+			}
 		}
 
 		$dataset = array(
 			'@type'               => 'Dataset',
-			'name'                => $chart_data['title'] ?: ( $has_cpt ? get_the_title( $post_id ) : '' ),
-			'description'         => $description,
-			'url'                 => $is_embedded ? $context['article_url'] : $chart_data['permalink'],
+			'name'                => $title ?: ( $has_cpt ? get_the_title( $post_id ) : '' ),
+			'description'         => trim( $description . ' Copyright ' . $tag . '.' ),
+			'url'                 => $chart_data['permalink'],
 			'datePublished'       => $chart_data['date_published'],
 			'dateModified'        => $chart_data['date_modified'],
 			'isAccessibleForFree' => true,
@@ -609,9 +644,6 @@ class JSON_LD {
 			'license'             => home_url( '/terms-and-conditions/' ),
 		);
 
-		// Only emit a distribution/download URL when there is a real chart CPT post
-		// backing this dataset. Inline charts (post_id === 0) have no REST endpoint,
-		// so generating a URL would produce a broken .../charts/0/data.csv link.
 		if ( $has_cpt ) {
 			$csv_url                = rest_url( self::REST_NAMESPACE . '/charts/' . $post_id . '/data.csv' );
 			$dataset['distribution'] = array(
@@ -621,16 +653,51 @@ class JSON_LD {
 			);
 		}
 
-		if ( ! empty( $chart_data['tag'] ) ) {
-			$dataset['citation'] = $chart_data['tag'];
-		}
-
 		if ( ! empty( $chart_data['image_url'] ) ) {
 			$dataset['image'] = $chart_data['image_url'];
 		}
 
+
+		// todo: when available, add funder attribution to the dataset. this should be powered by the funder metadata field.
+
+		// Build isPartOf from all published posts that embed this chart.
+		// For synced chart CPTs, query the usage meta. For the embedded context
+		// (inline charts with no CPT), fall back to the current article URL.
+		$is_part_of = array();
+
+		if ( $has_cpt ) {
+			$referencing_urls = $this->get_published_referencing_urls( $post_id );
+			foreach ( $referencing_urls as $url ) {
+				$is_part_of[] = array(
+					'@type' => 'WebPage',
+					'url'   => $url,
+				);
+			}
+		}
+
 		if ( $is_embedded ) {
-			$dataset['isPartOf'] = $context['article_url'];
+			$article_url = $context['article_url'] ?? '';
+			if ( $article_url ) {
+				$already_listed = false;
+				foreach ( $is_part_of as $entry ) {
+					if ( $entry['url'] === $article_url ) {
+						$already_listed = true;
+						break;
+					}
+				}
+				if ( ! $already_listed ) {
+					$is_part_of[] = array(
+						'@type' => 'WebPage',
+						'url'   => $article_url,
+					);
+				}
+			}
+		}
+
+		if ( 1 === count( $is_part_of ) ) {
+			$dataset['isPartOf'] = $is_part_of[0];
+		} elseif ( count( $is_part_of ) > 1 ) {
+			$dataset['isPartOf'] = $is_part_of;
 		}
 
 		return $dataset;

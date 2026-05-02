@@ -9,6 +9,7 @@ import {
 	TextControl,
 	SelectControl,
 	Spinner,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { store as noticeStore } from '@wordpress/notices';
@@ -150,40 +151,44 @@ export default function ChartCreate({ setAttributes }) {
 
 	return (
 		<BaseControl id="create-chart" label="Create a new chart">
-			<TextControl
-				label="Chart Title"
-				value={title}
-				onChange={(newTitle) => setTitle(newTitle)}
-				disabled={textControlDisabled}
-			/>
-			<SelectControl
-				label="Chart Type"
-				value={type}
-				options={chartOptions}
-				onChange={(newType) => setType(newType)}
-				disabled={selectControlDisabled}
-			/>
-			<Button
-				variant="primary"
-				onClick={() => {
-					createChart();
-				}}
-				disabled={buttonDisabled}
-			>
-				{processing ? (
-					<div
-						style={{
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'center',
+			<VStack spacing="3">
+				<TextControl
+					label="Chart Title"
+					value={title}
+					onChange={(newTitle) => setTitle(newTitle)}
+					disabled={textControlDisabled}
+				/>
+				<SelectControl
+					label="Chart Type"
+					value={type}
+					options={chartOptions}
+					onChange={(newType) => setType(newType)}
+					disabled={selectControlDisabled}
+				/>
+				<div style={{ marginBottom: '1.5em' }}>
+					<Button
+						variant="primary"
+						onClick={() => {
+							createChart();
 						}}
+						disabled={buttonDisabled}
 					>
-						<Spinner /> Creating Chart...
-					</div>
-				) : (
-					'Create Chart'
-				)}
-			</Button>
+						{processing ? (
+							<div
+								style={{
+									display: 'flex',
+									alignItems: 'center',
+									justifyContent: 'center',
+								}}
+							>
+								<Spinner /> Creating Chart...
+							</div>
+						) : (
+							'Create Chart'
+						)}
+					</Button>
+				</div>
+			</VStack>
 		</BaseControl>
 	);
 }

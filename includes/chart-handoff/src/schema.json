@@ -1,0 +1,498 @@
+{
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"$id": "prc-chart-handoff/v1",
+	"title": "PRC Chart Handoff Format",
+	"description": "Tool-agnostic JSON handoff format for transferring charts between pewplots (R) and prc-chart-builder (WordPress). Version 1 supports the 7 core chart types shared by both tools.",
+	"type": "object",
+	"required": ["$schema", "version", "chartType", "data", "metadata"],
+	"additionalProperties": false,
+	"properties": {
+		"$schema": {
+			"type": "string",
+			"const": "prc-chart-handoff/v1"
+		},
+		"version": {
+			"type": "string",
+			"pattern": "^\\d+\\.\\d+\\.\\d+$",
+			"description": "Semantic version of the handoff document itself."
+		},
+
+		"chartType": {
+			"type": "string",
+			"enum": [
+				"bar",
+				"stacked-bar",
+				"diverging-bar",
+				"line",
+				"area",
+				"stacked-area",
+				"dot-plot",
+				"scatter"
+			],
+			"description": "The chart type. Maps to CB layout.type. 'bar' covers both horizontal (pew_bar) and vertical (pew_column) via the orientation field."
+		},
+
+		"orientation": {
+			"type": "string",
+			"enum": ["horizontal", "vertical"],
+			"default": "horizontal",
+			"description": "Bar/column orientation. Horizontal = pew_bar(); vertical = pew_column(). Ignored for non-bar types."
+		},
+
+		"data": {
+			"type": "object",
+			"required": ["values", "xColumn", "yColumn"],
+			"additionalProperties": false,
+			"description": "The chart data in tidy/long format. Rows are observations. This is the pre-summarized data as CB expects it — pew_bar/pew_column internally summarize before storing here.",
+			"properties": {
+				"values": {
+					"type": "array",
+					"minItems": 1,
+					"description": "Array of data row objects. Each row must contain at minimum the xColumn and yColumn fields. Category/series fields are optional.",
+					"items": {
+						"type": "object",
+						"minProperties": 1
+					}
+				},
+				"xColumn": {
+					"type": "string",
+					"description": "The field name used as the independent variable (x axis). Maps to CB dataRender.x."
+				},
+				"yColumn": {
+					"type": "string",
+					"description": "The field name used as the dependent variable (y axis). Maps to CB dataRender.y."
+				},
+				"categoryColumn": {
+					"type": ["string", "null"],
+					"default": null,
+					"description": "The field name for series/group differentiation (fill_by in pew_bar, color_by in pew_line). Maps to CB dataRender.categories (the unique values of this column). Null for single-series charts."
+				},
+				"xType": {
+					"type": "string",
+					"enum": ["categorical", "numeric", "date"],
+					"default": "categorical",
+					"description": "The data type of the x/independent variable. Maps to CB dataRender.xScale ('linear' for numeric, 'time' for date, 'linear' for categorical)."
+				},
+				"yType": {
+					"type": "string",
+					"enum": ["numeric", "percentage"],
+					"default": "numeric",
+					"description": "The data type of the y/dependent variable. 'percentage' indicates values are 0-100 and axis should show '%'. Maps to CB dependentAxis.tickUnit."
+				}
+			}
+		},
+
+		"metadata": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "Chart text metadata. Maps directly to CB metadata.*",
+			"properties": {
+				"title": {
+					"type": "string",
+					"default": "",
+					"description": "Chart title. Maps to CB metadata.title."
+				},
+				"subtitle": {
+					"type": "string",
+					"default": "",
+					"description": "Chart subtitle. Maps to CB metadata.subtitle."
+				},
+				"note": {
+					"type": "string",
+					"default": "",
+					"description": "Chart note (below chart). Maps to CB metadata.note."
+				},
+				"source": {
+					"type": "string",
+					"default": "",
+					"description": "Data source attribution. Maps to CB metadata.source."
+				}
+			}
+		},
+
+		"config": {
+			"type": "object",
+			"additionalProperties": false,
+			"description": "Visual configuration. Only fields expressible by the source tool are present; everything else gets CB defaults at import time.",
+			"properties": {
+				"colors": {
+					"type": "array",
+					"items": {
+						"type": "string",
+						"pattern": "^#[0-9a-fA-F]{3,8}$"
+					},
+					"description": "Resolved hex color palette, in series order. Maps to CB colors[]. For pewplots exports, these are the resolved hex values from pew_cols() / palette_pew()."
+				},
+				"width": {
+					"type": "number",
+					"default": 640,
+					"description": "Chart width in pixels. Maps to CB layout.width."
+				},
+				"height": {
+					"type": "number",
+					"default": 400,
+					"description": "Chart height in pixels. Maps to CB layout.height."
+				},
+
+				"independentAxis": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Independent (x) axis configuration. Maps to CB independentAxis.*",
+					"properties": {
+						"label": {
+							"type": "string",
+							"default": "",
+							"description": "Axis label text. Maps to CB independentAxis.label."
+						},
+						"scale": {
+							"type": "string",
+							"enum": ["linear", "log", "time"],
+							"default": "linear",
+							"description": "Axis scale type. Maps to CB independentAxis.scale."
+						},
+						"domain": {
+							"type": ["array", "null"],
+							"items": { "type": "number" },
+							"minItems": 2,
+							"maxItems": 2,
+							"default": null,
+							"description": "Explicit [min, max] domain. Null = auto. Maps to CB independentAxis.domain."
+						},
+						"tickFormat": {
+							"type": ["string", "null"],
+							"default": null,
+							"description": "D3 format string for tick labels (e.g. ',.0f'). Maps to CB independentAxis.tickFormat."
+						},
+						"tickUnit": {
+							"type": "string",
+							"default": "",
+							"description": "Unit suffix/prefix on tick labels (e.g. '%', '$'). Maps to CB independentAxis.tickUnit."
+						},
+						"tickUnitPosition": {
+							"type": "string",
+							"enum": ["start", "end"],
+							"default": "end",
+							"description": "Whether the unit appears before or after the tick value. Maps to CB independentAxis.tickUnitPosition."
+						},
+						"showZero": {
+							"type": "boolean",
+							"default": false,
+							"description": "Whether to show a zero baseline. Maps to CB independentAxis.showZero."
+						}
+					}
+				},
+
+				"dependentAxis": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Dependent (y) axis configuration. Maps to CB dependentAxis.*",
+					"properties": {
+						"label": {
+							"type": "string",
+							"default": "",
+							"description": "Axis label text. Maps to CB dependentAxis.label."
+						},
+						"scale": {
+							"type": "string",
+							"enum": ["linear", "log", "time"],
+							"default": "linear",
+							"description": "Axis scale type. Maps to CB dependentAxis.scale."
+						},
+						"domain": {
+							"type": ["array", "null"],
+							"items": { "type": "number" },
+							"minItems": 2,
+							"maxItems": 2,
+							"default": null,
+							"description": "Explicit [min, max] domain. Null = auto. Maps to CB dependentAxis.domain."
+						},
+						"tickFormat": {
+							"type": ["string", "null"],
+							"default": null,
+							"description": "D3 format string for tick labels. Maps to CB dependentAxis.tickFormat."
+						},
+						"tickUnit": {
+							"type": "string",
+							"default": "",
+							"description": "Unit suffix/prefix on tick labels. Maps to CB dependentAxis.tickUnit."
+						},
+						"tickUnitPosition": {
+							"type": "string",
+							"enum": ["start", "end"],
+							"default": "end",
+							"description": "Maps to CB dependentAxis.tickUnitPosition."
+						},
+						"showZero": {
+							"type": "boolean",
+							"default": true,
+							"description": "Whether to include zero in the domain. Maps to CB dependentAxis.showZero."
+						}
+					}
+				},
+
+				"legend": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Legend configuration. Maps to CB legend.*",
+					"properties": {
+						"active": {
+							"type": "boolean",
+							"default": false,
+							"description": "Whether to show the legend. Maps to CB legend.active."
+						},
+						"orientation": {
+							"type": "string",
+							"enum": ["row", "column"],
+							"default": "row",
+							"description": "Legend layout direction. Maps to CB legend.orientation."
+						}
+					}
+				},
+
+				"labels": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Data label configuration. Maps to CB labels.*",
+					"properties": {
+						"active": {
+							"type": "boolean",
+							"default": false,
+							"description": "Whether to show data labels on chart elements. Maps to CB labels.active."
+						},
+						"position": {
+							"type": "string",
+							"enum": ["inside", "outside", "center"],
+							"default": "inside",
+							"description": "Label position relative to the bar/element. Maps to CB labels.labelPositionBar."
+						}
+					}
+				},
+
+				"barOptions": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Bar/column chart options. Applied when chartType is 'bar', 'stacked-bar', or 'diverging-bar'.",
+					"properties": {
+						"barPadding": {
+							"type": "number",
+							"minimum": 0,
+							"maximum": 1,
+							"default": 0.2,
+							"description": "Padding between individual bars (0–1). Maps to CB bar.barPadding. Derived from pewplots bar_width (inverted: bar_width 0.7 ≈ barPadding 0.3)."
+						},
+						"barGroupPadding": {
+							"type": "number",
+							"minimum": 0,
+							"maximum": 1,
+							"default": 0.2,
+							"description": "Padding between bar groups in a grouped chart. Maps to CB bar.barGroupPadding."
+						},
+						"stackOffset": {
+							"type": "string",
+							"enum": ["none", "expand", "diverging"],
+							"default": "none",
+							"description": "Stack offset mode. 'expand' = 100% stacked (pew_bar position='fill'). Maps to CB bar.stackOffset."
+						}
+					}
+				},
+
+				"lineOptions": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Line chart options. Applied when chartType is 'line' or 'area'.",
+					"properties": {
+						"interpolation": {
+							"type": "string",
+							"enum": ["curveLinear", "curveStep", "curveBasis", "curveMonotoneX"],
+							"default": "curveLinear",
+							"description": "Line interpolation mode. Maps to CB line.interpolation."
+						},
+						"strokeWidth": {
+							"type": "number",
+							"default": 3,
+							"description": "Line stroke width in pixels. Maps to CB line.strokeWidth."
+						},
+						"showPoints": {
+							"type": "boolean",
+							"default": false,
+							"description": "Whether to show data points on the line. Maps to CB line.showPoints. In pewplots this is pew_line() points parameter (none=false, extremes/final/all/specific=true)."
+						},
+						"areaFillOpacity": {
+							"type": "number",
+							"minimum": 0,
+							"maximum": 1,
+							"default": 0.4,
+							"description": "Fill opacity for area charts. Maps to CB line.areaFillOpacity. pewplots pew_area(opaque=TRUE) sets this to 1.0."
+						}
+					}
+				},
+
+				"dotPlotOptions": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Dot plot chart options. Applied when chartType is 'dot-plot'.",
+					"properties": {
+						"connectPoints": {
+							"type": "boolean",
+							"default": true,
+							"description": "Whether to draw a connecting line between dot pairs. Maps to CB dotPlot.connectPoints. Corresponds to pewplots pew_dotplot() diff_bar parameter."
+						}
+					}
+				},
+
+				"scatterOptions": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Scatter plot options. Applied when chartType is 'scatter'.",
+					"properties": {
+						"showRegressionLine": {
+							"type": "boolean",
+							"default": false,
+							"description": "Whether to show a regression/fit line. Maps to CB regression.active. Corresponds to pewplots pew_scatter() fit_line parameter."
+						},
+						"regressionType": {
+							"type": "string",
+							"enum": ["linear", "quadratic", "polynomial", "power", "exponential", "logarithmic"],
+							"default": "linear",
+							"description": "Regression line type. Maps to CB regression.type. Corresponds to pewplots pew_scatter() fit_line (always 'lm' = linear)."
+						}
+					}
+				},
+
+				"divergingBarOptions": {
+					"type": "object",
+					"additionalProperties": false,
+					"description": "Diverging bar chart options. Applied when chartType is 'diverging-bar'.",
+					"properties": {
+						"positiveCategories": {
+							"type": "array",
+							"items": { "type": "string" },
+							"default": [],
+							"description": "Category values that belong on the positive (right) side. Maps to CB divergingBar.positiveCategories."
+						},
+						"negativeCategories": {
+							"type": "array",
+							"items": { "type": "string" },
+							"default": [],
+							"description": "Category values that belong on the negative (left) side. Maps to CB divergingBar.negativeCategories."
+						}
+					}
+				}
+			}
+		},
+
+		"source": {
+			"type": "object",
+			"required": ["tool", "exportedAt"],
+			"additionalProperties": false,
+			"description": "Provenance: which tool created this file and when.",
+			"properties": {
+				"tool": {
+					"type": "string",
+					"enum": ["pewplots", "prc-chart-builder"],
+					"description": "Which tool exported this file."
+				},
+				"toolVersion": {
+					"type": "string",
+					"description": "Version of the exporting tool."
+				},
+				"exportedAt": {
+					"type": "string",
+					"format": "date-time",
+					"description": "ISO 8601 timestamp of when the file was exported."
+				},
+				"originalCall": {
+					"type": ["string", "null"],
+					"default": null,
+					"description": "The original R function call that produced this chart (e.g. 'pew_bar(df, x=country, y=share, fill_by=group)'). For debugging only."
+				},
+				"palette": {
+					"type": ["string", "null"],
+					"default": null,
+					"description": "The named pewplots palette used (e.g. 'labs', 'partisan'). Stored for round-tripping back to R. Null when exported from CB."
+				},
+				"paletteScale": {
+					"type": ["string", "null"],
+					"enum": ["auto", "manual", "gradient", "split gradient", null],
+					"default": null,
+					"description": "The palette_pew() scale mode. Null when exported from CB."
+				}
+			}
+		},
+
+		"warnings": {
+			"type": "array",
+			"default": [],
+			"description": "List of features that were dropped or approximated during export. Consumers should surface these to the user.",
+			"items": {
+				"type": "object",
+				"required": ["code", "message"],
+				"additionalProperties": false,
+				"properties": {
+					"code": {
+						"type": "string",
+						"description": "Machine-readable warning code.",
+						"examples": [
+							"FACET_DROPPED",
+							"HIGHLIGHT_DROPPED",
+							"GROUP_LABEL_DROPPED",
+							"RESPONSIVE_OVERRIDE_DROPPED",
+							"ANNOTATION_DROPPED",
+							"DRAWING_DROPPED",
+							"STAT_COUNT_COMPUTED"
+						]
+					},
+					"message": {
+						"type": "string",
+						"description": "Human-readable explanation of what was dropped and why."
+					}
+				}
+			}
+		}
+	},
+
+	"examples": [
+		{
+			"$schema": "prc-chart-handoff/v1",
+			"version": "1.0.0",
+			"chartType": "bar",
+			"orientation": "horizontal",
+			"data": {
+				"values": [
+					{ "country": "Germany", "share": 40, "opinion": "Favorable" },
+					{ "country": "Spain",   "share": 50, "opinion": "Favorable" },
+					{ "country": "Germany", "share": 20, "opinion": "Unfavorable" },
+					{ "country": "Spain",   "share": 30, "opinion": "Unfavorable" }
+				],
+				"xColumn": "country",
+				"yColumn": "share",
+				"categoryColumn": "opinion",
+				"xType": "categorical",
+				"yType": "percentage"
+			},
+			"metadata": {
+				"title": "Views of Country X",
+				"subtitle": "% who have a favorable view",
+				"note": "Note: Based on adults in each country.",
+				"source": "Source: Pew Research Center"
+			},
+			"config": {
+				"colors": ["#456A83", "#BF3B27"],
+				"width": 640,
+				"height": 400,
+				"legend": { "active": true },
+				"labels": { "active": true, "position": "inside" },
+				"dependentAxis": { "tickUnit": "%" }
+			},
+			"source": {
+				"tool": "pewplots",
+				"toolVersion": "3.1.0",
+				"exportedAt": "2026-04-07T12:00:00Z",
+				"originalCall": "pew_bar(df, x=country, y=share, fill_by=opinion, position='dodge')",
+				"palette": "partisan",
+				"paletteScale": "auto"
+			},
+			"warnings": []
+		}
+	]
+}

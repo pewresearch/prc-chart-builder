@@ -97,6 +97,7 @@ class Print_Engine_Integration {
 		$allowed_statuses = array( 'publish' );
 		if ( is_user_logged_in() || is_preview() ) {
 			$allowed_statuses[] = 'draft';
+			$allowed_statuses[] = 'future';
 			$allowed_statuses[] = 'private';
 		}
 		if ( ! in_array( $chart_post->post_status, $allowed_statuses, true ) ) {
@@ -224,7 +225,7 @@ class Print_Engine_Integration {
 	 * @return array<int, array<int, string>> Rows × cells.
 	 */
 	private function parse_html_table( string $html ): array {
-		$processor = new \WP_HTML_Table_Processor( $html );
+		$processor = new \PRC\Html\TableProcessor( $html );
 		$data      = $processor->get_data();
 
 		if ( is_wp_error( $data ) || empty( $data['header'] ) ) {

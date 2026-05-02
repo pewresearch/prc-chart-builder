@@ -74,13 +74,13 @@ function getChartType(item) {
 /**
  * Build the chart_type filter elements from the localized term list
  * (set by wp_localize_script in class-admin.php).
- * Values are term IDs (integers) because the native WP REST taxonomy
- * filter expects term_id, not slug.
+ * Values are slugs; use-charts.js sends them as chart_type_slug to the
+ * WP REST API which accepts slug-based taxonomy filtering natively.
  */
 function getChartTypeElements() {
 	const terms = window?.prcChartBuilderLibrary?.chartTypeTerms || [];
 	return terms.map((term) => ({
-		value: term.id,
+		value: term.slug,
 		label: term.label,
 	}));
 }

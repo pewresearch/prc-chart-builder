@@ -51,9 +51,9 @@ function viewToQueryArgs(view) {
 				if (!joined) {
 					return;
 				}
-				if (filter.field === 'chartType') {
-					args.chart_type = joined;
-				}
+			if (filter.field === 'chartType') {
+				args.chart_type_slug = joined;
+			}
 				if (filter.field === 'status') {
 					args.status = joined;
 				}

@@ -45,8 +45,7 @@ class Synced_Chart {
 		$chart_post_id   = (int) $chart_post_id;
 		$current_post_id = (int) $current_post_id;
 
-		// Ensure current post ID is 1. not the same as the chart ID, and 2. not pointing to an autosave.
-		if ( $chart_post_id === $current_post_id || wp_is_post_autosave( $current_post_id ) ) {
+		if ( $chart_post_id === $current_post_id || wp_is_post_revision( $current_post_id ) || wp_is_post_autosave( $current_post_id ) ) {
 			return;
 		}
 
@@ -79,7 +78,15 @@ class Synced_Chart {
 		$chart_post_id = (int) $chart_post_id;
 		$post_ids      = get_post_meta( $chart_post_id, self::$synced_chart_usage_meta_key, true );
 
-		return is_array( $post_ids ) ? $post_ids : array();
+		if ( ! is_array( $post_ids ) ) {
+			return array();
+		}
+
+		$post_ids = array_unique( array_filter( $post_ids, function ( $id ) {
+			return ! wp_is_post_revision( $id ) && ! wp_is_post_autosave( $id );
+		} ) );
+
+		return array_values( $post_ids );
 	}
 
 	/**
@@ -131,6 +138,7 @@ class Synced_Chart {
 		$allowed_statuses = array( 'publish' );
 		if ( is_user_logged_in() || is_preview() ) {
 			$allowed_statuses[] = 'draft';
+			$allowed_statuses[] = 'future';
 			$allowed_statuses[] = 'private';
 		} elseif ( ! empty( $synced_chart_block->post_password ) ) {
 			return '';
@@ -174,6 +182,15 @@ class Synced_Chart {
 		}
 
 		unset( $seen_refs[ $attributes['ref'] ] );
+
+		if ( ! empty( $attributes['align'] ) ) {
+			$content = sprintf(
+				'<div %1$s>%2$s</div>',
+				get_block_wrapper_attributes(),
+				$content
+			);
+		}
+
 		return $content;
 	}
 

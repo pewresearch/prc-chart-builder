@@ -2,6 +2,13 @@
 /**
  * SEO class for the chart builder.
  *
+ * Hooks into prc-schema-seo filters to provide chart-specific meta tags:
+ *  - description → chart alt text (metadata.alt from block attrs)
+ *  - og:image    → chart featured image URL (set by the PNG export pipeline)
+ *
+ * twitter:card is automatically upgraded to summary_large_image by prc-schema-seo
+ * whenever an og:image URL is present.
+ *
  * @package PRC\Platform\Chart_Builder
  */
 
@@ -34,139 +41,85 @@ class SEO {
 	 * Initialize the hooks.
 	 */
 	public function init() {
-		$this->loader->add_filter( 'wpseo_opengraph_image', $this, 'get_chart_image', 100, 1 );
-		$this->loader->add_filter( 'wpseo_metadesc', $this, 'get_chart_description', 100, 1 );
-		$this->loader->add_filter( 'wpseo_title', $this, 'get_chart_title', 100, 1 );
+		$this->loader->add_filter( 'prc_schema_seo_description_fallback', $this, 'filter_chart_description', 11, 2 );
+		$this->loader->add_filter( 'prc_schema_seo_og_image_url', $this, 'filter_chart_og_image_url', 10, 3 );
 	}
 
 	/**
-	 * Get the chart attribute.
+	 * Extract the alt text from a chart CPT post's block content.
 	 *
-	 * @param int    $post_id The post ID.
-	 * @param string $attribute The attribute.
-	 * @return string The attribute.
+	 * Uses WP_Block_Processor to stream forward and stop as soon as the
+	 * first prc-chart-builder/chart block inside a controller is found, avoiding
+	 * the full parse_blocks() allocation of the entire post content.
+	 *
+	 * @param int $post_id Chart post ID.
+	 * @return string The chart alt text, or empty string if not found.
 	 */
-	public function get_chart_attribute( $post_id, $attribute ) {
-		if ( ! is_singular( 'chart' ) ) {
-			return;
+	private function get_chart_description( int $post_id ): string {
+		$post_content = get_post_field( 'post_content', $post_id );
+		if ( empty( $post_content ) ) {
+			return '';
 		}
 
-		// Prevent multiple processing of the same chart
-		static $processed_charts = array();
-		$cache_key = $post_id . '_' . $attribute;
+		$processor = new \WP_Block_Processor( $post_content );
 
-		if ( isset( $processed_charts[ $cache_key ] ) ) {
-			return $processed_charts[ $cache_key ];
+		// Advance to the controller, then to the chart nested inside it.
+		if ( ! $processor->next_block( 'prc-chart-builder/controller' ) ) {
+			return '';
+		}
+		if ( ! $processor->next_block( 'prc-chart-builder/chart' ) ) {
+			return '';
 		}
 
-		$post_content      = get_post_field( 'post_content', $post_id );
-		$blocks            = parse_blocks( $post_content );
-		$controller_blocks = array_filter(
-			$blocks,
-			function ( $block ) {
-				return 'prc-chart-builder/controller' === $block['blockName'];
-			}
-		);
-		if ( empty( $controller_blocks ) ) {
-			return;
-		}
-		$chart_blocks = array_map(
-			function ( $block ) {
-				return array_filter(
-					$block['innerBlocks'],
-					function ( $inner_block ) {
-						return 'prc-chart-builder/chart' === $inner_block['blockName'];
-					}
-				);
-			},
-			$controller_blocks
-		);
-
-		// Get the first chart block.
-		$chart_block = reset( $chart_blocks );
-
-		// Validate that we have a chart block with the expected structure.
-		if ( false === $chart_block || empty( $chart_block ) ) {
-			return false;
+		$attrs = $processor->allocate_and_return_parsed_attributes() ?? array();
+		if ( ! isset( $attrs['_version'] ) || 'v2' !== $attrs['_version'] ) {
+			$attrs = Block_Migration::migrate_attributes_v1_to_v2( $attrs );
 		}
 
-		// Get the first chart block from the inner blocks array.
-		$chart_block = reset( $chart_block );
-
-		// Validate that we have a chart block with the expected structure.
-		if ( false === $chart_block || empty( $chart_block ) || ! isset( $chart_block['attrs'] ) ) {
-			return false;
-		}
-
-		$attributes = $chart_block['attrs'];
-
-		// Ensure attributes is an array before checking key existence.
-		if ( ! is_array( $attributes ) ) {
-			$processed_charts[ $cache_key ] = false;
-			return false;
-		}
-
-		$block_attribute = array_key_exists( $attribute, $attributes ) ? $attributes[ $attribute ] : false;
-
-		// Cache the result
-		$processed_charts[ $cache_key ] = $block_attribute;
-
-		return $block_attribute;
+		$alt = wp_strip_all_tags( $attrs['metadata']['alt'] ?? '' );
+		return $alt;
 	}
 
 	/**
-	 * Get the chart title.
+	 * Replace the SEO description with the chart's alt text.
 	 *
-	 * @param string $title The title.
-	 * @return string The title.
-	 */
-	public function get_chart_title( $title ) {
-		global $post;
-		if ( ! is_singular( 'chart' ) ) {
-			return $title;
-		}
-		$id    = $post->ID;
-		$title = $this->get_chart_attribute( $id, 'metaTitle' );
-		return $title;
-	}
-
-	/**
-	 * Get the chart image.
+	 * @hook prc_schema_seo_description_fallback 11
 	 *
-	 * @param string $image The image.
-	 * @return string The image.
+	 * @param string $description Current description.
+	 * @param int    $post_id     Post ID.
+	 * @return string
 	 */
-	public function get_chart_image( $image ) {
-		global $post;
-		if ( ! is_singular( 'chart' ) ) {
-			return $image;
-		}
-
-		// Post meta is set by the async PNG export pipeline and is authoritative.
-		$png_url = get_post_meta( $post->ID, '_chart_png_url', true );
-		if ( $png_url ) {
-			return $png_url;
-		}
-
-		// Fall back to the block attribute path (covers dynamic charts or
-		// charts that haven't been through the export pipeline yet).
-		$png_id = $this->get_chart_attribute( $post->ID, 'pngId' );
-		return $png_id ? wp_get_attachment_url( $png_id ) : $image;
-	}
-
-	/**
-	 * Get the chart description.
-	 *
-	 * @param string $description The description.
-	 * @return string The description.
-	 */
-	public function get_chart_description( $description ) {
-		global $post;
-		if ( ! is_singular( 'chart' ) ) {
+	public function filter_chart_description( string $description, int $post_id ): string {
+		if ( ! is_singular( Content_Type::$post_type ) ) {
 			return $description;
 		}
-		$id          = $post->ID;
-		$description = $this->get_chart_attribute( $id, 'metaSource' );
-		return $description;
+
+		$chart_description = $this->get_chart_description( $post_id );
+
+		return ! empty( $chart_description ) ? $chart_description : $description;
+	}
+
+	/**
+	 * Inject the chart's featured image URL as the og:image.
+	 *
+	 * The PNG export pipeline sets the chart post's featured image via
+	 * set_post_thumbnail(). We surface it here via the og:image URL filter so
+	 * prc-schema-seo needs no chart-specific knowledge.
+	 *
+	 * @hook prc_schema_seo_og_image_url 10
+	 *
+	 * @param string $og_image_url Current og:image URL (may be empty).
+	 * @param int    $post_id      Post ID (0 for archives/terms).
+	 * @param array  $seo_data     Resolved SEO data.
+	 * @return string
+	 */
+	public function filter_chart_og_image_url( string $og_image_url, int $post_id, array $seo_data ): string {
+		if ( ! $post_id || ! is_singular( Content_Type::$post_type ) || ! empty( $og_image_url ) ) {
+			return $og_image_url;
+		}
+
+		$thumbnail_id = get_post_thumbnail_id( $post_id );
+
+		return $thumbnail_id ? (string) wp_get_attachment_url( $thumbnail_id ) : $og_image_url;
 	}
 }

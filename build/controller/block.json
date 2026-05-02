@@ -75,7 +75,8 @@
   ],
   "supports": {
     "html": false,
-    "interactivity": true
+    "interactivity": true,
+    "align": true
   },
   "viewScriptModule": "file:./view.js",
   "editorScript": "file:./index.js",

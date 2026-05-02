@@ -244,7 +244,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 	const [description, setDescription] = useState('');
 	const [imageFile, setImageFile] = useState(null);
 	const [csvText, setCsvText] = useState('');
-	const [model, setModel] = useState('claude-sonnet-4-5');
+	const [model, setModel] = useState('claude-sonnet-4-6');
 	const [acknowledgedRisks, setAcknowledgedRisks] = useState(false);
 
 	const [isGenerating, setIsGenerating] = useState(false);
@@ -467,7 +467,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 						)}
 					/>
 					<ToggleGroupControlOption
-						value="claude-sonnet-4-5"
+						value="claude-sonnet-4-6"
 						label={__('Sonnet (default)', 'prc-chart-builder')}
 						showTooltip
 						aria-label={__(
@@ -476,7 +476,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 						)}
 					/>
 					<ToggleGroupControlOption
-						value="claude-opus-4-5"
+						value="claude-opus-4-7"
 						label={__('Opus (most capable)', 'prc-chart-builder')}
 						showTooltip
 						aria-label={__(

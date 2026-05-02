@@ -114,6 +114,37 @@ const MAP_STYLE_KEYS = [
 const DIFF_COLUMN_STYLE_KEYS = ['style'];
 
 /**
+ * Top-level keys within netValues that are style-related.
+ * `positive` and `negative` are nested objects handled separately via
+ * NET_VALUES_ITEM_STYLE_KEYS; `category` on those nested objects is a
+ * data-column reference and is intentionally excluded from copy/paste.
+ */
+const NET_VALUES_TOP_LEVEL_STYLE_KEYS = ['active'];
+
+/**
+ * Keys within netValues.positive / netValues.negative that are style-related
+ * (excludes `category`, which selects a data column on the source chart).
+ */
+const NET_VALUES_ITEM_STYLE_KEYS = [
+	'active',
+	'color',
+	'fontWeight',
+	'fontSize',
+	'fontFamily',
+	'textAnchor',
+	'labelPositionDX',
+	'labelPositionDY',
+	'abbreviateValue',
+	'absoluteValue',
+	'truncateDecimal',
+	'toFixedDecimal',
+	'toLocaleString',
+	'labelUnit',
+	'labelUnitPosition',
+	'margin',
+];
+
+/**
  * Extract only specified keys from an object
  * @param obj
  * @param keys
@@ -164,6 +195,7 @@ const extractStyleAttributes = (attributes, isViewportOverride = false) => {
 		nodes,
 		map,
 		diffColumn,
+		netValues,
 		explodedBar,
 		divergingBar,
 		io,
@@ -246,6 +278,33 @@ const extractStyleAttributes = (attributes, isViewportOverride = false) => {
 	// Diff column styling
 	if (diffColumn) {
 		result.diffColumn = pickKeys(diffColumn, DIFF_COLUMN_STYLE_KEYS);
+	}
+
+	// Net value labels styling. `netValues` is shaped as
+	// { active, positive: { ...style + category }, negative: { ...style + category } };
+	// pick the top-level toggle and the style-only keys from each nested
+	// object, leaving `category` (data-column reference) off the clipboard.
+	if (netValues) {
+		const netValuesStyles = pickKeys(
+			netValues,
+			NET_VALUES_TOP_LEVEL_STYLE_KEYS,
+		);
+		const positiveStyles = pickKeys(
+			netValues.positive,
+			NET_VALUES_ITEM_STYLE_KEYS,
+		);
+		const negativeStyles = pickKeys(
+			netValues.negative,
+			NET_VALUES_ITEM_STYLE_KEYS,
+		);
+		const combined = {
+			...(netValuesStyles || {}),
+			...(positiveStyles ? { positive: positiveStyles } : {}),
+			...(negativeStyles ? { negative: negativeStyles } : {}),
+		};
+		if (Object.keys(combined).length > 0) {
+			result.netValues = combined;
+		}
 	}
 
 	// IO - only color-related settings

@@ -14,6 +14,11 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
 	return;
 }
 
+// Bail when running outside VIP infrastructure (wp-env, Playground): the parent class is unavailable.
+if ( ! class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
+	return;
+}
+
 /**
  * WP-CLI Commands for PRC Chart Builder
  *
@@ -486,8 +491,6 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
  *   site is not publicly reachable (e.g. local dev via ngrok) or when
  *   targeting a password-protected environment like alpha. HTTP basic auth
  *   credentials can be embedded directly in the URL.
- *   Example: --base-url=https://abc123.ngrok-free.app/pewresearch-org
- *   Example: --base-url=https://guest:prcguest@alpha.pewresearch.org/pewresearch-org
  *
  * [--export-url=<url>]
  * : Bypass permalink construction entirely and pass this exact URL to
@@ -495,7 +498,6 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
  *   (e.g. an alpha chart export page) without needing the post to exist
  *   on the local environment. Requires --post-id so the resulting PNG has
  *   a local post to attach to.
- *   Example: --export-url=https://guest:prcguest@alpha.pewresearch.org/pewresearch-org/chart/some-slug/export/
 	 *
 	 * ## EXAMPLES
 	 *
@@ -511,14 +513,8 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 *     # Re-generate all PNGs regardless of current state
 	 *     wp prc-chart-builder backfill_pngs --force-regenerate
 	 *
-	 *     # Backfill via ngrok tunnel (local dev)
-	 *     wp prc-chart-builder backfill_pngs --post-id=123 --base-url=https://abc123.ngrok-free.app/pewresearch-org
-	 *
-	 *     # Backfill against alpha (password-protected)
-	 *     wp prc-chart-builder backfill_pngs --post-id=123 --base-url=https://guest:prcguest@alpha.pewresearch.org/pewresearch-org
-	 *
 	 *     # Test against a specific remote export URL from local
-	 *     wp prc-chart-builder backfill_pngs --post-id=123 --export-url=https://guest:prcguest@alpha.pewresearch.org/pewresearch-org/chart/some-slug/export/
+	 *     wp prc-chart-builder backfill_pngs --post-id=123 --export-url={{remote-url}}/chart/some-slug/export/
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -643,7 +639,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 
 			try {
 				$png_export->generate_png( $post->ID, $base_url, $export_url );
-				$png_url = get_post_meta( $post->ID, '_chart_png_url', true );
+				$png_url = wp_get_attachment_url( get_post_thumbnail_id( $post->ID ) );
 					\WP_CLI::log( sprintf( '  [done]  %d "%s" — %s', $post->ID, $post->post_title, $png_url ) );
 					++$generated;
 				} catch ( \Exception $e ) {

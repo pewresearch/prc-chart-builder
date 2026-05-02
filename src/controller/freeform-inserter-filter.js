@@ -4,40 +4,51 @@
 import { addFilter } from '@wordpress/hooks';
 import { select } from '@wordpress/data';
 import { store as blockEditorStore } from '@wordpress/block-editor';
+import { store as editorStore } from '@wordpress/editor';
 
 /**
- * Filter that controls when the controller block can be inserted.
- * Controllers are only insertable when inside a freeform chart context
- * (i.e., when an ancestor controller has isFreeform: true).
+ * Filter that controls when the controller block can be inserted via the
+ * inserter UI. Controllers are only shown in the inserter when inside a
+ * freeform chart context (i.e., when an ancestor controller has
+ * isFreeform: true).
  *
- * This allows nested chart controllers inside freeform charts while
- * keeping them out of the main inserter elsewhere.
+ * Root-level insertion is allowed on the "chart" post type (its native
+ * home) and always allowed when no rootClientId is provided so that
+ * paste and programmatic insertion are not blocked.
  */
 addFilter(
 	'blockEditor.__unstableCanInsertBlockType',
 	'prc-chart-builder/controller-freeform-only',
 	(canInsert, blockType, rootClientId) => {
-		// Only filter the controller block
 		if (blockType.name !== 'prc-chart-builder/controller') {
 			return canInsert;
 		}
 
-		// If there's no insertion context (root level), don't allow
+		// Root-level insertion: allow on chart post type and for
+		// paste/programmatic operations (no rootClientId).
 		if (!rootClientId) {
-			return false;
+			try {
+				const postType =
+					select(editorStore).getCurrentPostType();
+				if ('chart' === postType) {
+					return true;
+				}
+			} catch (e) {
+				// editorStore may not be available in all contexts
+			}
+			// Allow root-level insertion so paste works across post types
+			return canInsert;
 		}
 
 		const { getBlock, getBlockParentsByBlockName } =
 			select(blockEditorStore);
 
-		// Get parent controller blocks directly
 		const controllerParentIds = getBlockParentsByBlockName(
 			rootClientId,
 			'prc-chart-builder/controller',
 			true
 		);
 
-		// Check if any ancestor controller has isFreeform: true
 		for (const parentId of controllerParentIds) {
 			const block = getBlock(parentId);
 			if (block?.attributes?.isFreeform === true) {
@@ -45,7 +56,6 @@ addFilter(
 			}
 		}
 
-		// Not inside a freeform chart, don't allow insertion
 		return false;
 	}
 );

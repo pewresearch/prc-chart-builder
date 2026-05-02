@@ -91,6 +91,7 @@ class Markdown_For_Agents_Integration {
 		$allowed_statuses = array( 'publish' );
 		if ( is_user_logged_in() || is_preview() ) {
 			$allowed_statuses[] = 'draft';
+			$allowed_statuses[] = 'future';
 			$allowed_statuses[] = 'private';
 		}
 		if ( ! in_array( $chart_post->post_status, $allowed_statuses, true ) ) {
@@ -209,14 +210,14 @@ class Markdown_For_Agents_Integration {
 	/**
 	 * Parse an HTML <table> string into a 2-D array of cell strings.
 	 *
-	 * Uses WP_HTML_Table_Processor (extends WP_HTML_Tag_Processor) instead of
+	 * Uses PRC\Html\TableProcessor (extends WP_HTML_Tag_Processor) instead of
 	 * DOMDocument so we stay within the WordPress HTML API.
 	 *
 	 * @param string $html Raw HTML containing a <table>.
 	 * @return array<int, array<int, string>> Rows × cells, or empty array on failure.
 	 */
 	private function parse_html_table( string $html ): array {
-		$processor = new \WP_HTML_Table_Processor( $html );
+		$processor = new \PRC\Html\TableProcessor( $html );
 		$data      = $processor->get_data();
 
 		if ( is_wp_error( $data ) || empty( $data['header'] ) ) {

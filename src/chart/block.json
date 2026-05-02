@@ -331,6 +331,20 @@
 				}
 			}
 		},
+		"errorBars": {
+			"type": "object",
+			"default": {
+				"enabled": false,
+				"defaultStyles": {
+					"stroke": "#E6E7E8",
+					"strokeWidth": 6,
+					"strokeDasharray": "",
+					"strokeOpacity": 1
+				},
+				"categories": {},
+				"customStyles": {}
+			}
+		},
 		"explodedBar": {
 			"type": "object",
 			"default": {
@@ -441,6 +455,50 @@
 				}
 			}
 		},
+		"netValues": {
+			"type": "object",
+			"default": {
+				"active": false,
+				"positive": {
+					"active": true,
+					"category": "",
+					"color": "black",
+					"fontWeight": 700,
+					"fontSize": 10,
+					"fontFamily": "",
+					"textAnchor": "middle",
+					"labelPositionDX": 0,
+					"labelPositionDY": 0,
+					"abbreviateValue": false,
+					"absoluteValue": false,
+					"truncateDecimal": false,
+					"toFixedDecimal": 0,
+					"toLocaleString": false,
+					"labelUnit": "",
+					"labelUnitPosition": "end",
+					"margin": 5
+				},
+				"negative": {
+					"active": false,
+					"category": "",
+					"color": "black",
+					"fontWeight": 700,
+					"fontSize": 10,
+					"fontFamily": "",
+					"textAnchor": "middle",
+					"labelPositionDX": 0,
+					"labelPositionDY": 0,
+					"abbreviateValue": false,
+					"absoluteValue": false,
+					"truncateDecimal": false,
+					"toFixedDecimal": 0,
+					"toLocaleString": false,
+					"labelUnit": "",
+					"labelUnitPosition": "end",
+					"margin": 5
+				}
+			}
+		},
 		"treemap": {
 			"type": "object",
 			"default": {
@@ -450,7 +508,6 @@
 				"labelMinArea": 1600,
 				"paddingInner": 2,
 				"paddingOuter": 4,
-				"showGroupLabels": true,
 				"scaleOpacity": false,
 				"opacityRange": [0.4, 1],
 				"borderRadius": 0,
@@ -490,6 +547,10 @@
 			}
 		},
 		"customLegendLabels": {
+			"type": "object",
+			"default": {}
+		},
+		"customTooltips": {
 			"type": "object",
 			"default": {}
 		},

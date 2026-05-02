@@ -1,6 +1,6 @@
 # Chart Builder Architecture & State Management
 
-_Last Updated: March 2026 · Version 3.5.0_
+*Last Updated: April 2026 · Version 3.8.0*
 
 ---
 
@@ -39,13 +39,15 @@ Introduced in 3.5.0 (issue #1400). Lives in `includes/admin/`.
 
 ### Key components
 
-| Component | File | Role |
-|---|---|---|
-| `ChartLibrary` | `src/chart-library.jsx` | Page root; composes DataViews + modal + dropzone |
-| `DataViews` | `src/components/dataviews.jsx` | Filterable/searchable chart grid with live block previews |
+
+| Component             | File                                        | Role                                                              |
+| --------------------- | ------------------------------------------- | ----------------------------------------------------------------- |
+| `ChartLibrary`        | `src/chart-library.jsx`                     | Page root; composes DataViews + modal + dropzone                  |
+| `DataViews`           | `src/components/dataviews.jsx`              | Filterable/searchable chart grid with live block previews         |
 | `CreateNewChartModal` | `src/components/create-new-chart-modal.jsx` | Multi-step creation flow; chart type picker → template/pattern/AI |
-| `AICreateStep` | `src/components/ai-create-step.jsx` | AI generation panel (text + image + CSV → block markup) |
-| `DropZone` | `src/components/dropzone.jsx` | Page-level CSV drop target |
+| `AICreateStep`        | `src/components/ai-create-step.jsx`         | AI generation panel (text + image + CSV → block markup)           |
+| `DropZone`            | `src/components/dropzone.jsx`               | Page-level CSV drop target                                        |
+
 
 ### AI generation flow
 
@@ -77,6 +79,8 @@ prc-chart-builder/controller   (outer, provides context + data table)
 
 `prc-chart-builder/synced-chart` is a reference block used when embedding a chart CPT post into an article. It holds a `ref` (post ID) and delegates rendering to the chart CPT's controller block.
 
+**Visibility of the referenced chart:** Anonymous visitors only see charts whose CPT post is `publish`. Logged-in users and preview requests may also see `draft`, `future` (scheduled), and `private` charts, so embedded synced charts can resolve before a chart’s publish date. Password-protected chart posts never render for anonymous users.
+
 ### Data flow
 
 ```
@@ -97,16 +101,25 @@ As of 3.5.0, per-element style overrides (label colors, shape fills, line styles
 
 ```json
 {
-  "labels": {
-    "customLabels":     { "2020::Democrats": "52%" },
-    "customVisibility": { "2020::Democrats": false },
-    "customStyles":     { "2020::Democrats": { "color": "#ff0000", "fontWeight": "bold" } },
-    "customPositions":  { "2020::Democrats": { "dx": 10, "dy": -5 } }
-  },
-  "shapes": {
-    "customStyles":   { "2020::Democrats": { "fill": "#ff0000", "opacity": 0.8 } },
-    "segmentStyles":  { "2020::2024::Democrats": { "stroke": "#ff0000", "strokeDasharray": "5,5" } }
-  }
+	"labels": {
+		"customLabels": { "2020::Democrats": "52%" },
+		"customVisibility": { "2020::Democrats": false },
+		"customStyles": {
+			"2020::Democrats": { "color": "#ff0000", "fontWeight": "bold" }
+		},
+		"customPositions": { "2020::Democrats": { "dx": 10, "dy": -5 } }
+	},
+	"shapes": {
+		"customStyles": {
+			"2020::Democrats": { "fill": "#ff0000", "opacity": 0.8 }
+		},
+		"segmentStyles": {
+			"2020::2024::Democrats": {
+				"stroke": "#ff0000",
+				"strokeDasharray": "5,5"
+			}
+		}
+	}
 }
 ```
 
@@ -144,16 +157,38 @@ onUpdate() → setAttributes() → chart re-renders
 
 The block editor tier uses only WordPress-native patterns:
 
-| Need | Solution |
-|---|---|
-| Persisting chart config | Block attributes on `prc-chart-builder/chart` |
-| Persisting per-element overrides | Separate top-level block attributes (key-based) |
-| Parent → child communication | Block Context via `ChartContext.Provider` in the controller |
-| Editor-only UI state (popover open/closed, selected element) | `src/chart/edit/store.js` — a local `@wordpress/data` store |
-| Frontend runtime state | WordPress Interactivity API (for freeform/interactive charts) |
-| Real-time collaboration | Automatic — Gutenberg syncs block attributes natively |
+
+| Need                                                         | Solution                                                      |
+| ------------------------------------------------------------ | ------------------------------------------------------------- |
+| Persisting chart config                                      | Block attributes on `prc-chart-builder/chart`                 |
+| Persisting per-element overrides                             | Separate top-level block attributes (key-based)               |
+| Parent → child communication                                 | Block Context via `ChartContext.Provider` in the controller   |
+| Editor-only UI state (popover open/closed, selected element) | `src/chart/edit/store.js` — a local `@wordpress/data` store   |
+| Frontend runtime state                                       | WordPress Interactivity API (for freeform/interactive charts) |
+| Real-time collaboration                                      | Automatic — Gutenberg syncs block attributes natively         |
+
 
 No external Redux or React state management libraries are used.
+
+### PNG generation pipeline
+
+As of 3.6.0, PNGs are generated **server-side** via the ScreenshotOne API. When a chart post is saved (or a WP-CLI backfill is run), an Action Scheduler job calls `PNG_Export::generate_png()`, which screenshots the chart's public URL, sideloads the result into the media library as the chart post's featured image, and writes the URL/attachment ID/attributes hash to post meta (`_chart_png_url`, `_chart_png_attachment_id`, `_chart_attributes_hash`).
+
+### Export filenames and downloads
+
+User-facing downloads use a shared sanitization rule: **chart metadata title** (from `metadata.title` on the chart block) is normalized to a filename stem—lowercase, spaces → underscores, punctuation stripped, Unicode letters and digits kept—via `sanitizeChartExportFilename()` in `src/chart/utils/sanitize-chart-export-filename.js`. Empty or invalid input falls back to `chart`.
+
+
+| Surface                                                               | Filename pattern                           | Notes                                                                                                                                          |
+| --------------------------------------------------------------------- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Server PNG sideload (`PNG_Export` in `includes/class-png-export.php`) | `{stem}-{post_id}-{time}.png`              | ScreenshotOne API → media library on post save / WP-CLI backfill. `stem` from `metadata.title` or `post_title` as fallback.                            |
+| Context-menu PNG download (`view.js`)                                 | `{stem}.png`                               | Uses pre-generated `pngUrl` (featured image); name is cosmetic                                                                                 |
+| CSV download (`downloadData` in `view.js`)                            | `{stem}_data_{postPubDate}.csv`            | `postPubDate` from controller context                                                                                                          |
+| Featured-image download                                               | `{stem}.png`                               |                                                                                                                                                |
+| SVG download                                                          | `chart-{id}.svg` or `chart-{clientId}.svg` | Not title-based                                                                                                                                |
+
+
+**Social share URLs:** The Interactivity API context exposes both `postUrl` (the page where the chart is embedded) and `chartPostUrl` (the chart CPT permalink when different). Share actions (`shareTwitter`, `shareBluesky`, `shareFacebook`) use `chartPostUrl || postUrl` so links point at the chart post when the controller is synced into an article.
 
 ---
 
@@ -165,21 +200,23 @@ React component library built on `@visx` and D3 that renders SVG charts. Consume
 
 Chart types available as of 3.5.0:
 
-| Type | Notes |
-|---|---|
-| Bar (vertical, horizontal, stacked, grouped) | |
-| Diverging Bar | |
-| Line | |
-| Scatter | Supports grouping and regression lines (3.5.0) |
-| Dot Plot | |
-| Pie | |
-| Stacked Area | |
-| US Block Map | Responsive scaling fixed in 3.5.0 |
-| US County Map | |
-| World Map | Missing territories (Somaliland, Western Sahara etc.) added in 3.5.0 |
-| Sankey | New in 3.5.0 |
-| Treemap | New in 3.5.0 |
-| Radar | Work in progress; not yet in type picker |
+
+| Type                                         | Notes                                                                |
+| -------------------------------------------- | -------------------------------------------------------------------- |
+| Bar (vertical, horizontal, stacked, grouped) |                                                                      |
+| Diverging Bar                                |                                                                      |
+| Line                                         |                                                                      |
+| Scatter                                      | Supports grouping and regression lines (3.5.0)                       |
+| Dot Plot                                     |                                                                      |
+| Pie                                          |                                                                      |
+| Stacked Area                                 |                                                                      |
+| US Block Map                                 | Responsive scaling fixed in 3.5.0                                    |
+| US County Map                                |                                                                      |
+| World Map                                    | Missing territories (Somaliland, Western Sahara etc.) added in 3.5.0 |
+| Sankey                                       | New in 3.5.0                                                         |
+| Treemap                                      | New in 3.5.0                                                         |
+| Radar                                        | Work in progress; not yet in type picker                             |
+
 
 ### @prc/charting-utilities
 
@@ -213,23 +250,28 @@ As of 3.5.0, charts respond automatically to the OS/browser dark mode preference
 ## Decision Matrix
 
 ### Use block attributes when:
+
 - Data needs to persist with the post
 - Standard chart config (axes, colors, layout, metadata)
 - Per-element style overrides (key-based, separate from data)
 
 ### Use Block Context when:
+
 - Parent → child communication within the controller/chart relationship
 - Passing callbacks or functions to inner blocks
 
 ### Use the local `@wordpress/data` store (`edit/store.js`) when:
+
 - Editor-only ephemeral UI state (which element is selected, popover position)
 - State that should not persist across saves
 
 ### Use the Interactivity API when:
+
 - Frontend-only runtime interactions (hover, scroll, click on published charts)
 - Lightweight state that doesn't need to persist
 
 ### Do not use:
+
 - External Redux or global React state — WordPress-native patterns cover all current needs
 - `__labelPositions` inside `chartData` — superseded by the key-based attribute approach in 3.5.0
 
@@ -244,3 +286,4 @@ As of 3.5.0, charts respond automatically to the OS/browser dark mode preference
 - [src/chart/edit/popover/panels/README.md](../src/chart/edit/popover/panels/README.md) — element popover system internals
 - [WordPress Data Package](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-data/)
 - [WordPress Interactivity API](https://developer.wordpress.org/block-editor/reference-guides/interactivity-api/)
+

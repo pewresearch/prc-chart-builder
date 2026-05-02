@@ -1,6 +1,6 @@
 # PRC Chart Builder
 
-Version 3.5.1
+Version 3.8.0
 
 A WordPress plugin for building, managing, and embedding interactive SVG charts on the Pew Research Center platform. Charts are authored as a custom post type (`chart`) using the Gutenberg block editor and rendered via the PRC Charting Library (`prc-charting-library`), which is built on `@visx` and D3.
 
@@ -96,6 +96,8 @@ The plugin depends on `prc-charting-library` and `@prc/charting-utilities`. Chan
 | `[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)`                                       | System architecture, data flow, state management, decision matrix |
 | `[docs/VIEWPORT_ATTRIBUTES.md](docs/VIEWPORT_ATTRIBUTES.md)`                         | Viewport-aware attribute system internals                         |
 | `[docs/VIEWPORT_USAGE_GUIDE.md](docs/VIEWPORT_USAGE_GUIDE.md)`                       | Practical guide to responsive chart customization                 |
+| `[docs/release-notes/3_7_0.md](docs/release-notes/3_7_0.md)`                         | Chart Builder 3.7.0 release notes                                 |
+| `[docs/release-notes/3_6_0.md](docs/release-notes/3_6_0.md)`                         | Chart Builder 3.6.0 release notes (server-side PNG export)        |
 | `[docs/release-notes/3_5_0.md](docs/release-notes/3_5_0.md)`                         | Chart Builder 3.5.0 release notes                                 |
 | `[src/chart/edit/popover/panels/README.md](src/chart/edit/popover/panels/README.md)` | Element popover system internals and extension guide              |
 
@@ -616,7 +618,6 @@ Applies to: `treemap`.
 | `treemap.labelMinArea`    | number           | `1600`         | Minimum cell area (px²) required to show a label  |
 | `treemap.paddingInner`    | number           | `2`            | Inner padding between leaf cells (px)             |
 | `treemap.paddingOuter`    | number           | `4`            | Outer padding around the treemap boundary (px)    |
-| `treemap.showGroupLabels` | boolean          | `true`         | Show parent group labels                          |
 | `treemap.scaleOpacity`    | boolean          | `false`        | Scale cell opacity by value                       |
 | `treemap.opacityRange`    | [number, number] | `[0.4, 1]`     | Min/max opacity range when `scaleOpacity` is true |
 | `treemap.borderRadius`    | number           | `0`            | Corner radius for treemap cells (px)              |
@@ -740,8 +741,8 @@ Stores the chart's data payload, static image fallback, and miscellaneous I/O fl
 | `io.chartConverted.requester` | string   | `""`        | User or process that triggered the conversion                                          |
 | `io.chartConverted.timestamp` | string   | `""`        | ISO timestamp of the conversion                                                        |
 | `io.defaultShouldRender`      | boolean  | `true`      | Whether the chart should render on page load by default                                |
-| `io.pngUrl`                   | string   | `""`        | URL to a rendered PNG export of the chart                                              |
-| `io.pngId`                    | string   | `""`        | WordPress attachment ID of the PNG export                                              |
+| `io.pngUrl`                   | string   | `""`        | URL of the server-generated PNG (3.6.0+). Set automatically by `PNG_Export` via ScreenshotOne on post save or WP-CLI backfill.                       |
+| `io.pngId`                    | string   | `""`        | WordPress attachment ID of the server-generated PNG. Set alongside `io.pngUrl` by `PNG_Export`.                                                      |
 | `io.colorValue`               | string   | `"general"` | Named color palette variant (e.g. `"general"`, `"sequential"`)                         |
 | `io.customColors`             | string[] | `[]`        | Editor-supplied color overrides (takes precedence over `colors`)                       |
 | `io.chartFamily`              | string   | `"chart"`   | Top-level chart family used for routing in the charting library (eg. "map" or "chart") |

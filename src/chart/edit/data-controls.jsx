@@ -23,8 +23,10 @@ import { __ } from '@wordpress/i18n';
 
 import {
 	GROUP_BREAKS_CHART_TYPES,
+	GROUPABLE_CHART_TYPES,
 	POINT_CHART_TYPES,
 	SORTABLE_CHART_TYPES,
+	SUPPLEMENTAL_COLUMN_CHART_TYPES,
 } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import Sorter from './sorter';
@@ -480,20 +482,28 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							help={__(
 								'Select a column to group and color points. Each unique value becomes a color group in the legend.'
 							)}
-					value={dataRender.groupBreaksCategory || ''}
-					onChange={(value) => {
-						const categoryValues = value && chartData
-							? [ ...new Set( chartData.map((d) => d[value]).filter(Boolean) ) ]
-							: [];
-						setAttributes({
-							dataRender: {
-								...dataRender,
-								groupBreaksCategory: value || '',
-								groupBreaksActive: !!value,
-								groupBreaksCategoryValues: categoryValues,
-							},
-						});
-					}}
+							value={dataRender.groupBreaksCategory || ''}
+							onChange={(value) => {
+								const categoryValues =
+									value && chartData
+										? [
+												...new Set(
+													chartData
+														.map((d) => d[value])
+														.filter(Boolean)
+												),
+											]
+										: [];
+								setAttributes({
+									dataRender: {
+										...dataRender,
+										groupBreaksCategory: value || '',
+										groupBreaksActive: !!value,
+										groupBreaksCategoryValues:
+											categoryValues,
+									},
+								});
+							}}
 							options={[
 								{
 									value: '',
@@ -507,19 +517,19 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						/>
 					</WidePanelItem>
 				)}
-				{GROUP_BREAKS_CHART_TYPES.includes(chartType) && (
+				{GROUPABLE_CHART_TYPES.includes(chartType) && (
 					<>
 						<PanelDescription>
-							<StyledLabel>2. Group Breaks</StyledLabel>
+							<StyledLabel>2. Group By</StyledLabel>
 						</PanelDescription>
 						<WidePanelItem
 							hasValue={() => true}
-							label={__('Group Breaks')}
+							label={__('Group By')}
 							isShownByDefault
 							panelId={clientId}
 						>
 							<ToggleControl
-								label={__('Enable Group Breaks')}
+								label={__('Enable Grouping')}
 								checked={dataRender.groupBreaksActive || false}
 								onChange={() =>
 									setAttributes({
@@ -532,10 +542,9 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								}
 							/>
 							<PanelDescription>
-								Visually separate your data into groups by
-								selecting a category column. Each unique value
-								in that column will become a separate group with
-								visual breaks in between.
+								Partition your data into groups by selecting a
+								category column. Each unique value in that
+								column becomes a separate group.
 							</PanelDescription>
 							{dataRender.groupBreaksActive && (
 								<>
@@ -557,92 +566,101 @@ function DataControls({ attributes, setAttributes, clientId }) {
 											})
 										)}
 									/>
-									<SelectControl
-										label={__('Break Line Style')}
-										value={
-											dataRender.groupBreaks?.breakStyles
-												?.variation
-										}
-										onChange={(value) => {
-											const groupBreaks =
-												getCurrentValue(
-													'dataRender',
-													'groupBreaks'
-												) || {};
-											const breakStyles =
-												groupBreaks.breakStyles || {};
-											updateAttributeForDevice(
-												'dataRender',
-												{
-													groupBreaks: {
-														...groupBreaks,
-														breakStyles: {
-															...breakStyles,
-															variation: value,
-														},
-													},
+									{GROUP_BREAKS_CHART_TYPES.includes(
+										chartType
+									) && (
+										<>
+											<SelectControl
+												label={__('Break Line Style')}
+												value={
+													dataRender.groupBreaks
+														?.breakStyles?.variation
 												}
-											);
-										}}
-										options={[
-											{
-												value: 'empty',
-												label: 'Empty',
-											},
-											{
-												value: 'solid',
-												label: 'Solid',
-											},
-											{
-												value: 'dotted',
-												label: 'Dotted',
-											},
-											{
-												value: 'dashed',
-												label: 'Dashed',
-											},
-											{
-												value: 'heartbeat',
-												label: 'Heartbeat',
-											},
-										]}
-									/>
-									<NumberControl
-										label={__('Break Height')}
-										withInputField
-										step={1}
-										value={parseInt(
-											getCurrentValue(
-												'dataRender',
-												'groupBreaks'
-											)?.breakStyles?.height || 0,
-											10
-										)}
-										onChange={(value) => {
-											const groupBreaks =
-												getCurrentValue(
-													'dataRender',
-													'groupBreaks'
-												) || {};
-											const breakStyles =
-												groupBreaks.breakStyles || {};
-											updateAttributeForDevice(
-												'dataRender',
-												{
-													groupBreaks: {
-														...groupBreaks,
-														breakStyles: {
-															...breakStyles,
-															height: formatNum(
-																value,
-																'integer'
-															),
-														},
+												onChange={(value) => {
+													const groupBreaks =
+														getCurrentValue(
+															'dataRender',
+															'groupBreaks'
+														) || {};
+													const breakStyles =
+														groupBreaks.breakStyles ||
+														{};
+													updateAttributeForDevice(
+														'dataRender',
+														{
+															groupBreaks: {
+																...groupBreaks,
+																breakStyles: {
+																	...breakStyles,
+																	variation:
+																		value,
+																},
+															},
+														}
+													);
+												}}
+												options={[
+													{
+														value: 'empty',
+														label: 'Empty',
 													},
-												}
-											);
-										}}
-									/>
+													{
+														value: 'solid',
+														label: 'Solid',
+													},
+													{
+														value: 'dotted',
+														label: 'Dotted',
+													},
+													{
+														value: 'dashed',
+														label: 'Dashed',
+													},
+													{
+														value: 'heartbeat',
+														label: 'Heartbeat',
+													},
+												]}
+											/>
+											<NumberControl
+												label={__('Break Height')}
+												withInputField
+												step={1}
+												value={parseInt(
+													getCurrentValue(
+														'dataRender',
+														'groupBreaks'
+													)?.breakStyles?.height || 0,
+													10
+												)}
+												onChange={(value) => {
+													const groupBreaks =
+														getCurrentValue(
+															'dataRender',
+															'groupBreaks'
+														) || {};
+													const breakStyles =
+														groupBreaks.breakStyles ||
+														{};
+													updateAttributeForDevice(
+														'dataRender',
+														{
+															groupBreaks: {
+																...groupBreaks,
+																breakStyles: {
+																	...breakStyles,
+																	height: formatNum(
+																		value,
+																		'integer'
+																	),
+																},
+															},
+														}
+													);
+												}}
+											/>
+										</>
+									)}
 								</>
 							)}
 						</WidePanelItem>
@@ -668,7 +686,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 										attribute="groupBreaksCategoryValues"
 										parentObject="dataRender"
 										parentObjectValue={dataRender}
-										allowDisabled={false}
+										allowDisabled={chartType === 'treemap'}
 									/>
 								</WidePanelItem>
 							)}
@@ -685,31 +703,41 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							isShownByDefault
 							panelId={clientId}
 						>
-							<SelectControl
-								label={__('Sort Key')}
-								value={dataRender.sortKey}
-								help={__(
-									'Choose the column you would like to sort your data by.'
-								)}
-								onChange={(value) =>
-									setAttributes({
-										dataRender: {
-											...dataRender,
-											sortKey: value,
+							{/* Sort Key is meaningless for treemap (always the implicit value column). */}
+							{chartType !== 'treemap' && (
+								<SelectControl
+									label={__('Sort Key')}
+									value={dataRender.sortKey}
+									help={__(
+										'Choose the column you would like to sort your data by.'
+									)}
+									onChange={(value) =>
+										setAttributes({
+											dataRender: {
+												...dataRender,
+												sortKey: value,
+											},
+										})
+									}
+									options={[
+										...availableSelectableOptions,
+										{
+											label: independentVariable,
+											value: 'x',
 										},
-									})
-								}
-								options={[
-									...availableSelectableOptions,
-									{
-										label: independentVariable,
-										value: 'x',
-									},
-								]}
-							/>
+									]}
+								/>
+							)}
 							<SelectControl
 								label={__('Sort Order')}
 								value={dataRender.sortOrder}
+								help={
+									chartType === 'treemap'
+										? __(
+												'How leaf rectangles are ordered inside each group. "Descending" mirrors classic treemap hierarchy; "No Sort" preserves the underlying data order.'
+											)
+										: undefined
+								}
 								options={[
 									{
 										value: 'ascending',
@@ -736,7 +764,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						</WidePanelItem>
 					</>
 				)}
-				{SORTABLE_CHART_TYPES.includes(chartType) && (
+				{SUPPLEMENTAL_COLUMN_CHART_TYPES.includes(chartType) && (
 					<>
 						<PanelDescription>
 							<StyledLabel>5. Diff Column</StyledLabel>
@@ -786,6 +814,146 @@ function DataControls({ attributes, setAttributes, clientId }) {
 										value: option.label,
 									}))}
 								/>
+							)}
+						</WidePanelItem>
+					</>
+				)}
+				{SUPPLEMENTAL_COLUMN_CHART_TYPES.includes(chartType) && (
+					<>
+						<PanelDescription>
+							<StyledLabel>6. Net Value Labels</StyledLabel>
+						</PanelDescription>
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Net Value Labels')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<ToggleControl
+								label={
+									getCurrentValue('netValues', 'active')
+										? __('Active')
+										: __('Inactive')
+								}
+								checked={
+									getCurrentValue('netValues', 'active') ||
+									false
+								}
+								onChange={(value) =>
+									updateAttributeForDevice('netValues', {
+										active: value,
+									})
+								}
+							/>
+							<PanelDescription>
+								Show extra data columns as labels outside the
+								bars (separate from the Diff column).
+							</PanelDescription>
+							{getCurrentValue('netValues', 'active') && (
+								<>
+									<SelectControl
+										label={__('Positive column')}
+										value={
+											getCurrentValue(
+												'netValues',
+												'positive'
+											)?.category || ''
+										}
+										onChange={(value) => {
+											const nv =
+												getCurrentValue('netValues') ||
+												{};
+											updateAttributeForDevice(
+												'netValues',
+												{
+													...nv,
+													positive: {
+														...(nv.positive || {}),
+														category: value,
+													},
+												}
+											);
+										}}
+										options={availableOptions.map(
+											(option) => ({
+												label: option.label,
+												value: option.label,
+											})
+										)}
+									/>
+									{'diverging-bar' === chartType && (
+										<>
+											<ToggleControl
+												label={__(
+													'Negative labels active'
+												)}
+												checked={
+													!!getCurrentValue(
+														'netValues',
+														'negative'
+													)?.active
+												}
+												onChange={(value) => {
+													const nv =
+														getCurrentValue(
+															'netValues'
+														) || {};
+													updateAttributeForDevice(
+														'netValues',
+														{
+															...nv,
+															negative: {
+																...(nv.negative ||
+																	{}),
+																active: value,
+															},
+														}
+													);
+												}}
+											/>
+											{getCurrentValue(
+												'netValues',
+												'negative'
+											)?.active && (
+												<SelectControl
+													label={__(
+														'Negative column'
+													)}
+													value={
+														getCurrentValue(
+															'netValues',
+															'negative'
+														)?.category || ''
+													}
+													onChange={(value) => {
+														const nv =
+															getCurrentValue(
+																'netValues'
+															) || {};
+														updateAttributeForDevice(
+															'netValues',
+															{
+																...nv,
+																negative: {
+																	...(nv.negative ||
+																		{}),
+																	category:
+																		value,
+																},
+															}
+														);
+													}}
+													options={availableOptions.map(
+														(option) => ({
+															label: option.label,
+															value: option.label,
+														})
+													)}
+												/>
+											)}
+										</>
+									)}
+								</>
 							)}
 						</WidePanelItem>
 					</>

@@ -147,8 +147,9 @@ class Plugin_Bootstrap {
 	private function load_dependencies() {
 		// Include plugin loading class.
 		$this->include( 'class-loader.php' );
+		$this->include( 'trait-chart-block-defaults.php' );
 		$this->include( 'class-content-type.php' );
-		$this->include( 'class-media-library.php' );
+		$this->include( 'class-synced-chart-auto-publish.php' );
 		$this->include( 'class-block-utils.php' );
 		$this->include( 'class-seo.php' );
 		$this->include( 'class-block-migration.php' );
@@ -158,6 +159,7 @@ class Plugin_Bootstrap {
 		$this->include( 'class-json-ld.php' );
 		$this->include( 'class-print-engine-integration.php' );
 		$this->include( 'admin/class-admin.php' );
+		$this->include( 'chart-handoff/class-pch-import-endpoint.php' );
 		$this->include( 'class-chart-patterns.php' );
 		$this->include( 'inspector-sidebar-panel/class-inspector-sidebar-panel.php' );
 		$this->include( 'class-chart-export-endpoint.php' );
@@ -166,12 +168,6 @@ class Plugin_Bootstrap {
 		}
 		if ( file_exists( plugin_dir_path( __DIR__ ) . 'includes/class-png-export.php' ) ) {
 			$this->include( 'class-png-export.php' );
-		}
-
-		// Conditionally load the AI experiment if the Abstracts_Experiment base class is available.
-		if ( class_exists( '\WordPress\AI\Abstracts\Abstract_Experiment' ) ) {
-			$this->include( 'ai-experiment/class-chart-ai-ability.php' );
-			$this->include( 'ai-experiment/class-chart-ai-experiment.php' );
 		}
 
 		$this->load_blocks();
@@ -189,7 +185,7 @@ class Plugin_Bootstrap {
 	 */
 	private function register_modules() {
 		new Content_Type( $this->get_loader() );
-		new Media_Library( $this->get_loader() );
+		new Synced_Chart_Auto_Publish( $this->get_loader() );
 		new SEO( $this->get_loader() );
 		new Block_Migration( $this->get_loader() );
 		new Distributor( $this->get_loader() );
@@ -197,6 +193,7 @@ class Plugin_Bootstrap {
 		new JSON_LD( $this->get_loader() );
 		new Print_Engine_Integration( $this->get_loader() );
 		new Admin( $this->get_loader() );
+		new PCH_Import_Endpoint( $this->get_loader() );
 		new Chart_Patterns( $this->get_loader() );
 		new Inspector_Sidebar_Panel( $this->get_loader() );
 		new Chart_Export_Endpoint( $this->get_loader() );
@@ -205,28 +202,46 @@ class Plugin_Bootstrap {
 			new PNG_Export( $this->get_loader(), $screenshot_service );
 		}
 
-		// Register the AI experiment if the base class is available.
-		if ( class_exists( '\WordPress\AI\Abstracts\Abstract_Experiment' ) && class_exists( '\PRC\Platform\Chart_Builder\Chart_AI_Experiment' ) ) {
-			// Increase HTTP timeout for Gemini API calls (thinking models can take 30–60s).
-			add_filter(
-				'http_request_args',
-				static function ( $args, $url ) {
-					if ( is_string( $url ) && str_contains( $url, 'generativelanguage.googleapis.com' ) ) {
-						$args['timeout'] = 90;
-					}
-					return $args;
-				},
-				10,
-				2
-			);
+		// After WP AI plugins_loaded bootstrap (priority 10); Abstract_Feature is not autoloadable before that.
+		add_action( 'plugins_loaded', array( $this, 'register_wp_ai_features' ), 11 );
+	}
 
-			add_action(
-				'ai_experiments_register_experiments',
-				static function ( $registry ) {
-					$registry->register_experiment( new Chart_AI_Experiment() );
-				}
-			);
+	/**
+	 * Load Chart AI classes, HTTP timeout filter, and register the feature with the WP AI plugin.
+	 *
+	 * @return void
+	 */
+	public function register_wp_ai_features() {
+		if ( ! class_exists( '\WordPress\AI\Abstracts\Abstract_Feature' ) ) {
+			return;
 		}
+
+		$this->include( 'ai-experiment/class-chart-ai-ability.php' );
+		$this->include( 'ai-experiment/class-chart-ai-experiment.php' );
+
+		if ( ! class_exists( '\PRC\Platform\Chart_Builder\Chart_AI_Experiment' ) ) {
+			return;
+		}
+
+		// Increase HTTP timeout for Gemini API calls (thinking models can take 30–60s).
+		add_filter(
+			'http_request_args',
+			static function ( $args, $url ) {
+				if ( is_string( $url ) && str_contains( $url, 'generativelanguage.googleapis.com' ) ) {
+					$args['timeout'] = 90;
+				}
+				return $args;
+			},
+			10,
+			2
+		);
+
+		add_action(
+			'wpai_register_features',
+			static function ( $registry ) {
+				$registry->register_feature( new Chart_AI_Experiment() );
+			}
+		);
 	}
 
 	/**

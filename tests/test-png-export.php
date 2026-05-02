@@ -33,17 +33,22 @@ class PNGExportTest extends WP_UnitTestCase {
 				'width'  => 640,
 				'height' => 400,
 			),
-			'chartData' => array( array( 'x' => 1, 'y' => 2 ) ),
+			'chartData' => array(
+				array(
+					'x' => 1,
+					'y' => 2,
+				),
+			),
 			'io'        => array(
-				'colorValue'  => '#e53e3e',
+				'colorValue'   => '#e53e3e',
 				'customColors' => array(),
-				'pngUrl'      => '',
-				'pngId'       => 0,
+				'pngUrl'       => '',
+				'pngId'        => 0,
 			),
 		);
 
-		$merged       = array_merge( $defaults, $attrs );
-		$json_attrs   = wp_json_encode( $merged );
+		$merged     = array_merge( $defaults, $attrs );
+		$json_attrs = wp_json_encode( $merged );
 
 		return "<!-- wp:prc-chart-builder/chart {$json_attrs} /-->";
 	}
@@ -64,13 +69,13 @@ class PNGExportTest extends WP_UnitTestCase {
 	 * We use a minimal stub instead of Mockery/PHPUnit mocks so there are no
 	 * extra dev dependencies.
 	 *
-	 * @param bool   $service_configured Return value of is_configured().
-	 * @param mixed  $take_return        Return value of take(). Use a WP_Error to simulate failure.
+	 * @param bool  $service_configured Return value of is_configured().
+	 * @param mixed $take_return        Return value of take(). Use a WP_Error to simulate failure.
 	 * @return array{ png_export: PNG_Export, loader_mock: object, screenshot_mock: object }
 	 */
 	private function make_png_export( bool $service_configured = false, mixed $take_return = null ): array {
 		// Minimal loader stub — just records registered hooks.
-		$loader_mock = new class {
+		$loader_mock = new class() {
 			public array $actions = array();
 			public function add_action( $hook, $cb_obj, $method, $priority = 10, $accepted_args = 1 ): void {
 				$this->actions[] = compact( 'hook', 'method', 'priority' );
@@ -102,10 +107,33 @@ class PNGExportTest extends WP_UnitTestCase {
 		$png_export = new PNG_Export( $loader_mock, $screenshot_mock );
 
 		return array(
-			'png_export'       => $png_export,
-			'loader_mock'      => $loader_mock,
-			'screenshot_mock'  => $screenshot_mock,
+			'png_export'      => $png_export,
+			'loader_mock'     => $loader_mock,
+			'screenshot_mock' => $screenshot_mock,
 		);
+	}
+
+	// -------------------------------------------------------------------------
+	// sanitize_png_filename_stem() (private; exercised by generate_png sideload name)
+	// -------------------------------------------------------------------------
+
+	/**
+	 * PNG filename stem strips punctuation except hyphen and underscore.
+	 */
+	public function test_sanitize_png_filename_stem_strips_punctuation() {
+		[ 'png_export' => $pe ] = $this->make_png_export();
+		$method                 = ( new \ReflectionClass( $pe ) )->getMethod( 'sanitize_png_filename_stem' );
+		$method->setAccessible( true );
+
+		$this->assertSame(
+			'in_some_countries_majorities_value_presidents',
+			$method->invoke( $pe, 'In some countries, majorities value presidents' )
+		);
+		$this->assertSame(
+			'keep-hyphen_and_underscore',
+			$method->invoke( $pe, 'Keep-hyphen_and_underscore!' )
+		);
+		$this->assertSame( 'chart', $method->invoke( $pe, '!!!' ) );
 	}
 
 	// -------------------------------------------------------------------------
@@ -142,24 +170,24 @@ class PNGExportTest extends WP_UnitTestCase {
 		$base = array(
 			'chartData' => array( array( 'x' => 1 ) ),
 			'io'        => array(
-				'colorValue'       => '#000',
-				'pngUrl'          => '',
-				'pngId'           => 0,
-				'pngGeneratedAt'  => null,
-				'svgUrl'          => '',
-				'staticImageUrl'  => '',
+				'colorValue'     => '#000',
+				'pngUrl'         => '',
+				'pngId'          => 0,
+				'pngGeneratedAt' => null,
+				'svgUrl'         => '',
+				'staticImageUrl' => '',
 			),
 		);
 
 		$after_export = array(
 			'chartData' => array( array( 'x' => 1 ) ),
 			'io'        => array(
-				'colorValue'       => '#000',
-				'pngUrl'          => 'https://example.com/wp-content/uploads/chart-1.png',
-				'pngId'           => 42,
-				'pngGeneratedAt'  => '2025-01-01T00:00:00Z',
-				'svgUrl'          => 'https://example.com/wp-content/uploads/chart-1.svg',
-				'staticImageUrl'  => 'https://example.com/wp-content/uploads/static.png',
+				'colorValue'     => '#000',
+				'pngUrl'         => 'https://example.com/wp-content/uploads/chart-1.png',
+				'pngId'          => 42,
+				'pngGeneratedAt' => '2025-01-01T00:00:00Z',
+				'svgUrl'         => 'https://example.com/wp-content/uploads/chart-1.svg',
+				'staticImageUrl' => 'https://example.com/wp-content/uploads/static.png',
 			),
 		);
 
@@ -192,7 +220,13 @@ class PNGExportTest extends WP_UnitTestCase {
 		[ 'png_export' => $pe ] = $this->make_png_export();
 
 		$base     = array( 'chartData' => array( array( 'x' => 1 ) ) );
-		$migrated = array_merge( $base, array( '_legacy' => true, '_v1Original' => array( 'old' => 'data' ) ) );
+		$migrated = array_merge(
+			$base,
+			array(
+				'_legacy'     => true,
+				'_v1Original' => array( 'old' => 'data' ),
+			)
+		);
 
 		$this->assertEquals(
 			$pe->compute_attributes_hash( $base ),
@@ -205,9 +239,17 @@ class PNGExportTest extends WP_UnitTestCase {
 	 */
 	public function test_io_hash_excluded_keys_contains_expected_values() {
 		$expected = array(
-			'pngUrl', 'pngId', 'pngGeneratedAt', 'pngAttributesHash',
-			'svgUrl', 'svgId', 'svgGeneratedAt', 'svgAttributesHash',
-			'staticImageUrl', 'staticImageId', 'staticImageInnerHTML',
+			'pngUrl',
+			'pngId',
+			'pngGeneratedAt',
+			'pngAttributesHash',
+			'svgUrl',
+			'svgId',
+			'svgGeneratedAt',
+			'svgAttributesHash',
+			'staticImageUrl',
+			'staticImageId',
+			'staticImageInnerHTML',
 		);
 
 		foreach ( $expected as $key ) {
@@ -229,11 +271,13 @@ class PNGExportTest extends WP_UnitTestCase {
 
 		[ 'png_export' => $pe ] = $this->make_png_export( false );
 
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'publish',
-			'post_content' => $this->make_chart_post_content(),
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'publish',
+				'post_content' => $this->make_chart_post_content(),
+			)
+		);
 
 		$post = get_post( $post_id );
 
@@ -262,11 +306,13 @@ class PNGExportTest extends WP_UnitTestCase {
 
 		[ 'png_export' => $pe ] = $this->make_png_export( true );
 
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'publish',
-			'post_content' => '<!-- wp:paragraph --><p>No chart here</p><!-- /wp:paragraph -->',
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'publish',
+				'post_content' => '<!-- wp:paragraph --><p>No chart here</p><!-- /wp:paragraph -->',
+			)
+		);
 
 		$post = get_post( $post_id );
 		$pe->maybe_schedule_png_generation( $post );
@@ -294,18 +340,20 @@ class PNGExportTest extends WP_UnitTestCase {
 		[ 'png_export' => $pe ] = $this->make_png_export( true );
 
 		$content = $this->make_chart_post_content();
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'publish',
-			'post_content' => $content,
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'publish',
+				'post_content' => $content,
+			)
+		);
 
 		$post = get_post( $post_id );
 
 		// Compute the hash the same way the class does and pre-store it.
-		$blocks    = parse_blocks( $content );
-		$block     = $blocks[0];
-		$hash      = $pe->compute_attributes_hash( $block['attrs'] ?? array() );
+		$blocks = parse_blocks( $content );
+		$block  = $blocks[0];
+		$hash   = $pe->compute_attributes_hash( $block['attrs'] ?? array() );
 		update_post_meta( $post_id, '_chart_attributes_hash', $hash );
 
 		$pe->maybe_schedule_png_generation( $post );
@@ -332,11 +380,13 @@ class PNGExportTest extends WP_UnitTestCase {
 
 		[ 'png_export' => $pe ] = $this->make_png_export( true );
 
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'publish',
-			'post_content' => $this->make_chart_post_content(),
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'publish',
+				'post_content' => $this->make_chart_post_content(),
+			)
+		);
 
 		// Store a stale hash to simulate a changed chart.
 		update_post_meta( $post_id, '_chart_attributes_hash', 'stale_hash_value' );
@@ -366,11 +416,13 @@ class PNGExportTest extends WP_UnitTestCase {
 
 		[ 'png_export' => $pe ] = $this->make_png_export( true );
 
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'publish',
-			'post_content' => $this->make_chart_post_content(),
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'publish',
+				'post_content' => $this->make_chart_post_content(),
+			)
+		);
 
 		update_post_meta( $post_id, '_chart_attributes_hash', 'stale_hash_value' );
 
@@ -432,11 +484,13 @@ class PNGExportTest extends WP_UnitTestCase {
 	public function test_generate_png_returns_early_for_draft_post() {
 		[ 'png_export' => $pe ] = $this->make_png_export( true, null );
 
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'draft',
-			'post_content' => $this->make_chart_post_content(),
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'draft',
+				'post_content' => $this->make_chart_post_content(),
+			)
+		);
 
 		// Should not throw and should not update any meta.
 		$pe->generate_png( $post_id );
@@ -452,11 +506,13 @@ class PNGExportTest extends WP_UnitTestCase {
 
 		[ 'png_export' => $pe ] = $this->make_png_export( true, $error );
 
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'publish',
-			'post_content' => $this->make_chart_post_content(),
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'publish',
+				'post_content' => $this->make_chart_post_content(),
+			)
+		);
 
 		$this->expectException( \RuntimeException::class );
 
@@ -477,11 +533,13 @@ class PNGExportTest extends WP_UnitTestCase {
 
 		[ 'png_export' => $pe ] = $this->make_png_export( true, $tiny_png );
 
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'publish',
-			'post_content' => $this->make_chart_post_content(),
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'publish',
+				'post_content' => $this->make_chart_post_content(),
+			)
+		);
 
 		// Provide the sideload function if we're in a test environment where
 		// media_handle_sideload is available; skip otherwise.
@@ -516,11 +574,13 @@ class PNGExportTest extends WP_UnitTestCase {
 			$this->markTestSkipped( 'media_handle_sideload() not available in this test environment.' );
 		}
 
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'publish',
-			'post_content' => $this->make_chart_post_content(),
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'publish',
+				'post_content' => $this->make_chart_post_content(),
+			)
+		);
 
 		// Create a dummy "previous" attachment and store its ID in post meta.
 		$previous_attachment_id = self::factory()->attachment->create( array( 'post_parent' => $post_id ) );
@@ -533,9 +593,9 @@ class PNGExportTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * generate_png() flags the new attachment with isChartBuilderImage meta.
+	 * generate_png() tags the new attachment with the hidden _media_visibility term.
 	 */
-	public function test_generate_png_flags_attachment_as_chart_builder_image() {
+	public function test_generate_png_flags_attachment_as_hidden_media() {
 		$tiny_png = base64_decode(
 			'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='
 		);
@@ -546,18 +606,21 @@ class PNGExportTest extends WP_UnitTestCase {
 			$this->markTestSkipped( 'media_handle_sideload() not available in this test environment.' );
 		}
 
-		$post_id = self::factory()->post->create( array(
-			'post_type'    => 'chart',
-			'post_status'  => 'publish',
-			'post_content' => $this->make_chart_post_content(),
-		) );
+		$post_id = self::factory()->post->create(
+			array(
+				'post_type'    => 'chart',
+				'post_status'  => 'publish',
+				'post_content' => $this->make_chart_post_content(),
+			)
+		);
 
 		$pe->generate_png( $post_id );
 
 		$attachment_id = (int) get_post_meta( $post_id, '_chart_png_attachment_id', true );
-		$is_chart_img  = get_post_meta( $attachment_id, 'isChartBuilderImage', true );
+		$terms         = wp_get_object_terms( $attachment_id, '_media_visibility', array( 'fields' => 'slugs' ) );
 
-		$this->assertTrue( (bool) $is_chart_img );
+		$this->assertNotWPError( $terms );
+		$this->assertContains( 'hidden', $terms );
 	}
 
 	// -------------------------------------------------------------------------

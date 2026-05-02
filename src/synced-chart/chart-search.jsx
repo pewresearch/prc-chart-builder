@@ -9,13 +9,14 @@ export default function ChartSearch({ setAttributes }) {
 			placeholder="Search for charts"
 			entityType="postType"
 			entitySubType="chart"
-			entityStatus={['publish', 'draft']}
+			entityStatus={['publish', 'draft', 'future']}
 			onSelect={(item) => {
 				setAttributes({
 					ref: parseInt(item.entityId),
 				});
 			}}
 			perPage={10}
+			showFeaturedImage={true}
 		/>
 	);
 }

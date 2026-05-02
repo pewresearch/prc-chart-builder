@@ -1,13 +1,13 @@
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
 import {
+	PanelBody,
 	TextareaControl,
 	TextControl,
 	ToggleControl,
-	PanelBody,
 } from '@wordpress/components';
+import { __ } from '@wordpress/i18n';
 
 import { generateDefaultAltText } from '../utils/helpers';
 import { useViewportAttributes } from './use-viewport-attributes';
@@ -98,7 +98,7 @@ function TextFieldControls({ attributes, setAttributes }) {
 			)}
 			{!isStaticChart && (
 				<TextareaControl
-					label={__('Alt Text (Accessibility)')}
+					label={__('Alt Text (Accessibility) / SEO Description')}
 					help={
 						alt
 							? __('Custom alt text set')

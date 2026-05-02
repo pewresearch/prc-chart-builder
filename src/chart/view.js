@@ -13,6 +13,7 @@ import {
  */
 import getConfig from './utils/get-config';
 import { mergeCustomLabelData } from './utils/merge-custom-label-data';
+import { mergeCustomTooltipData } from './utils/merge-custom-tooltip-data';
 
 // import './styles.scss';
 
@@ -111,9 +112,58 @@ const { actions, state } = store('prc-chart-builder/chart', {
 					? config.dataRender.groupBreaksCategory
 					: null;
 
-			const dataWithCustomizations = mergeCustomLabelData(
+			const dataWithLabelCustomizations = mergeCustomLabelData(
 				data,
 				labelCustomizations,
+				activeGroupBreaksCategory
+			);
+
+			// Enrich data with __errorBars from column mappings (dot-plot only)
+			let dataWithCustomizations = dataWithLabelCustomizations;
+			if (
+				config.layout?.type === 'dot-plot' &&
+				config.errorBars?.enabled &&
+				config.errorBars?.categories
+			) {
+				const mappingEntries = Object.entries(
+					config.errorBars.categories
+				);
+				if (mappingEntries.length > 0) {
+					const defaultStyles = config.errorBars.defaultStyles || {};
+					dataWithCustomizations = dataWithLabelCustomizations.map(
+						(row) => {
+							const bars = {};
+							for (const [catKey, mapping] of mappingEntries) {
+								if (mapping.lowColumn && mapping.highColumn) {
+									const low = parseFloat(
+										row[mapping.lowColumn]
+									);
+									const high = parseFloat(
+										row[mapping.highColumn]
+									);
+									if (!isNaN(low) && !isNaN(high)) {
+										bars[catKey] = {
+											min: low,
+											max: high,
+											...defaultStyles,
+											...(mapping.styles || {}),
+										};
+									}
+								}
+							}
+							return Object.keys(bars).length > 0
+								? { ...row, __errorBars: bars }
+								: row;
+						}
+					);
+				}
+			}
+
+			// Merge customTooltips (top-level block attribute) as the final pass.
+			const customTooltips = attributes.customTooltips || {};
+			const dataWithAllCustomizations = mergeCustomTooltipData(
+				dataWithCustomizations,
+				customTooltips,
 				activeGroupBreaksCategory
 			);
 
@@ -123,7 +173,7 @@ const { actions, state } = store('prc-chart-builder/chart', {
 			} else {
 				ChartBuilderRenderer(
 					id,
-					dataWithCustomizations,
+					dataWithAllCustomizations,
 					config,
 					tableData
 				);
@@ -136,14 +186,25 @@ const { actions, state } = store('prc-chart-builder/chart', {
 		 */
 		*navigateToViewport(viewport) {
 			const newUrl = buildViewportUrl(viewport);
-			const router = yield import('@wordpress/interactivity-router');
-			yield router.actions.navigate(newUrl);
+			const { actions: routerActions } =
+				yield import('@wordpress/interactivity-router');
+			yield routerActions.navigate(newUrl, { replace: true });
+			// Strip the viewport param from the URL bar after navigation so it
+			// doesn't persist visibly in the browser bar.
+			const cleanUrl = new URL(window.location.href);
+			cleanUrl.searchParams.delete('cb_viewport');
+			window.history.replaceState(
+				window.history.state,
+				'',
+				cleanUrl.toString()
+			);
 		},
 		// TODO: this is a POC of how to update data. will need more unique query params
 		*updateData(param) {
 			const newUrl = `${window.location.href}?chartBuilderFilterParam=${param}`;
-			const router = yield import('@wordpress/interactivity-router');
-			yield router.actions.navigate(newUrl);
+			const { actions: routerActions } =
+				yield import('@wordpress/interactivity-router');
+			yield routerActions.navigate(newUrl, { replace: false });
 		},
 		toggleQuestionWordingExpanded() {
 			const context = getContext();

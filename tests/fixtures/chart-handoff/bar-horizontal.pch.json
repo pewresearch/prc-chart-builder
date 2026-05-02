@@ -1,0 +1,41 @@
+{
+	"$schema": "prc-chart-handoff/v1",
+	"version": "1.0.0",
+	"chartType": "bar",
+	"orientation": "horizontal",
+	"data": {
+		"values": [
+			{ "country": "Germany", "share": 40, "opinion": "Favorable" },
+			{ "country": "Spain",   "share": 50, "opinion": "Favorable" },
+			{ "country": "Germany", "share": 20, "opinion": "Unfavorable" },
+			{ "country": "Spain",   "share": 30, "opinion": "Unfavorable" }
+		],
+		"xColumn": "country",
+		"yColumn": "share",
+		"categoryColumn": "opinion",
+		"xType": "categorical",
+		"yType": "percentage"
+	},
+	"metadata": {
+		"title": "Views of Country X",
+		"subtitle": "% who have a favorable view",
+		"note": "Note: Based on adults in each country.",
+		"source": "Source: Pew Research Center"
+	},
+	"config": {
+		"colors": ["#456A83", "#BF3B27"],
+		"width": 640,
+		"height": 400,
+		"dependentAxis": { "tickUnit": "%" },
+		"legend": { "active": true },
+		"labels": { "active": true, "position": "inside" }
+	},
+	"source": {
+		"tool": "pewplots",
+		"toolVersion": "3.1.0",
+		"exportedAt": "2026-04-07T12:00:00Z",
+		"palette": "partisan",
+		"paletteScale": "auto"
+	},
+	"warnings": []
+}

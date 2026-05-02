@@ -6,7 +6,7 @@
  * Plugin Name:       PRC Chart Builder
  * Plugin URI:        https://github.com/pewresearch/prc-chart-builder
  * Description:       Chart Builder is a chart building tool for the PRC Platform. It allows you to create rich, highly interactive charts and data visualizations all from the block editor. Support for synced charts via the Synced Chart block is also possible, allowing you to place one chart in many places and have them all update when the original is updated.
- * Version:           3.6.0
+ * Version:           3.8.1
  * Author:            Pew Research Center
  * Author URI:        https://pewresearch.org
  * License:           GPL-2.0+
@@ -14,7 +14,7 @@
  * Text Domain:       prc-chart-builder
  * Requires at least: 6.7
  * Requires PHP:      8.2
- * Requires Plugin:   prc-block-library
+ * Requires Plugins:  prc-scripts, prc-block-library, prc-post-publish-pipeline
  * @package           prc-chart-builder
  */
 
@@ -22,7 +22,16 @@
 if ( ! defined( 'WPINC' ) ) {
 	die;
 }
-define( 'PRC_CHART_BUILDER_VERSION', '3.1.0' );
+// Load the Jetpack Autoloader so runtime version-selection can pick the
+// highest version across all plugins that ship the same library dep
+// (see .cursor/plans/composer-shape-b-migration_0e4e9991.plan.md).
+$prc_chart_builder_autoloader = __DIR__ . '/vendor/autoload_packages.php';
+if ( file_exists( $prc_chart_builder_autoloader ) ) {
+	require_once $prc_chart_builder_autoloader;
+}
+unset( $prc_chart_builder_autoloader );
+
+define( 'PRC_CHART_BUILDER_VERSION', '3.8.0' );
 define( 'PRC_CHART_BUILDER_DIR', __DIR__ );
 define( 'PRC_CHART_BUILDER_DIR_MANIFEST_FILE', __DIR__ . '/build/block-manifest.php' );
 define( 'PRC_CHART_BUILDER_NAMESPACE', 'prc-chart-builder' );

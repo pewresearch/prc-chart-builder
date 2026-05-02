@@ -20,6 +20,43 @@ class Controller {
 	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'block_init' );
+		$loader->add_filter( 'prc_table_validation_schemas', $this, 'register_validation_schemas' );
+	}
+
+	/**
+	 * Register chart-builder-specific validation schemas that the table block's
+	 * validation engine can enforce (geo maps, time series, etc.).
+	 *
+	 * @param array $schemas Existing schemas from other plugins.
+	 * @return array
+	 */
+	public function register_validation_schemas( $schemas ) {
+		$schemas[] = array(
+			'slug'          => 'geo-state',
+			'label'         => 'US State Map',
+			'requiredTypes' => array( 'fips' ),
+		);
+		$schemas[] = array(
+			'slug'          => 'geo-county',
+			'label'         => 'US County Map',
+			'requiredTypes' => array( 'fips' ),
+		);
+		$schemas[] = array(
+			'slug'          => 'geo-country',
+			'label'         => 'World Map (Alpha-3)',
+			'requiredTypes' => array( 'iso3alpha' ),
+		);
+		$schemas[] = array(
+			'slug'          => 'geo-country-numeric',
+			'label'         => 'World Map (Numeric)',
+			'requiredTypes' => array( 'iso3numeric' ),
+		);
+		$schemas[] = array(
+			'slug'          => 'timeseries',
+			'label'         => 'Time Series',
+			'requiredTypes' => array( 'date', 'number' ),
+		);
+		return $schemas;
 	}
 
 	/**
@@ -50,7 +87,7 @@ class Controller {
 		$publication_date = get_the_date( 'Y-m-d', $current_post_id );
 		$root_url         = get_bloginfo( 'url' );
 		$permalink        = get_permalink( $current_post_id );
-		$is_mobile        = 'mobile' === \PRC\Platform\get_current_device();
+		$is_mobile        = 'mobile' === \PRC\BlockUtils\get_current_device();
 
 		// Resolve the canonical chart post URL for the context menu.
 		// When the controller is synced into a report, refId is the chart CPT post ID.
@@ -198,12 +235,12 @@ class Controller {
 					$featured_image_url                               = $static_chart_img[0];
 				}
 		} else {
-			// Post meta is the authoritative source for server-generated PNGs.
+			// The featured image is the canonical server-generated PNG.
 			// When synced into another post, refId is the chart CPT post ID —
 			// use it so we read meta from the chart post, not the parent article.
 			$chart_meta_id  = $chart_ref_id ?? $current_post_id;
-			$server_png_id  = (int) get_post_meta( $chart_meta_id, '_chart_png_attachment_id', true );
-			$server_png_url = (string) get_post_meta( $chart_meta_id, '_chart_png_url', true );
+			$server_png_id  = (int) get_post_thumbnail_id( $chart_meta_id );
+			$server_png_url = $server_png_id ? (string) wp_get_attachment_url( $server_png_id ) : '';
 				if ( $server_png_id && $server_png_url ) {
 					$featured_image_id  = $server_png_id;
 					$featured_image_url = $server_png_url;
@@ -222,7 +259,7 @@ class Controller {
 		if ( $blocks['table'] ) {
 			$blocks['table']['attrs']['className'] = 'chart-builder-data-table';
 
-			$table_array = \PRC\Platform\Core\WP_HTML_Sub_Processors\parse_table_block_into_array( $blocks['table']['innerHTML'] );
+			$table_array = \PRC\Html\parse_table_block_into_array( $blocks['table']['innerHTML'] );
 
 			$meta_title                   = $chart_attributes['metadata']['title'] ?? '';
 			$meta_subtitle                = $chart_attributes['metadata']['subtitle'] ?? '';
@@ -421,21 +458,22 @@ class Controller {
 				),
 			);
 
-			$context = array(
-				'id'               => $block_id,
-				'postId'           => $current_post_id,
-				'postUrl'          => $permalink,
-				'postPubDate'      => $publication_date,
-				'rootUrl'          => $root_url,
-				'featuredImageId'  => $featured_image_id,
-				'featuredImageUrl' => $featured_image_url,
-				'title'            => $chart_attributes['metadata']['title'] ?? '',
-				'subtitle'         => $chart_attributes['metadata']['subtitle'] ?? '',
-				'note'             => $chart_attributes['metadata']['note'] ?? '',
-				'source'           => $chart_attributes['metadata']['source'] ?? '',
-				'tag'              => $chart_attributes['metadata']['tag'] ?? '',
-				'tableData'        => $table_array,
-			);
+		$context = array(
+			'id'               => $block_id,
+			'postId'           => $current_post_id,
+			'postUrl'          => $permalink,
+			'chartPostUrl'     => $chart_post_url,
+			'postPubDate'      => $publication_date,
+			'rootUrl'          => $root_url,
+			'featuredImageId'  => $featured_image_id,
+			'featuredImageUrl' => $featured_image_url,
+			'title'            => $chart_attributes['metadata']['title'] ?? '',
+			'subtitle'         => $chart_attributes['metadata']['subtitle'] ?? '',
+			'note'             => $chart_attributes['metadata']['note'] ?? '',
+			'source'           => $chart_attributes['metadata']['source'] ?? '',
+			'tag'              => $chart_attributes['metadata']['tag'] ?? '',
+			'tableData'        => $table_array,
+		);
 
 		$block_attrs = get_block_wrapper_attributes(
 			array(

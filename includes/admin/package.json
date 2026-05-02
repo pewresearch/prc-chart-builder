@@ -7,7 +7,7 @@
 		"@wordpress/icons": "^10.23.0"
 	},
 	"devDependencies": {
-		"@wordpress/scripts": "^30.16.0"
+		"@wordpress/scripts": "^31.4.0"
 	},
 	"scripts": {
 		"build": "wp-scripts build ./src/index.js --output-path=./build",

@@ -10,3 +10,5 @@ export { useSegmentCustomizations } from './useSegmentCustomizations';
 export { useTickLabelCustomizations } from './useTickLabelCustomizations';
 export { useAnnotationCustomizations } from './useAnnotationCustomizations';
 export { useLegendItemCustomizations } from './useLegendItemCustomizations';
+export { useErrorBarCustomizations } from './useErrorBarCustomizations';
+export { useTooltipCustomizations } from './useTooltipCustomizations';

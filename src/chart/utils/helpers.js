@@ -330,10 +330,7 @@ export const formatCellContent = (
 		return content;
 	}
 	// Preserve string values for specified keys (e.g. Sankey 'target' column)
-	if (
-		Array.isArray(preserveStringKeys) &&
-		preserveStringKeys.includes(key)
-	) {
+	if (Array.isArray(preserveStringKeys) && preserveStringKeys.includes(key)) {
 		return content;
 	}
 	// TODO: temporary fix for less than signs in table cells.
@@ -342,6 +339,71 @@ export const formatCellContent = (
 		return '';
 	}
 	return replaceNonNumeric(content);
+};
+
+/**
+ * Type-aware cell content parser that uses columnMeta when available.
+ *
+ * When the table's columnMeta declares a specific data type for a column,
+ * this function uses it directly instead of guessing. Falls back to the
+ * existing formatCellContent logic for 'auto' or absent metadata.
+ *
+ * @param {string}   content              Raw cell HTML/text
+ * @param {string}   key                  Header key ('x' for first column, header label otherwise)
+ * @param {Object[]} columnMeta           The table's columnMeta array
+ * @param {number}   colIndex             0-based column index in the table
+ * @param {string}   scale                mapScale value
+ * @param {string}   groupBreaksCategory  Active group breaks category
+ * @param {string}   xScale               Independent axis scale ('time', 'ordinal', etc.)
+ * @param {string}   xFormat              Date format string
+ * @param {string[]} preserveStringKeys   Keys that should stay as strings
+ * @return {*} Parsed value
+ */
+export const formatCellContentTyped = (
+	content,
+	key,
+	columnMeta,
+	colIndex,
+	scale,
+	groupBreaksCategory,
+	xScale,
+	xFormat,
+	preserveStringKeys = []
+) => {
+	const meta = columnMeta?.[colIndex];
+	const dataType = meta?.dataType;
+
+	if (dataType && dataType !== 'auto') {
+		switch (dataType) {
+			case 'number':
+			case 'currency':
+			case 'percentage': {
+				const stripped = String(content).replace(/[^0-9.\-]/g, '');
+				const num = parseFloat(stripped);
+				return Number.isNaN(num) ? content : num;
+			}
+			case 'date':
+				return parseDateString(content, xFormat);
+			case 'fips':
+			case 'iso3alpha':
+			case 'iso3numeric':
+			case 'text':
+			case 'url':
+				return content;
+			default:
+				break;
+		}
+	}
+
+	return formatCellContent(
+		content,
+		key,
+		scale,
+		groupBreaksCategory,
+		xScale,
+		xFormat,
+		preserveStringKeys
+	);
 };
 
 /**

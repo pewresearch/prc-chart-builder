@@ -1,0 +1,40 @@
+{
+	"$schema": "prc-chart-handoff/v1",
+	"version": "1.0.0",
+	"chartType": "diverging-bar",
+	"orientation": "horizontal",
+	"data": {
+		"values": [
+			{ "country": "Germany", "share": 40, "sentiment": "Favorable" },
+			{ "country": "Germany", "share": -30, "sentiment": "Unfavorable" },
+			{ "country": "Spain",   "share": 50, "sentiment": "Favorable" },
+			{ "country": "Spain",   "share": -25, "sentiment": "Unfavorable" }
+		],
+		"xColumn": "country",
+		"yColumn": "share",
+		"categoryColumn": "sentiment",
+		"xType": "categorical",
+		"yType": "numeric"
+	},
+	"metadata": {
+		"title": "Diverging Sentiment",
+		"subtitle": "",
+		"note": "",
+		"source": "Source: Pew Research Center"
+	},
+	"config": {
+		"colors": ["#456A83", "#BF3B27"],
+		"divergingBarOptions": {
+			"positiveCategories": ["Favorable"],
+			"negativeCategories": ["Unfavorable"]
+		}
+	},
+	"source": {
+		"tool": "pewplots",
+		"toolVersion": "3.1.0",
+		"exportedAt": "2026-04-07T12:00:00Z",
+		"palette": "partisan",
+		"paletteScale": "auto"
+	},
+	"warnings": []
+}

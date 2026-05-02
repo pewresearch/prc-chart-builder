@@ -43,6 +43,7 @@ export function generateLabelKey(x, category, groupValue = null) {
  * @param {string}   params.deviceType               - Current device type ('desktop', 'tablet', 'mobile')
  * @param {Function} params.getCurrentValue          - Function to get viewport-aware attribute values
  * @param {Function} params.updateAttributeForDevice - Function to update viewport-aware attributes
+ * @param {Function} params.setAttributes            - Block setAttributes (for non-viewport-aware top-level attrs)
  * @param {Function} params.toggleSelection          - Function to enable/disable block selection
  * @param {Function} params.setAlignments            - Function to update alignment overlay state
  * @param {Function} params.setIsDragging            - Function to update drag state (for disabling tooltips)
@@ -55,6 +56,7 @@ export function createWpEditorFunctions({
 	deviceType,
 	getCurrentValue,
 	updateAttributeForDevice,
+	setAttributes,
 	toggleSelection,
 	setAlignments,
 	setIsDragging,
@@ -168,6 +170,9 @@ export function createWpEditorFunctions({
 
 			/**
 			 * Handle click on a label to open customization popover.
+			 * Detects net value labels by their __net_ category prefix
+			 * and fires a distinct element type so the correct inspector
+			 * panel receives focus.
 			 *
 			 * @param {Object}      dataPoint    - The data point object from chartData
 			 * @param {string}      category     - The category key (e.g., 'n1', 'Democrats')
@@ -183,8 +188,12 @@ export function createWpEditorFunctions({
 				groupValue
 			) => {
 				if (onElementClick) {
+					const isNetValue =
+						category &&
+						typeof category === 'string' &&
+						category.startsWith('__net_');
 					onElementClick({
-						elementType: 'label',
+						elementType: isNetValue ? 'netValueLabel' : 'label',
 						dataPoint,
 						category,
 						defaultLabel,
@@ -393,6 +402,34 @@ export function createWpEditorFunctions({
 				};
 			},
 		},
+		tooltips: {
+			/**
+			 * Update per-element custom tooltips. Writes to the top-level
+			 * `customTooltips` block attribute (not viewport-aware — tooltip
+			 * content is the same across viewports).
+			 *
+			 * @param {Object} updates                 - { customTooltips }
+			 * @param {Object} updates.customTooltips  - Full map of customTooltips
+			 */
+			updateCustomizations: (updates) => {
+				if (updates.customTooltips !== undefined && setAttributes) {
+					setAttributes({
+						customTooltips: updates.customTooltips,
+					});
+				}
+			},
+
+			/**
+			 * Get current customTooltips map from attributes.
+			 *
+			 * @return {Object} { customTooltips }
+			 */
+			getCustomizations: () => {
+				return {
+					customTooltips: attrs?.customTooltips || {},
+				};
+			},
+		},
 		segments: {
 			/**
 			 * Handle click on a line segment to open customization popover.
@@ -592,6 +629,61 @@ export function createWpEditorFunctions({
 					 */
 					getCustomizations: () => {
 						return getCurrentValue('customLegendLabels') || {};
+					},
+				}
+			: undefined,
+		errorBars: onElementClick
+			? {
+					/**
+					 * Handle click on an error bar line to open customization popover.
+					 *
+					 * @param {Object}      dataPoint    - The data point object from chartData
+					 * @param {string}      category     - The category key (e.g., 'Democrats')
+					 * @param {string}      defaultColor - The default stroke color
+					 * @param {HTMLElement} anchorEl     - The DOM element to anchor the popover to
+					 * @param {string|null} groupValue   - The group value (when groupBreaksActive), or null
+					 */
+					onClick: (
+						dataPoint,
+						category,
+						defaultColor,
+						anchorEl,
+						groupValue
+					) => {
+						onElementClick({
+							elementType: 'errorBar',
+							dataPoint,
+							category,
+							defaultColor,
+							anchorEl,
+							groupValue: groupValue || null,
+						});
+					},
+
+					/**
+					 * Update error bar customizations (stroke, strokeWidth, opacity, etc.).
+					 *
+					 * @param {Object} updates - Object with customStyles updates
+					 */
+					updateCustomizations: (updates) => {
+						if (updates.customStyles !== undefined) {
+							updateAttributeForDevice('errorBars', {
+								customStyles: updates.customStyles,
+							});
+						}
+					},
+
+					/**
+					 * Get current error bar customizations from attributes.
+					 *
+					 * @return {Object} Current customizations: { customStyles }
+					 */
+					getCustomizations: () => {
+						return {
+							customStyles:
+								getCurrentValue('errorBars', 'customStyles') ||
+								{},
+						};
 					},
 				}
 			: undefined,

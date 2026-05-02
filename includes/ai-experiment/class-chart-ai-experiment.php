@@ -12,7 +12,8 @@
 
 namespace PRC\Platform\Chart_Builder;
 
-use WordPress\AI\Abstracts\Abstract_Experiment;
+use WordPress\AI\Abstracts\Abstract_Feature;
+use WordPress\AI\Experiments\Experiment_Category;
 
 // If this file is called directly, abort.
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,20 +25,29 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 1.0.0
  */
-class Chart_AI_Experiment extends Abstract_Experiment {
+class Chart_AI_Experiment extends Abstract_Feature {
 
 	/**
-	 * Loads experiment metadata.
+	 * Feature identifier.
+	 *
+	 * @since 1.0.0
+	 */
+	public static function get_id(): string {
+		return 'chart-ai-create';
+	}
+
+	/**
+	 * Loads feature metadata.
 	 *
 	 * @since 1.0.0
 	 *
-	 * @return array{id: string, label: string, description: string} Experiment metadata.
+	 * @return array{label: string, description: string, category: string} Feature metadata.
 	 */
-	protected function load_experiment_metadata(): array {
+	protected function load_metadata(): array {
 		return array(
-			'id'          => 'chart-ai-create',
 			'label'       => __( 'Chart AI Create', 'prc-chart-builder' ),
 			'description' => __( 'Uses Gemini 2.5 Flash to generate chart block markup from an image, CSV data, and/or a text description. Adds a "Chart Wizard (Experimental)" option to the Add New Chart modal in the Chart Library admin.', 'prc-chart-builder' ),
+			'category'    => Experiment_Category::ADMIN,
 		);
 	}
 

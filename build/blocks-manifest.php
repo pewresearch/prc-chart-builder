@@ -365,6 +365,24 @@ return array(
 					)
 				)
 			),
+			'errorBars' => array(
+				'type' => 'object',
+				'default' => array(
+					'enabled' => false,
+					'defaultStyles' => array(
+						'stroke' => '#E6E7E8',
+						'strokeWidth' => 6,
+						'strokeDasharray' => '',
+						'strokeOpacity' => 1
+					),
+					'categories' => array(
+						
+					),
+					'customStyles' => array(
+						
+					)
+				)
+			),
 			'explodedBar' => array(
 				'type' => 'object',
 				'default' => array(
@@ -483,6 +501,50 @@ return array(
 					)
 				)
 			),
+			'netValues' => array(
+				'type' => 'object',
+				'default' => array(
+					'active' => false,
+					'positive' => array(
+						'active' => true,
+						'category' => '',
+						'color' => 'black',
+						'fontWeight' => 700,
+						'fontSize' => 10,
+						'fontFamily' => '',
+						'textAnchor' => 'middle',
+						'labelPositionDX' => 0,
+						'labelPositionDY' => 0,
+						'abbreviateValue' => false,
+						'absoluteValue' => false,
+						'truncateDecimal' => false,
+						'toFixedDecimal' => 0,
+						'toLocaleString' => false,
+						'labelUnit' => '',
+						'labelUnitPosition' => 'end',
+						'margin' => 5
+					),
+					'negative' => array(
+						'active' => false,
+						'category' => '',
+						'color' => 'black',
+						'fontWeight' => 700,
+						'fontSize' => 10,
+						'fontFamily' => '',
+						'textAnchor' => 'middle',
+						'labelPositionDX' => 0,
+						'labelPositionDY' => 0,
+						'abbreviateValue' => false,
+						'absoluteValue' => false,
+						'truncateDecimal' => false,
+						'toFixedDecimal' => 0,
+						'toLocaleString' => false,
+						'labelUnit' => '',
+						'labelUnitPosition' => 'end',
+						'margin' => 5
+					)
+				)
+			),
 			'treemap' => array(
 				'type' => 'object',
 				'default' => array(
@@ -492,7 +554,6 @@ return array(
 					'labelMinArea' => 1600,
 					'paddingInner' => 2,
 					'paddingOuter' => 4,
-					'showGroupLabels' => true,
 					'scaleOpacity' => false,
 					'opacityRange' => array(
 						0.4,
@@ -543,6 +604,12 @@ return array(
 				)
 			),
 			'customLegendLabels' => array(
+				'type' => 'object',
+				'default' => array(
+					
+				)
+			),
+			'customTooltips' => array(
 				'type' => 'object',
 				'default' => array(
 					
@@ -788,7 +855,8 @@ return array(
 		),
 		'supports' => array(
 			'html' => false,
-			'interactivity' => true
+			'interactivity' => true,
+			'align' => true
 		),
 		'viewScriptModule' => 'file:./view.js',
 		'editorScript' => 'file:./index.js',

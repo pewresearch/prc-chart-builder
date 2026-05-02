@@ -42,6 +42,7 @@ import * as variationTemplates from '../../../../.shared/variation-templates/ind
 import { csvToTableAttributes, inferCategories, parseCsv } from '../utils/csv';
 import AICreateStep from './ai-create-step';
 import CsvDataInput from './csv-data-input';
+import PchImportStep from './pch-import';
 
 // ── Icon map (fallback when no variation image exists) ──────────────────────────
 
@@ -239,13 +240,20 @@ function ChartTypeCard({ term, patternCount, onSelect }) {
 	);
 }
 
-function ChartTypePicker({ onSelect, patternCounts }) {
+function ChartTypePicker({ onSelect, patternCounts, onImportPch }) {
 	const terms = window?.prcChartBuilderLibrary?.chartTypeTerms || [];
 
 	return (
 		<div className="prc-chart-modal__type-picker">
 			<p className="prc-chart-modal__step-label">
-				{__('Choose a chart type to get started.', 'prc-chart-builder')}
+				{__(
+					'Choose a chart type to get started. Importing from pewplots? ',
+					'prc-chart-builder'
+				)}
+				<Button variant="link" onClick={onImportPch}>
+					{__('Upload', 'prc-chart-builder')}{' '}
+				</Button>
+				{__(' your .pch.json file.', 'prc-chart-builder')}
 			</p>
 			<div className="prc-chart-modal__type-grid">
 				{terms.map((term) => (
@@ -628,6 +636,8 @@ export default function CreateNewChartModal({
 	const [patternCounts, setPatternCounts] = useState({});
 	const [allPatterns, setAllPatterns] = useState([]);
 	const [termIdToSlug, setTermIdToSlug] = useState({});
+	const [patternsError, setPatternsError] = useState(null);
+	const [isPchImport, setIsPchImport] = useState(false);
 
 	// Tab state for Step 2 — 'pattern' or 'ai'. Only shown when aiEnabled.
 	const aiEnabled = !!window?.prcChartBuilderLibrary?.aiEnabled;
@@ -641,25 +651,77 @@ export default function CreateNewChartModal({
 		const nonce = window?.prcChartBuilderLibrary?.nonce || '';
 		const headers = { 'X-WP-Nonce': nonce };
 
+		// Throws on non-2xx so Promise.all rejects and the UI can surface a
+		// meaningful error. Returns both the parsed body and the raw response
+		// so callers can read pagination headers.
+		async function fetchJson(url) {
+			const response = await fetch(url, { headers });
+			if (!response.ok) {
+				let message = `${response.status} ${response.statusText}`;
+				try {
+					const body = await response.json();
+					if (body?.message) {
+						message = `${message} — ${body.message}`;
+					}
+				} catch (_) {
+					// Non-JSON error body; ignore.
+				}
+				const err = new Error(`${message} (${url})`);
+				err.status = response.status;
+				throw err;
+			}
+			return { data: await response.json(), response };
+		}
+
+		// Paginate /wp/v2/blocks so we don't silently drop patterns once the
+		// total exceeds per_page. The safety cap prevents a runaway loop if
+		// something goes sideways with the Totals headers.
+		async function fetchAllBlocks() {
+			const perPage = 100;
+			const maxPages = 20;
+			const { data: firstPage, response: firstResponse } =
+				await fetchJson(
+					`${restUrl}/wp/v2/blocks?per_page=${perPage}&context=edit&page=1`
+				);
+			const totalPages = Math.min(
+				parseInt(
+					firstResponse.headers.get('X-WP-TotalPages') || '1',
+					10
+				) || 1,
+				maxPages
+			);
+			const first = Array.isArray(firstPage) ? firstPage : [];
+			if (totalPages <= 1) {
+				return first;
+			}
+			const rest = await Promise.all(
+				Array.from({ length: totalPages - 1 }, (_, i) =>
+					fetchJson(
+						`${restUrl}/wp/v2/blocks?per_page=${perPage}&context=edit&page=${i + 2}`
+					).then((r) => (Array.isArray(r.data) ? r.data : []))
+				)
+			);
+			return [...first, ...rest.flat()];
+		}
+
 		Promise.all([
-			fetch(`${restUrl}/wp/v2/blocks?per_page=100&context=edit`, {
-				headers,
-			}).then((r) => r.json()),
-			fetch(`${restUrl}/wp/v2/wp_pattern_category?per_page=100`, {
-				headers,
-			}).then((r) => r.json()),
+			fetchAllBlocks(),
+			fetchJson(`${restUrl}/wp/v2/wp_pattern_category?per_page=100`).then(
+				(r) => (Array.isArray(r.data) ? r.data : [])
+			),
 		])
 			.then(([blocks, terms]) => {
 				const idToSlug = {};
-				(Array.isArray(terms) ? terms : []).forEach((t) => {
+				terms.forEach((t) => {
 					idToSlug[t.id] = t.slug;
 				});
 
 				setTermIdToSlug(idToSlug);
-				setAllPatterns(Array.isArray(blocks) ? blocks : []);
+				setAllPatterns(blocks);
+				setPatternsError(null);
 
 				const counts = {};
-				(Array.isArray(blocks) ? blocks : []).forEach((p) => {
+				blocks.forEach((p) => {
 					(p.wp_pattern_category || []).forEach((termId) => {
 						const slug = idToSlug[termId];
 						if (slug && slug.startsWith('prc-chart-builder-')) {
@@ -673,7 +735,20 @@ export default function CreateNewChartModal({
 				});
 				setPatternCounts(counts);
 			})
-			.catch(() => {});
+			.catch((err) => {
+				// eslint-disable-next-line no-console
+				console.error(
+					'[prc-chart-builder] Failed to load pattern library:',
+					err
+				);
+				setPatternsError(
+					err?.message ||
+						__(
+							'Failed to load the pattern library.',
+							'prc-chart-builder'
+						)
+				);
+			});
 	}, []);
 
 	useEffect(() => {
@@ -710,6 +785,7 @@ export default function CreateNewChartModal({
 		setSelectedPattern(null);
 		setPatterns([]);
 		setActiveTab('pattern');
+		setIsPchImport(false);
 		onClose();
 	}, [onClose]);
 
@@ -729,6 +805,7 @@ export default function CreateNewChartModal({
 		setSelectedPattern(null);
 		setPatterns([]);
 		setActiveTab('pattern');
+		setIsPchImport(false);
 	}, []);
 
 	const handleBackToPatterns = useCallback(() => {
@@ -749,7 +826,9 @@ export default function CreateNewChartModal({
 	}, []);
 
 	let modalTitle = __('Add New Chart', 'prc-chart-builder');
-	if (selectedType && !selectedPattern) {
+	if (isPchImport) {
+		modalTitle = __('Import from pewplots', 'prc-chart-builder');
+	} else if (selectedType && !selectedPattern) {
 		if (activeTab === 'ai') {
 			modalTitle = `${selectedType.label} — ${__(
 				'Chart Wizard (Experimental)',
@@ -784,11 +863,29 @@ export default function CreateNewChartModal({
 						className="prc-chart-modal"
 						size="large"
 					>
-						{!selectedType && (
+						{patternsError && !isPchImport && !selectedPattern && (
+							<Notice
+								status="error"
+								isDismissible={false}
+								className="prc-chart-modal__pattern-error"
+							>
+								{__(
+									"Couldn't load the pattern library. Saved patterns won't appear until this is resolved — see the browser console for the underlying error.",
+									'prc-chart-builder'
+								)}
+							</Notice>
+						)}
+
+						{!selectedType && !isPchImport && (
 							<ChartTypePicker
 								onSelect={handleSelectType}
 								patternCounts={patternCounts}
+								onImportPch={() => setIsPchImport(true)}
 							/>
+						)}
+
+						{isPchImport && (
+							<PchImportStep onBack={handleBackToTypes} />
 						)}
 
 						{selectedType && !selectedPattern && (

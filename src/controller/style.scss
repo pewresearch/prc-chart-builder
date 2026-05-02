@@ -31,9 +31,24 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		margin-inline-start: auto !important;
 		margin-inline-end: auto !important;
 	}
-	&[data-hide-table] {
-		.chart-builder-data-table {
-			display: none;
+	// Editor view mode: show only the chart, only the data table, or both.
+	// Driven by the `view` local state in controller/Edit.jsx. Per-user
+	// editor preference only — does not affect the saved/published output.
+	&[data-view-mode="chart"] .chart-builder-data-table {
+		display: none;
+	}
+	&[data-view-mode="data"] .wp-block-prc-chart-builder-chart {
+		display: none;
+	}
+	// In data view mode the chart's validation Notice sits between the
+	// table and the (now hidden) chart wrapper. Flex the inner-blocks
+	// layout so we can pull the Notice up above the table.
+	&[data-view-mode="data"] .block-editor-block-list__layout {
+		display: flex;
+		flex-direction: column;
+
+		> .components-notice.is-warning {
+			order: -1;
 		}
 	}
 	.wp-chart-builder-chart,
@@ -339,10 +354,6 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 			color: var(--wp--preset--color--white);
 		}
 	}
-}
-
-figure.wp-chart-builder {
-	margin: 0;
 }
 
 .wp-chart-builder-view-buttons {

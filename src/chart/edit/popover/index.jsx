@@ -25,6 +25,8 @@ import {
 	AnnotationPanel,
 	TickLabelPanel,
 	LegendItemPanel,
+	ErrorBarPanel,
+	TooltipPanelSection,
 } from './panels';
 
 /**
@@ -32,6 +34,7 @@ import {
  */
 export const ELEMENT_TYPES = {
 	LABEL: 'label',
+	NET_VALUE_LABEL: 'netValueLabel',
 	SHAPE: 'shape',
 	LINE: 'line',
 	SEGMENT: 'segment',
@@ -39,6 +42,7 @@ export const ELEMENT_TYPES = {
 	ANNOTATION: 'annotation',
 	TICK_LABEL: 'tickLabel',
 	LEGEND_ITEM: 'legendItem',
+	ERROR_BAR: 'errorBar',
 };
 
 /**
@@ -61,6 +65,8 @@ function getPanelTitle(elementType) {
 			return __('Tick Label Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.LEGEND_ITEM:
 			return __('Legend Item Settings', 'prc-chart-builder');
+		case ELEMENT_TYPES.ERROR_BAR:
+			return __('Error Bar Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.LABEL:
 		default:
 			return __('Label Settings', 'prc-chart-builder');
@@ -90,6 +96,8 @@ function getPanelTitle(elementType) {
  * @param {string}     props.tickValue              - Raw tick value (for tick labels)
  * @param {string}     props.categoryValue          - Category/domain value (for legend items)
  * @param {Function}   props.onUpdate              - Callback to update
+ * @param {Object}     props.currentTooltipCustomizations - { customTooltips } for TooltipPanelSection
+ * @param {Function}   props.onTooltipUpdate       - Callback to update customTooltips
  * @param {Function}   props.onDelete              - Callback to delete (for annotations)
  * @param {Function}   props.onClose               - Callback when closing
  */
@@ -111,6 +119,8 @@ export function ChartElementPopover({
 	tickValue,
 	categoryValue,
 	onUpdate,
+	currentTooltipCustomizations = {},
+	onTooltipUpdate,
 	onDelete,
 	onClose,
 }) {
@@ -166,6 +176,10 @@ export function ChartElementPopover({
 						groupValue={groupValue}
 						currentCustomizations={currentCustomizations}
 						onUpdate={onUpdate}
+						currentTooltipCustomizations={
+							currentTooltipCustomizations
+						}
+						onTooltipUpdate={onTooltipUpdate}
 					/>
 				);
 			case ELEMENT_TYPES.SEGMENT:
@@ -216,6 +230,17 @@ export function ChartElementPopover({
 						onUpdate={onUpdate}
 					/>
 				);
+			case ELEMENT_TYPES.ERROR_BAR:
+				return (
+					<ErrorBarPanel
+						dataPoint={dataPoint}
+						category={category}
+						defaultColor={defaultColor}
+						groupValue={groupValue}
+						currentCustomizations={currentCustomizations}
+						onUpdate={onUpdate}
+					/>
+				);
 			case ELEMENT_TYPES.LABEL:
 			default:
 				return (
@@ -227,6 +252,10 @@ export function ChartElementPopover({
 						chartType={chartType}
 						currentCustomizations={currentCustomizations}
 						onUpdate={onUpdate}
+						currentTooltipCustomizations={
+							currentTooltipCustomizations
+						}
+						onTooltipUpdate={onTooltipUpdate}
 					/>
 				);
 		}
@@ -277,11 +306,15 @@ export {
 	LineSegmentPanel,
 	RegressionLinePanel,
 	AnnotationPanel,
+	ErrorBarPanel,
+	TooltipPanelSection,
 } from './panels';
 export {
 	useLabelCustomizations,
 	useShapeCustomizations,
 	useSegmentCustomizations,
+	useErrorBarCustomizations,
+	useTooltipCustomizations,
 } from './hooks';
 export {
 	generateElementKey,

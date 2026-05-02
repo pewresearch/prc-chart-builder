@@ -539,7 +539,7 @@ class Block_Migration {
 		$result['post_title'] = $post->post_title;
 		$result['post_type'] = $post->post_type;
 
-		// Check if post contains any of the old block names.
+		// Check if post contains any of the old block names (Phase 1: name migration).
 		$has_old_blocks = false;
 		foreach ( $this->block_mappings as $old_name => $new_name ) {
 			if ( strpos( $post->post_content, $old_name ) !== false ) {
@@ -548,17 +548,29 @@ class Block_Migration {
 			}
 		}
 
-		if ( ! $has_old_blocks ) {
+		$original_content = $post->post_content;
+		$updated_content  = $original_content;
+
+		if ( $has_old_blocks ) {
+			// Phase 1: rename old block names to new ones.
+			$updated_content = $this->update_block_names_in_content( $original_content );
+		}
+
+		// Phase 2: attribute migration (v1 flat → v2 nested).
+		// Runs whether or not Phase 1 was needed — posts may already have new names
+		// but still carry v1-style flat attributes without a "_version":"v2" marker.
+		$has_chart_blocks = strpos( $updated_content, 'prc-chart-builder/chart' ) !== false;
+
+		if ( $has_chart_blocks ) {
+			$updated_content = $this->migrate_block_attributes_in_content( $updated_content );
+		}
+
+		if ( ! $has_old_blocks && ! $has_chart_blocks ) {
 			$result['error'] = 'Post does not contain any blocks that need migration';
 			return $result;
 		}
 
-		// Update block names in the post content.
-		$original_content = $post->post_content;
-		$updated_content  = $this->update_block_names_in_content( $original_content );
-
 		if ( $original_content !== $updated_content ) {
-			// Update the post content.
 			$update_result = $wpdb->update(
 				$wpdb->posts,
 				array( 'post_content' => $updated_content ),
@@ -571,7 +583,6 @@ class Block_Migration {
 				$result['migrated'] = true;
 				$result['changes_made'] = true;
 
-				// Clear any caches for this post.
 				clean_post_cache( $post->ID );
 			} else {
 				$result['error'] = 'Failed to update post content in database';
@@ -582,6 +593,56 @@ class Block_Migration {
 		}
 
 		return $result;
+	}
+
+	/**
+	 * Walk parsed blocks recursively and run attribute migration on each
+	 * prc-chart-builder/chart block that is not yet at v2.
+	 *
+	 * @since 3.1.1
+	 * @param string $content Serialized block content.
+	 * @return string Updated serialized block content.
+	 */
+	private function migrate_block_attributes_in_content( $content ) {
+		// Cheap string check before any block parsing: if every chart block already
+		// carries the v2 marker we can skip all further work entirely. Count only
+		// opening block delimiters (which also covers self-closing `/-->` form) so
+		// we get one hit per block rather than two (open + close).
+		$chart_count = substr_count( $content, '<!-- wp:prc-chart-builder/chart' );
+		$v2_count    = substr_count( $content, '"_version":"v2"' )
+			+ substr_count( $content, '"_version": "v2"' );
+
+		if ( $chart_count > 0 && $v2_count >= $chart_count ) {
+			return $content;
+		}
+
+		$blocks  = parse_blocks( $content );
+		$changed = false;
+
+		$walk = function( &$blocks ) use ( &$walk, &$changed ) {
+			foreach ( $blocks as &$block ) {
+				if ( 'prc-chart-builder/chart' === $block['blockName'] ) {
+					$attrs = $block['attrs'];
+					// Skip blocks already at v2 (no _v1Original re-migration needed).
+					$already_v2 = ! isset( $attrs['_v1Original'] )
+						&& isset( $attrs['_version'] )
+						&& 'v2' === $attrs['_version'];
+
+					if ( ! $already_v2 ) {
+						$block['attrs'] = self::migrate_attributes_v1_to_v2( $attrs );
+						$changed = true;
+					}
+				}
+
+				if ( ! empty( $block['innerBlocks'] ) ) {
+					$walk( $block['innerBlocks'] );
+				}
+			}
+		};
+
+		$walk( $blocks );
+
+		return $changed ? serialize_blocks( $blocks ) : $content;
 	}
 
 	/**
@@ -1116,7 +1177,7 @@ class Block_Migration {
 			return array(
 			'active'                   => $attributes['labelsActive'] ?? false,
 			'showFirstLastPointsOnly'  => $attributes['showFirstLastPointsOnly'] ?? false,
-			'color'                    => $attributes['labelColor'] ?? null, // No default - let charting library decide
+			'color'                    => $attributes['labelColor'] ?? 'inherit',
 			'fontWeight'               => $attributes['labelFontWeight'] ?? 200,
 			'fontSize'                 => $attributes['labelFontSize'] ?? 12,
 			'fontFamily'               => "'franklin-gothic-urw', Verdana, Geneva, sans-serif",

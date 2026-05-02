@@ -85,5 +85,16 @@ export function useFocusedPanel(panelId) {
 		}
 	}, [ctx?.focusedPanels, panelId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+	// Expose the stable panel id on the DOM so observational layers
+	// (e.g. presence) can identify which panel a focused input lives in
+	// without every controls file having to wire it up. Purely additive —
+	// panels not wrapped with `useFocusedPanel` fall back to title-text
+	// detection in the consumer.
+	useEffect(() => {
+		const el = panelRef.current;
+		if (!el) return;
+		el.setAttribute('data-presence-id', panelId);
+	}, [panelId]);
+
 	return { isOpen, panelRef, onToggle: setIsOpen };
 }

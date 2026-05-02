@@ -58,6 +58,16 @@ export const MAP_CHART_TYPES = [
 /** Charts that support visual group break lines between groups */
 export const GROUP_BREAKS_CHART_TYPES = [...BAR_CHART_TYPES, 'dot-plot'];
 
+/** Charts that can partition data by a category field (groupBreaksCategory).
+ *  Superset of GROUP_BREAKS_CHART_TYPES — these charts support the underlying
+ *  group-by + group-order controls, but not all draw visual divider lines.
+ *  Pie uses angular explode offset (pie-controls.jsx) instead of break lines. */
+export const GROUPABLE_CHART_TYPES = [
+	...GROUP_BREAKS_CHART_TYPES,
+	'treemap',
+	'pie',
+];
+
 /** Charts where legend ordering / ordinal scale does not apply */
 export const NO_ORDINAL_LEGEND_TYPES = ['treemap', 'sankey'];
 
@@ -69,5 +79,19 @@ export const FORMATTED_DATA_PASSTHROUGH_TYPES = [
 	'dot-plot',
 ];
 
-/** Charts that support sortable data rendering */
-export const SORTABLE_CHART_TYPES = [...BAR_CHART_TYPES, 'dot-plot', 'pie'];
+/** Charts that support sortable data rendering (sort key + sort order) */
+export const SORTABLE_CHART_TYPES = [
+	...BAR_CHART_TYPES,
+	'dot-plot',
+	'pie',
+	'treemap',
+];
+
+/** Charts that support supplemental column features rendered alongside the chart
+ *  (Diff Column, Net Value Labels). These are bar/dot-plot/pie concepts and do
+ *  not apply to layout types like treemap. */
+export const SUPPLEMENTAL_COLUMN_CHART_TYPES = [
+	...BAR_CHART_TYPES,
+	'dot-plot',
+	'pie',
+];

@@ -7,60 +7,61 @@
 /**
  * WordPress Dependencies
  */
-import { __ } from '@wordpress/i18n';
 import {
 	InspectorControls,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
+import { store as blocksStore } from '@wordpress/blocks';
 import {
+	BoxControl,
+	Button,
+	ExternalLink,
 	PanelBody,
 	PanelRow,
-	SelectControl,
 	RangeControl,
-	BoxControl,
-	ExternalLink,
-	Button,
+	SelectControl,
 	TextControl,
 	ToggleControl,
 } from '@wordpress/components';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { useState } from '@wordpress/element';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { store as blocksStore } from '@wordpress/blocks';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal Dependencies
  */
-import { formatNum } from '../utils/helpers';
 import {
 	BAR_CHART_TYPES,
 	LINE_CHART_TYPES,
 	NODE_CHART_TYPES,
 	REGRESSION_CHART_TYPES,
 } from '../utils/chart-types';
-import { createPNG, createSVG } from '../utils/image-exports';
-import { useViewportAttributes } from './use-viewport-attributes';
+import { formatNum } from '../utils/helpers';
+import { createSVG } from '../utils/image-exports';
+import AnnotationControls from './annotation-controls';
 import BarControls from './bar-controls';
 import ColorControls from './color-controls';
-import IndependentAxisControls from './independent-axis-controls';
-import DependentAxisControls from './dependent-axis-controls';
 import DataControls from './data-controls';
-import LineControls from './line-controls';
-import LabelControls from './label-controls';
-import LegendControls from './legend-controls';
-import TooltipControls from './tooltip-controls';
-import TextFieldControls from './text-field-controls';
-import NodeControls from './node-controls';
+import DependentAxisControls from './dependent-axis-controls';
+import DiffColumnControls from './diff-column-controls';
 import DivergingBarControls from './diverging-bar-control';
 import DotPlotControls from './dot-plot-controls';
-import PlotBandControls from './plot-band-controls';
-import AnnotationControls from './annotation-controls';
-import DiffColumnControls from './diff-column-controls';
-import MapControls from './map-controls';
 import DrawingControls from './drawing-controls';
+import IndependentAxisControls from './independent-axis-controls';
+import LabelControls from './label-controls';
+import LegendControls from './legend-controls';
+import LineControls from './line-controls';
+import MapControls from './map-controls';
+import NetValueControls from './net-value-controls';
+import NodeControls from './node-controls';
 import PieControls from './pie-controls';
-import TreemapControls from './treemap-controls';
-import SankeyControls from './sankey-controls';
+import PlotBandControls from './plot-band-controls';
 import RegressionControls from './regression-controls';
+import SankeyControls from './sankey-controls';
+import TextFieldControls from './text-field-controls';
+import TooltipControls from './tooltip-controls';
+import TreemapControls from './treemap-controls';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 function ControlSections(props) {
 	const { attributes, limitControls, clientId } = props;
@@ -71,6 +72,7 @@ function ControlSections(props) {
 	const io = attributes.io || {}; // io is not viewport-aware
 	const layout = attributes.layout || {}; // Will use getCurrentValue in specific controls
 	const diffColumn = attributes.diffColumn || {};
+	const netValues = attributes.netValues || {};
 
 	const { type: chartType } = layout;
 	const { chartFamily } = io;
@@ -102,14 +104,15 @@ function ControlSections(props) {
 			{'pie' === chartType && <PieControls {...props} />}
 			{'treemap' === chartType && <TreemapControls {...props} />}
 			{'sankey' === chartType && <SankeyControls {...props} />}
-			{NODE_CHART_TYPES.includes(chartType) ||
-				(LINE_CHART_TYPES.includes(chartType) && (
-					<NodeControls {...props} chartType={chartType} />
-				))}
+			{(NODE_CHART_TYPES.includes(chartType) ||
+				LINE_CHART_TYPES.includes(chartType)) && (
+				<NodeControls {...props} chartType={chartType} />
+			)}
 			{REGRESSION_CHART_TYPES.includes(chartType) && (
 				<RegressionControls {...props} />
 			)}
 			{diffColumn.active && <DiffColumnControls {...props} />}
+			{netValues.active && <NetValueControls {...props} />}
 			<AnnotationControls {...props} />
 			<LabelControls {...props} />
 			<TooltipControls {...props} />
@@ -134,7 +137,6 @@ function ChartControls({
 	selectedDrawingId,
 	onSelectedDrawingChange,
 }) {
-	const [imageLoading, setImageLoading] = useState(false);
 	const [svgLoading, setSVGLoading] = useState(false);
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -153,13 +155,7 @@ function ChartControls({
 	} = layout;
 	// Content attribute - NOT viewport-aware
 	const io = attributes.io || {};
-	const {
-		chartFamily,
-		pngUrl,
-		allowDataDownload,
-		isStaticChart,
-		isFreeformChart,
-	} = io;
+	const { pngUrl, allowDataDownload, isStaticChart, isFreeformChart } = io;
 	const limitControls = isFreeformChart || isStaticChart;
 
 	// Use centralized image export utilities
@@ -170,15 +166,6 @@ function ChartControls({
 			upload: false, // Just download
 			onComplete: () => setSVGLoading(false),
 			onError: () => setSVGLoading(false),
-		});
-	};
-
-	const handleCreatePng = () => {
-		setImageLoading(true);
-		createPNG({
-			clientId,
-			onComplete: () => setImageLoading(false),
-			onError: () => setImageLoading(false),
 		});
 	};
 
@@ -385,6 +372,14 @@ function ChartControls({
 					}
 				/>
 				<PanelRow>
+					<p>
+						<em>Designers:</em> Click the button below to download
+						the SVG of the chart inner (no title, legend, etc.).
+						This is useful for continued design work in Illustrator,
+						etc.
+					</p>
+				</PanelRow>
+				<PanelRow>
 					<Button
 						isSecondary
 						isBusy={svgLoading}
@@ -393,23 +388,8 @@ function ChartControls({
 						Download SVG
 					</Button>
 				</PanelRow>
-				<PanelRow>
-					<Button
-						isSecondary
-						isBusy={imageLoading}
-						onClick={handleCreatePng}
-					>
-						Upload Chart PNG to Media Library
-					</Button>
-				</PanelRow>
-				<PanelRow>
-					{imageLoading && (
-						<p>
-							Creating image. This will take several moments ...
-						</p>
-					)}
-					{svgLoading && <p>Preparing SVG ...</p>}
-				</PanelRow>
+
+				<PanelRow>{svgLoading && <p>Preparing SVG ...</p>}</PanelRow>
 				{pngUrl && 0 < pngUrl.length && (
 					<>
 						<PanelRow>

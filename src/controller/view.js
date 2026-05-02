@@ -11,6 +11,7 @@ import {
 /**
  * Internal Dependencies
  */
+import { sanitizeChartExportFilename } from '../chart/utils/sanitize-chart-export-filename';
 import { logMigrationComparison } from './utils/log-migration';
 
 const { addQueryArgs } = window.wp.url;
@@ -138,9 +139,7 @@ function buildContextMenu(wrapper, event) {
 					.then((blob) => {
 						const url = URL.createObjectURL(blob);
 						const a = document.createElement('a');
-						const slug = chartTitle
-							? chartTitle.toLowerCase().replace(/\s+/g, '_')
-							: 'chart';
+						const slug = sanitizeChartExportFilename(chartTitle);
 						a.href = url;
 						a.download = `${slug}.png`;
 						a.click();
@@ -373,11 +372,8 @@ const { state, actions } = store('prc-chart-builder/controller', {
 		},
 		shareNative: () => {
 			const context = getContext();
-			const { postId, postUrl, rootUrl, title, featuredImageId } =
-				context;
-			const url = featuredImageId
-				? `${rootUrl}/share/${postId}/${featuredImageId}`
-				: postUrl;
+			const { chartPostUrl, postUrl, title } = context;
+			const url = chartPostUrl || postUrl;
 
 			if (true === state.webShareSupported) {
 				window.navigator.share({
@@ -388,13 +384,10 @@ const { state, actions } = store('prc-chart-builder/controller', {
 		},
 		shareTwitter() {
 			const context = getContext();
-			const { postId, postUrl, rootUrl, title, featuredImageId } =
-				context;
+			const { chartPostUrl, postUrl, title } = context;
 			const actionUrl = addQueryArgs('https://twitter.com/intent/tweet', {
 				text: title,
-				url: featuredImageId
-					? `${rootUrl}/share/${postId}/${featuredImageId}`
-					: postUrl,
+				url: chartPostUrl || postUrl,
 			});
 			window.open(
 				actionUrl,
@@ -406,11 +399,8 @@ const { state, actions } = store('prc-chart-builder/controller', {
 		},
 		shareBluesky() {
 			const context = getContext();
-			const { postId, postUrl, rootUrl, title, featuredImageId } =
-				context;
-			const url = featuredImageId
-				? `${rootUrl}/share/${postId}/${featuredImageId}`
-				: postUrl;
+			const { chartPostUrl, postUrl, title } = context;
+			const url = chartPostUrl || postUrl;
 			const actionUrl = addQueryArgs('https://bsky.app/intent/compose', {
 				text: `${title} ${url}`,
 			});
@@ -424,13 +414,11 @@ const { state, actions } = store('prc-chart-builder/controller', {
 		},
 		shareFacebook() {
 			const context = getContext();
-			const { postId, postUrl, rootUrl, featuredImageId } = context;
+			const { chartPostUrl, postUrl } = context;
 			const actionUrl = addQueryArgs(
 				'https://www.facebook.com/sharer/sharer.php',
 				{
-					u: featuredImageId
-						? `${rootUrl}/share/${postId}/${featuredImageId}`
-						: postUrl,
+					u: chartPostUrl || postUrl,
 				}
 			);
 			window.open(
@@ -473,7 +461,7 @@ const { state, actions } = store('prc-chart-builder/controller', {
 			const blob = new Blob([csv], { type: 'text/csv' });
 			const url = URL.createObjectURL(blob);
 			const downloadLink = document.createElement('a');
-			const csvTitle = title.toLowerCase().replace(/\s+/g, '_');
+			const csvTitle = sanitizeChartExportFilename(title);
 			downloadLink.setAttribute('href', url);
 			downloadLink.setAttribute(
 				'download',
@@ -490,9 +478,7 @@ const { state, actions } = store('prc-chart-builder/controller', {
 				.then((blob) => {
 					const url = URL.createObjectURL(blob);
 					const a = document.createElement('a');
-					const slug = title
-						? title.toLowerCase().replace(/\s+/g, '_')
-						: 'chart';
+					const slug = sanitizeChartExportFilename(title);
 					a.href = url;
 					a.download = `${slug}.png`;
 					a.click();

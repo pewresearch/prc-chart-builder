@@ -42,7 +42,7 @@ class Admin {
 			'edit.php?post_type=chart',
 			__( 'Chart Builder Library', 'prc-chart-builder' ),
 			__( 'Library (BETA)', 'prc-chart-builder' ),
-			'manage_options',
+			'edit_posts',
 			'prc-chart-builder-library',
 			array( $this, 'render_page' )
 		);
@@ -152,42 +152,22 @@ class Admin {
 	}
 
 	/**
-	 * Get all registered chart_type taxonomy terms for use in the React app.
+	 * Build the chart type list for the React app directly from the canonical
+	 * $known_chart_types map — no database query needed.
 	 *
-	 * @return array Array of term objects with slug and name.
+	 * @return array Array of {slug, label} objects, sorted alphabetically by label.
 	 */
 	private function get_chart_type_terms() {
-		$terms = get_terms(
-			array(
-				'taxonomy'   => \PRC\Platform\Chart_Builder\Content_Type::$chart_type_taxonomy,
-				'hide_empty' => false,
-				'orderby'    => 'name',
-			)
-		);
-
-		if ( is_wp_error( $terms ) || empty( $terms ) ) {
-			return array();
+		$types = array();
+		foreach ( Content_Type::$known_chart_types as $slug => $label ) {
+			$types[] = array(
+				'slug'  => $slug,
+				'label' => $label,
+			);
 		}
-
-		$known_slugs = array_keys( Content_Type::$known_chart_types );
-
-		return array_values(
-			array_filter(
-				array_map(
-					static function ( $term ) {
-						return array(
-							'id'    => $term->term_id,
-							'slug'  => $term->slug,
-							'label' => $term->name,
-							'count' => $term->count,
-						);
-					},
-					$terms
-				),
-				static function ( $item ) use ( $known_slugs ) {
-					return in_array( $item['slug'], $known_slugs, true );
-				}
-			)
-		);
+		usort( $types, static function ( $a, $b ) {
+			return strcmp( $a['label'], $b['label'] );
+		} );
+		return $types;
 	}
 }

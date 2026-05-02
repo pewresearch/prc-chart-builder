@@ -117,22 +117,21 @@ const treemapTemplate = [
 				headerValue: 'categoryValue',
 				format: '{{row}}: {{value}}',
 			},
-		labels: {
-			active: true,
-			color: 'contrast',
-		},
+			labels: {
+				active: true,
+				color: 'contrast',
+			},
 			legend: {
 				active: true,
 				markerStyle: 'rect',
 			},
-		treemap: {
-			tile: 'squarify',
-			rectStroke: '#ffffff',
-			rectStrokeWidth: 2,
-			labelMinArea: 1600,
+			treemap: {
+				tile: 'squarify',
+				rectStroke: '#ffffff',
+				rectStrokeWidth: 2,
+				labelMinArea: 1600,
 				paddingInner: 2,
 				paddingOuter: 4,
-				showGroupLabels: true,
 				scaleOpacity: false,
 				opacityRange: [0.4, 1],
 				borderRadius: 0,

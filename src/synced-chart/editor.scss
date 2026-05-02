@@ -36,3 +36,31 @@ $chart_highlight_color: #b8236d;
 		display: none !important;
 	}
 }
+
+// Presence lock: visually indicate that the chart is locked for editing
+// because another user currently has the chart CPT open.
+.synced-chart-presence-lock {
+	opacity: 0.6;
+	pointer-events: none;
+	user-select: none;
+	position: relative;
+
+	&::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: rgba(255, 255, 255, 0.35);
+		border-radius: 2px;
+		z-index: 1;
+	}
+}
+
+.synced-chart-presence-lock__notice.components-notice {
+	margin: 0 0 8px;
+	border-left: 4px solid #f0b849;
+	background-color: #fcf9e8;
+
+	.components-notice__content {
+		font-size: 13px;
+	}
+}

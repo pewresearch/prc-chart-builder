@@ -11,7 +11,6 @@ import { registerPlugin } from '@wordpress/plugins';
  */
 import { DesignSlugStatusInfo } from './design-slug-panel';
 import { ReferencingPostsPanel } from './referencing-posts-panel';
-import { ChartPngPrePublishPanel } from './chart-png-panel';
 
 /**
  * Styles
@@ -26,7 +25,6 @@ function ChartEditorPanels() {
 		<>
 			<DesignSlugStatusInfo />
 			<ReferencingPostsPanel />
-			<ChartPngPrePublishPanel />
 		</>
 	);
 }

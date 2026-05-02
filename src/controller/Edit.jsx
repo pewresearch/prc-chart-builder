@@ -12,8 +12,6 @@ import {
 	useInnerBlocksProps,
 	useBlockProps,
 	store as blockEditorStore,
-	BlockControls,
-	BlockAlignmentControl,
 } from '@wordpress/block-editor';
 import { ToggleControl, PanelBody } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
@@ -22,19 +20,19 @@ import { store as blocksStore } from '@wordpress/blocks';
 /**
  * Internal Dependencies
  */
-import store from './store';
-import HideTableHandler from './hide-table-handler';
 import Placeholder from './placeholder';
+import ViewModeControls from './view-mode-controls';
+import controllerStore from './store';
+import useChartEditorPresence from './use-chart-editor-presence';
 
-export default function Edit({ attributes, setAttributes, clientId }) {
-	const {
-		id,
-		tabsActive,
-		shareActive,
-		align,
-		chartType,
-		enableSchemaOutput,
-	} = attributes;
+export default function Edit({ attributes, setAttributes, clientId, context }) {
+	const { id, tabsActive, shareActive, chartType, enableSchemaOutput } =
+		attributes;
+
+	useChartEditorPresence({
+		controllerClientId: clientId,
+		refId: context?.refId,
+	});
 
 	// Track if we've already initialized the ID in this component lifecycle
 	// This prevents repeated setAttributes calls when the component remounts
@@ -68,41 +66,77 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		}
 	}, [id, setAttributes]);
 
-	const { hideThisTable } = useSelect(
+	const {
+		layoutType,
+		chartClientId,
+		tableClientId,
+		selectedBlockClientId,
+		selectedBlockParents,
+		view,
+		showBoth,
+	} = useSelect(
 		(select) => {
-			const { get } = select('core/preferences');
-			const { getAllTableVisibility } = select(store);
-
-			const persistentHiddenTables = get(
-				'prc-chart-builder/controller',
-				'persistentHiddenTables'
-			);
-
-			const tempHideAllTables = getAllTableVisibility();
-
-			return {
-				hideThisTable:
-					persistentHiddenTables?.includes(id) || tempHideAllTables,
-			};
-		},
-		[id]
-	);
-
-	// Get the inner chart block and its layout type
-	const { layoutType, chartClientId } = useSelect(
-		(select) => {
-			const { getBlock } = select('core/block-editor');
+			const { getBlock, getSelectedBlockClientId, getBlockParents } =
+				select(blockEditorStore);
+			const { getControllerView, getControllerShowBoth } =
+				select(controllerStore);
 			const block = getBlock(clientId);
 			const chartBlock = block?.innerBlocks?.find(
 				(innerBlock) => innerBlock.name === 'prc-chart-builder/chart'
 			);
+			const tableBlock = block?.innerBlocks?.find(
+				(innerBlock) => innerBlock.name === 'prc-block/table'
+			);
+			const sel = getSelectedBlockClientId();
 			return {
 				layoutType: chartBlock?.attributes?.layout?.type,
 				chartClientId: chartBlock?.clientId,
+				tableClientId: tableBlock?.clientId,
+				selectedBlockClientId: sel,
+				selectedBlockParents: sel ? getBlockParents(sel) : [],
+				view: getControllerView(id),
+				showBoth: getControllerShowBoth(id),
 			};
 		},
-		[clientId]
+		[clientId, id]
 	);
+
+	const { setControllerView, setControllerShowBoth } =
+		useDispatch(controllerStore);
+
+	// Auto-switch the editor view to match whichever pane the user
+	// selects (or selects a descendant of) from the list view or canvas.
+	// This prevents the confusing case where clicking a hidden block
+	// selects something the user can't see. Skipped when both panes are
+	// visible or when the controller id isn't ready yet.
+	useEffect(() => {
+		if (!id || showBoth || !selectedBlockClientId) {
+			return;
+		}
+		const ancestry = [selectedBlockClientId, ...selectedBlockParents];
+		if (
+			chartClientId &&
+			ancestry.includes(chartClientId) &&
+			view !== 'chart'
+		) {
+			setControllerView(id, 'chart');
+		} else if (
+			tableClientId &&
+			ancestry.includes(tableClientId) &&
+			view !== 'data'
+		) {
+			setControllerView(id, 'data');
+		}
+	}, [
+		id,
+		selectedBlockClientId,
+		selectedBlockParents,
+		chartClientId,
+		tableClientId,
+		showBoth,
+		view,
+		setControllerView,
+	]);
 
 	const { updateBlockAttributes } = useDispatch(blockEditorStore);
 	const variations = useSelect((select) => {
@@ -223,14 +257,10 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 		},
 	];
 
-	const blockElmProps = {};
-	if (hideThisTable) {
-		blockElmProps['data-hide-table'] = true;
-	}
+	const viewMode = showBoth ? 'both' : view;
 
 	const blockProps = useBlockProps({
-		...blockElmProps,
-		className: align ? `align${align}` : 'alignnone',
+		'data-view-mode': viewMode,
 	});
 	const hasInnerBlocks = useSelect(
 		(select) => select(blockEditorStore).getBlocks(clientId).length > 0,
@@ -238,7 +268,6 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 	);
 
 	const innerBlocksProps = useInnerBlocksProps(blockProps, {
-		orientation: 'horizontal',
 		renderAppender: false,
 		templateLock: false,
 	});
@@ -249,6 +278,12 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 
 	return (
 		<Fragment>
+			<ViewModeControls
+				view={view}
+				showBoth={showBoth}
+				onChangeView={(next) => setControllerView(id, next)}
+				onChangeShowBoth={(next) => setControllerShowBoth(id, next)}
+			/>
 			<InspectorControls>
 				{/* check if layout.type has substring of 'map' */}
 				{layoutType && layoutType.includes('map') && (
@@ -315,21 +350,9 @@ export default function Edit({ attributes, setAttributes, clientId }) {
 					/>
 				</PanelBody>
 			</InspectorControls>
-			<BlockControls>
-				<BlockAlignmentControl
-					value={align}
-					onChange={(nextAlign) => {
-						setAttributes({
-							align: nextAlign,
-						});
-					}}
-				/>
-			</BlockControls>
-			<HideTableHandler id={id}>
-				<figure {...blockProps}>
-					<div {...innerBlocksProps} />
-				</figure>
-			</HideTableHandler>
+			<figure {...blockProps}>
+				<div {...innerBlocksProps} />
+			</figure>
 		</Fragment>
 	);
 }

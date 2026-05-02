@@ -50,6 +50,7 @@ class Content_Type {
 		$loader->add_action( 'pre_get_posts', $this, 'make_design_slug_searchable' );
 		$loader->add_filter( 'rest_' . self::$post_type . '_query', $this, 'make_design_slug_rest_searchable', 10, 2 );
 		$loader->add_filter( 'rest_' . self::$post_type . '_query', $this, 'filter_by_chart_type', 10, 2 );
+		$loader->add_action( 'admin_enqueue_scripts', $this, 'dequeue_ai_scripts', 20 );
 	}
 
 	/**
@@ -58,26 +59,26 @@ class Content_Type {
 	 * @var array
 	 */
 	public static $known_chart_types = array(
-		'area'          => 'Area',
-		'bar'           => 'Bar',
-		'column'        => 'Column',
-		'diverging-bar' => 'Diverging Bar',
-		'dot-plot'      => 'Dot Plot',
-		'exploded-bar'  => 'Exploded Bar',
-		'freeform'      => 'Freeform',
-		'line'          => 'Line',
-		'map-usa'       => 'USA Map',
-		'map-usa-block' => 'USA Block Map',
-		'map-usa-county'=> 'USA County Map',
-		'map-usa-hex'   => 'USA Hex Map',
-		'map-world'     => 'World Map',
-		'pie'           => 'Pie',
-		'sankey'        => 'Sankey',
-		'scatter'       => 'Scatter Plot',
-		'stacked-area'  => 'Stacked Area',
-		'stacked-bar'   => 'Stacked Bar',
-		'stacked-column'=> 'Stacked Column',
-		'treemap'       => 'Treemap',
+		'area'           => 'Area',
+		'bar'            => 'Bar',
+		'column'         => 'Column',
+		'diverging-bar'  => 'Diverging Bar',
+		'dot-plot'       => 'Dot Plot',
+		'exploded-bar'   => 'Exploded Bar',
+		'freeform'       => 'Freeform',
+		'line'           => 'Line',
+		'map-usa'        => 'USA Map',
+		'map-usa-block'  => 'USA Block Map',
+		'map-usa-county' => 'USA County Map',
+		'map-usa-hex'    => 'USA Hex Map',
+		'map-world'      => 'World Map',
+		'pie'            => 'Pie',
+		'sankey'         => 'Sankey',
+		'scatter'        => 'Scatter Plot',
+		'stacked-area'   => 'Stacked Area',
+		'stacked-bar'    => 'Stacked Bar',
+		'stacked-column' => 'Stacked Column',
+		'treemap'        => 'Treemap',
 	);
 
 	/**
@@ -111,8 +112,10 @@ class Content_Type {
 
 		// Pre-register all known chart type terms so they exist for filtering
 		// even if no charts of that type have been saved yet.
+		// term_exists() matches by name when passed a string, so we look up by
+		// slug explicitly using get_term_by() to avoid creating duplicates.
 		foreach ( self::$known_chart_types as $slug => $label ) {
-			if ( ! term_exists( $slug, self::$chart_type_taxonomy ) ) {
+			if ( ! get_term_by( 'slug', $slug, self::$chart_type_taxonomy ) ) {
 				wp_insert_term( $label, self::$chart_type_taxonomy, array( 'slug' => $slug ) );
 			}
 		}
@@ -147,7 +150,7 @@ class Content_Type {
 		}
 
 		// Ensure the term exists before assigning.
-		if ( ! term_exists( $chart_type, self::$chart_type_taxonomy ) ) {
+		if ( ! get_term_by( 'slug', $chart_type, self::$chart_type_taxonomy ) ) {
 			$label = self::$known_chart_types[ $chart_type ] ?? ucfirst( str_replace( '-', ' ', $chart_type ) );
 			wp_insert_term( $label, self::$chart_type_taxonomy, array( 'slug' => $chart_type ) );
 		}
@@ -164,12 +167,12 @@ class Content_Type {
 	public static function extract_chart_type_from_content( $post_content ) {
 		// The canonical chart type source depends on block vintage:
 		//
-		//   v2 (prc-chart-builder/*):
-		//     - prc-chart-builder/chart  → layout.type (canonical, typed in block.json)
-		//     - prc-chart-builder/controller → chartType (convenience duplicate)
+		// v2 (prc-chart-builder/*):
+		// - prc-chart-builder/chart  → layout.type (canonical, typed in block.json)
+		// - prc-chart-builder/controller → chartType (convenience duplicate)
 		//
-		//   v1 / legacy (prc-block/*):
-		//     - prc-block/chart-builder → chartType (inner block, self-closing)
+		// v1 / legacy (prc-block/*):
+		// - prc-block/chart-builder → chartType (inner block, self-closing)
 		//
 		// Fast path: skip entirely if no recognisable chart block is present.
 		$has_new    = false !== strpos( $post_content, 'prc-chart-builder/controller' );
@@ -312,7 +315,7 @@ class Content_Type {
 			'label'               => __( 'Chart', 'prc-chart-builder' ),
 			'description'         => __( 'A store for chart blocks. This post type allows you to save a chart once and update everywhere it is used.', 'prc-chart-builder' ),
 			'labels'              => self::get_labels(),
-			'supports'            => array( 'title', 'editor', 'excerpt', 'author', 'thumbnail', 'revisions', 'prc-revisions', 'custom-fields', 'prc-datasets' ),
+			'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'custom-fields', 'revisions', 'prc-revisions', 'prc-datasets' ),
 			'taxonomies'          => array( 'category' ),
 			'hierarchical'        => false,
 			'public'              => true,
@@ -333,6 +336,13 @@ class Content_Type {
 		);
 
 		register_post_type( self::$post_type, $args );
+
+		// Opt the chart CPT into the Presence API so Heartbeat tracks who is editing a chart.
+		// This enables the synced-chart block to display a lock banner when another user
+		// has the chart CPT open for direct editing.
+		if ( function_exists( 'wp_presence_post_room' ) ) {
+			add_post_type_support( self::$post_type, 'presence' );
+		}
 	}
 
 	/**
@@ -348,38 +358,6 @@ class Content_Type {
 				'single'            => true,
 				'show_in_rest'      => true,
 				'sanitize_callback' => 'sanitize_text_field',
-				'auth_callback'     => function () {
-					return current_user_can( 'edit_posts' );
-				},
-			)
-		);
-
-		register_post_meta(
-			self::$post_type,
-			'_chart_png_attachment_id',
-			array(
-				'type'              => 'integer',
-				'description'       => __( 'Attachment ID of the server-generated PNG for this chart.', 'prc-chart-builder' ),
-				'single'            => true,
-				'show_in_rest'      => true,
-				'default'           => 0,
-				'sanitize_callback' => 'absint',
-				'auth_callback'     => function () {
-					return current_user_can( 'edit_posts' );
-				},
-			)
-		);
-
-		register_post_meta(
-			self::$post_type,
-			'_chart_png_url',
-			array(
-				'type'              => 'string',
-				'description'       => __( 'URL of the server-generated PNG for this chart.', 'prc-chart-builder' ),
-				'single'            => true,
-				'show_in_rest'      => true,
-				'default'           => '',
-				'sanitize_callback' => 'esc_url_raw',
 				'auth_callback'     => function () {
 					return current_user_can( 'edit_posts' );
 				},
@@ -535,7 +513,7 @@ class Content_Type {
 	 * When no explicit chart_type filter is applied in admin context, require that
 	 * a chart_type term EXISTS so vestigial/legacy posts are excluded from the gallery.
 	 *
-	 * Specific chart_type filtering (e.g. ?chart_type=123) is handled natively by
+	 * Specific chart_type filtering (e.g. ?chart_type_slug=bar) is handled natively by
 	 * the WordPress REST API because the taxonomy has show_in_rest=true.
 	 *
 	 * @hook rest_chart_query
@@ -589,5 +567,25 @@ class Content_Type {
 
 		$data['type'] = 'rich';
 		return $data;
+	}
+
+	/**
+	 * Dequeue the AI scripts on the chart editor screen.
+	 *
+	 * @hook admin_enqueue_scripts 20
+	 *
+	 * @param string $hook_suffix The current admin page hook suffix.
+	 */
+	public function dequeue_ai_scripts( string $hook_suffix ): void {
+		if ( 'post.php' !== $hook_suffix && 'post-new.php' !== $hook_suffix ) {
+			return;
+		}
+		$screen = get_current_screen();
+		if ( $screen && self::$post_type === $screen->post_type ) {
+			wp_dequeue_script( 'ai_summarization' );
+			wp_dequeue_style( 'ai_summarization' );
+			wp_dequeue_script( 'ai_review_notes' );
+			wp_dequeue_style( 'ai_review_notes' );
+		}
 	}
 }

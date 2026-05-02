@@ -25,6 +25,10 @@ import v1Attributes from './v1-attributes';
  * @return {boolean} True if block should use v1 deprecation
  */
 function isEligible(attributes) {
+	if (attributes._version === 'v2') {
+		return false;
+	}
+
 	// Helper to check if value is a non-empty object
 	const isNonEmptyObject = (obj) => {
 		return obj && typeof obj === 'object' && Object.keys(obj).length > 0;
@@ -43,11 +47,6 @@ function isEligible(attributes) {
 	// Force re-migration if testing flag is set (for testing phase)
 	if (attributes._migrationMeta?.forceRemigrate === true) {
 		return true;
-	}
-
-	// If _version is v2, don't migrate (already migrated)
-	if (attributes._version === 'v2') {
-		return false;
 	}
 
 	// If _version is not set or is explicitly 'v1', use this deprecation
@@ -128,7 +127,7 @@ function migrate(attributes) {
 						'#ea9e2c',
 						'#bc7b2b',
 						'#eeece4',
-					],
+				  ],
 
 		// Plot bands object
 		plotBands: {
@@ -193,7 +192,7 @@ function migrate(attributes) {
 			},
 			ticks: {
 				stroke: attributes.xAxisStroke || 'gray',
-				size: (attributes.xTickMarksActive ?? true) ? 5 : 0, // Default to true if not set (match block.json default)
+				size: attributes.xTickMarksActive ?? true ? 5 : 0, // Default to true if not set (match block.json default)
 				strokeWidth: 0, // Match block.json default
 			},
 			grid: {
@@ -256,7 +255,7 @@ function migrate(attributes) {
 			},
 			ticks: {
 				stroke: attributes.yAxisStroke || 'gray',
-				size: (attributes.yTickMarksActive ?? true) ? 5 : 0, // Default to true if not set (match block.json default)
+				size: attributes.yTickMarksActive ?? true ? 5 : 0, // Default to true if not set (match block.json default)
 				strokeWidth: 0, // Match block.json default
 			},
 			grid: {

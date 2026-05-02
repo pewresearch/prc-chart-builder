@@ -10,7 +10,7 @@
  *   React (POST /prc-chart-builder/v1/ai/generate)
  *     → Chart_AI_Ability::handle_rest_request()
  *     → Chart_AI_Ability::generate_chart()
- *     → AiClient (claude-haiku-4-5 | claude-sonnet-4-5 | claude-opus-4-5)
+ *     → wp_ai_client_prompt (claude-haiku-4-5 | claude-sonnet-4-6 | claude-opus-4-7)
  *     → JSON { tableData, chartAttributes }
  *     → PHP serializer → block markup string
  *     → { content: string, error: string } → React
@@ -20,7 +20,8 @@
 
 namespace PRC\Platform\Chart_Builder;
 
-use WordPress\AiClient\AiClient;
+use Throwable;
+use WordPress\AiClient\Files\DTO\File;
 use WP_REST_Request;
 use WP_REST_Response;
 use WP_Error;
@@ -36,6 +37,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @since 1.0.0
  */
 class Chart_AI_Ability {
+	use \PRC\Platform\Chart_Builder\Chart_Block_Defaults;
 
 	/**
 	 * Ability name registered with the WordPress Abilities API.
@@ -107,17 +109,17 @@ class Chart_AI_Ability {
 							'type'        => 'string',
 							'description' => 'Base64-encoded PNG or JPEG image of a chart to recreate.',
 						),
-					'csvData'     => array(
-						'type'        => 'string',
-						'description' => 'Raw CSV text containing the chart data.',
+						'csvData'     => array(
+							'type'        => 'string',
+							'description' => 'Raw CSV text containing the chart data.',
+						),
+						'model'       => array(
+							'type'        => 'string',
+							'description' => 'Claude model to use: claude-haiku-4-5, claude-sonnet-4-6 (default), or claude-opus-4-7.',
+							'enum'        => array( 'claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7' ),
+						),
 					),
-					'model'       => array(
-						'type'        => 'string',
-						'description' => 'Claude model to use: claude-haiku-4-5, claude-sonnet-4-5 (default), or claude-opus-4-5.',
-						'enum'        => array( 'claude-haiku-4-5', 'claude-sonnet-4-5', 'claude-opus-4-5' ),
-					),
-				),
-				'required'             => array( 'chartType' ),
+					'required'             => array( 'chartType' ),
 					'additionalProperties' => false,
 				),
 				'output_schema'       => array(
@@ -182,43 +184,43 @@ class Chart_AI_Ability {
 						'sanitize_callback' => 'sanitize_textarea_field',
 						'default'           => '',
 					),
-				'image'       => array(
-					'required'          => false,
-					'type'              => 'string',
-					'default'           => '',
-					// Strip everything except valid base64 chars and the data URI prefix.
-					'sanitize_callback' => static function ( $value ) {
-						if ( empty( $value ) ) {
+					'image'       => array(
+						'required'          => false,
+						'type'              => 'string',
+						'default'           => '',
+						// Strip everything except valid base64 chars and the data URI prefix.
+						'sanitize_callback' => static function ( $value ) {
+							if ( empty( $value ) ) {
+								return '';
+							}
+							// Allow optional data URI prefix then base64 payload only.
+							if ( preg_match( '/^(data:image\/[a-z+]+;base64,)?([A-Za-z0-9+\/=]+)$/', $value, $m ) ) {
+								return $m[1] . $m[2];
+							}
 							return '';
-						}
-						// Allow optional data URI prefix then base64 payload only.
-						if ( preg_match( '/^(data:image\/[a-z+]+;base64,)?([A-Za-z0-9+\/=]+)$/', $value, $m ) ) {
-							return $m[1] . $m[2];
-						}
-						return '';
-					},
-				),
-		'csvData'     => array(
-			'required'          => false,
-			'type'              => 'string',
-			'default'           => '',
-			'sanitize_callback' => array( $this, 'sanitize_csv_data' ),
-		),
-				'model'       => array(
-					'required'          => false,
-					'type'              => 'string',
-					'sanitize_callback' => 'sanitize_text_field',
-					'default'           => 'claude-sonnet-4-5',
-					'enum'              => array(
-						'claude-haiku-4-5',
-						'claude-sonnet-4-5',
-						'claude-opus-4-5',
+						},
+					),
+					'csvData'     => array(
+						'required'          => false,
+						'type'              => 'string',
+						'default'           => '',
+						'sanitize_callback' => array( $this, 'sanitize_csv_data' ),
+					),
+					'model'       => array(
+						'required'          => false,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+						'default'           => 'claude-sonnet-4-6',
+						'enum'              => array(
+							'claude-haiku-4-5',
+							'claude-sonnet-4-6',
+							'claude-opus-4-7',
+						),
 					),
 				),
-			),
-		)
-	);
-}
+			)
+		);
+	}
 
 	/**
 	 * Handle the REST request and return the generated block content.
@@ -232,7 +234,7 @@ class Chart_AI_Ability {
 			'description' => $request->get_param( 'description' ) ?? '',
 			'image'       => $request->get_param( 'image' ) ?? '',
 			'csvData'     => $request->get_param( 'csvData' ) ?? '',
-			'model'       => $request->get_param( 'model' ) ?? 'claude-sonnet-4-5',
+			'model'       => $request->get_param( 'model' ) ?? 'claude-sonnet-4-6',
 		);
 
 		$result = $this->generate_chart( $input );
@@ -283,8 +285,8 @@ class Chart_AI_Ability {
 	 */
 	private const ALLOWED_MODELS = array(
 		'claude-haiku-4-5',
-		'claude-sonnet-4-5',
-		'claude-opus-4-5',
+		'claude-sonnet-4-6',
+		'claude-opus-4-7',
 	);
 
 	/**
@@ -300,7 +302,7 @@ class Chart_AI_Ability {
 		$csv_data    = $input['csvData'] ?? '';
 		$model       = in_array( $input['model'] ?? '', self::ALLOWED_MODELS, true )
 			? $input['model']
-			: 'claude-sonnet-4-5';
+			: 'claude-sonnet-4-6';
 
 		if ( empty( $chart_type ) ) {
 			return array(
@@ -320,45 +322,61 @@ class Chart_AI_Ability {
 		$user_prompt         = self::build_user_prompt( $chart_type, $description, $csv_data );
 		$output_schema       = self::get_output_schema();
 
-		try {
-			$builder = AiClient::prompt( $user_prompt )
-				->usingSystemInstruction( $system_instructions )
-				->usingModelPreference( $model )
-				->asJsonResponse( $output_schema );
-
-			// Attach image if provided.
-			if ( ! empty( $image_b64 ) ) {
-				$mime = 'image/png';
-				if ( preg_match( '/^data:(image\/[a-z+]+);base64,/', $image_b64, $m ) ) {
-					$mime = $m[1];
-				}
-				$clean_b64 = preg_replace( '/^data:image\/[a-z+]+;base64,/', '', $image_b64 );
-				$builder   = $builder->withFile( $clean_b64, $mime );
-			}
-
-			$response = $builder->generateText();
-
-			$ai_data = json_decode( $response, true );
-
-			if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $ai_data ) ) {
-				return array(
-					'content' => '',
-					'error'   => 'Failed to parse AI response as JSON.',
-				);
-			}
-
-			$content = $this->serialize_chart_blocks( $chart_type, $ai_data );
-
-			return array(
-				'content' => $content,
-				'error'   => '',
-			);
-		} catch ( \Exception $e ) {
+		$builder = wp_ai_client_prompt( $user_prompt );
+		if ( is_wp_error( $builder ) ) {
 			return array(
 				'content' => '',
-				'error'   => 'AI generation failed: ' . $e->getMessage(),
+				'error'   => $builder->get_error_message(),
 			);
 		}
+
+		$builder = $builder
+			->using_system_instruction( $system_instructions )
+			->using_model_preference( $model )
+			->as_json_response( $output_schema );
+
+		// Attach image if provided.
+		if ( ! empty( $image_b64 ) ) {
+			$mime = 'image/png';
+			if ( preg_match( '/^data:(image\/[a-z+]+);base64,/', $image_b64, $m ) ) {
+				$mime = $m[1];
+			}
+			$clean_b64 = preg_replace( '/^data:image\/[a-z+]+;base64,/', '', $image_b64 );
+			try {
+				$file    = new File( $clean_b64, $mime );
+				$builder = $builder->with_file( $file );
+			} catch ( Throwable $e ) {
+				return array(
+					'content' => '',
+					'error'   => 'Invalid image data: ' . $e->getMessage(),
+				);
+			}
+		}
+
+		$response = $builder->generate_text();
+
+		if ( is_wp_error( $response ) ) {
+			return array(
+				'content' => '',
+				'error'   => $response->get_error_message(),
+			);
+		}
+
+		$ai_data = json_decode( (string) $response, true );
+
+		if ( json_last_error() !== JSON_ERROR_NONE || ! is_array( $ai_data ) ) {
+			return array(
+				'content' => '',
+				'error'   => 'Failed to parse AI response as JSON.',
+			);
+		}
+
+		$content = $this->serialize_chart_blocks( $chart_type, $ai_data );
+
+		return array(
+			'content' => $content,
+			'error'   => '',
+		);
 	}
 
 	// ── Block serialization ───────────────────────────────────────────────
@@ -402,10 +420,10 @@ class Chart_AI_Ability {
 		// ── 3. Derive chart data arrays from the table for io.chartData ───────────────
 
 		// Header cells tell us column names; first column = independentVariable (x).
-		$header_cells        = $head_rows[0]['cells'] ?? array();
-		$column_names        = array_map( fn( $c ) => $c['content'] ?? '', $header_cells );
-		$independent_var     = $column_names[0] ?? 'x';
-		$categories          = array_slice( $column_names, 1 );
+		$header_cells    = $head_rows[0]['cells'] ?? array();
+		$column_names    = array_map( fn( $c ) => $c['content'] ?? '', $header_cells );
+		$independent_var = $column_names[0] ?? 'x';
+		$categories      = array_slice( $column_names, 1 );
 
 		// Build io.chartData: array of {x: val, col1: val, ...} objects.
 		// Mirrors the JS editor logic: column 0 → 'x', all others keep their header name.
@@ -599,273 +617,35 @@ class Chart_AI_Ability {
 		);
 	}
 
-	/**
-	 * Return the chart-type-specific opinionated attribute overrides that mirror
-	 * the JS variation templates in .shared/variation-templates/.
-	 *
-	 * These are the "middle layer" between block.json defaults and the AI's output.
-	 * They capture the same settings that the JS mergeWithDefaults() calls in each
-	 * template file (bar.js, line.js, pie.js, etc.), but without the sample table
-	 * data or the lock attributes.
-	 *
-	 * @param string $chart_type Chart type slug.
-	 * @return array<string, mixed>
-	 */
-	private function get_variation_template_defaults( string $chart_type ): array {
-		$shared_metadata = array(
-			'active' => true,
-			'tag'    => 'PEW RESEARCH CENTER',
-		);
-		$shared_io = array(
-			'isConvertedChart' => false,
-		);
-
-		$templates = array(
-			'bar' => array(
-				'layout'          => array( 'type' => 'bar', 'orientation' => 'horizontal', 'width' => 420, 'height' => 160, 'padding' => array( 'left' => 100 ) ),
-				'metadata'        => $shared_metadata,
-				'independentAxis' => array( 'tickCount' => null, 'domainPadding' => 16, 'axis' => array( 'stroke' => '', 'strokeWidth' => 1 ), 'tickLabels' => array( 'textAnchor' => 'end', 'verticalAnchor' => 'middle', 'dx' => -5 ) ),
-				'dependentAxis'   => array( 'active' => false ),
-				'tooltip'         => array( 'active' => true, 'headerValue' => 'independentValue', 'format' => '{{column}}: {{value}}' ),
-				'labels'          => array( 'active' => true, 'color' => 'contrast', 'labelPositionDY' => 3 ),
-				'legend'          => array( 'active' => true, 'markerStyle' => 'rect' ),
-				'bar'             => array( 'barWidth' => 24, 'barGroupOffset' => 28 ),
-				'dataRender'      => array( 'sortOrder' => 'descending' ),
-				'io'              => $shared_io,
-			),
-			'column' => array(
-				'layout'          => array( 'type' => 'column', 'orientation' => 'vertical', 'width' => 420, 'height' => 300, 'padding' => array( 'top' => 30, 'bottom' => 40 ) ),
-				'metadata'        => $shared_metadata,
-				'independentAxis' => array( 'active' => true, 'tickMarksActive' => false ),
-				'dependentAxis'   => array( 'active' => true, 'tickMarksActive' => true, 'abbreviateTicks' => true ),
-				'tooltip'         => array( 'active' => true, 'format' => '{{column}}: {{value}}' ),
-				'labels'          => array( 'active' => true, 'color' => 'contrast' ),
-				'legend'          => array( 'active' => true, 'markerStyle' => 'rect' ),
-				'dataRender'      => array( 'sortOrder' => 'none' ),
-				'io'              => $shared_io,
-			),
-			'line' => array(
-				'layout'          => array( 'type' => 'line', 'width' => 420, 'height' => 356, 'padding' => array( 'top' => 10, 'left' => 30, 'bottom' => 30, 'right' => 20 ) ),
-				'metadata'        => $shared_metadata,
-				'independentAxis' => array( 'tickMarksActive' => true, 'scale' => 'time' ),
-				'dependentAxis'   => array( 'showZero' => true, 'tickMarksActive' => true ),
-				'tooltip'         => array( 'active' => true, 'offsetX' => 30, 'offsetY' => 30, 'headerValue' => 'categoryValue', 'format' => '{{row}}: {{value}}' ),
-				'labels'          => array( 'color' => 'inherit' ),
-				'line'            => array( 'strokeWidth' => 4 ),
-				'nodes'           => array( 'pointSize' => 4, 'pointFill' => 'white', 'pointStrokeWidth' => 1, 'pointStroke' => 'white' ),
-				'legend'          => array( 'active' => true, 'markerStyle' => 'line' ),
-				'dataRender'      => array( 'sortOrder' => 'ascending', 'xScale' => 'time', 'xFormat' => 'YYYY' ),
-				'io'              => $shared_io,
-			),
-			'area' => array(
-				'layout'     => array( 'type' => 'area', 'width' => 420, 'height' => 300, 'padding' => array( 'top' => 10, 'left' => 30, 'bottom' => 30, 'right' => 20 ) ),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array( 'active' => true, 'format' => '{{row}}: {{value}}' ),
-				'legend'     => array( 'active' => true, 'markerStyle' => 'line' ),
-				'dataRender' => array( 'sortOrder' => 'ascending' ),
-				'io'         => $shared_io,
-			),
-			'stacked-bar' => array(
-				'layout'          => array( 'type' => 'stacked-bar', 'orientation' => 'horizontal', 'width' => 420, 'height' => 220, 'padding' => array( 'left' => 100 ) ),
-				'metadata'        => $shared_metadata,
-				'independentAxis' => array( 'active' => false ),
-				'dependentAxis'   => array( 'active' => true, 'tickMarksActive' => true ),
-				'tooltip'         => array( 'active' => true, 'format' => '{{column}}: {{value}}' ),
-				'labels'          => array( 'active' => true, 'color' => 'contrast' ),
-				'legend'          => array( 'active' => true, 'markerStyle' => 'rect' ),
-				'dataRender'      => array( 'sortOrder' => 'none' ),
-				'io'              => $shared_io,
-			),
-			'stacked-column' => array(
-				'layout'     => array( 'type' => 'stacked-column', 'width' => 420, 'height' => 300 ),
-				'metadata'   => $shared_metadata,
-				'legend'     => array( 'active' => true, 'markerStyle' => 'rect' ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
-			),
-			'stacked-area' => array(
-				'layout'     => array( 'type' => 'stacked-area', 'width' => 420, 'height' => 300 ),
-				'metadata'   => $shared_metadata,
-				'legend'     => array( 'active' => true, 'markerStyle' => 'line' ),
-				'dataRender' => array( 'sortOrder' => 'ascending' ),
-				'io'         => $shared_io,
-			),
-			'pie' => array(
-				'layout'          => array( 'type' => 'pie', 'width' => 420, 'height' => 350, 'padding' => array( 'left' => 20, 'bottom' => 20, 'right' => 20 ) ),
-				'metadata'        => $shared_metadata,
-				'independentAxis' => array( 'tickCount' => null, 'domainPadding' => 16 ),
-				'dependentAxis'   => array( 'active' => false ),
-				'tooltip'         => array( 'active' => true, 'headerValue' => 'independentValue', 'format' => '{{column}}: {{value}}' ),
-				'labels'          => array( 'active' => true, 'color' => 'contrast', 'labelPositionDX' => -20 ),
-				'legend'          => array( 'active' => true, 'markerStyle' => 'circle' ),
-				'dataRender'      => array( 'sortOrder' => 'reverse' ),
-				'io'              => $shared_io,
-			),
-			'scatter' => array(
-				'layout'     => array( 'type' => 'scatter', 'width' => 420, 'height' => 300, 'padding' => array( 'left' => 40, 'bottom' => 40, 'top' => 10 ) ),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array( 'active' => true, 'format' => '{{row}}: {{value}}' ),
-				'nodes'      => array( 'pointSize' => 5 ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
-			),
-			'dot-plot' => array(
-				'layout'     => array( 'type' => 'dot-plot', 'width' => 420, 'height' => 300, 'orientation' => 'horizontal' ),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array( 'active' => true, 'format' => '{{row}}: {{value}}' ),
-				'legend'     => array( 'active' => true ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
-			),
-			'diverging-bar' => array(
-				'layout'     => array( 'type' => 'diverging-bar', 'orientation' => 'horizontal', 'width' => 420, 'height' => 220 ),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array( 'active' => true, 'format' => '{{column}}: {{value}}' ),
-				'labels'     => array( 'active' => true, 'color' => 'contrast' ),
-				'legend'     => array( 'active' => true, 'markerStyle' => 'rect' ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
-			),
-			'exploded-bar' => array(
-				'layout'     => array( 'type' => 'exploded-bar', 'orientation' => 'horizontal', 'width' => 420, 'height' => 220 ),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array( 'active' => true, 'format' => '{{column}}: {{value}}' ),
-				'labels'     => array( 'active' => true, 'color' => 'contrast' ),
-				'legend'     => array( 'active' => true, 'markerStyle' => 'rect' ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
-			),
-			'treemap' => array(
-				'layout'     => array( 'type' => 'treemap', 'width' => 640, 'height' => 400 ),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array( 'active' => true, 'format' => '{{row}}: {{value}}' ),
-				'labels'     => array( 'active' => true ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
-			),
-			'sankey' => array(
-				'layout'     => array( 'type' => 'sankey', 'width' => 640, 'height' => 400 ),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array( 'active' => true ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
-			),
-			'freeform' => array(
-				'layout'  => array( 'type' => 'freeform', 'width' => 640, 'height' => 400 ),
-				'metadata'=> $shared_metadata,
-				'io'      => $shared_io,
-			),
-		);
-
-		// Map aliases / defaults.
-		if ( isset( $templates[ $chart_type ] ) ) {
-			return $templates[ $chart_type ];
-		}
-
-		// Generic fallback for map types and anything else.
-		return array(
-			'layout'   => array( 'type' => $chart_type, 'width' => 640, 'height' => 400 ),
-			'metadata' => $shared_metadata,
-
-		);
-	}
-
-	/**
-	 * Get default attribute values from the chart block.json.
-	 *
-	 * Reads the block.json file at build-time and extracts all default values.
-	 * This mirrors the JS mergeWithDefaults() helper in .shared/variation-templates/.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private function get_chart_block_defaults(): array {
-		$block_json_path = PRC_CHART_BUILDER_DIR . '/build/chart/block.json';
-
-		// Fall back to src if build doesn't exist (local dev).
-		if ( ! file_exists( $block_json_path ) ) {
-			$block_json_path = PRC_CHART_BUILDER_DIR . '/src/chart/block.json';
-		}
-
-		if ( ! file_exists( $block_json_path ) ) {
-			return array();
-		}
-
-		$block_json = json_decode( file_get_contents( $block_json_path ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		if ( ! isset( $block_json['attributes'] ) ) {
-			return array();
-		}
-
-		$defaults = array();
-		foreach ( $block_json['attributes'] as $key => $config ) {
-			if ( array_key_exists( 'default', $config ) ) {
-				$defaults[ $key ] = $config['default'];
-			}
-		}
-
-		return $defaults;
-	}
-
-	/**
-	 * Recursively deep-merge two arrays. Source values override target values.
-	 * Arrays (non-list) are merged recursively. Lists and scalars are replaced.
-	 *
-	 * @param array<string, mixed> $target Defaults.
-	 * @param array<string, mixed> $source Overrides.
-	 * @return array<string, mixed>
-	 */
-	private function deep_merge( array $target, array $source ): array {
-		$output = $target;
-
-		foreach ( $source as $key => $value ) {
-			if (
-				is_array( $value ) &&
-				! array_is_list( $value ) &&
-				isset( $target[ $key ] ) &&
-				is_array( $target[ $key ] ) &&
-				! array_is_list( $target[ $key ] )
-			) {
-				$output[ $key ] = $this->deep_merge( $target[ $key ], $value );
-			} else {
-				$output[ $key ] = $value;
-			}
-		}
-
-		return $output;
-	}
-
 	// ── Prompts ───────────────────────────────────────────────────────────
 
 	/**
-	 * Build JSON schema for structured chart generation output.
+	 * JSON Schema for `as_json_response` (root `type` required; no name/schema wrapper).
 	 *
-	 * Ensures providers that require `response_format.type = json_schema`
-	 * can accept this request while still allowing flexible chart attributes.
+	 * Allows flexible `chartAttributes` while constraining `tableData` shape.
 	 *
 	 * @return array<string, mixed>
 	 */
 	private static function get_output_schema(): array {
 		return array(
-			'name'   => 'chart_generation_response',
-			'schema' => array(
-				'type'                 => 'object',
-				'properties'           => array(
-					'tableData'       => array(
-						'type'                 => 'object',
-						'properties'           => array(
-							'head' => array( 'type' => 'array' ),
-							'body' => array( 'type' => 'array' ),
-						),
-						'required'             => array( 'head', 'body' ),
-						'additionalProperties' => true,
+			'type'                 => 'object',
+			'properties'           => array(
+				'tableData'       => array(
+					'type'                 => 'object',
+					'properties'           => array(
+						'head' => array( 'type' => 'array' ),
+						'body' => array( 'type' => 'array' ),
 					),
-					'chartAttributes' => array(
-						'type'                 => 'object',
-						'additionalProperties' => true,
-					),
+					'required'             => array( 'head', 'body' ),
+					'additionalProperties' => true,
 				),
-				'required'             => array( 'tableData', 'chartAttributes' ),
-				'additionalProperties' => false,
+				'chartAttributes' => array(
+					'type'                 => 'object',
+					'additionalProperties' => true,
+				),
 			),
+			'required'             => array( 'tableData', 'chartAttributes' ),
+			'additionalProperties' => false,
 		);
 	}
 
@@ -875,7 +655,6 @@ class Chart_AI_Ability {
 	 * @param string $chart_type The selected chart type slug.
 	 * @return string
 	 */
-
 	private static function get_system_instructions( string $chart_type ): string {
 		$type_label = Content_Type::$known_chart_types[ $chart_type ] ?? ucfirst( $chart_type );
 
@@ -1053,21 +832,21 @@ PROMPT;
 	 */
 	private static function get_type_specific_guidance( string $chart_type ): string {
 		$guidance = array(
-			'bar'           => 'Horizontal bar chart. Set layout.orientation="horizontal", layout.width=420. Height = 40 * number_of_rows. dependentAxis.active=false. labels.active=true, labels.color="contrast". dataRender.sortOrder="descending".',
-			'column'        => 'Vertical column chart. Set layout.orientation="vertical". dependentAxis.active=true. independentAxis.active=true. labels.active=true.',
-			'line'          => 'Line chart. dataRender.categories should list all series columns. legend.active=true if multiple series. line.showPoints=true.',
-			'area'          => 'Area chart. Similar to line. line.showArea=true, line.areaFillOpacity=0.4.',
-			'stacked-bar'   => 'Stacked horizontal bar. layout.orientation="horizontal". bar.stackOffset="none". legend.active=true.',
-			'stacked-column'=> 'Stacked vertical column. legend.active=true.',
-			'stacked-area'  => 'Stacked area chart. legend.active=true.',
-			'pie'           => 'Pie/donut chart. Two columns: label and value. pie.innerRadius=0 for pie, >0 for donut. legend.active=true.',
-			'scatter'       => 'Scatter plot. columns: x (category or numeric), y (numeric). nodes.pointSize=5.',
-			'dot-plot'      => 'Dot plot for comparison. Two value columns typically.',
-			'diverging-bar' => 'Diverging bar chart. Must have positive and negative value columns.',
-			'sankey'        => 'Sankey/flow diagram. Columns MUST be: source, target, value (all strings). No axes. sankey.nodeAlign="justify".',
-			'treemap'       => 'Treemap. Columns: label, value. treemap.tile="squarify".',
-			'exploded-bar'  => 'Exploded bar chart for 100% comparison. Multiple value columns.',
-			'freeform'      => 'General-purpose chart. Use bar layout as a sensible default.',
+			'bar'            => 'Horizontal bar chart. Set layout.orientation="horizontal", layout.width=420. Height = 40 * number_of_rows. dependentAxis.active=false. labels.active=true, labels.color="contrast". dataRender.sortOrder="descending".',
+			'column'         => 'Vertical column chart. Set layout.orientation="vertical". dependentAxis.active=true. independentAxis.active=true. labels.active=true.',
+			'line'           => 'Line chart. dataRender.categories should list all series columns. legend.active=true if multiple series. line.showPoints=true.',
+			'area'           => 'Area chart. Similar to line. line.showArea=true, line.areaFillOpacity=0.4.',
+			'stacked-bar'    => 'Stacked horizontal bar. layout.orientation="horizontal". bar.stackOffset="none". legend.active=true.',
+			'stacked-column' => 'Stacked vertical column. legend.active=true.',
+			'stacked-area'   => 'Stacked area chart. legend.active=true.',
+			'pie'            => 'Pie/donut chart. Two columns: label and value. pie.innerRadius=0 for pie, >0 for donut. legend.active=true.',
+			'scatter'        => 'Scatter plot. columns: x (category or numeric), y (numeric). nodes.pointSize=5.',
+			'dot-plot'       => 'Dot plot for comparison. Two value columns typically.',
+			'diverging-bar'  => 'Diverging bar chart. Must have positive and negative value columns.',
+			'sankey'         => 'Sankey/flow diagram. Columns MUST be: source, target, value (all strings). No axes. sankey.nodeAlign="justify".',
+			'treemap'        => 'Treemap. Columns: label, value. treemap.tile="squarify".',
+			'exploded-bar'   => 'Exploded bar chart for 100% comparison. Multiple value columns.',
+			'freeform'       => 'General-purpose chart. Use bar layout as a sensible default.',
 		);
 
 		return $guidance[ $chart_type ] ?? "Standard {$chart_type} chart. Follow the general guidelines above.";
@@ -1093,11 +872,11 @@ PROMPT;
 
 		if ( ! empty( $csv_data ) ) {
 			// Trim to avoid token waste, cap at ~100 rows.
-			$lines      = explode( "\n", trim( $csv_data ) );
-			$capped     = array_slice( $lines, 0, 101 );
-			$trimmed    = implode( "\n", $capped );
-			$parts[]    = "\nCSV data:\n```csv\n{$trimmed}\n```";
-			$parts[]    = 'Parse this CSV into the tableData format. The first row is the header.';
+			$lines   = explode( "\n", trim( $csv_data ) );
+			$capped  = array_slice( $lines, 0, 101 );
+			$trimmed = implode( "\n", $capped );
+			$parts[] = "\nCSV data:\n```csv\n{$trimmed}\n```";
+			$parts[] = 'Parse this CSV into the tableData format. The first row is the header.';
 		}
 
 		if ( empty( $csv_data ) ) {

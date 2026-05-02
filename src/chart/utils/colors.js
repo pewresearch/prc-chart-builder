@@ -1,7 +1,7 @@
 const colors = {
 	general: ['#456A83', '#BF3B27', '#756a7e', '#ea9e2c'],
 	'politics-main': ['#d1a730', '#a55a26', '#949d48'],
-	'global-main': ['#949d48', '#006699', '#a55a26'],
+	'global-main': ['#949d48', '#1F497D', '#a55a26'],
 	'religion-main': ['#0090C0', '#a55a26', '#949d48'],
 	'social-trends-main': ['#387668', '#d1a730', '#949d48'],
 	'journalism-main': ['#733d47', '#d1a730', '#949d48'],

@@ -3,7 +3,7 @@
 	"description": "Chart Inspector Sidebar Panel functionality for PRC Chart Builder",
 	"license": "GPL-2.0-or-later",
 	"devDependencies": {
-		"@wordpress/scripts": "^30.15.0"
+		"@wordpress/scripts": "^31.4.0"
 	},
 	"scripts": {
 		"build": "wp-scripts build src/index.js",

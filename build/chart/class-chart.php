@@ -81,7 +81,7 @@ class Chart {
 		$viewport_override = isset( $_GET['cb_viewport'] ) ? sanitize_key( $_GET['cb_viewport'] ) : null;
 		$device_type       = $viewport_override && in_array( $viewport_override, array( 'mobile', 'tablet', 'desktop' ), true )
 			? $viewport_override
-			: \PRC\Platform\get_current_device();
+			: \PRC\BlockUtils\get_current_device();
 		$attributes        = $this->merge_viewport_attributes( $attributes, $device_type );
 
 		// Prevent double rendering by tracking rendered blocks.
@@ -119,13 +119,14 @@ class Chart {
 		$target_namespace = array_key_exists( 'interactiveNamespace', $attributes ) ? $attributes['interactiveNamespace'] : 'prc-chart-builder/chart';
 
 		// Resolve the static fallback image shown before JS hydrates and on error.
-		// Priority: server-generated PNG (post meta) → io.pngUrl (block attr) → io.svgUrl (legacy).
+		// Priority: featured image (server-generated PNG) → io.pngUrl (block attr) → io.svgUrl (legacy).
 		// When synced into another post, refId is the chart CPT post ID — use it
 		// so we read meta from the chart post, not the parent article.
 		$chart_post_id       = $block->context['refId'] ?? get_the_ID();
 		$static_fallback_url = '';
 		if ( $chart_post_id ) {
-			$static_fallback_url = (string) get_post_meta( $chart_post_id, '_chart_png_url', true );
+			$thumbnail_id        = get_post_thumbnail_id( $chart_post_id );
+			$static_fallback_url = $thumbnail_id ? (string) wp_get_attachment_url( $thumbnail_id ) : '';
 		}
 		if ( ! $static_fallback_url ) {
 			$static_fallback_url = $block_attributes['io']['pngUrl'] ?? '';

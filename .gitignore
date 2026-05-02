@@ -2,7 +2,6 @@
 node_modules
 node_modules/
 vendor/
-composer.lock
 
 # Yarn v2
 .pnp.*
@@ -20,7 +19,6 @@ artifacts/
 
 # Composer
 /vendor/
-composer.lock
 
 # PHPUnit
 /coverage/

@@ -1,0 +1,42 @@
+{
+	"$schema": "prc-chart-handoff/v1",
+	"version": "1.0.0",
+	"chartType": "area",
+	"orientation": "horizontal",
+	"data": {
+		"values": [
+			{ "year": 2018, "pct": 36, "party": "Democrat" },
+			{ "year": 2019, "pct": 40, "party": "Democrat" },
+			{ "year": 2020, "pct": 43, "party": "Democrat" },
+			{ "year": 2018, "pct": 55, "party": "Republican" },
+			{ "year": 2019, "pct": 52, "party": "Republican" },
+			{ "year": 2020, "pct": 48, "party": "Republican" }
+		],
+		"xColumn": "year",
+		"yColumn": "pct",
+		"categoryColumn": "party",
+		"xType": "numeric",
+		"yType": "percentage"
+	},
+	"metadata": {
+		"title": "Party Support Over Time",
+		"subtitle": "% supporting",
+		"note": "",
+		"source": "Source: Pew Research Center"
+	},
+	"config": {
+		"colors": ["#456A83", "#BF3B27"],
+		"dependentAxis": { "tickUnit": "%" },
+		"lineOptions": {
+			"areaFillOpacity": 0.4
+		}
+	},
+	"source": {
+		"tool": "pewplots",
+		"toolVersion": "3.1.0",
+		"exportedAt": "2026-04-07T12:00:00Z",
+		"palette": "partisan",
+		"paletteScale": "auto"
+	},
+	"warnings": []
+}

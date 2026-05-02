@@ -228,40 +228,6 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 								</ToolsPanelItem>
 								<ToolsPanelItem
 									hasValue={() => true}
-									label={__('Show Group Labels')}
-									isShownByDefault
-									panelId={clientId}
-								>
-									<ToggleControl
-										label={__('Show Group Labels')}
-										help={__(
-											'Display group header labels at the top of each group section.'
-										)}
-										checked={
-											getCurrentValue(
-												'treemap',
-												'showGroupLabels'
-											) ?? true
-										}
-										disabled={
-											!getCurrentValue('labels', 'active')
-										}
-										onChange={(newValue) => {
-											const treemap =
-												getCurrentValue('treemap') ||
-												{};
-											updateAttributeForDevice(
-												'treemap',
-												{
-													...treemap,
-													showGroupLabels: newValue,
-												}
-											);
-										}}
-									/>
-								</ToolsPanelItem>
-								<ToolsPanelItem
-									hasValue={() => true}
 									label={__('Label Min Area')}
 									isShownByDefault
 									panelId={clientId}
@@ -726,8 +692,9 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 						</>
 					)}
 					<WidePanelItem
-						hasValue={() => getCurrentValue('labels', 'color')}
+						hasValue={() => true}
 						label={__('Label Color')}
+						isShownByDefault
 						panelId={clientId}
 					>
 						<SelectControl
