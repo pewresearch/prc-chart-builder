@@ -93,13 +93,9 @@ export default function useChartEditorPresence({ controllerClientId, refId }) {
 				.map((id) => blockEditor.getBlockName(id));
 
 			const isTableBlock = (blockName) =>
-				blockName === 'prc-block/table' ||
-				blockName === 'core/table';
+				blockName === 'prc-block/table' || blockName === 'core/table';
 
-			if (
-				isTableBlock(name) ||
-				parentNames.some(isTableBlock)
-			) {
+			if (isTableBlock(name) || parentNames.some(isTableBlock)) {
 				resolvedSection = 'data';
 			} else if (
 				name === 'prc-chart-builder/chart' ||
@@ -120,7 +116,12 @@ export default function useChartEditorPresence({ controllerClientId, refId }) {
 
 	// Only publish when the controller is the root of a chart CPT edit screen.
 	// When nested inside a synced-chart (refId present), observers in the room
-	// are the synced-chart wrappers — we'd be talking to ourselves.
+	// are the synced-chart wrappers — we'd be talking to ourselves. When the
+	// Presence API plugin isn't loaded on the site, `useDeclarePresence` gates
+	// itself internally on `window.prcPlatform.presenceApiEnabled` (temporary
+	// bridge until deeper Presence integration) and becomes fully inert (no
+	// fetches, no setInterval, no apiFetch retries), so we don't need to repeat
+	// that check here.
 	const isChartRoot =
 		!refId && currentPostType === 'chart' && !!currentPostId;
 	const room = isChartRoot ? `postType/chart:${currentPostId}` : null;

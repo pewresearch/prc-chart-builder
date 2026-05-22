@@ -31,6 +31,12 @@ function chartPresenceRoom(ref) {
 /**
  * Subscribes to Presence API data for a chart entity referenced by a synced-chart block.
  *
+ * When the Presence API plugin is not loaded on the site, `usePresenceUsers`
+ * detects that internally (via `window.prcPlatform.presenceApiEnabled`) and
+ * becomes a no-op — so callers don't need to gate on it here. That flag is a
+ * temporary platform bridge; it should disappear when Presence is integrated
+ * more deeply and `@prc/hooks` no longer needs a separate opt-in.
+ *
  * @param {number|undefined} ref Chart post ID from the synced-chart `ref` attribute.
  * @return {{
  *   isLocked: boolean,

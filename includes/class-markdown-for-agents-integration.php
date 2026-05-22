@@ -67,9 +67,9 @@ class Markdown_For_Agents_Integration {
 	/**
 	 * Convert a synced-chart block to markdown.
 	 *
-	 * Fetches the referenced chart CPT post, finds its controller block, and
-	 * delegates to controller_to_markdown(). This mirrors what render_block_callback()
-	 * does via do_blocks(), but walks the block tree instead of producing HTML.
+	 * In email context, resolves the chart CPT's server-generated PNG (featured
+	 * image) and returns a markdown image so the AI emits an email-safe <img>
+	 * rather than a data table. Falls through to the table path when no PNG exists.
 	 *
 	 * @param array    $block Parsed block array (contains attrs.ref).
 	 * @param \WP_Post $post  The article post being converted.
@@ -98,6 +98,21 @@ class Markdown_For_Agents_Integration {
 			return 'Chart post not published';
 		}
 
+		// Email context: prefer the server-generated PNG (featured image) over a
+		// data table so the AI renders an <img> instead of approximating the chart
+		// as tabular HTML.
+		if ( 'email' === Block_Markdown_Registry::get_context() ) {
+			$thumbnail_id = get_post_thumbnail_id( $chart_post->ID );
+			if ( $thumbnail_id ) {
+				$png_url = wp_get_attachment_url( $thumbnail_id );
+				if ( $png_url ) {
+					$title = get_the_title( $chart_post ) ?: 'Chart';
+					return sprintf( '![%s](%s)', wp_strip_all_tags( $title ), esc_url( $png_url ) );
+				}
+			}
+			// No PNG yet — fall through to table so the AI has something to work with.
+		}
+
 		// Find the controller block inside the chart post's content.
 		$chart_blocks = parse_blocks( $chart_post->post_content );
 		foreach ( $chart_blocks as $chart_block ) {
@@ -112,7 +127,12 @@ class Markdown_For_Agents_Integration {
 	/**
 	 * Convert a chart controller block to markdown.
 	 *
-	 * Outputs: title heading, subtitle, data table, note, source.
+	 * In email context, emits a markdown image pointing at the chart's PNG if
+	 * one exists (so the AI produces an email-safe <img>). Falls back to the
+	 * standard title + data-table output for all other contexts or when no PNG
+	 * is stored on the block.
+	 *
+	 * Outputs (non-email / no-PNG path): title heading, subtitle, data table, note, source.
 	 *
 	 * @param array    $block Parsed block array from parse_blocks().
 	 * @param \WP_Post $post  The post being converted.
@@ -146,7 +166,18 @@ class Markdown_For_Agents_Integration {
 
 		$metadata = $attrs['metadata'] ?? array();
 		$io       = $attrs['io'] ?? array();
-		$parts    = array();
+
+		// Email context: emit a markdown image so the AI renders an <img> instead
+		// of a table. Fall through to the table path when no PNG is available.
+		if ( 'email' === Block_Markdown_Registry::get_context() ) {
+			$png_url = $this->resolve_chart_png_url( $attrs );
+			if ( $png_url ) {
+				$title = $metadata['title'] ?? 'Chart';
+				return sprintf( '![%s](%s)', wp_strip_all_tags( $title ), $png_url );
+			}
+		}
+
+		$parts = array();
 
 		$title = $metadata['title'] ?? '';
 		if ( $title ) {
@@ -182,6 +213,27 @@ class Markdown_For_Agents_Integration {
 		}
 
 		return implode( "\n\n", array_filter( $parts ) );
+	}
+
+	/**
+	 * Resolve the best available PNG URL from already-migrated chart block attributes.
+	 *
+	 * Uses io.pngUrl (stored on the block at export time). The synced-chart path
+	 * separately resolves from the chart CPT featured image (which is the canonical
+	 * server-generated PNG) before this method is reached, so this helper covers
+	 * inline (non-synced) controller blocks only.
+	 *
+	 * @param array $attrs Migrated chart block attributes (v2 shape).
+	 * @return string PNG URL, or empty string if none is available.
+	 */
+	private function resolve_chart_png_url( array $attrs ): string {
+		$io = $attrs['io'] ?? array();
+
+		if ( ! empty( $io['pngUrl'] ) ) {
+			return (string) $io['pngUrl'];
+		}
+
+		return '';
 	}
 
 	/**
