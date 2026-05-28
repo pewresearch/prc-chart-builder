@@ -111,7 +111,7 @@ const MAP_STYLE_KEYS = [
 /**
  * Keys within diffColumn that are style-related
  */
-const DIFF_COLUMN_STYLE_KEYS = ['style'];
+const DIFF_COLUMN_STYLE_KEYS = ['style', 'columnHeader'];
 
 /**
  * Top-level keys within netValues that are style-related.
@@ -200,6 +200,7 @@ const extractStyleAttributes = (attributes, isViewportOverride = false) => {
 		divergingBar,
 		io,
 		colors,
+		dataRender,
 	} = attributes;
 
 	const result = {};
@@ -287,15 +288,15 @@ const extractStyleAttributes = (attributes, isViewportOverride = false) => {
 	if (netValues) {
 		const netValuesStyles = pickKeys(
 			netValues,
-			NET_VALUES_TOP_LEVEL_STYLE_KEYS,
+			NET_VALUES_TOP_LEVEL_STYLE_KEYS
 		);
 		const positiveStyles = pickKeys(
 			netValues.positive,
-			NET_VALUES_ITEM_STYLE_KEYS,
+			NET_VALUES_ITEM_STYLE_KEYS
 		);
 		const negativeStyles = pickKeys(
 			netValues.negative,
-			NET_VALUES_ITEM_STYLE_KEYS,
+			NET_VALUES_ITEM_STYLE_KEYS
 		);
 		const combined = {
 			...(netValuesStyles || {}),
@@ -312,6 +313,19 @@ const extractStyleAttributes = (attributes, isViewportOverride = false) => {
 		const ioStyles = pickKeys(io, ['colorValue', 'customColors']);
 		if (ioStyles) {
 			result.io = ioStyles;
+		}
+	}
+
+	// dataRender - highlight color settings only (not highlightedCategories)
+	if (dataRender) {
+		const dataRenderStyles = pickKeys(dataRender, [
+			'isHighlightedColor',
+			'highlightColor',
+			'deselectedColor',
+			'deselectedOpacity',
+		]);
+		if (dataRenderStyles) {
+			result.dataRender = dataRenderStyles;
 		}
 	}
 

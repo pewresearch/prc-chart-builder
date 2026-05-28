@@ -12,6 +12,7 @@ import {
 	POSITION_DISABLED_CHART_TYPES,
 	ANNOTATION_POPOVER_CHART_TYPES,
 	TICK_LABEL_POPOVER_CHART_TYPES,
+	DIFF_COLUMN_POPOVER_CHART_TYPES,
 } from './popover/utils';
 
 /**
@@ -70,6 +71,10 @@ export function createWpEditorFunctions({
 	const tickLabelPopoverEnabled =
 		TICK_LABEL_POPOVER_CHART_TYPES === null ||
 		TICK_LABEL_POPOVER_CHART_TYPES.includes(chartType);
+	const diffColumnPopoverEnabled =
+		DIFF_COLUMN_POPOVER_CHART_TYPES === null ||
+		DIFF_COLUMN_POPOVER_CHART_TYPES.includes(chartType);
+	const diffColumnActive = getCurrentValue('diffColumn')?.active;
 	// Label position registry for alignment detection
 	const labelRegistry = new Map();
 	return {
@@ -591,6 +596,33 @@ export function createWpEditorFunctions({
 						},
 					}
 				: undefined,
+		diffColumn:
+			diffColumnPopoverEnabled && diffColumnActive && onElementClick
+				? {
+						onHeaderClick: (anchorEl) => {
+							onElementClick({
+								elementType: 'diffColumnHeader',
+								anchorEl,
+							});
+						},
+						onClick: (
+							dataPoint,
+							category,
+							defaultLabel,
+							anchorEl,
+							groupValue = null
+						) => {
+							onElementClick({
+								elementType: 'diffColumnLabel',
+								dataPoint,
+								category,
+								defaultLabel,
+								anchorEl,
+								groupValue,
+							});
+						},
+					}
+				: undefined,
 		legendItems: onElementClick
 			? {
 					/**
@@ -629,6 +661,51 @@ export function createWpEditorFunctions({
 					 */
 					getCustomizations: () => {
 						return getCurrentValue('customLegendLabels') || {};
+					},
+
+					/**
+					 * Called when a detached legend item drag begins.
+					 * Disables block selection and tooltips while dragging.
+					 */
+					onItemDragStart: () => {
+						if (toggleSelection) {
+							toggleSelection(false);
+						}
+						if (setIsDragging) {
+							setIsDragging(true);
+						}
+					},
+
+					// No-op during drag; reserved for live preview if needed.
+					onItemDrag: () => {},
+
+					/**
+					 * Called when a detached legend item drag ends.
+					 * Writes the final position back to customLegendLabels[categoryValue].offsetX/offsetY
+					 * via setAttributes (top-level flat attribute, same pattern as customTickLabels).
+					 *
+					 * @param {string} categoryValue - The category/domain value of the dragged item
+					 * @param {number} finalX        - Final x offset (pixels from chart container left)
+					 * @param {number} finalY        - Final y offset (pixels from chart container top)
+					 */
+					onItemDragEnd: (categoryValue, finalX, finalY) => {
+						if (setIsDragging) {
+							setIsDragging(false);
+						}
+						const current = attrs?.customLegendLabels || {};
+						setAttributes({
+							customLegendLabels: {
+								...current,
+								[categoryValue]: {
+									...(current[categoryValue] ?? {}),
+									offsetX: Math.round(finalX),
+									offsetY: Math.round(finalY),
+								},
+							},
+						});
+						if (toggleSelection) {
+							toggleSelection(true);
+						}
 					},
 				}
 			: undefined,

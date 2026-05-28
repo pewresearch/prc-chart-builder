@@ -260,12 +260,14 @@ return array(
 				'type' => 'object',
 				'default' => array(
 					'active' => false,
+					'variation' => 'grouped',
 					'orientation' => 'row',
 					'title' => '',
 					'alignment' => 'center',
 					'offsetX' => 0,
 					'offsetY' => 0,
 					'markerStyle' => 'rect',
+					'markerFill' => 'solid',
 					'borderStroke' => '',
 					'fill' => '',
 					'categories' => array(
@@ -275,6 +277,7 @@ return array(
 					'labelLower' => 'Less than ',
 					'labelUpper' => 'More than ',
 					'fontSize' => 12,
+					'fontWeight' => 'normal',
 					'margin' => array(
 						'top' => 0,
 						'right' => 5,
@@ -475,6 +478,23 @@ return array(
 						'offsetX' => 0,
 						'separator' => true,
 						'separatorOffsetX' => -1
+					),
+					'secondary' => array(
+						'active' => false,
+						'positiveCategories' => array(
+							
+						),
+						'negativeCategories' => array(
+							
+						),
+						'fill' => '#D9D9D9',
+						'stroke' => '#000000',
+						'strokeWidth' => 0.5,
+						'opacity' => 0.4,
+						'categoryStyles' => array(
+							
+						),
+						'showInLegend' => false
 					)
 				)
 			),
@@ -484,14 +504,24 @@ return array(
 					'active' => false,
 					'category' => '',
 					'columnHeader' => 'Diff',
+					'customLabels' => array(
+						
+					),
 					'dx' => 0,
 					'dy' => 0,
 					'style' => array(
 						'rectStrokeWidth' => 0,
 						'rectStrokeColor' => 'white',
 						'rectFill' => 'none',
+						'fill' => '#2a2a2a',
+						'headerFill' => '#2a2a2a',
+						'textOutline' => false,
+						'headerTextOutline' => false,
 						'fontWeight' => 'normal',
 						'fontStyle' => 'normal',
+						'headerFontWeight' => 'normal',
+						'headerFontStyle' => 'normal',
+						'headerFontFamily' => '',
 						'fontAppearance' => 'default',
 						'fontSize' => '10px',
 						'headerFontSize' => '12px',
@@ -631,6 +661,12 @@ return array(
 					'yFormat' => null,
 					'numberFormat' => 'en-US',
 					'isHighlightedColor' => '#ECDBAC',
+					'highlightColor' => '#ECDBAC',
+					'deselectedColor' => '#EEECE4',
+					'deselectedOpacity' => 1,
+					'highlightedCategories' => array(
+						
+					),
 					'mapScale' => 'threshold',
 					'mapScaleDomain' => array(
 						10,

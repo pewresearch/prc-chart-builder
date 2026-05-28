@@ -332,6 +332,8 @@ function EditInner({
 		[ELEMENT_TYPES.ANNOTATION]: 'annotations',
 		[ELEMENT_TYPES.LEGEND_ITEM]: 'legend',
 		[ELEMENT_TYPES.ERROR_BAR]: 'dotPlot',
+		[ELEMENT_TYPES.DIFF_COLUMN_HEADER]: 'diffColumn',
+		[ELEMENT_TYPES.DIFF_COLUMN_LABEL]: 'diffColumn',
 	};
 
 	// Handle element click for customization popover (labels, shapes, segments, annotations, tick labels, etc.)
@@ -543,6 +545,31 @@ function EditInner({
 		updateAttributeForDevice('customTickLabels', next);
 	};
 
+	// Handle diff column header customization updates from popover
+	const handleDiffColumnHeaderCustomizationUpdate = (updates) => {
+		const current = getCurrentValue('diffColumn') || {};
+		updateAttributeForDevice('diffColumn', {
+			...current,
+			...updates,
+			style: {
+				...(current.style || {}),
+				...(updates.style || {}),
+			},
+		});
+	};
+
+	// Handle per-cell diff column customization updates from popover
+	const handleDiffColumnLabelCustomizationUpdate = (updates) => {
+		if (updates.customLabels === undefined) {
+			return;
+		}
+		const current = getCurrentValue('diffColumn') || {};
+		updateAttributeForDevice('diffColumn', {
+			...current,
+			customLabels: updates.customLabels,
+		});
+	};
+
 	// Handle annotation delete from popover
 	const handleAnnotationDelete = (annotationId) => {
 		const index = parseInt(annotationId, 10);
@@ -582,6 +609,12 @@ function EditInner({
 		if (elementType === ELEMENT_TYPES.LEGEND_ITEM) {
 			return handleLegendItemCustomizationUpdate;
 		}
+		if (elementType === ELEMENT_TYPES.DIFF_COLUMN_HEADER) {
+			return handleDiffColumnHeaderCustomizationUpdate;
+		}
+		if (elementType === ELEMENT_TYPES.DIFF_COLUMN_LABEL) {
+			return handleDiffColumnLabelCustomizationUpdate;
+		}
 		return handleLabelCustomizationUpdate;
 	};
 
@@ -620,6 +653,12 @@ function EditInner({
 		}
 		if (elementType === ELEMENT_TYPES.LEGEND_ITEM) {
 			return getCurrentValue('customLegendLabels') || {};
+		}
+		if (elementType === ELEMENT_TYPES.DIFF_COLUMN_HEADER) {
+			return getCurrentValue('diffColumn') || {};
+		}
+		if (elementType === ELEMENT_TYPES.DIFF_COLUMN_LABEL) {
+			return getCurrentValue('diffColumn')?.customLabels || {};
 		}
 		return {
 			customPositions: customPositions || {},
@@ -919,6 +958,12 @@ function EditInner({
 												selectedElement.elementType
 											}
 											chartType={chartType}
+											legendVariation={
+												getCurrentValue(
+													'legend',
+													'variation'
+												) || 'grouped'
+											}
 											dataPoint={
 												selectedElement.dataPoint
 											}

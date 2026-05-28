@@ -162,6 +162,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		'exploded-bar': 'exploded-bar',
 		'map-usa': 'map-usa',
 		'map-usa-counties': 'map-usa-counties',
+		'map-usa-cbsa': 'map-usa-cbsa',
 		'map-usa-block': 'map-usa-block',
 		'map-usa-hex': 'map-usa-hex',
 		'map-world': 'map-world',

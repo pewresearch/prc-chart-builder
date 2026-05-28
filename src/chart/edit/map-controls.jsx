@@ -7,26 +7,49 @@ import styled from '@emotion/styled';
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
+import { PanelColorSettings } from '@wordpress/block-editor';
 import {
-	PanelBody,
-	SelectControl,
+	Flex,
+	FlexItem,
 	__experimentalNumberControl as NumberControl,
+	PanelBody,
+	RangeControl,
+	SelectControl,
+	ToggleControl,
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
-	ToggleControl,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
+import { BUBBLE_MAP_CHART_TYPES } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
 import { useFocusedPanel } from './inspector-focus-context';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const WidePanelItem = styled(ToolsPanelItem)`
 	grid-column: span 2;
+	display: block;
+`;
+
+const StyledLabel = styled.div`
+	font-size: 11px;
+	font-weight: 500;
+	line-height: 1.4;
+	text-transform: uppercase;
+	display: inline-block;
+	margin-bottom: calc(8px) !important;
+	padding: 0px;
+`;
+
+const Help = styled.div`
+	margin-top: calc(8px);
+	font-size: 12px;
+	font-style: normal;
+	color: rgb(117, 117, 117);
+	margin-bottom: 0px;
 `;
 
 // Map projection presets
@@ -179,6 +202,10 @@ function MapControls({ attributes, setAttributes, clientId }) {
 	const layout = getCurrentValue('layout') || {};
 	const { type: chartType } = layout;
 
+	// dataRender is not viewport-aware — read directly from attributes
+	const dataRender = attributes.dataRender || {};
+	const isBubbleMode = dataRender.mapStyle === 'bubble';
+
 	// Handler for preset selection
 	const handlePresetChange = (presetKey) => {
 		const preset = MAP_PROJECTION_PRESETS[presetKey];
@@ -295,6 +322,129 @@ function MapControls({ attributes, setAttributes, clientId }) {
 							step={0.1}
 						/>
 					</WidePanelItem>
+					{/* Bubble mode controls — visible when Map Style is set to Bubble */}
+					{BUBBLE_MAP_CHART_TYPES.includes(chartType) &&
+						isBubbleMode && (
+							<>
+								<WidePanelItem
+									hasValue={() => true}
+									label={__('Bubble Radius')}
+									isShownByDefault
+									panelId={clientId}
+								>
+									<StyledLabel>
+										{__('Radius Range')}
+									</StyledLabel>
+									<Flex>
+										<FlexItem
+											style={{
+												width: '50%',
+												marginBottom: '0px',
+											}}
+										>
+											<NumberControl
+												label={__('Min (px)')}
+												value={
+													getCurrentValue(
+														'map',
+														'bubble'
+													)?.minRadius ?? 4
+												}
+												onChange={(value) => {
+													const bubble =
+														getCurrentValue(
+															'map',
+															'bubble'
+														) || {};
+													updateAttributeForDevice(
+														'map',
+														{
+															bubble: {
+																...bubble,
+																minRadius:
+																	parseFloat(
+																		value
+																	) || 4,
+															},
+														}
+													);
+												}}
+											/>
+										</FlexItem>
+										<FlexItem
+											style={{
+												width: '50%',
+												marginBottom: '0px',
+											}}
+										>
+											<NumberControl
+												label={__('Max (px)')}
+												value={
+													getCurrentValue(
+														'map',
+														'bubble'
+													)?.maxRadius ?? 24
+												}
+												onChange={(value) => {
+													const bubble =
+														getCurrentValue(
+															'map',
+															'bubble'
+														) || {};
+													updateAttributeForDevice(
+														'map',
+														{
+															bubble: {
+																...bubble,
+																maxRadius:
+																	parseFloat(
+																		value
+																	) || 24,
+															},
+														}
+													);
+												}}
+											/>
+										</FlexItem>
+									</Flex>
+									<Help>
+										{__(
+											'Square-root scaled — circle area is proportional to value.'
+										)}
+									</Help>
+								</WidePanelItem>
+								<WidePanelItem
+									hasValue={() => true}
+									label={__('Bubble Opacity')}
+									isShownByDefault
+									panelId={clientId}
+								>
+									<RangeControl
+										label={__('Opacity')}
+										value={
+											getCurrentValue('map', 'bubble')
+												?.opacity ?? 0.7
+										}
+										min={0}
+										max={1}
+										step={0.05}
+										onChange={(value) => {
+											const bubble =
+												getCurrentValue(
+													'map',
+													'bubble'
+												) || {};
+											updateAttributeForDevice('map', {
+												bubble: {
+													...bubble,
+													opacity: value,
+												},
+											});
+										}}
+									/>
+								</WidePanelItem>
+							</>
+						)}
 					{/* Projection Controls - for World Map */}
 					{'map-world' === chartType && (
 						<>

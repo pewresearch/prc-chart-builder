@@ -259,7 +259,10 @@ class Controller {
 		if ( $blocks['table'] ) {
 			$blocks['table']['attrs']['className'] = 'chart-builder-data-table';
 
-			$table_array = \PRC\Html\parse_table_block_into_array( $blocks['table']['innerHTML'] );
+			$table_array = Table_Export::filter_hidden_columns(
+				\PRC\Html\parse_table_block_into_array( $blocks['table']['innerHTML'] ),
+				$blocks['table']['attrs'] ?? array()
+			);
 
 			$meta_title                   = $chart_attributes['metadata']['title'] ?? '';
 			$meta_subtitle                = $chart_attributes['metadata']['subtitle'] ?? '';

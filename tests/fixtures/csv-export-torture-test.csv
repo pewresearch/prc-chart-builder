@@ -1,0 +1,24 @@
+Category,Label,Value,Notes,HideMe
+Smart quotes,"He said “yes” and she replied ‘no’",42,"Curly double “ ” and single ‘ ’ quotes",internal id 001
+Commas,"Portland, OR; Austin, TX","1,234.56","Thousands separator + city list",skip
+Quoted field,"She said ""hello"" to the ""world""",100,"RFC 4180 doubled-quote escape",skip
+Multiline,"First line
+Second line
+Third line",7,"Cell contains literal line breaks",skip
+Dashes,"10–20 range — em dash — minus −5","−3.2","En dash U+2013, em dash U+2014, minus U+2212",skip
+Typography,"Wait… really?","50 %","Ellipsis U+2026; narrow no-break space before %",skip
+Accents & ligatures,"café naïve Zürich façade","Résumé coöperate","Latin extended; watch é ï ü",skip
+More Latin,"Señor Niño Ångström æ ø å","Þorn ð eth","Spanish + Nordic characters",skip
+CJK,"日本語 中文 한국어","東京 北京 서울","East Asian scripts",skip
+Emoji & symbols,"Party 🎉 fire 🔥 check ✓ cross ✗","♀ ♂ ⚧ ☮","Emoji + dingbats",skip
+Greek & math,"α + β = γ, Δx · π","±2 × 3 ÷ 2 ≈ 6","Greek letters and math operators",skip
+Currency,"€100 £50 ¥1000 ₹500","$1,000.00 ₿0.001","Mixed currency; comma in USD amount",skip
+Legal marks,"Copyright © 2026 · Trademark ™ · Registered ®","§ 42 ¶ reference","Section/paragraph symbols",skip
+Whitespace torture,"  leading and trailing  ","word→→gap","Spaces; arrow marks U+2192",skip
+Non-breaking,Word break test,"1 000","NBSP (U+00A0) between 1 and 000 in Value",skip
+Empty cells,,,,"Only HideMe column has data"
+HTML-like,"<strong>bold</strong> and <em>italic</em>","<script>alert(1)</script>","Tags should strip on CSV export",skip
+Degree & units,"−40°C to 212°F","98.6°","Minus sign + degree symbol",skip
+Punctuation soup,"pipe | backslash \\ brace {test}","#@!%^&*~`","Special chars Excel sometimes mangles",skip
+Backslash quotes,"Path: C:\\Users\\Test\\file.csv","mixed ""nested"" 'quotes'","Windows paths + mixed quote styles",skip
+Metadata mirror,"Title: “Survey Results” — Q1 2026","Source: Pew Research Center","Subtitle-style prose for chart meta fields",skip

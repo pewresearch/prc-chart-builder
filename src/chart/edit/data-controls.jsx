@@ -22,6 +22,7 @@ import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 import {
+	BUBBLE_MAP_CHART_TYPES,
 	GROUP_BREAKS_CHART_TYPES,
 	GROUPABLE_CHART_TYPES,
 	POINT_CHART_TYPES,
@@ -68,6 +69,10 @@ function DataControls({ attributes, setAttributes, clientId }) {
 	const categories = dataRender.categories || [];
 	const positiveCategories = divergingBar.positiveCategories || [];
 	const negativeCategories = divergingBar.negativeCategories || [];
+	const secondary = divergingBar.secondary || {};
+	const secondaryActive = secondary.active || false;
+	const secondaryPositiveCategories = secondary.positiveCategories || [];
+	const secondaryNegativeCategories = secondary.negativeCategories || [];
 	const groupBreaksActive = dataRender.groupBreaksActive || false;
 	const groupBreaksCategory = dataRender.groupBreaksCategory || '';
 
@@ -110,6 +115,24 @@ function DataControls({ attributes, setAttributes, clientId }) {
 			})),
 		[availableCategories, negativeCategories]
 	);
+	const availableSecondaryPositiveOptions = useMemo(
+		() =>
+			availableCategories.map((category) => ({
+				label: category,
+				value: category,
+				disabled: !secondaryPositiveCategories.includes(category),
+			})),
+		[availableCategories, secondaryPositiveCategories]
+	);
+	const availableSecondaryNegativeOptions = useMemo(
+		() =>
+			availableCategories.map((category) => ({
+				label: category,
+				value: category,
+				disabled: !secondaryNegativeCategories.includes(category),
+			})),
+		[availableCategories, secondaryNegativeCategories]
+	);
 
 	// Derive unique group values from the selected groupBreaksCategory
 	const availableGroupValues = useMemo(() => {
@@ -149,32 +172,31 @@ function DataControls({ attributes, setAttributes, clientId }) {
 				<PanelDescription>
 					<StyledLabel>1. Data Accessors</StyledLabel>
 				</PanelDescription>
-				{'line' === chartType ||
-					('area' === chartType && (
-						<WidePanelItem
-							hasValue={() => true}
+				{['line', 'area', 'stacked-area'].includes(chartType) && (
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('X Scale')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<SelectControl
 							label={__('X Scale')}
-							isShownByDefault
-							panelId={clientId}
-						>
-							<SelectControl
-								label={__('X Scale')}
-								value={dataRender.xScale}
-								onChange={(value) =>
-									setAttributes({
-										dataRender: {
-											...dataRender,
-											xScale: value,
-										},
-									})
-								}
-								options={[
-									{ value: 'time', label: 'Time' },
-									{ value: 'linear', label: 'Linear' },
-								]}
-							/>
-						</WidePanelItem>
-					))}
+							value={dataRender.xScale}
+							onChange={(value) =>
+								setAttributes({
+									dataRender: {
+										...dataRender,
+										xScale: value,
+									},
+								})
+							}
+							options={[
+								{ value: 'time', label: 'Time' },
+								{ value: 'linear', label: 'Linear' },
+							]}
+						/>
+					</WidePanelItem>
+				)}
 				{'time' === dataRender.xScale && (
 					<WidePanelItem
 						hasValue={() => true}
@@ -265,115 +287,179 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								options={availableSelectableOptions}
 							/>
 						</WidePanelItem>
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Map Color Scale')}
-							isShownByDefault
-							panelId={clientId}
-						>
-							<SelectControl
-								label={__('Map Scale')}
-								value={dataRender.mapScale}
-								onChange={(value) =>
-									setAttributes({
-										dataRender: {
-											...dataRender,
-											mapScale: value,
-										},
-									})
+						{BUBBLE_MAP_CHART_TYPES.includes(chartType) && (
+							<WidePanelItem
+								hasValue={() =>
+									dataRender.mapStyle !== undefined
 								}
-								options={[
-									{
-										value: 'threshold',
-										label: 'Threshold',
-									},
-									{
-										value: 'ordinal',
-										label: 'Ordinal',
-									},
-									{
-										value: 'linear',
-										label: 'Linear',
-									},
-								]}
-							/>
-						</WidePanelItem>
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Map Color Scale Domain')}
-							isShownByDefault
-							panelId={clientId}
-						>
-							{dataRender.mapScale === 'ordinal' ? (
-								<>
-									<PanelDescription>
-										Enter the categories in the order you
-										would like them to appear, one per line.
-									</PanelDescription>
-									<TextareaControl
-										label={__('Map Color Scale Domain')}
-										value={(
-											dataRender.mapScaleDomain || []
-										).join('\n')}
-										onChange={(value) => {
-											// Keep all lines during editing (including empty)
-											const mapScaleCategories =
-												value.split('\n');
+								label={__('Map Style')}
+								isShownByDefault
+								panelId={clientId}
+							>
+								<PanelDescription>
+									{__(
+										'Heat fills each shape by value. Bubble draws proportional circles at each feature\u2019s centroid \u2014 bubble controls appear in the Map panel.'
+									)}
+								</PanelDescription>
+								<SelectControl
+									label={__('Map Style')}
+									value={dataRender.mapStyle || 'choropleth'}
+									onChange={(value) =>
+										setAttributes({
+											dataRender: {
+												...dataRender,
+												mapStyle: value,
+											},
+										})
+									}
+									options={[
+										{
+											value: 'choropleth',
+											label: __('Choropleth'),
+										},
+										{
+											value: 'bubble',
+											label: __('Bubble'),
+										},
+									]}
+								/>
+							</WidePanelItem>
+						)}
+						{!(
+							BUBBLE_MAP_CHART_TYPES.includes(chartType) &&
+							dataRender.mapStyle === 'bubble'
+						) && (
+							<>
+								<WidePanelItem
+									hasValue={() => true}
+									label={__('Map Color Scale')}
+									isShownByDefault
+									panelId={clientId}
+								>
+									<SelectControl
+										label={__('Map Scale')}
+										value={dataRender.mapScale}
+										onChange={(value) =>
 											setAttributes({
 												dataRender: {
 													...dataRender,
-													mapScaleDomain:
-														mapScaleCategories,
+													mapScale: value,
 												},
-											});
-										}}
-										onBlur={() => {
-											// Clean up empty lines when user leaves field
-											const cleaned = (
-												dataRender.mapScaleDomain || []
-											).filter(
-												(line) => line.trim() !== ''
-											);
-											setAttributes({
-												dataRender: {
-													...dataRender,
-													mapScaleDomain: cleaned,
-												},
-											});
-										}}
-										help={__('One category per line.')}
-										rows={5}
+											})
+										}
+										options={[
+											{
+												value: 'threshold',
+												label: 'Threshold',
+											},
+											{
+												value: 'ordinal',
+												label: 'Ordinal',
+											},
+											{
+												value: 'linear',
+												label: 'Linear',
+											},
+										]}
 									/>
-								</>
-							) : (
-								<>
-									<PanelDescription>
-										{dataRender.mapScale === 'threshold'
-											? 'Enter the thresholds for each color.'
-											: 'Enter the min and max values for the scale.'}
-									</PanelDescription>
-									<FormTokenField
-										label={__('Map Color Scale Domain')}
-										value={dataRender.mapScaleDomain || []}
-										onChange={(c) => {
-											c = c
-												.map((v) => parseFloat(v))
-												.filter((v) => !isNaN(v))
-												.sort((a, b) => a - b);
-											setAttributes({
-												dataRender: {
-													...dataRender,
-													mapScaleDomain: c,
-												},
-											});
-										}}
-										help={__(
-											'Separate with commas or the Enter key.'
-										)}
-									/>
-								</>
-							)}
-						</WidePanelItem>
+								</WidePanelItem>
+								<WidePanelItem
+									hasValue={() => true}
+									label={__('Map Color Scale Domain')}
+									isShownByDefault
+									panelId={clientId}
+								>
+									{dataRender.mapScale === 'ordinal' ? (
+										<>
+											<PanelDescription>
+												Enter the categories in the
+												order you would like them to
+												appear, one per line.
+											</PanelDescription>
+											<TextareaControl
+												label={__(
+													'Map Color Scale Domain'
+												)}
+												value={(
+													dataRender.mapScaleDomain ||
+													[]
+												).join('\n')}
+												onChange={(value) => {
+													// Keep all lines during editing (including empty)
+													const mapScaleCategories =
+														value.split('\n');
+													setAttributes({
+														dataRender: {
+															...dataRender,
+															mapScaleDomain:
+																mapScaleCategories,
+														},
+													});
+												}}
+												onBlur={() => {
+													// Clean up empty lines when user leaves field
+													const cleaned = (
+														dataRender.mapScaleDomain ||
+														[]
+													).filter(
+														(line) =>
+															line.trim() !== ''
+													);
+													setAttributes({
+														dataRender: {
+															...dataRender,
+															mapScaleDomain:
+																cleaned,
+														},
+													});
+												}}
+												help={__(
+													'One category per line.'
+												)}
+												rows={5}
+											/>
+										</>
+									) : (
+										<>
+											<PanelDescription>
+												{dataRender.mapScale ===
+												'threshold'
+													? 'Enter the thresholds for each color.'
+													: 'Enter the min and max values for the scale.'}
+											</PanelDescription>
+											<FormTokenField
+												label={__(
+													'Map Color Scale Domain'
+												)}
+												value={
+													dataRender.mapScaleDomain ||
+													[]
+												}
+												onChange={(c) => {
+													c = c
+														.map((v) =>
+															parseFloat(v)
+														)
+														.filter(
+															(v) => !isNaN(v)
+														)
+														.sort((a, b) => a - b);
+													setAttributes({
+														dataRender: {
+															...dataRender,
+															mapScaleDomain: c,
+														},
+													});
+												}}
+												help={__(
+													'Separate with commas or the Enter key.'
+												)}
+											/>
+										</>
+									)}
+								</WidePanelItem>
+							</>
+						)}
 					</>
 				)}
 				{'diverging-bar' === chartType && (
@@ -430,9 +516,9 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							parentObject="divergingBar"
 							parentObjectValue={divergingBar}
 						/>
-						<SelectControl
-							label={__('Neutral Category')}
-							value={divergingBar.neutralBar?.category}
+						<ToggleControl
+							label={__('Neutral Column')}
+							checked={divergingBar.neutralBar?.active || false}
 							onChange={(value) => {
 								const neutralBar =
 									divergingBar.neutralBar || {};
@@ -441,13 +527,130 @@ function DataControls({ attributes, setAttributes, clientId }) {
 										...divergingBar,
 										neutralBar: {
 											...neutralBar,
-											category: value,
+											active: value,
 										},
 									},
 								});
 							}}
-							options={availableSelectableOptions}
+							help={__(
+								'Add a neutral column to the right of the chart.'
+							)}
 						/>
+						{divergingBar.neutralBar?.active && (
+							<SelectControl
+								label={__('Neutral Category')}
+								value={divergingBar.neutralBar?.category}
+								onChange={(value) => {
+									const neutralBar =
+										divergingBar.neutralBar || {};
+									setAttributes({
+										divergingBar: {
+											...divergingBar,
+											neutralBar: {
+												...neutralBar,
+												category: value,
+											},
+										},
+									});
+								}}
+								options={availableSelectableOptions}
+							/>
+						)}
+						<ToggleControl
+							label={__('Ghost Overlay')}
+							checked={secondaryActive}
+							onChange={(value) => {
+								const currentSecondary =
+									divergingBar.secondary || {};
+								setAttributes({
+									divergingBar: {
+										...divergingBar,
+										secondary: {
+											...currentSecondary,
+											active: value,
+										},
+									},
+								});
+							}}
+							help={__(
+								'Render a secondary ghost overlay for comparisons.'
+							)}
+						/>
+						{secondaryActive && (
+							<>
+								<PanelDescription style={{ marginTop: '16px' }}>
+									<StyledLabel>
+										Secondary (Ghost) Categories
+									</StyledLabel>
+								</PanelDescription>
+								<PanelDescription>
+									Select the data columns for the secondary
+									ghost overlay. These render on top of the
+									primary bars with reduced opacity — useful
+									for age-pyramid comparisons.
+								</PanelDescription>
+								<PanelDescription>
+									<StyledLabel>
+										Secondary Positive Categories
+									</StyledLabel>
+								</PanelDescription>
+								<Sorter
+									options={availableSecondaryPositiveOptions}
+									setAttributes={(updates) => {
+										if (updates.divergingBar) {
+											const currentSecondary =
+												divergingBar.secondary || {};
+											updateAttributeForDevice(
+												'divergingBar',
+												{
+													secondary: {
+														...currentSecondary,
+														positiveCategories:
+															updates.divergingBar
+																.positiveCategories,
+													},
+												}
+											);
+										} else {
+											setAttributes(updates);
+										}
+									}}
+									attribute="positiveCategories"
+									parentObject="divergingBar"
+									parentObjectValue={secondary}
+								/>
+								<PanelDescription>
+									<StyledLabel>
+										Secondary Negative Categories
+									</StyledLabel>
+								</PanelDescription>
+								<Sorter
+									options={availableSecondaryNegativeOptions}
+									setAttributes={(updates) => {
+										if (updates.divergingBar) {
+											const currentSecondary =
+												divergingBar.secondary || {};
+											updateAttributeForDevice(
+												'divergingBar',
+												{
+													secondary: {
+														...currentSecondary,
+														negativeCategories:
+															updates.divergingBar
+																.negativeCategories,
+													},
+												}
+											);
+										} else {
+											setAttributes(updates);
+										}
+									}}
+									attribute="negativeCategories"
+									parentObject="divergingBar"
+									parentObjectValue={secondary}
+								/>
+							</>
+						)}
 					</WidePanelItem>
 				)}
 				{'map' !== chartFamily && 'diverging-bar' !== chartType && (

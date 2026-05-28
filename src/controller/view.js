@@ -12,6 +12,7 @@ import {
  * Internal Dependencies
  */
 import { sanitizeChartExportFilename } from '../chart/utils/sanitize-chart-export-filename';
+import { arrayToCSV, UTF8_BOM } from './utils/csv-export';
 import { logMigrationComparison } from './utils/log-migration';
 
 const { addQueryArgs } = window.wp.url;
@@ -42,47 +43,6 @@ function resolveLightDarkInSVG(svg) {
 		});
 	});
 	return clone;
-}
-
-// convert array of arrays to formatted csv, with optional metadata
-// @see https://github.com/pewresearch/prc-scripts/blob/main/src/@prc/functions/functions.js#L145
-function arrayToCSV(objArray, metadata) {
-	if (undefined === objArray || objArray.length === 0) return false;
-	const array =
-		'object' !== typeof objArray ? JSON.parse(objArray) : objArray;
-	const checkIfEmptyAndSanitize = (str) => {
-		if (undefined === str) {
-			return '';
-		}
-		// remove any inner html tags that might be present, both open and close
-		str = str.replace(/<[^>]*>?/g, '');
-		str = str.replace(/<\/[^>]*>?/g, '');
-		if (str.indexOf(',') > -1) {
-			return `"${str}"`;
-		}
-		return str;
-	};
-	let str = '';
-	if (undefined !== metadata) {
-		str += `${checkIfEmptyAndSanitize(metadata.title)}\n${checkIfEmptyAndSanitize(metadata.subtitle)}\n\n`;
-	}
-	for (let i = 0; i < array.length; i += 1) {
-		let line = '';
-		// if a value has a comma in it, wrap it in quotes
-		for (let j = 0; j < array[i].length; j += 1) {
-			if (j > 0) line += ',';
-			if (array[i][j].indexOf(',') > -1) {
-				line += `"${array[i][j]}"`;
-			} else {
-				line += array[i][j];
-			}
-		}
-		str += `${line}\n`;
-	}
-	if (undefined !== metadata) {
-		str += `\n${checkIfEmptyAndSanitize(metadata.note)}\n${checkIfEmptyAndSanitize(metadata.source)}\n${checkIfEmptyAndSanitize(metadata.tag)}`;
-	}
-	return str;
 }
 
 /**
@@ -458,7 +418,9 @@ const { state, actions } = store('prc-chart-builder/controller', {
 				source,
 				tag,
 			});
-			const blob = new Blob([csv], { type: 'text/csv' });
+			const blob = new Blob([UTF8_BOM, csv], {
+				type: 'text/csv;charset=utf-8',
+			});
 			const url = URL.createObjectURL(blob);
 			const downloadLink = document.createElement('a');
 			const csvTitle = sanitizeChartExportFilename(title);

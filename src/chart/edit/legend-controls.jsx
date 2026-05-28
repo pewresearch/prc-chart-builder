@@ -10,22 +10,23 @@ import styled from '@emotion/styled';
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
-import { useMemo } from '@wordpress/element';
 import {
-	PanelBody,
-	TextControl,
-	ToggleControl,
-	SelectControl,
+	Button,
 	Flex,
 	FlexItem,
-	Button,
+	FormTokenField,
 	__experimentalNumberControl as NumberControl,
-	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
+	PanelBody,
+	SelectControl,
+	TextControl,
+	ToggleControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
+	__experimentalToolsPanel as ToolsPanel,
+	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
+import { useEffect, useMemo } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
@@ -33,11 +34,19 @@ import {
 	PanelColorSettings,
 	__experimentalSpacingSizesControl as SpacingSizesControl,
 } from '@wordpress/block-editor';
+import {
+	getAvailableLegendCategories,
+	isBubbleMapLegendMode,
+} from '../utils/get-available-legend-categories';
 import { formatNum } from '../utils/helpers';
-import { POINT_CHART_TYPES } from '../utils/chart-types';
+import {
+	isLegendCategoryOrderStale,
+	mergeLegendCategoryOrder,
+} from '../utils/merge-legend-category-order';
+import { useFocusedPanel } from './inspector-focus-context';
+import { FONT_WEIGHT_OPTIONS } from './popover/utils';
 import Sorter from './sorter';
 import { useViewportAttributes } from './use-viewport-attributes';
-import { useFocusedPanel } from './inspector-focus-context';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -75,95 +84,62 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 	// Content attributes - NOT viewport-aware
 	const io = attributes.io || {};
 	const dataRender = attributes.dataRender || {};
+	const sankey = attributes.sankey || {};
 
 	// Presentation attributes - viewport-aware
 	const layout = getCurrentValue('layout') || {};
 	const divergingBar = attributes.divergingBar || {};
 
 	const { type: chartType } = layout;
-	const { chartFamily, availableCategories } = io;
-	const { mapScale, mapScaleDomain, categories: dataCategories } = dataRender;
-	const { neutralBar } = divergingBar;
-	const isPointBasedChart = POINT_CHART_TYPES.includes(chartType);
+	const { chartFamily } = io;
+	const { mapScale, mapStyle } = dataRender;
+	const isBubbleMode = isBubbleMapLegendMode(chartType, mapStyle);
 
-	// Determine available legend categories based on chart type.
-	// Point-based charts (scatter, bee-swarm, bubble) with a groupBreaksCategory set
-	// derive their legend items from the unique values of that column.
-	const availableLegendCategories = useMemo(() => {
-		const cat =
-			dataCategories?.length > 0 ? dataCategories : availableCategories;
-		if (chartType === 'diverging-bar') {
-			const divergingCategories = neutralBar.active
-				? [
-						...divergingBar.negativeCategories,
-						...divergingBar.positiveCategories,
-						neutralBar.category,
-					]
-				: [
-						...divergingBar.negativeCategories,
-						...divergingBar.positiveCategories,
-					];
-			return divergingCategories;
-		}
-		if (chartFamily === 'map' && mapScale === 'ordinal') {
-			return mapScaleDomain;
-		}
-		if (isPointBasedChart && dataRender.groupBreaksCategory) {
-			const chartData = io.chartData || [];
-			const groupValues = [
-				...new Set(
-					chartData
-						.map((d) => d[dataRender.groupBreaksCategory])
-						.filter(
-							(v) => v !== null && v !== undefined && v !== ''
-						)
-				),
-			];
-			return groupValues;
-		}
-		return cat;
-	}, [
-		chartType,
-		chartFamily,
-		mapScale,
-		dataCategories,
-		availableCategories,
-		divergingBar,
-		mapScaleDomain,
-		dataRender.groupBreaksCategory,
-		io.chartData,
-		isPointBasedChart,
-	]);
+	const availableLegendCategories = useMemo(
+		() =>
+			getAvailableLegendCategories({
+				chartType,
+				chartFamily,
+				io,
+				dataRender,
+				divergingBar,
+				sankey,
+			}),
+		[chartType, chartFamily, io, dataRender, divergingBar, sankey]
+	);
 
-	// Create options for the Sorter
-	// Use categories if it exists and matches available categories, otherwise use available categories
 	const legendCategories = getCurrentValue('legend', 'categories');
+
 	const legendOrderOptions = useMemo(() => {
-		// If legendCategories exists and contains the same items as available categories, use it
-		// (respects custom drag order the user has set, including for point-based charts)
-		if (
-			legendCategories &&
-			legendCategories.length > 0 &&
-			legendCategories.length === availableLegendCategories.length
-		) {
-			const sortedLegend = [...legendCategories].sort();
-			const sortedAvailable = [...availableLegendCategories].sort();
-			if (
-				JSON.stringify(sortedLegend) === JSON.stringify(sortedAvailable)
-			) {
-				// Same items, use custom order
-				return legendCategories.map((c) => ({
-					label: c,
-					disabled: false,
-				}));
-			}
-		}
-		// Otherwise use available categories in their default order
-		return availableLegendCategories.map((c) => ({
+		const merged = mergeLegendCategoryOrder(
+			legendCategories,
+			availableLegendCategories
+		);
+		return merged.map((c) => ({
 			label: c,
 			disabled: false,
 		}));
 	}, [legendCategories, availableLegendCategories]);
+
+	// Keep persisted legend.categories in sync when available categories change
+	// (e.g. neutral column or secondary overlay toggled on/off).
+	useEffect(() => {
+		if (
+			!isLegendCategoryOrderStale(
+				legendCategories,
+				availableLegendCategories
+			)
+		) {
+			return;
+		}
+
+		updateAttributeForDevice('legend', {
+			categories: mergeLegendCategoryOrder(
+				legendCategories,
+				availableLegendCategories
+			),
+		});
+	}, [legendCategories, availableLegendCategories, updateAttributeForDevice]);
 
 	// Check if legend has custom position (non-default offsets)
 	const hasCustomLegendPosition =
@@ -322,106 +298,334 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 							}
 						/>
 					</WidePanelItem>
-					{shouldShowLegendOrder && legendOrderOptions.length > 0 && (
+					{isBubbleMode && (
 						<WidePanelItem
 							hasValue={() => true}
-							label={__('Legend Order')}
+							label={__('Bubble Legend')}
+							isShownByDefault
 							panelId={clientId}
 						>
-							<PanelDescription>
-								<StyledLabel>Legend Order</StyledLabel>
-							</PanelDescription>
-							<Sorter
-								options={legendOrderOptions}
-								setAttributes={(updates) => {
-									// Sorter calls setAttributes with { legend: { ...legend, categories: [...] } }
-									// Extract categories and use updateAttributeForDevice
-									if (
-										updates.legend &&
-										updates.legend.categories
-									) {
-										updateAttributeForDevice('legend', {
-											categories:
-												updates.legend.categories,
-										});
-									}
+							<ToggleGroupControl
+								__nextHasNoMarginBottom
+								isBlock
+								label={__('Layout')}
+								value={
+									getCurrentValue('legend', 'bubbleLegend')
+										?.layout ?? 'stacked'
+								}
+								onChange={(value) => {
+									const legendAttr =
+										getCurrentValue('legend') || {};
+									updateAttributeForDevice('legend', {
+										bubbleLegend: {
+											...(legendAttr.bubbleLegend || {}),
+											layout: value,
+										},
+									});
 								}}
-								attribute="categories"
-								parentObject="legend"
-								parentObjectValue={legend}
-								allowDisabled={false}
+							>
+								<ToggleGroupControlOption
+									label={__('Stacked')}
+									value="stacked"
+								/>
+								<ToggleGroupControlOption
+									label={__('Spread')}
+									value="spread"
+								/>
+							</ToggleGroupControl>
+							<PanelDescription>
+								<Help>
+									{__(
+										'Stacked: nested concentric circles sharing a baseline. Spread: side-by-side circles with labels below.'
+									)}
+								</Help>
+							</PanelDescription>
+							<ToggleGroupControl
+								__nextHasNoMarginBottom
+								isBlock
+								label={__('Label Position')}
+								value={
+									getCurrentValue('legend', 'bubbleLegend')
+										?.labelPosition ?? 'outside'
+								}
+								onChange={(value) => {
+									const legendAttr =
+										getCurrentValue('legend') || {};
+									updateAttributeForDevice('legend', {
+										bubbleLegend: {
+											...(legendAttr.bubbleLegend || {}),
+											labelPosition: value,
+										},
+									});
+								}}
+							>
+								<ToggleGroupControlOption
+									label={__('Outside')}
+									value="outside"
+								/>
+								<ToggleGroupControlOption
+									label={__('Inside')}
+									value="inside"
+								/>
+							</ToggleGroupControl>
+							<PanelDescription>
+								<Help>
+									{__(
+										'Outside (default): labels render above each ring (stacked) or below the circles (spread). Inside: labels sit just inside the top edge of each circle.'
+									)}
+								</Help>
+							</PanelDescription>
+							<SelectControl
+								label={__('Circle Fill')}
+								value={
+									getCurrentValue('legend', 'bubbleLegend')
+										?.fill ?? 'category'
+								}
+								onChange={(value) => {
+									const legendAttr =
+										getCurrentValue('legend') || {};
+									updateAttributeForDevice('legend', {
+										bubbleLegend: {
+											...(legendAttr.bubbleLegend || {}),
+											fill: value,
+										},
+									});
+								}}
+								options={[
+									{
+										value: 'category',
+										label: __('Category color'),
+									},
+									{
+										value: 'none',
+										label: __('Outline only'),
+									},
+								]}
+							/>
+							<FormTokenField
+								label={__('Reference values')}
+								value={
+									getCurrentValue('legend', 'bubbleLegend')
+										?.refValues || []
+								}
+								onChange={(values) => {
+									const cleaned = values
+										.map((v) => parseFloat(v))
+										.filter((v) => !isNaN(v))
+										.sort((a, b) => a - b);
+									const legendAttr =
+										getCurrentValue('legend') || {};
+									updateAttributeForDevice('legend', {
+										bubbleLegend: {
+											...(legendAttr.bubbleLegend || {}),
+											refValues: cleaned,
+										},
+									});
+								}}
 							/>
 							<PanelDescription>
 								<Help>
 									{__(
-										'Drag to rearrange the order in which legend items appear. This order is independent of the data order set in Data Controls.'
+										'Leave empty to auto-compute three reference values (25%, 50%, 100% of max).'
 									)}
 								</Help>
 							</PanelDescription>
 						</WidePanelItem>
 					)}
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Orientation')}
-						panelId={clientId}
-					>
-						<SelectControl
+					{!isBubbleMode &&
+						shouldShowLegendOrder &&
+						legendOrderOptions.length > 0 && (
+							<WidePanelItem
+								hasValue={() => true}
+								label={__('Legend Order')}
+								panelId={clientId}
+							>
+								<PanelDescription>
+									<StyledLabel>Legend Order</StyledLabel>
+								</PanelDescription>
+								<Sorter
+									options={legendOrderOptions}
+									setAttributes={(updates) => {
+										// Sorter calls setAttributes with { legend: { ...legend, categories: [...] } }
+										// Extract categories and use updateAttributeForDevice
+										if (
+											updates.legend &&
+											updates.legend.categories
+										) {
+											updateAttributeForDevice('legend', {
+												categories:
+													updates.legend.categories,
+											});
+										}
+									}}
+									attribute="categories"
+									parentObject="legend"
+									parentObjectValue={legend}
+									allowDisabled={false}
+								/>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Drag to rearrange the order in which legend items appear. This order is independent of the data order set in Data Controls.'
+										)}
+									</Help>
+								</PanelDescription>
+							</WidePanelItem>
+						)}
+					{!isBubbleMode && (
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Layout')}
+							panelId={clientId}
+						>
+							<ToggleGroupControl
+								isBlock
+								label={__('Legend Layout')}
+								value={
+									getCurrentValue('legend', 'variation') ||
+									'grouped'
+								}
+								onChange={(value) =>
+									updateAttributeForDevice('legend', {
+										variation: value,
+									})
+								}
+							>
+								<ToggleGroupControlOption
+									label={__('Grouped')}
+									value="grouped"
+								/>
+								<ToggleGroupControlOption
+									label={__('Detached')}
+									value="detached"
+								/>
+							</ToggleGroupControl>
+							<PanelDescription>
+								<Help>
+									{__(
+										'Grouped: all items render together in one legend block. Detached: each item floats independently on the chart — position by dragging or via the per-item popover.'
+									)}
+								</Help>
+							</PanelDescription>
+						</WidePanelItem>
+					)}
+					{!isBubbleMode && (
+						<WidePanelItem
+							hasValue={() => true}
 							label={__('Orientation')}
-							value={getCurrentValue('legend', 'orientation')}
-							options={[
-								{
-									value: 'row',
-									label: 'Row',
-								},
-								{
-									value: 'column',
-									label: 'Column',
-								},
-								{
-									value: 'row-reverse',
-									label: 'Row reverse',
-								},
-								{
-									value: 'column-reverse',
-									label: 'Column reverse',
-								},
-							]}
-							onChange={(type) => {
-								updateAttributeForDevice('legend', {
-									orientation: type,
-								});
-							}}
-						/>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Marker Style')}
-						panelId={clientId}
-					>
-						<SelectControl
+							panelId={clientId}
+						>
+							<SelectControl
+								label={__('Orientation')}
+								value={getCurrentValue('legend', 'orientation')}
+								options={[
+									{
+										value: 'row',
+										label: 'Row',
+									},
+									{
+										value: 'column',
+										label: 'Column',
+									},
+									{
+										value: 'row-reverse',
+										label: 'Row reverse',
+									},
+									{
+										value: 'column-reverse',
+										label: 'Column reverse',
+									},
+								]}
+								onChange={(type) => {
+									updateAttributeForDevice('legend', {
+										orientation: type,
+									});
+								}}
+							/>
+						</WidePanelItem>
+					)}
+					{!isBubbleMode && (
+						<WidePanelItem
+							hasValue={() => true}
 							label={__('Marker Style')}
-							value={getCurrentValue('legend', 'markerStyle')}
-							options={[
-								{
-									value: 'rect',
-									label: 'Square',
-								},
-								{
-									value: 'circle',
-									label: 'Circle',
-								},
-								{
-									value: 'line',
-									label: 'Line',
-								},
-							]}
-							onChange={(type) => {
-								updateAttributeForDevice('legend', {
-									markerStyle: type,
-								});
-							}}
-						/>
-					</WidePanelItem>
+							panelId={clientId}
+						>
+							<SelectControl
+								label={__('Marker Style')}
+								value={getCurrentValue('legend', 'markerStyle')}
+								options={[
+									{
+										value: 'rect',
+										label: 'Square',
+									},
+									{
+										value: 'circle',
+										label: 'Circle',
+									},
+									{
+										value: 'line',
+										label: 'Line',
+									},
+									{
+										value: 'none',
+										label: 'None',
+									},
+									{
+										value: 'label',
+										label: 'Category Color',
+									},
+								]}
+								onChange={(type) => {
+									updateAttributeForDevice('legend', {
+										markerStyle: type,
+									});
+								}}
+							/>
+						</WidePanelItem>
+					)}
+					{!isBubbleMode &&
+						getCurrentValue('legend', 'markerStyle') !== 'none' &&
+						getCurrentValue('legend', 'markerStyle') !==
+							'label' && (
+							<WidePanelItem
+								hasValue={() => true}
+								label={__('Marker Fill')}
+								panelId={clientId}
+							>
+								<ToggleGroupControl
+									__nextHasNoMarginBottom
+									isBlock
+									label={__('Marker Fill')}
+									value={
+										getCurrentValue(
+											'legend',
+											'markerFill'
+										) || 'solid'
+									}
+									onChange={(value) => {
+										updateAttributeForDevice('legend', {
+											markerFill: value,
+										});
+									}}
+								>
+									<ToggleGroupControlOption
+										label={__('Solid')}
+										value="solid"
+									/>
+									<ToggleGroupControlOption
+										label={__('Outline')}
+										value="outline"
+									/>
+								</ToggleGroupControl>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Render markers as solid fills or stroked outlines (3px stroke).'
+										)}
+									</Help>
+								</PanelDescription>
+							</WidePanelItem>
+						)}
 					<WidePanelItem
 						hasValue={() => getCurrentValue('legend', 'fontSize')}
 						label={__('Font Size')}
@@ -450,6 +654,25 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 								)}
 							</Help>
 						</PanelDescription>
+					</WidePanelItem>
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('Font Weight')}
+						panelId={clientId}
+					>
+						<SelectControl
+							label={__('Font Weight')}
+							value={
+								getCurrentValue('legend', 'fontWeight') ||
+								'normal'
+							}
+							options={[...FONT_WEIGHT_OPTIONS]}
+							onChange={(value) =>
+								updateAttributeForDevice('legend', {
+									fontWeight: value,
+								})
+							}
+						/>
 					</WidePanelItem>
 					<WidePanelItem
 						hasValue={() => true}
@@ -534,47 +757,58 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 							]}
 						/>
 					</WidePanelItem>
-					{'map' === chartFamily && 'threshold' === mapScale && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Threshold language')}
-							panelId={clientId}
-						>
-							<PanelDescription>
-								<StyledLabel>Threshold langauge</StyledLabel>
-							</PanelDescription>
-							<TextControl
-								label={__('Lower label')}
-								value={getCurrentValue('legend', 'labelLower')}
-								onChange={(value) => {
-									updateAttributeForDevice('legend', {
-										labelLower: value,
-									});
-								}}
-							/>
-							<TextControl
-								label={__('Label delimiter')}
-								value={getCurrentValue(
-									'legend',
-									'labelDelimiter'
-								)}
-								onChange={(value) =>
-									updateAttributeForDevice('legend', {
-										labelDelimiter: value,
-									})
-								}
-							/>
-							<TextControl
-								label={__('Upper label')}
-								value={getCurrentValue('legend', 'labelUpper')}
-								onChange={(value) =>
-									updateAttributeForDevice('legend', {
-										labelUpper: value,
-									})
-								}
-							/>
-						</WidePanelItem>
-					)}
+					{!isBubbleMode &&
+						'map' === chartFamily &&
+						'threshold' === mapScale && (
+							<WidePanelItem
+								hasValue={() => true}
+								label={__('Threshold language')}
+								isShownByDefault
+								panelId={clientId}
+							>
+								<PanelDescription>
+									<StyledLabel>
+										{__('Threshold language')}
+									</StyledLabel>
+								</PanelDescription>
+								<TextControl
+									label={__('Lower label')}
+									value={getCurrentValue(
+										'legend',
+										'labelLower'
+									)}
+									onChange={(value) => {
+										updateAttributeForDevice('legend', {
+											labelLower: value,
+										});
+									}}
+								/>
+								<TextControl
+									label={__('Label delimiter')}
+									value={getCurrentValue(
+										'legend',
+										'labelDelimiter'
+									)}
+									onChange={(value) =>
+										updateAttributeForDevice('legend', {
+											labelDelimiter: value,
+										})
+									}
+								/>
+								<TextControl
+									label={__('Upper label')}
+									value={getCurrentValue(
+										'legend',
+										'labelUpper'
+									)}
+									onChange={(value) =>
+										updateAttributeForDevice('legend', {
+											labelUpper: value,
+										})
+									}
+								/>
+							</WidePanelItem>
+						)}
 				</ToolsPanel>
 			</PanelBody>
 		</div>

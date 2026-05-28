@@ -9,6 +9,31 @@ import {
 	stringToArrayOfNums,
 } from './helpers';
 import { resolveColor, resolveColorInString } from './resolve-color';
+import { getAvailableLegendCategories } from './get-available-legend-categories';
+import { mergeLegendCategoryOrder } from './merge-legend-category-order';
+
+/**
+ * Resolve fill colors in diff column per-cell customizations.
+ *
+ * @param {Object} customLabels
+ * @return {Object}
+ */
+function resolveDiffColumnCustomLabels(customLabels = {}) {
+	const resolved = {};
+	Object.entries(customLabels).forEach(([key, entry]) => {
+		if (!entry || typeof entry !== 'object') {
+			resolved[key] = entry;
+			return;
+		}
+		resolved[key] = {
+			...entry,
+			...(entry.fill !== undefined && entry.fill !== ''
+				? { fill: resolveColor(entry.fill) }
+				: {}),
+		};
+	});
+	return resolved;
+}
 
 /**
  * Deep merge viewport-specific overrides into base attributes
@@ -129,7 +154,6 @@ const getConfig = (
 
 	const { scale: iScale, domain: iDomain } = independentAxis;
 	const { scale: dScale, domain: dDomain } = dependentAxis;
-	const { neutralBar } = divergingBar;
 
 	// Use stringToArray for time scales to preserve date strings, stringToArrayOfNums for numeric scales
 	const independentAxisTickValues =
@@ -280,6 +304,19 @@ const getConfig = (
 				dataRender.isHighlightedColor ??
 					baseConfig.dataRender?.isHighlightedColor
 			),
+			highlightColor: resolveColor(
+				dataRender.highlightColor ??
+					baseConfig.dataRender?.highlightColor
+			),
+			deselectedColor: resolveColor(
+				dataRender.deselectedColor ??
+					baseConfig.dataRender?.deselectedColor
+			),
+			deselectedOpacity:
+				dataRender.deselectedOpacity ??
+				baseConfig.dataRender?.deselectedOpacity ??
+				1,
+			highlightedCategories: dataRender.highlightedCategories ?? [],
 			groupBreaks: {
 				...baseConfig.dataRender?.groupBreaks,
 				...dataRender.groupBreaks,
@@ -343,36 +380,23 @@ const getConfig = (
 			fill: resolveColor(legend.fill ?? baseConfig.legend?.fill),
 			customLabels: customLegendLabels ?? {},
 			categories: (() => {
-				// If legendCategories is set, use it (custom user-defined order)
+				const availableLegendCategories = getAvailableLegendCategories({
+					chartType,
+					chartFamily: io.chartFamily,
+					io,
+					dataRender,
+					divergingBar,
+					sankey,
+				});
+
 				if (legend.categories && legend.categories.length > 0) {
-					return legend.categories;
+					return mergeLegendCategoryOrder(
+						legend.categories,
+						availableLegendCategories
+					);
 				}
-				// Otherwise determine categories based on chart type and data source
-				if (chartType === 'diverging-bar') {
-					// For diverging bar charts, combine negative, positive, and neutral categories
-					const divergingCategories = neutralBar.active
-						? [
-								...divergingBar.negativeCategories,
-								...divergingBar.positiveCategories,
-								neutralBar.category,
-							]
-						: [
-								...divergingBar.negativeCategories,
-								...divergingBar.positiveCategories,
-							];
-					return divergingCategories;
-				}
-				if (dataRender.mapScale === 'ordinal') {
-					// For maps with ordinal scale, use the mapScaleDomain
-					return dataRender.mapScaleDomain;
-				}
-				if (chartType === 'treemap' || chartType === 'sankey') {
-					// For treemaps and sankey, legend categories are derived from node/group names
-					// in the data by the component itself — return empty so it's not overridden
-					return [];
-				}
-				// For all other charts, use the categories array from dataRender
-				return dataRender.categories || [];
+
+				return availableLegendCategories;
 			})(),
 		},
 		bar: {
@@ -484,6 +508,9 @@ const getConfig = (
 		diffColumn: {
 			...baseConfig.diffColumn,
 			...diffColumn,
+			customLabels: resolveDiffColumnCustomLabels(
+				diffColumn.customLabels ?? baseConfig.diffColumn?.customLabels
+			),
 			style: {
 				...baseConfig.diffColumn.style,
 				...diffColumn.style,
@@ -494,6 +521,13 @@ const getConfig = (
 				rectFill: resolveColor(
 					diffColumn.style?.rectFill ??
 						baseConfig.diffColumn?.style?.rectFill
+				),
+				fill: resolveColor(
+					diffColumn.style?.fill ?? baseConfig.diffColumn?.style?.fill
+				),
+				headerFill: resolveColor(
+					diffColumn.style?.headerFill ??
+						baseConfig.diffColumn?.style?.headerFill
 				),
 			},
 		},

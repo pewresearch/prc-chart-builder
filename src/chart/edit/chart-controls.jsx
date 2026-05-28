@@ -35,6 +35,7 @@ import {
 	LINE_CHART_TYPES,
 	NODE_CHART_TYPES,
 	REGRESSION_CHART_TYPES,
+	SUPPLEMENTAL_COLUMN_CHART_TYPES,
 } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import { createSVG } from '../utils/image-exports';
@@ -111,8 +112,10 @@ function ControlSections(props) {
 			{REGRESSION_CHART_TYPES.includes(chartType) && (
 				<RegressionControls {...props} />
 			)}
-			{diffColumn.active && <DiffColumnControls {...props} />}
-			{netValues.active && <NetValueControls {...props} />}
+			{SUPPLEMENTAL_COLUMN_CHART_TYPES.includes(chartType) &&
+				diffColumn.active && <DiffColumnControls {...props} />}
+			{SUPPLEMENTAL_COLUMN_CHART_TYPES.includes(chartType) &&
+				netValues.active && <NetValueControls {...props} />}
 			<AnnotationControls {...props} />
 			<LabelControls {...props} />
 			<TooltipControls {...props} />

@@ -9,6 +9,7 @@ export { default as lineTemplate } from './line';
 export { default as mapUsaTemplate } from './map-usa';
 export { default as mapUsaBlockTemplate } from './map-usa-block';
 export { default as mapUsaCountyTemplate } from './map-usa-county';
+export { default as mapUsaCbsaTemplate } from './map-usa-cbsa';
 export { default as mapUsaHexTemplate } from './map-usa-hex';
 export { default as mapWorldTemplate } from './map-world';
 export { default as pieTemplate } from './pie';

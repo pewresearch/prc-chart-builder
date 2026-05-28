@@ -35,10 +35,10 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 	// Driven by the `view` local state in controller/Edit.jsx. Per-user
 	// editor preference only — does not affect the saved/published output.
 	&[data-view-mode="chart"] .chart-builder-data-table {
-		display: none;
+		display: none !important;
 	}
 	&[data-view-mode="data"] .wp-block-prc-chart-builder-chart {
-		display: none;
+		display: none !important;
 	}
 	// In data view mode the chart's validation Notice sits between the
 	// table and the (now hidden) chart wrapper. Flex the inner-blocks

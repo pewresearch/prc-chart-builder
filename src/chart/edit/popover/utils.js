@@ -4,6 +4,8 @@
  * Shared utility functions for popover components.
  */
 
+import { BAR_CHART_TYPES } from '../../utils/chart-types';
+
 /**
  * Chart types where label positions are algorithmically determined
  * and should not support manual drag positioning.
@@ -33,6 +35,11 @@ export const ANNOTATION_POPOVER_CHART_TYPES = null; // null = all chart types
  * to null once validated across all chart types.
  */
 export const TICK_LABEL_POPOVER_CHART_TYPES = null; // null = all chart types
+
+/**
+ * Chart types that support click-to-edit on the diff column header and cells.
+ */
+export const DIFF_COLUMN_POPOVER_CHART_TYPES = [...BAR_CHART_TYPES, 'dot-plot'];
 
 /**
  * Normalize a value for use in keys.

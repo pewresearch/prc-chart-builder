@@ -582,7 +582,7 @@ Applies to: `scatter`.
 
 #### `diffColumn` — Difference Column
 
-Renders a calculated difference column alongside bar/grouped-bar charts.
+Renders a calculated difference column alongside bar-family and dot-plot charts (not pie).
 
 
 | Attribute                          | Type    | Default     | Notes                                                    |
@@ -590,13 +590,21 @@ Renders a calculated difference column alongside bar/grouped-bar charts.
 | `diffColumn.active`                | boolean | `false`     | Show/hide the diff column                                |
 | `diffColumn.category`              | string  | `""`        | Column key whose values are displayed in the diff column |
 | `diffColumn.columnHeader`          | string  | `"Diff"`    | Header label for the column                              |
+| `diffColumn.customLabels`          | object  | `{}`        | Per-cell overrides keyed by `x::category` or `x::category::group` |
 | `diffColumn.dx`                    | number  | `0`         | Horizontal nudge of the column (px)                      |
 | `diffColumn.dy`                    | number  | `0`         | Vertical nudge of the column (px)                        |
 | `diffColumn.style.rectStrokeWidth` | number  | `0`         | Border width of column cells (px)                        |
 | `diffColumn.style.rectStrokeColor` | string  | `"white"`   | Border color of column cells                             |
 | `diffColumn.style.rectFill`        | string  | `"none"`    | Background fill of column cells                          |
+| `diffColumn.style.fill`            | string  | `"#2a2a2a"` | Default cell text color                                  |
+| `diffColumn.style.headerFill`      | string  | `"#2a2a2a"` | Header text color                                        |
+| `diffColumn.style.textOutline`     | boolean | `false`     | Column-wide cell text outline toggle                     |
+| `diffColumn.style.headerTextOutline` | boolean | `false`   | Column-wide header text outline toggle                   |
 | `diffColumn.style.fontWeight`      | string  | `"normal"`  | Font weight of cell text                                 |
 | `diffColumn.style.fontStyle`       | string  | `"normal"`  | Font style of cell text                                  |
+| `diffColumn.style.headerFontWeight`| string  | `"normal"`  | Header font weight (separate from cell text)           |
+| `diffColumn.style.headerFontStyle` | string  | `"normal"`  | Header font style (separate from cell text)            |
+| `diffColumn.style.headerFontFamily`| string  | `""`        | Header font family (separate from cell text)           |
 | `diffColumn.style.fontAppearance`  | string  | `"default"` | Semantic appearance variant (e.g. colored diffs)         |
 | `diffColumn.style.fontSize`        | string  | `"10px"`    | Cell font size                                           |
 | `diffColumn.style.headerFontSize`  | string  | `"12px"`    | Column header font size                                  |

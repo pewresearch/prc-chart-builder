@@ -12,3 +12,5 @@ export { useAnnotationCustomizations } from './useAnnotationCustomizations';
 export { useLegendItemCustomizations } from './useLegendItemCustomizations';
 export { useErrorBarCustomizations } from './useErrorBarCustomizations';
 export { useTooltipCustomizations } from './useTooltipCustomizations';
+export { useDiffColumnHeaderCustomizations } from './useDiffColumnHeaderCustomizations';
+export { useDiffColumnLabelCustomizations } from './useDiffColumnLabelCustomizations';

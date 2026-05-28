@@ -3,6 +3,7 @@
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
+import { PanelColorSettings } from '@wordpress/block-editor';
 import {
 	PanelBody,
 	SelectControl,
@@ -21,6 +22,14 @@ const NodeControls = ({ attributes, setAttributes }) => {
 		setAttributes
 	);
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('nodes');
+	const pointStroke = getCurrentValue('nodes', 'pointStroke') ?? 'inherit';
+	const strokePreset =
+		pointStroke === 'inherit'
+			? 'inherit'
+			: pointStroke === 'white'
+				? 'white'
+				: 'custom';
+
 	return (
 		<div ref={panelRef}>
 			<PanelBody
@@ -67,6 +76,53 @@ const NodeControls = ({ attributes, setAttributes }) => {
 						});
 					}}
 				/>
+				<SelectControl
+					label={__('Node Stroke')}
+					options={[
+						{ label: __('Series color'), value: 'inherit' },
+						{ label: __('White'), value: 'white' },
+						{ label: __('Custom'), value: 'custom' },
+					]}
+					value={strokePreset}
+					onChange={(value) => {
+						const currentNodes = getCurrentValue('nodes') || {};
+						updateAttributeForDevice('nodes', {
+							...currentNodes,
+							pointStroke:
+								value === 'custom'
+									? !['inherit', 'white'].includes(
+											currentNodes.pointStroke
+										)
+										? currentNodes.pointStroke
+										: '#ffffff'
+									: value,
+						});
+					}}
+					help={__(
+						'Series color uses each category color (including highlight styling). White is a common outline for filled dots.'
+					)}
+				/>
+				{strokePreset === 'custom' && (
+					<PanelColorSettings
+						__experimentalHasMultipleOrigins
+						__experimentalIsRenderedInSidebar
+						title={__('Custom Node Stroke')}
+						colorSettings={[
+							{
+								value: pointStroke,
+								onChange: (value) => {
+									const currentNodes =
+										getCurrentValue('nodes') || {};
+									updateAttributeForDevice('nodes', {
+										...currentNodes,
+										pointStroke: value ?? '#ffffff',
+									});
+								},
+								label: __('Stroke'),
+							},
+						]}
+					/>
+				)}
 			</PanelBody>
 		</div>
 	);

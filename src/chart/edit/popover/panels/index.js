@@ -13,3 +13,6 @@ export { TickLabelPanel } from './TickLabelPanel';
 export { LegendItemPanel } from './LegendItemPanel';
 export { ErrorBarPanel } from './ErrorBarPanel';
 export { TooltipPanelSection } from './TooltipPanelSection';
+export { DiffColumnHeaderPanel } from './DiffColumnHeaderPanel';
+export { DiffColumnLabelPanel } from './DiffColumnLabelPanel';
+export { TextStyleControls } from './TextStyleControls';

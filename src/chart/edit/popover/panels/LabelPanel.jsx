@@ -7,33 +7,19 @@
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 
 import { __ } from '@wordpress/i18n';
-import { useMemo } from '@wordpress/element';
 import {
-	TextControl,
 	ToggleControl,
-	SelectControl,
 	__experimentalHStack as HStack,
 	__experimentalVStack as VStack,
 	__experimentalText as Text,
 	__experimentalNumberControl as NumberControl,
-	__experimentalToggleGroupControl as ToggleGroupControl,
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	Button,
 } from '@wordpress/components';
-import {
-	PanelColorSettings,
-	useSettings,
-	__experimentalFontFamilyControl as FontFamilyControl,
-} from '@wordpress/block-editor';
 
 import { useLabelCustomizations } from '../hooks';
-import {
-	generateElementKey,
-	FONT_WEIGHT_OPTIONS,
-	FONT_STYLE_OPTIONS,
-	POSITION_DISABLED_CHART_TYPES,
-} from '../utils';
+import { generateElementKey, POSITION_DISABLED_CHART_TYPES } from '../utils';
 import { TooltipPanelSection } from './TooltipPanelSection';
+import { TextStyleControls } from './TextStyleControls';
 
 /**
  * LabelPanel Component
@@ -64,15 +50,6 @@ export function LabelPanel({
 	const labelKey = generateElementKey(dataPoint.x, category, groupValue);
 	const defaultTooltipHeader = '';
 
-	const [blockLevelFontFamilies] = useSettings('typography.fontFamilies');
-	const fontFamilyOptions = useMemo(() => {
-		if (!blockLevelFontFamilies?.theme) return [];
-		return blockLevelFontFamilies.theme.map(({ fontFamily, name }) => ({
-			fontFamily,
-			name,
-		}));
-	}, [blockLevelFontFamilies]);
-
 	const {
 		customText,
 		isVisible,
@@ -93,6 +70,15 @@ export function LabelPanel({
 		handleReset,
 	} = useLabelCustomizations(labelKey, currentCustomizations, onUpdate);
 
+	const handleTextStyleChange = (field, value) => {
+		if (field === 'text') {
+			handleTextChange(value);
+			return;
+		}
+		const styleField = field === 'fill' ? 'color' : field;
+		handleStyleChange(styleField, value);
+	};
+
 	return (
 		<VStack spacing={4}>
 			<Text size="12px" color="#757575">
@@ -107,17 +93,6 @@ export function LabelPanel({
 
 			{isVisible && (
 				<>
-					<TextControl
-						label={__('Custom label text', 'prc-chart-builder')}
-						value={customText}
-						onChange={handleTextChange}
-						placeholder={defaultLabel}
-						help={__(
-							'Leave empty to use the default value',
-							'prc-chart-builder'
-						)}
-					/>
-
 					{positionDisabled ? (
 						<Text
 							size="12px"
@@ -149,56 +124,32 @@ export function LabelPanel({
 						</HStack>
 					)}
 
-					<SelectControl
-						label={__('Font Weight', 'prc-chart-builder')}
-						value={fontWeight}
-						options={FONT_WEIGHT_OPTIONS}
-						onChange={(v) => handleStyleChange('fontWeight', v)}
+					<TextStyleControls
+						values={{
+							text: customText,
+							fill: customColor,
+							fontWeight,
+							fontStyle,
+							fontFamily,
+							fontSize,
+							textOutline,
+						}}
+						onChange={handleTextStyleChange}
+						textLabel={__('Custom label text', 'prc-chart-builder')}
+						textPlaceholder={defaultLabel}
+						textHelp={__(
+							'Leave empty to use the default value',
+							'prc-chart-builder'
+						)}
+						colorField="fill"
+						colorPanelTitle={__('Label Color', 'prc-chart-builder')}
+						fontSizeOptions={['10', '12', '14', '16']}
+						fontSizeHelp={__(
+							'Leave unselected to use chart default',
+							'prc-chart-builder'
+						)}
+						showTextOutline
 					/>
-
-					<SelectControl
-						label={__('Font Style', 'prc-chart-builder')}
-						value={fontStyle}
-						options={FONT_STYLE_OPTIONS}
-						onChange={(v) => handleStyleChange('fontStyle', v)}
-					/>
-
-					{fontFamilyOptions.length > 0 && (
-						<FontFamilyControl
-							label={__('Font Family', 'prc-chart-builder')}
-							value={fontFamily}
-							fontFamilies={fontFamilyOptions}
-							onChange={(v) => handleStyleChange('fontFamily', v)}
-						/>
-					)}
-
-					<VStack spacing={2}>
-						<Text size="11px" weight={500}>
-							{__('Font Size', 'prc-chart-builder')}
-						</Text>
-						<ToggleGroupControl
-							__nextHasNoMarginBottom
-							isBlock
-							value={fontSize || ''}
-							onChange={(value) =>
-								handleStyleChange(
-									'fontSize',
-									value ? parseInt(value, 10) : null
-								)
-							}
-						>
-							<ToggleGroupControlOption label="10px" value="10" />
-							<ToggleGroupControlOption label="12px" value="12" />
-							<ToggleGroupControlOption label="14px" value="14" />
-							<ToggleGroupControlOption label="16px" value="16" />
-						</ToggleGroupControl>
-						<Text size="12px" color="#757575">
-							{__(
-								'Leave unselected to use chart default',
-								'prc-chart-builder'
-							)}
-						</Text>
-					</VStack>
 
 					<NumberControl
 						label={__('Max Width', 'prc-chart-builder')}
@@ -211,32 +162,6 @@ export function LabelPanel({
 							'Maximum width for text wrapping (0 = no limit)',
 							'prc-chart-builder'
 						)}
-					/>
-
-					<PanelColorSettings
-						__experimentalHasMultipleOrigins
-						__experimentalIsRenderedInSidebar
-						title={__('Label Color', 'prc-chart-builder')}
-						colorSettings={[
-							{
-								value: customColor,
-								onChange: (val) =>
-									handleStyleChange('color', val ?? ''),
-								label: __('Color', 'prc-chart-builder'),
-							},
-						]}
-					/>
-
-					<ToggleControl
-						label={__('Text Outline', 'prc-chart-builder')}
-						help={__(
-							'Adds a contrasting outline behind the text to improve readability on complex backgrounds.',
-							'prc-chart-builder'
-						)}
-						checked={textOutline}
-						onChange={(value) =>
-							handleStyleChange('textOutline', value)
-						}
 					/>
 				</>
 			)}

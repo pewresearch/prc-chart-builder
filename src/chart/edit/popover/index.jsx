@@ -27,6 +27,8 @@ import {
 	LegendItemPanel,
 	ErrorBarPanel,
 	TooltipPanelSection,
+	DiffColumnHeaderPanel,
+	DiffColumnLabelPanel,
 } from './panels';
 
 /**
@@ -43,6 +45,8 @@ export const ELEMENT_TYPES = {
 	TICK_LABEL: 'tickLabel',
 	LEGEND_ITEM: 'legendItem',
 	ERROR_BAR: 'errorBar',
+	DIFF_COLUMN_HEADER: 'diffColumnHeader',
+	DIFF_COLUMN_LABEL: 'diffColumnLabel',
 };
 
 /**
@@ -67,6 +71,10 @@ function getPanelTitle(elementType) {
 			return __('Legend Item Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.ERROR_BAR:
 			return __('Error Bar Settings', 'prc-chart-builder');
+		case ELEMENT_TYPES.DIFF_COLUMN_HEADER:
+			return __('Diff Column Header', 'prc-chart-builder');
+		case ELEMENT_TYPES.DIFF_COLUMN_LABEL:
+			return __('Diff Column Cell', 'prc-chart-builder');
 		case ELEMENT_TYPES.LABEL:
 		default:
 			return __('Label Settings', 'prc-chart-builder');
@@ -95,6 +103,7 @@ function getPanelTitle(elementType) {
  * @param {string}     props.axisKey               - 'independent' or 'dependent' (for tick labels)
  * @param {string}     props.tickValue              - Raw tick value (for tick labels)
  * @param {string}     props.categoryValue          - Category/domain value (for legend items)
+ * @param {string}     props.legendVariation       - 'grouped' | 'detached' (for legend items)
  * @param {Function}   props.onUpdate              - Callback to update
  * @param {Object}     props.currentTooltipCustomizations - { customTooltips } for TooltipPanelSection
  * @param {Function}   props.onTooltipUpdate       - Callback to update customTooltips
@@ -118,6 +127,7 @@ export function ChartElementPopover({
 	axisKey,
 	tickValue,
 	categoryValue,
+	legendVariation = 'grouped',
 	onUpdate,
 	currentTooltipCustomizations = {},
 	onTooltipUpdate,
@@ -226,6 +236,25 @@ export function ChartElementPopover({
 					<LegendItemPanel
 						categoryValue={categoryValue}
 						defaultLabel={defaultLabel}
+						currentCustomizations={currentCustomizations}
+						onUpdate={onUpdate}
+						legendVariation={legendVariation}
+					/>
+				);
+			case ELEMENT_TYPES.DIFF_COLUMN_HEADER:
+				return (
+					<DiffColumnHeaderPanel
+						diffColumn={currentCustomizations}
+						onUpdate={onUpdate}
+					/>
+				);
+			case ELEMENT_TYPES.DIFF_COLUMN_LABEL:
+				return (
+					<DiffColumnLabelPanel
+						dataPoint={dataPoint}
+						category={category}
+						defaultLabel={defaultLabel}
+						groupValue={groupValue}
 						currentCustomizations={currentCustomizations}
 						onUpdate={onUpdate}
 					/>

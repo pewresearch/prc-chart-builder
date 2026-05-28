@@ -1,6 +1,6 @@
 # Chart Builder Architecture & State Management
 
-*Last Updated: April 2026 · Version 3.8.0*
+*Last Updated: May 2026 · Version 3.9.0*
 
 ---
 
@@ -198,24 +198,46 @@ User-facing downloads use a shared sanitization rule: **chart metadata title** (
 
 React component library built on `@visx` and D3 that renders SVG charts. Consumed by `prc-chart-builder/chart` at render time (both in the editor and on the frontend via `view.js`).
 
-Chart types available as of 3.5.0:
+Chart types available as of 3.9.0:
 
 
-| Type                                         | Notes                                                                |
-| -------------------------------------------- | -------------------------------------------------------------------- |
-| Bar (vertical, horizontal, stacked, grouped) |                                                                      |
-| Diverging Bar                                |                                                                      |
-| Line                                         |                                                                      |
-| Scatter                                      | Supports grouping and regression lines (3.5.0)                       |
-| Dot Plot                                     |                                                                      |
-| Pie                                          |                                                                      |
-| Stacked Area                                 |                                                                      |
-| US Block Map                                 | Responsive scaling fixed in 3.5.0                                    |
-| US County Map                                |                                                                      |
-| World Map                                    | Missing territories (Somaliland, Western Sahara etc.) added in 3.5.0 |
-| Sankey                                       | New in 3.5.0                                                         |
-| Treemap                                      | New in 3.5.0                                                         |
-| Radar                                        | Work in progress; not yet in type picker                             |
+| Type                                         | `layout.type`        | Notes                                                                |
+| -------------------------------------------- | -------------------- | -------------------------------------------------------------------- |
+| Bar (vertical, horizontal, stacked, grouped) | `bar`                |                                                                      |
+| Diverging Bar                                | `bar-diverging`      |                                                                      |
+| Line                                         | `line`               |                                                                      |
+| Scatter                                      | `scatter`            | Supports grouping and regression lines (3.5.0)                       |
+| Dot Plot                                     | `dot-plot`           |                                                                      |
+| Pie                                          | `pie`                |                                                                      |
+| Stacked Area                                 | `area-stacked`       |                                                                      |
+| US States Map                                | `map-usa`            |                                                                      |
+| US Block Map                                 | `map-usa-block`      | Responsive scaling fixed in 3.5.0                                    |
+| US Hex Map                                   | `map-usa-hex`        |                                                                      |
+| US County Map                                | `map-usa-counties`   |                                                                      |
+| US CBSA Map                                  | `map-usa-cbsa`       | New in 3.9.0. See [CBSA matching contract](#cbsa-map-matching-contract) below. |
+| World Map                                    | `map-world`          | Missing territories (Somaliland, Western Sahara etc.) added in 3.5.0 |
+| Sankey                                       | `sankey`             | New in 3.5.0                                                         |
+| Treemap                                      | `treemap`            | New in 3.5.0                                                         |
+| Radar                                        | `radar`              | Work in progress; not yet in type picker                             |
+
+
+### CBSA map matching contract
+
+The US CBSA Map (`map-usa-cbsa`) matches data rows to geographic features by comparing each row's CBSA identifier against the 5-digit Census GEOID on each topology feature. The component accepts the identifier in any of these column names (checked in order):
+
+| Column name | Notes |
+| ----------- | ----- |
+| `CBSA`      | Preferred — uppercase, matches Census field naming |
+| `cbsa`      | Lowercase alias |
+| `GEOID`     | Direct GEOID reference |
+| `geoid`     | Lowercase alias |
+| `x`         | Fallback — the Power Table's independent-variable column |
+
+**Column setup in the Power Table:** right-click the CBSA code column → *Set data type* → **CBSA code**. This enables cell-level validation against the full 935-code allowlist (Census 2023 TIGER cartographic boundary).
+
+**Topology source:** `plugins/prc-charting-library/src/lib/maps/usa-cbsa/topology.json` — generated from `cb_2023_us_cbsa_500k` (Census cartographic boundary, 1:500k), further simplified 50% with `mapshaper keep-shapes`. Feature IDs are the 5-digit CBSA GEOID; `properties.name` holds the full CBSA title (e.g. `"New York-Newark-Jersey City, NY-NJ"`).
+
+**State outline:** The CBSA map always renders US state boundaries as a base layer so rural areas (which have no CBSA) still show the full country context. This distinguishes it from the county map, where county shapes tile the entire US.
 
 
 ### @prc/charting-utilities
@@ -282,6 +304,7 @@ As of 3.5.0, charts respond automatically to the OS/browser dark mode preference
 - [README.md](../README.md) — full block attribute reference
 - [docs/VIEWPORT_ATTRIBUTES.md](VIEWPORT_ATTRIBUTES.md) — viewport-aware attribute system
 - [docs/VIEWPORT_USAGE_GUIDE.md](VIEWPORT_USAGE_GUIDE.md) — practical guide to responsive customizations
+- [docs/release-notes/3_9_0.md](release-notes/3_9_0.md) — 3.9.0 release notes (CBSA map, bubble map)
 - [docs/release-notes/3_5_0.md](release-notes/3_5_0.md) — 3.5.0 release notes
 - [src/chart/edit/popover/panels/README.md](../src/chart/edit/popover/panels/README.md) — element popover system internals
 - [WordPress Data Package](https://developer.wordpress.org/block-editor/reference-guides/packages/packages-data/)

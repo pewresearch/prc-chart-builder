@@ -87,7 +87,7 @@ class JSON_LD {
 		header( 'Content-Disposition: attachment; filename="' . rawurlencode( $payload['filename'] ) . '"' );
 		header( 'Cache-Control: public, max-age=86400' );
 		// phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- raw CSV output
-		echo $payload['csv'];
+		echo Table_Export::UTF8_BOM . $payload['csv'];
 
 		return true;
 	}
@@ -290,7 +290,10 @@ class JSON_LD {
 		$table_block = $this->find_table_block( $controller_block );
 		$table_data  = null;
 		if ( $table_block && ! empty( $table_block['innerHTML'] ) ) {
-			$table_data = \PRC\Html\parse_table_block_into_array( $table_block['innerHTML'] );
+			$table_data = Table_Export::filter_hidden_columns(
+				\PRC\Html\parse_table_block_into_array( $table_block['innerHTML'] ),
+				$table_block['attrs'] ?? array()
+			);
 		}
 
 		$image_url = $io['pngUrl'] ?? '';
@@ -384,7 +387,10 @@ class JSON_LD {
 
 				$table_data = null;
 				if ( $table_block && ! empty( $table_block['innerHTML'] ) ) {
-					$table_data = \PRC\Html\parse_table_block_into_array( $table_block['innerHTML'] );
+					$table_data = Table_Export::filter_hidden_columns(
+						\PRC\Html\parse_table_block_into_array( $table_block['innerHTML'] ),
+						$table_block['attrs'] ?? array()
+					);
 				}
 
 				$image_url = $io['pngUrl'] ?? '';

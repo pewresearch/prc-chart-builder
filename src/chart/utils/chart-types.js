@@ -21,6 +21,7 @@ export const ALL_CHART_TYPES = [
 	'sankey',
 	'map-usa',
 	'map-usa-counties',
+	'map-usa-cbsa',
 	'map-usa-block',
 	'map-usa-hex',
 	'map-world',
@@ -50,8 +51,21 @@ export const REGRESSION_CHART_TYPES = ['scatter', 'bee-swarm', 'bubble'];
 export const MAP_CHART_TYPES = [
 	'map-usa',
 	'map-usa-counties',
+	'map-usa-cbsa',
 	'map-usa-block',
 	'map-usa-hex',
+	'map-world',
+];
+
+/**
+ * Geographic map chart types that support the bubble (proportional symbol)
+ * render mode. Excludes block and hex maps — those are abstract grid layouts
+ * with no continuous topology to place bubbles on.
+ */
+export const BUBBLE_MAP_CHART_TYPES = [
+	'map-usa',
+	'map-usa-counties',
+	'map-usa-cbsa',
 	'map-world',
 ];
 
@@ -67,9 +81,6 @@ export const GROUPABLE_CHART_TYPES = [
 	'treemap',
 	'pie',
 ];
-
-/** Charts where legend ordering / ordinal scale does not apply */
-export const NO_ORDINAL_LEGEND_TYPES = ['treemap', 'sankey'];
 
 /** Charts that skip numeric coercion in formattedData (preserve raw values) */
 export const FORMATTED_DATA_PASSTHROUGH_TYPES = [
@@ -88,10 +99,17 @@ export const SORTABLE_CHART_TYPES = [
 ];
 
 /** Charts that support supplemental column features rendered alongside the chart
- *  (Diff Column, Net Value Labels). These are bar/dot-plot/pie concepts and do
- *  not apply to layout types like treemap. */
-export const SUPPLEMENTAL_COLUMN_CHART_TYPES = [
+ *  (Diff Column, Net Value Labels). Bar and dot-plot layouts only — not pie. */
+export const SUPPLEMENTAL_COLUMN_CHART_TYPES = [...BAR_CHART_TYPES, 'dot-plot'];
+
+/**
+ * Charts that support highlightedCategories / highlightColor / deselectedColor.
+ * Multi-series legend keys only — not per-element emphasis (pie, treemap, maps).
+ */
+export const HIGHLIGHTABLE_CHART_TYPES = [
 	...BAR_CHART_TYPES,
 	'dot-plot',
-	'pie',
+	...LINE_CHART_TYPES,
+	'scatter',
+	'sankey',
 ];

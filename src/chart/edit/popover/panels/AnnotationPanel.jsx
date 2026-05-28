@@ -8,27 +8,18 @@
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 
 import { __ } from '@wordpress/i18n';
-import { useMemo } from '@wordpress/element';
 import {
 	TextControl,
 	SelectControl,
-	ToggleControl,
 	__experimentalVStack as VStack,
 	__experimentalText as Text,
 	__experimentalNumberControl as NumberControl,
-	__experimentalToggleGroupControl as ToggleGroupControl,
-	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	Button,
 } from '@wordpress/components';
-import {
-	PanelColorSettings,
-	useSettings,
-	__experimentalFontFamilyControl as FontFamilyControl,
-} from '@wordpress/block-editor';
 
 import { useAnnotationCustomizations } from '../hooks';
-import { FONT_WEIGHT_OPTIONS, FONT_STYLE_OPTIONS } from '../utils';
 import { formatNum } from '../../../utils/helpers';
+import { TextStyleControls } from './TextStyleControls';
 
 /**
  * AnnotationPanel Component
@@ -38,22 +29,20 @@ import { formatNum } from '../../../utils/helpers';
  * @param {Object}   props.annotation     - The annotation object
  * @param {Function} props.onUpdate       - Callback to update annotation (receives partial updates)
  * @param {Function} props.onDelete       - Callback to delete the annotation
+ * @param {string}   props.variant         - 'full' (default) or 'compact' (text styling only)
+ * @param {string}   props.subtitle        - Replaces "Annotation #N" when variant is compact
+ * @param {Object}   props.defaults        - Custom reset defaults (compact variant)
  */
 export function AnnotationPanel({
 	annotationId,
 	annotation,
 	onUpdate,
 	onDelete,
+	variant = 'full',
+	subtitle = '',
+	defaults: customDefaults = null,
 }) {
-	const [blockLevelFontFamilies] = useSettings('typography.fontFamilies');
-	const fontFamilyOptions = useMemo(() => {
-		if (!blockLevelFontFamilies?.theme) return [];
-		return blockLevelFontFamilies.theme.map(({ fontFamily, name }) => ({
-			fontFamily,
-			name,
-		}));
-	}, [blockLevelFontFamilies]);
-
+	const isCompact = variant === 'compact';
 	const {
 		text,
 		fontSize,
@@ -76,7 +65,8 @@ export function AnnotationPanel({
 	return (
 		<VStack spacing={4}>
 			<Text size="12px" color="#757575">
-				{__('Annotation', 'prc-chart-builder')} #{parseInt(annotationId, 10) + 1}
+				{__('Annotation', 'prc-chart-builder')} #
+				{parseInt(annotationId, 10) + 1}
 			</Text>
 
 			<TextControl
@@ -90,62 +80,41 @@ export function AnnotationPanel({
 				label={__('Positioning Context', 'prc-chart-builder')}
 				value={positioningContext}
 				options={[
-					{ label: __('Full Chart Area', 'prc-chart-builder'), value: 'chart' },
-					{ label: __('Data Area (Inner)', 'prc-chart-builder'), value: 'inner' },
+					{
+						label: __('Full Chart Area', 'prc-chart-builder'),
+						value: 'chart',
+					},
+					{
+						label: __('Data Area (Inner)', 'prc-chart-builder'),
+						value: 'inner',
+					},
 				]}
 				onChange={(value) => handleChange('positioningContext', value)}
 			/>
 
-			<SelectControl
-				label={__('Font Weight', 'prc-chart-builder')}
-				value={fontWeight}
-				options={FONT_WEIGHT_OPTIONS}
-				onChange={(value) => handleChange('fontWeight', value)}
+			<TextStyleControls
+				showText={false}
+				values={{
+					fontWeight,
+					fontStyle,
+					fontFamily,
+					fontSize,
+					fill,
+					textOutline,
+				}}
+				onChange={handleChange}
+				showTextOutline
 			/>
-
-			<SelectControl
-				label={__('Font Style', 'prc-chart-builder')}
-				value={fontStyle}
-				options={FONT_STYLE_OPTIONS}
-				onChange={(value) => handleChange('fontStyle', value)}
-			/>
-
-			{fontFamilyOptions.length > 0 && (
-				<FontFamilyControl
-					label={__('Font Family', 'prc-chart-builder')}
-					value={fontFamily}
-					fontFamilies={fontFamilyOptions}
-					onChange={(value) => handleChange('fontFamily', value ?? '')}
-				/>
-			)}
-
-			<VStack spacing={2}>
-				<Text size="11px" weight={500}>
-					{__('Font Size', 'prc-chart-builder')}
-				</Text>
-				<ToggleGroupControl
-					__nextHasNoMarginBottom
-					isBlock
-					value={fontSize ? String(fontSize) : ''}
-					onChange={(value) =>
-						handleChange('fontSize', value ? parseInt(value, 10) : 14)
-					}
-				>
-					<ToggleGroupControlOption label="10px" value="10" />
-					<ToggleGroupControlOption label="12px" value="12" />
-					<ToggleGroupControlOption label="14px" value="14" />
-					<ToggleGroupControlOption label="16px" value="16" />
-					<ToggleGroupControlOption label="18px" value="18" />
-					<ToggleGroupControlOption label="20px" value="20" />
-				</ToggleGroupControl>
-			</VStack>
 
 			<SelectControl
 				label={__('Text Anchor', 'prc-chart-builder')}
 				value={textAnchor}
 				options={[
 					{ label: __('Start', 'prc-chart-builder'), value: 'start' },
-					{ label: __('Middle', 'prc-chart-builder'), value: 'middle' },
+					{
+						label: __('Middle', 'prc-chart-builder'),
+						value: 'middle',
+					},
 					{ label: __('End', 'prc-chart-builder'), value: 'end' },
 				]}
 				onChange={(value) => handleChange('textAnchor', value)}
@@ -156,7 +125,10 @@ export function AnnotationPanel({
 				value={verticalAnchor}
 				options={[
 					{ label: __('Start', 'prc-chart-builder'), value: 'start' },
-					{ label: __('Middle', 'prc-chart-builder'), value: 'middle' },
+					{
+						label: __('Middle', 'prc-chart-builder'),
+						value: 'middle',
+					},
 					{ label: __('End', 'prc-chart-builder'), value: 'end' },
 				]}
 				onChange={(value) => handleChange('verticalAnchor', value)}
@@ -179,7 +151,10 @@ export function AnnotationPanel({
 					handleChange('maxWidth', formatNum(value, 'integer') ?? 200)
 				}
 				min={0}
-				help={__('Maximum width for text wrapping', 'prc-chart-builder')}
+				help={__(
+					'Maximum width for text wrapping',
+					'prc-chart-builder'
+				)}
 			/>
 
 			<NumberControl
@@ -190,29 +165,6 @@ export function AnnotationPanel({
 				max={1}
 				step={0.1}
 			/>
-
-		<PanelColorSettings
-			__experimentalHasMultipleOrigins
-			__experimentalIsRenderedInSidebar
-			title={__('Text Color', 'prc-chart-builder')}
-			colorSettings={[
-				{
-					value: fill,
-					onChange: (val) => handleChange('fill', val ?? '#231F20'),
-					label: __('Color', 'prc-chart-builder'),
-				},
-			]}
-		/>
-
-		<ToggleControl
-			label={__('Text Outline', 'prc-chart-builder')}
-			help={__(
-				'Adds a contrasting outline behind the text to improve readability on complex backgrounds.',
-				'prc-chart-builder'
-			)}
-			checked={textOutline}
-			onChange={(value) => handleChange('textOutline', value)}
-		/>
 
 			{hasCustomizations && (
 				<Button

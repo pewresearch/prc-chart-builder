@@ -13,10 +13,16 @@ import { useState, useEffect, useCallback } from '@wordpress/element';
  * @param {Object}   annotation - The current annotation object
  * @param {string}   annotationId - The annotation index as string
  * @param {Function} onUpdate     - Callback to update annotation (receives partial updates)
+ * @param {Object}   [customDefaults] - Optional defaults for reset (e.g. diff column header)
  * @return {Object} State values and handlers
  */
-export function useAnnotationCustomizations(annotation, annotationId, onUpdate) {
-	const defaults = {
+export function useAnnotationCustomizations(
+	annotation,
+	annotationId,
+	onUpdate,
+	customDefaults = null
+) {
+	const defaults = customDefaults ?? {
 		text: '',
 		fontSize: 14,
 		fontWeight: 'normal',
@@ -77,7 +83,9 @@ export function useAnnotationCustomizations(annotation, annotationId, onUpdate) 
 			setFontFamily(annotation.fontFamily ?? defaults.fontFamily);
 			setFill(annotation.fill ?? defaults.fill);
 			setTextAnchor(annotation.textAnchor ?? defaults.textAnchor);
-			setVerticalAnchor(annotation.verticalAnchor ?? defaults.verticalAnchor);
+			setVerticalAnchor(
+				annotation.verticalAnchor ?? defaults.verticalAnchor
+			);
 			setRotation(annotation.rotation ?? defaults.rotation);
 			setMaxWidth(annotation.maxWidth ?? defaults.maxWidth);
 			setOpacity(annotation.opacity ?? defaults.opacity);
@@ -101,10 +109,10 @@ export function useAnnotationCustomizations(annotation, annotationId, onUpdate) 
 				verticalAnchor: setVerticalAnchor,
 				rotation: setRotation,
 				maxWidth: setMaxWidth,
-			opacity: setOpacity,
-			positioningContext: setPositioningContext,
-			textOutline: setTextOutline,
-		};
+				opacity: setOpacity,
+				positioningContext: setPositioningContext,
+				textOutline: setTextOutline,
+			};
 			if (setters[key]) setters[key](value);
 			onUpdate({ [key]: value });
 		},
