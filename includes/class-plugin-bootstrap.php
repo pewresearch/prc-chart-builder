@@ -157,6 +157,7 @@ class Plugin_Bootstrap {
 		$this->include( 'class-wp-cli-commands.php' );
 		$this->include( 'class-distributor.php' );
 		$this->include( 'class-markdown-for-agents-integration.php' );
+		$this->include( 'class-email-newsletter-integration.php' );
 		$this->include( 'class-json-ld.php' );
 		$this->include( 'class-print-engine-integration.php' );
 		$this->include( 'admin/class-admin.php' );
@@ -191,6 +192,7 @@ class Plugin_Bootstrap {
 		new Block_Migration( $this->get_loader() );
 		new Distributor( $this->get_loader() );
 		new Markdown_For_Agents_Integration( $this->get_loader() );
+		new Email_Newsletter_Integration( $this->get_loader() );
 		new JSON_LD( $this->get_loader() );
 		new Print_Engine_Integration( $this->get_loader() );
 		new Admin( $this->get_loader() );
