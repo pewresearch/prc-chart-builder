@@ -2,15 +2,15 @@
 > build
 > wp-scripts build src/index.js
 
-assets by path *.css 3.89 KiB
-  asset index-rtl.css 1.94 KiB [emitted] (name: index)
-  asset index.css 1.94 KiB [emitted] (name: index)
-asset index.js 4.97 KiB [emitted] [minimized] (name: index)
-asset index.asset.php 218 bytes [emitted] (name: index)
-Entrypoint index 9.07 KiB = index.css 1.94 KiB index.js 4.97 KiB index-rtl.css 1.94 KiB index.asset.php 218 bytes
-orphan modules 13.7 KiB (javascript) 937 bytes (runtime) [orphan] 19 modules
+assets by path [1m[32m*.css[39m[22m 3.89 KiB
+  asset [1m[32mindex-rtl.css[39m[22m 1.94 KiB [1m[32m[emitted][39m[22m (name: index)
+  asset [1m[32mindex.css[39m[22m 1.94 KiB [1m[32m[emitted][39m[22m (name: index)
+asset [1m[32mindex.js[39m[22m 4.97 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: index)
+asset [1m[32mindex.asset.php[39m[22m 218 bytes [1m[32m[emitted][39m[22m (name: index)
+Entrypoint [1mindex[39m[22m 9.07 KiB = [1m[32mindex.css[39m[22m 1.94 KiB [1m[32mindex.js[39m[22m 4.97 KiB [1m[32mindex-rtl.css[39m[22m 1.94 KiB [1m[32mindex.asset.php[39m[22m 218 bytes
+orphan modules 13.7 KiB (javascript) 937 bytes (runtime) [1m[33m[orphan][39m[22m 19 modules
 runtime modules 663 bytes 3 modules
-built modules 9.73 KiB (javascript) 1.94 KiB (css/mini-extract) [built]
-  ./src/index.js + 11 modules 9.73 KiB [not cacheable] [built] [code generated]
-  css ../../../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./src/editor.scss 1.94 KiB [built] [code generated]
-webpack 5.106.2 compiled successfully in 2269 ms
+built modules 9.73 KiB (javascript) 1.94 KiB (css/mini-extract) [1m[33m[built][39m[22m
+  [1m./src/index.js + 11 modules[39m[22m 9.73 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  css ../../../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/editor.scss[39m[22m 1.94 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 10361 ms

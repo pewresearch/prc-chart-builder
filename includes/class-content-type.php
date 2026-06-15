@@ -38,6 +38,7 @@ class Content_Type {
 	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'register_types' );
+		$loader->add_action( 'init', $this, 'register_revisions_support', 11 );
 		$loader->add_action( 'init', $this, 'register_chart_meta' );
 		$loader->add_action( 'init', $this, 'register_chart_type_taxonomy' );
 		$loader->add_action( 'init', $this, 'register_export_endpoint' );
@@ -315,7 +316,7 @@ class Content_Type {
 			'label'               => __( 'Chart', 'prc-chart-builder' ),
 			'description'         => __( 'A store for chart blocks. This post type allows you to save a chart once and update everywhere it is used.', 'prc-chart-builder' ),
 			'labels'              => self::get_labels(),
-			'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'custom-fields', 'revisions', 'prc-revisions', 'prc-datasets' ),
+			'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'custom-fields', 'revisions', 'prc-datasets' ),
 			'taxonomies'          => array( 'category' ),
 			'hierarchical'        => false,
 			'public'              => true,
@@ -343,6 +344,18 @@ class Content_Type {
 		if ( function_exists( 'wp_presence_post_room' ) ) {
 			add_post_type_support( self::$post_type, 'presence' );
 		}
+	}
+
+	/**
+	 * Opt the chart CPT into prc-revisions for future revision (fork/merge) workflow.
+	 *
+	 * Registered after the CPT on init priority 11 so prc-revisions can discover
+	 * the chart post type when registering fork meta.
+	 *
+	 * @hook init 11
+	 */
+	public function register_revisions_support() {
+		add_post_type_support( self::$post_type, 'prc-revisions' );
 	}
 
 	/**
