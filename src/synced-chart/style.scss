@@ -1,0 +1,18 @@
+.wp-block-prc-chart-builder-synced-chart {
+	&.alignleft {
+		float: left;
+		margin-inline-start: 0 !important;
+		margin-inline-end: 2em !important;
+	}
+	&.alignright {
+		float: right;
+		margin-inline-start: 2em !important;
+		margin-inline-end: 0 !important;
+	}
+	&.aligncenter {
+		width: fit-content;
+		max-width: 100%;
+		margin-inline-start: auto !important;
+		margin-inline-end: auto !important;
+	}
+}

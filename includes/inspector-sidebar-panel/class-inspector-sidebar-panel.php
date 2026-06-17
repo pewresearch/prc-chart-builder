@@ -80,6 +80,9 @@ class Inspector_Sidebar_Panel {
 		}
 
 		// Get the post IDs that reference this chart.
+		if ( ! class_exists( __NAMESPACE__ . '\Synced_Chart' ) ) {
+			return new \WP_REST_Response( array(), 200 );
+		}
 		$referencing_post_ids = Synced_Chart::get_chart_usage_post_ids( $chart_id );
 
 		if ( empty( $referencing_post_ids ) ) {

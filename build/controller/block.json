@@ -45,6 +45,18 @@
       "type": "boolean",
       "default": true
     },
+    "chartTabActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "dataTabActive": {
+      "type": "boolean",
+      "default": true
+    },
+    "downloadImageTabActive": {
+      "type": "boolean",
+      "default": true
+    },
     "shareActive": {
       "type": "boolean",
       "default": true

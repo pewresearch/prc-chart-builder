@@ -101,12 +101,15 @@ class Controller {
 			'prc-chart-builder/controller',
 			isset( $attributes ) ? $attributes : array()
 		);
-		$block_id              = $controller_attributes['id'];
-		$align                 = $controller_attributes['align'];
-		$tabs_active           = $controller_attributes['tabsActive'];
-		$share_active          = $controller_attributes['shareActive'];
-		$is_static_chart       = $controller_attributes['isStatic'];
-		$is_freeform_chart     = $controller_attributes['isFreeform'];
+		$block_id                   = $controller_attributes['id'];
+		$align                      = $controller_attributes['align'];
+		$tabs_active                = $controller_attributes['tabsActive'];
+		$chart_tab_active           = $controller_attributes['chartTabActive'] ?? true;
+		$data_tab_active            = $controller_attributes['dataTabActive'] ?? true;
+		$download_image_tab_active  = $controller_attributes['downloadImageTabActive'] ?? true;
+		$share_active               = $controller_attributes['shareActive'];
+		$is_static_chart            = $controller_attributes['isStatic'];
+		$is_freeform_chart          = $controller_attributes['isFreeform'];
 
 		// TODO: This is a way to retrieve the datasets for the chart. Not sure yet if we want to surface this in the chart builder block.
 		// $post_type = get_post_type();
@@ -259,8 +262,16 @@ class Controller {
 		if ( $blocks['table'] ) {
 			$blocks['table']['attrs']['className'] = 'chart-builder-data-table';
 
+			// Render the Power Table block so the data tab preserves every author
+			// formatting choice — column widths, scroll-on-overflow, sticky column,
+			// sorting, and server-side rounding. The rendered markup (not the raw
+			// saved innerHTML) is also the source for the projection below, so
+			// tableData / CSV / ARIA reflect exactly what is displayed (e.g.
+			// rounded values rather than the raw stored precision).
+			$rendered_table = render_block( $blocks['table'] );
+
 			$table_array = Table_Export::filter_hidden_columns(
-				\PRC\Html\parse_table_block_into_array( $blocks['table']['innerHTML'] ),
+				\PRC\Html\parse_table_block_into_array( $rendered_table ),
 				$blocks['table']['attrs'] ?? array()
 			);
 
@@ -277,7 +288,7 @@ class Controller {
 			<div class="cb__title"><?php echo wp_kses_post( $meta_title ); ?></div>
 			<div class="cb__subtitle"><?php echo wp_kses_post( $meta_subtitle ); ?></div>
 			<div class="wp-chart-builder-table__inner" style="max-width: <?php echo esc_attr( $width ); ?> !important; margin-bottom: 0; overflow: auto;">
-				<?php echo render_block( $blocks['table'] ); //phpcs:ignore ?>
+				<?php echo $rendered_table; //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_block() output is sanitized by the block render pipeline. ?>
 			</div>
 			<hr class="cb__download-data-button-hr">
 			<div class="cb__download-data-button">
@@ -306,8 +317,8 @@ class Controller {
 					<?php echo wp_kses_post( $meta_question_wording ); ?>
 				</div>
 			<?php } ?>
-			<div class="cb__note"><?php echo wp_kses_post( $meta_note ); ?></div>
-			<div class="cb__note"><?php echo wp_kses_post( $meta_source ); ?></div>
+			<div class="cb__note cb__note--note"><?php echo wp_kses_post( $meta_note ); ?></div>
+			<div class="cb__note cb__note--source"><?php echo wp_kses_post( $meta_source ); ?></div>
 			<div class="cb__tag"><?php echo wp_kses_post( $meta_tag ); ?></div>
 			<hr style="margin: 10px 0px 0px; max-width: <?php echo esc_attr( $width ); ?>;">
 			<?php
@@ -375,8 +386,8 @@ class Controller {
 					<div class="cb__subtitle"><?php echo wp_kses_post( $meta_subtitle ); ?></div>
 					<?php echo $rendered_freeform; // phpcs:ignore ?>
 					<?php echo $question_wording_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean. ?>
-					<div class="cb__note"><?php echo wp_kses_post( $meta_note ); ?></div>
-					<div class="cb__note"><?php echo wp_kses_post( $meta_source ); ?></div>
+					<div class="cb__note cb__note--note"><?php echo wp_kses_post( $meta_note ); ?></div>
+					<div class="cb__note cb__note--source"><?php echo wp_kses_post( $meta_source ); ?></div>
 					<div class="cb__tag"><?php echo wp_kses_post( $meta_tag ); ?></div>
 					<?php echo $bottom_rule; // phpcs:ignore ?>
 				</div>
@@ -448,18 +459,21 @@ class Controller {
 			/**
 			 * Setup Interactivity API.
 			 */
-			$target_namespace = $attributes['interactiveNamespace'] ?? 'prc-chart-builder/controller';
-			$state            = wp_interactivity_state(
-				$target_namespace,
-				array(
-					$block_id => array(
-						'preformattedData'   => $preformatted_data ?? null,
-						'activeTab'          => 'chart',
-						'webShareSupported'  => $is_mobile ? false : true,
-						'isQuestionExpanded' => false,
-					),
+		$target_namespace = $attributes['interactiveNamespace'] ?? 'prc-chart-builder/controller';
+		// When the Chart tab is hidden but the Data tab is visible, default to
+		// showing the table so users aren't trapped on a view they cannot return to.
+		$initial_tab = ( ! $chart_tab_active && $data_tab_active ) ? 'table' : 'chart';
+		$state            = wp_interactivity_state(
+			$target_namespace,
+			array(
+				$block_id => array(
+					'preformattedData'   => $preformatted_data ?? null,
+					'activeTab'          => $initial_tab,
+					'webShareSupported'  => $is_mobile ? false : true,
+					'isQuestionExpanded' => false,
 				),
-			);
+			),
+		);
 
 		$context = array(
 			'id'               => $block_id,
@@ -488,6 +502,7 @@ class Controller {
 				'style'                                  => 'max-width:' . $width . ';',
 				'data-wp-init--detect-web-share-support' => 'callbacks.detectWebShareSupport',
 				'data-wp-init--sync-table-height'        => 'callbacks.syncTableHeight',
+				'data-wp-init--watch-chart'              => 'callbacks.watchChart',
 				// 'data-wp-init--log-migration-attributes' => 'callbacks.logMigrationAttributes',
 				'data-png-url'                           => esc_url( $featured_image_url ?? '' ),
 				'data-has-csv'                           => $table_array ? 'true' : 'false',
@@ -505,31 +520,49 @@ class Controller {
 		<div <?php echo wp_kses_post( $block_attrs ); ?>>
 			<?php
 			// If the chart is a freeform chart, and the share tabs are active, render the freeform chart in the tabbed interface.
-			if ( $tabs_active && $is_freeform_chart && $blocks['freeform'] && $blocks['table'] ) {
-					echo wp_sprintf(
-						'<div class="wp-chart-builder-chart active" data-chart-view="chart" data-allow-overlay="true" data-wp-class--active="state.isActive">%s%s</div>
-					<div class="wp-chart-builder-table" data-chart-view="table" data-wp-class--active="state.isActive" id="%s-table" style="max-width:%s;">%s</div>',
-						$freeform_with_meta, //phpcs:ignore
-						$share_modal, //phpcs:ignore
+		if ( $tabs_active && $is_freeform_chart && $blocks['freeform'] && $blocks['table'] ) {
+				$chart_active_class = 'chart' === $initial_tab ? ' active' : '';
+				$table_active_class = 'table' === $initial_tab ? ' active' : '';
+				$table_pane = $data_tab_active
+					? wp_sprintf(
+						'<div class="wp-chart-builder-table%s" data-chart-view="table" data-wp-class--active="state.isActive" id="%s-table" style="max-width:%s;">%s</div>',
+						$table_active_class,
 						esc_attr( $block_id ),
 						esc_attr( $width ),
 						$table_with_meta //phpcs:ignore
-					);
-				// If the chart is a freeform chart, and the share tabs are not active, render the freeform chart.
-			} elseif ( $is_freeform_chart && $blocks['freeform'] ) {
-				echo $freeform_with_meta; //phpcs:ignore
-				// If the chart is a regular chart, and the share tabs are active, render the chart in the tabbed interface.
-		} elseif ( $tabs_active && $blocks['chart'] && $blocks['table'] ) {
-			$chart_context = $chart_ref_id ? array( 'refId' => $chart_ref_id ) : array();
-			echo wp_sprintf(
-				'<div class="wp-chart-builder-chart active" data-chart-view="chart" data-allow-overlay="true" data-wp-class--active="state.isActive">%s%s</div>
-				<div class="wp-chart-builder-table" data-chart-view="table" data-wp-class--active="state.isActive" id="%s-table" style="max-width:%s;">%s</div>',
-				( new \WP_Block( $blocks['chart'], $chart_context ) )->render(), //phpcs:ignore
-				$share_modal, //phpcs:ignore
+					)
+					: '';
+				echo wp_sprintf(
+					'<div class="wp-chart-builder-chart%s" data-chart-view="chart" data-allow-overlay="true" data-wp-class--active="state.isActive">%s%s</div>%s',
+					$chart_active_class,
+					$freeform_with_meta, //phpcs:ignore
+					$share_modal, //phpcs:ignore
+					$table_pane //phpcs:ignore
+				);
+			// If the chart is a freeform chart, and the share tabs are not active, render the freeform chart.
+		} elseif ( $is_freeform_chart && $blocks['freeform'] ) {
+			echo $freeform_with_meta; //phpcs:ignore
+			// If the chart is a regular chart, and the share tabs are active, render the chart in the tabbed interface.
+	} elseif ( $tabs_active && $blocks['chart'] && $blocks['table'] ) {
+		$chart_context = $chart_ref_id ? array( 'refId' => $chart_ref_id ) : array();
+		$chart_active_class = 'chart' === $initial_tab ? ' active' : '';
+		$table_active_class = 'table' === $initial_tab ? ' active' : '';
+		$table_pane    = $data_tab_active
+			? wp_sprintf(
+				'<div class="wp-chart-builder-table%s" data-chart-view="table" data-wp-class--active="state.isActive" id="%s-table" style="max-width:%s;">%s</div>',
+				$table_active_class,
 				esc_attr( $block_id ),
 				esc_attr( $width ),
 				$table_with_meta //phpcs:ignore
-			);
+			)
+			: '';
+		echo wp_sprintf(
+			'<div class="wp-chart-builder-chart%s" data-chart-view="chart" data-allow-overlay="true" data-wp-class--active="state.isActive">%s%s</div>%s',
+			$chart_active_class,
+			( new \WP_Block( $blocks['chart'], $chart_context ) )->render(), //phpcs:ignore
+			$share_modal, //phpcs:ignore
+			$table_pane //phpcs:ignore
+		);
 			// If the chart is a regular chart, and the share tabs are not active, render the chart.
 		} elseif ( $blocks['chart'] ) {
 			$chart_context = $chart_ref_id ? array( 'refId' => $chart_ref_id ) : array();
@@ -557,20 +590,23 @@ class Controller {
 
 			// Left group: Chart / Data tab buttons.
 			echo '<div class="wp-chart-builder-view-buttons__tabs">';
-			foreach ( array( 'chart' => 'Chart', 'table' => 'Data' ) as $view => $label ) {
+			if ( $chart_tab_active ) {
 				echo wp_sprintf(
-					'<button class="view-button view-button--%s" data-chart-view="%s" data-chart-id="%s" data-wp-on--click="actions.setActiveTab" data-wp-class--active="state.isActive">%s</button>',
-					esc_attr( $view ),
-					esc_attr( $view ),
-					esc_attr( $block_id ),
-					esc_html( $label )
+					'<button class="view-button view-button--chart" data-chart-view="chart" data-chart-id="%s" data-wp-on--click="actions.setActiveTab" data-wp-class--active="state.isActive">Chart</button>',
+					esc_attr( $block_id )
+				);
+			}
+			if ( $data_tab_active ) {
+				echo wp_sprintf(
+					'<button class="view-button view-button--table" data-chart-view="table" data-chart-id="%s" data-wp-on--click="actions.setActiveTab" data-wp-class--active="state.isActive">Data</button>',
+					esc_attr( $block_id )
 				);
 			}
 			echo '</div>';
 
-			// Right group: Download image (if PNG exists) + Share.
+			// Right group: Download image + Share.
 			echo '<div class="wp-chart-builder-view-buttons__actions">';
-			if ( $featured_image_url ) {
+			if ( $download_image_tab_active && $featured_image_url ) {
 				echo wp_sprintf(
 					'<button class="view-button view-button--download-image" data-chart-id="%s" data-wp-on--click="actions.downloadImage">Download Image</button>',
 					esc_attr( $block_id )

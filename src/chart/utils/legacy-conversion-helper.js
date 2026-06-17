@@ -16,7 +16,7 @@ import {
 	legacyStackedColumnTemplate,
 	legacyStackedAreaTemplate,
 	pieTemplate,
-} from '../../../.shared/variation-templates';
+} from '../../controller/variation-templates';
 
 export function handleLegacyConversion(postId) {
 	return new Promise((resolve) => {

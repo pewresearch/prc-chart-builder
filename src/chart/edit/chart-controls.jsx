@@ -14,23 +14,19 @@ import {
 import { store as blocksStore } from '@wordpress/blocks';
 import {
 	BoxControl,
-	Button,
-	ExternalLink,
 	PanelBody,
 	PanelRow,
 	RangeControl,
 	SelectControl,
-	TextControl,
-	ToggleControl,
 } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
-import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal Dependencies
  */
 import {
+	ANIMATED_CHART_TYPES,
 	BAR_CHART_TYPES,
 	LINE_CHART_TYPES,
 	NODE_CHART_TYPES,
@@ -38,7 +34,7 @@ import {
 	SUPPLEMENTAL_COLUMN_CHART_TYPES,
 } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
-import { createSVG } from '../utils/image-exports';
+import AnimationControls from './animation-controls';
 import AnnotationControls from './annotation-controls';
 import BarControls from './bar-controls';
 import ColorControls from './color-controls';
@@ -63,9 +59,10 @@ import TextFieldControls from './text-field-controls';
 import TooltipControls from './tooltip-controls';
 import TreemapControls from './treemap-controls';
 import { useViewportAttributes } from './use-viewport-attributes';
+import ProductionControls from './production-controls';
 
 function ControlSections(props) {
-	const { attributes, limitControls, clientId } = props;
+	const { attributes, limitControls } = props;
 	if (limitControls) {
 		return <TextFieldControls {...props} />;
 	}
@@ -120,6 +117,9 @@ function ControlSections(props) {
 			<LabelControls {...props} />
 			<TooltipControls {...props} />
 			<LegendControls {...props} />
+			{ANIMATED_CHART_TYPES.includes(chartType) && (
+				<AnimationControls {...props} />
+			)}
 			<DrawingControls {...props} />
 		</>
 	);
@@ -129,6 +129,8 @@ function ChartControls({
 	attributes,
 	setAttributes,
 	clientId,
+	onPreviewAnimation,
+	isPreviewingAnimation,
 	isDrawingMode,
 	drawingTool,
 	onDrawingModeChange,
@@ -140,7 +142,6 @@ function ChartControls({
 	selectedDrawingId,
 	onSelectedDrawingChange,
 }) {
-	const [svgLoading, setSVGLoading] = useState(false);
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
 		setAttributes
@@ -158,19 +159,8 @@ function ChartControls({
 	} = layout;
 	// Content attribute - NOT viewport-aware
 	const io = attributes.io || {};
-	const { pngUrl, allowDataDownload, isStaticChart, isFreeformChart } = io;
+	const { isStaticChart, isFreeformChart } = io;
 	const limitControls = isFreeformChart || isStaticChart;
-
-	// Use centralized image export utilities
-	const handleCreateSvg = () => {
-		setSVGLoading(true);
-		createSVG({
-			clientId,
-			upload: false, // Just download
-			onComplete: () => setSVGLoading(false),
-			onError: () => setSVGLoading(false),
-		});
-	};
 
 	// Get controller block to update chartType
 	const controllerClientId = useSelect(
@@ -221,192 +211,162 @@ function ChartControls({
 			})) || [];
 
 	return (
-		<InspectorControls>
-			<PanelBody title={__('Chart Layout')} initialOpen={false}>
-				{!limitControls && chartTypeOptions.length > 0 && (
-					<SelectControl
-						label={__('Chart Type')}
-						value={controllerChartType || chartType}
-						options={chartTypeOptions}
-						onChange={(newChartType) => {
-							if (controllerClientId) {
-								updateBlockAttributes(controllerClientId, {
-									chartType: newChartType,
-								});
-							}
-						}}
-					/>
-				)}
-				{!limitControls &&
-					('bar' === chartType || 'stacked-bar' === chartType) && (
+		<>
+			<InspectorControls>
+				<PanelBody title={__('Chart Layout')} initialOpen={false}>
+					{!limitControls && chartTypeOptions.length > 0 && (
 						<SelectControl
-							label={__('Chart Orientation (Bar charts only)')}
-							value={orientation}
-							options={[
-								{
-									value: 'vertical',
-									label: 'Vertical',
-								},
-								{
-									value: 'horizontal',
-									label: 'Horizontal',
-								},
-							]}
-							onChange={(o) => {
-								updateAttributeForDevice('layout', {
-									orientation: o,
-								});
+							label={__('Chart Type')}
+							value={controllerChartType || chartType}
+							options={chartTypeOptions}
+							onChange={(newChartType) => {
+								if (controllerClientId) {
+									updateBlockAttributes(controllerClientId, {
+										chartType: newChartType,
+									});
+								}
 							}}
 						/>
 					)}
-				<RangeControl
-					label={__('Width')}
-					withInputField
-					min={0}
-					max={1152}
-					value={parseInt(width, 10)}
-					onChange={(w) =>
-						updateAttributeForDevice('layout', {
-							width: formatNum(w, 'integer'),
-						})
-					}
-				/>
-				<RangeControl
-					label={__('Height')}
-					withInputField
-					min={0}
-					max={1200}
-					value={parseInt(height, 10)}
-					onChange={(h) =>
-						updateAttributeForDevice('layout', {
-							height: formatNum(h, 'integer'),
-						})
-					}
-				/>
-				<SelectControl
-					label={__('Overflow')}
-					value={overflowX}
-					help={__(
-						'Choose how the chart should handle overflow on the x-axis when the chart width is wider than the window. "Responsive" will resize the chart width to fit the window, "Scroll" will allow the chart to be scrolled horizontally, and "Scroll (fixed y-axis)" will allow the chart to be scrolled horizontally while keeping the y-axis fixed (if applicable).'
-					)}
-					options={[
-						{
-							value: 'responsive',
-							label: 'Responsive (Recommended)',
-						},
-						{
-							value: 'scroll',
-							label: 'Scroll',
-						},
-						// {
-						// 	value: 'scroll-fixed-y-axis',
-						// 	label: 'Scroll (fixed y-axis)',
-						// },
-						{
-							value: 'preserve-aspect-ratio',
-							label: 'Preserve Aspect Ratio',
-						},
-					]}
-					onChange={(overflow) =>
-						updateAttributeForDevice('layout', {
-							overflowX: overflow,
-						})
-					}
-				/>
-				{!limitControls && (
-					<BoxControl
-						label={__('Padding')}
-						values={{
-							top: padding.top,
-							right: padding.right,
-							bottom: padding.bottom,
-							left: padding.left,
-						}}
-						resetValues={{
-							top: 0,
-							right: 0,
-							bottom: 0,
-							left: 0,
-						}}
-						onChange={(value) =>
+					{!limitControls &&
+						('bar' === chartType ||
+							'stacked-bar' === chartType) && (
+							<SelectControl
+								label={__(
+									'Chart Orientation (Bar charts only)'
+								)}
+								value={orientation}
+								options={[
+									{
+										value: 'vertical',
+										label: 'Vertical',
+									},
+									{
+										value: 'horizontal',
+										label: 'Horizontal',
+									},
+								]}
+								onChange={(o) => {
+									updateAttributeForDevice('layout', {
+										orientation: o,
+									});
+								}}
+							/>
+						)}
+					<RangeControl
+						label={__('Width')}
+						withInputField
+						min={0}
+						max={1152}
+						value={parseInt(width, 10)}
+						onChange={(w) =>
 							updateAttributeForDevice('layout', {
-								padding: {
-									...padding,
-									top: formatNum(value.top, 'integer'),
-									right: formatNum(value.right, 'integer'),
-									bottom: formatNum(value.bottom, 'integer'),
-									left: formatNum(value.left, 'integer'),
-								},
+								width: formatNum(w, 'integer'),
 							})
 						}
 					/>
-				)}
-			</PanelBody>
-			<ControlSections
+					<RangeControl
+						label={__('Height')}
+						withInputField
+						min={0}
+						max={1200}
+						value={parseInt(height, 10)}
+						onChange={(h) =>
+							updateAttributeForDevice('layout', {
+								height: formatNum(h, 'integer'),
+							})
+						}
+					/>
+					<SelectControl
+						label={__('Overflow')}
+						value={overflowX}
+						help={__(
+							'Choose how the chart should handle overflow on the x-axis when the chart width is wider than the window. "Responsive" will resize the chart width to fit the window, "Scroll" will allow the chart to be scrolled horizontally, and "Scroll (fixed y-axis)" will allow the chart to be scrolled horizontally while keeping the y-axis fixed (if applicable).'
+						)}
+						options={[
+							{
+								value: 'responsive',
+								label: 'Responsive (Recommended)',
+							},
+							{
+								value: 'scroll',
+								label: 'Scroll',
+							},
+							// {
+							// 	value: 'scroll-fixed-y-axis',
+							// 	label: 'Scroll (fixed y-axis)',
+							// },
+							{
+								value: 'preserve-aspect-ratio',
+								label: 'Preserve Aspect Ratio',
+							},
+						]}
+						onChange={(overflow) =>
+							updateAttributeForDevice('layout', {
+								overflowX: overflow,
+							})
+						}
+					/>
+					{!limitControls && (
+						<BoxControl
+							label={__('Padding')}
+							values={{
+								top: padding.top,
+								right: padding.right,
+								bottom: padding.bottom,
+								left: padding.left,
+							}}
+							resetValues={{
+								top: 0,
+								right: 0,
+								bottom: 0,
+								left: 0,
+							}}
+							onChange={(value) =>
+								updateAttributeForDevice('layout', {
+									padding: {
+										...padding,
+										top: formatNum(value.top, 'integer'),
+										right: formatNum(
+											value.right,
+											'integer'
+										),
+										bottom: formatNum(
+											value.bottom,
+											'integer'
+										),
+										left: formatNum(value.left, 'integer'),
+									},
+								})
+							}
+						/>
+					)}
+				</PanelBody>
+				<ControlSections
+					attributes={attributes}
+					setAttributes={setAttributes}
+					clientId={clientId}
+					limitControls={limitControls}
+					onPreviewAnimation={onPreviewAnimation}
+					isPreviewingAnimation={isPreviewingAnimation}
+					isDrawingMode={isDrawingMode}
+					drawingTool={drawingTool}
+					onDrawingModeChange={onDrawingModeChange}
+					onToolChange={onToolChange}
+					strokeColor={strokeColor}
+					strokeWidth={strokeWidth}
+					onStrokeColorChange={onStrokeColorChange}
+					onStrokeWidthChange={onStrokeWidthChange}
+					selectedDrawingId={selectedDrawingId}
+					onSelectedDrawingChange={onSelectedDrawingChange}
+				/>
+			</InspectorControls>
+			<ProductionControls
 				attributes={attributes}
 				setAttributes={setAttributes}
 				clientId={clientId}
-				limitControls={limitControls}
-				isDrawingMode={isDrawingMode}
-				drawingTool={drawingTool}
-				onDrawingModeChange={onDrawingModeChange}
-				onToolChange={onToolChange}
-				strokeColor={strokeColor}
-				strokeWidth={strokeWidth}
-				onStrokeColorChange={onStrokeColorChange}
-				onStrokeWidthChange={onStrokeWidthChange}
-				selectedDrawingId={selectedDrawingId}
-				onSelectedDrawingChange={onSelectedDrawingChange}
 			/>
-			<PanelBody title="Image and Data Exports" initialOpen={false}>
-				<ToggleControl
-					label={__('Allow user to download data')}
-					checked={allowDataDownload}
-					help={__(
-						'If checked, a link to download a .csv of the table data will be displayed below the table and on the share tab.'
-					)}
-					onChange={() =>
-						setAttributes({
-							io: {
-								...io,
-								allowDataDownload: !allowDataDownload,
-							},
-						})
-					}
-				/>
-				<PanelRow>
-					<p>
-						<em>Designers:</em> Click the button below to download
-						the SVG of the chart inner (no title, legend, etc.).
-						This is useful for continued design work in Illustrator,
-						etc.
-					</p>
-				</PanelRow>
-				<PanelRow>
-					<Button
-						isSecondary
-						isBusy={svgLoading}
-						onClick={handleCreateSvg}
-					>
-						Download SVG
-					</Button>
-				</PanelRow>
-
-				<PanelRow>{svgLoading && <p>Preparing SVG ...</p>}</PanelRow>
-				{pngUrl && 0 < pngUrl.length && (
-					<>
-						<PanelRow>
-							<TextControl label={__('PNG URL')} value={pngUrl} />
-						</PanelRow>
-						<PanelRow>
-							<ExternalLink href={pngUrl}>
-								Preview Image
-							</ExternalLink>
-						</PanelRow>
-					</>
-				)}
-			</PanelBody>
-		</InspectorControls>
+		</>
 	);
 }
 

@@ -1,1 +1,1 @@
-<?php return array('dependencies' => array('@wordpress/interactivity', array('id' => '@wordpress/interactivity-router', 'import' => 'dynamic')), 'version' => '4df25348da4f169d39a8', 'type' => 'module');
+<?php return array('dependencies' => array('@prc/charting-library', '@wordpress/interactivity', array('id' => '@wordpress/interactivity-router', 'import' => 'dynamic')), 'version' => 'c697e26a5048fa88559c', 'type' => 'module');

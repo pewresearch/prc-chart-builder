@@ -25,6 +25,7 @@ export const ALL_CHART_TYPES = [
 	'map-usa-block',
 	'map-usa-hex',
 	'map-world',
+	'map-world-orthographic',
 ];
 
 /** Bar family: bar, stacked-bar, diverging-bar, exploded-bar */
@@ -37,6 +38,20 @@ export const BAR_CHART_TYPES = [
 
 /** Line family: line, area, stacked-area */
 export const LINE_CHART_TYPES = ['line', 'area', 'stacked-area'];
+
+/**
+ * Charts with PRC-17 animation primitives and the Inspector Animation panel.
+ * Add a type here when its charting-library component consumes `animated/*`
+ * and `config.animation` — keep in sync with `animation-controls.jsx`
+ * `resolveFamily()` and the rollout plan (`.cursor/plans/prc-17_animation_rollout.plan.md`).
+ */
+export const ANIMATED_CHART_TYPES = [
+	...BAR_CHART_TYPES,
+	...LINE_CHART_TYPES,
+	'scatter',
+	'dot-plot',
+	'pie',
+];
 
 /** Charts that get node size/stroke controls */
 export const NODE_CHART_TYPES = ['scatter', 'dot-plot'];
@@ -55,6 +70,7 @@ export const MAP_CHART_TYPES = [
 	'map-usa-block',
 	'map-usa-hex',
 	'map-world',
+	'map-world-orthographic',
 ];
 
 /**

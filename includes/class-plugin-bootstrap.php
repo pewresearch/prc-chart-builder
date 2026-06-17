@@ -96,27 +96,6 @@ class Plugin_Bootstrap {
 	}
 
 	/**
-	 * Include a file from the plugin's includes directory.
-	 *
-	 * @param mixed $block_file_name The block directory name.
-	 * @return WP_Error|void
-	 */
-	private function include_block( $block_file_name ) {
-		$directory = 'local' === wp_get_environment_type() ? 'src' : 'build';
-		if ( defined( 'WP_PLAYGROUND' ) && true === WP_PLAYGROUND ) {
-			$directory = 'build';
-		}
-		$block_file_path = $directory . '/' . $block_file_name . '/class-' . $block_file_name . '.php';
-		// check if WP_PLAYGROUND constant is defined and is true.
-		if ( file_exists( plugin_dir_path( __DIR__ ) . $block_file_path ) ) {
-			require_once plugin_dir_path( __DIR__ ) . $block_file_path;
-		} else {
-			// translators: %s is the block directory name/slug that could not be loaded.
-			return new WP_Error( 'missing-block', wp_sprintf( __( 'Block missing:: %s', 'prc-chart-builder' ), $block_file_name ) );
-		}
-	}
-
-	/**
 	 * Include all blocks.
 	 */
 	private function load_blocks() {
@@ -126,12 +105,16 @@ class Plugin_Bootstrap {
 		}
 		$block_files = glob( PRC_CHART_BUILDER_DIR . $directory . '/*', GLOB_ONLYDIR );
 		foreach ( $block_files as $block ) {
-			$block  = basename( $block );
-			$loaded = $this->include_block( $block );
-			if ( is_wp_error( $loaded ) ) {
-				// translators: %s is the block directory name/slug that could not be loaded.
-				return new WP_Error( 'missing-block', wp_sprintf( __( 'Block missing:: %s', 'prc-chart-builder' ), $block ) );
+			$block      = basename( $block );
+			$class_file = PRC_CHART_BUILDER_DIR . $directory . '/' . $block . '/class-' . $block . '.php';
+			// Not every block directory ships a PHP class (e.g. editor-only
+			// surfaces like `debug/`). Skip those rather than aborting the loop:
+			// a single classless directory must not prevent sibling blocks that
+			// sort after it alphabetically from registering.
+			if ( ! file_exists( $class_file ) ) {
+				continue;
 			}
+			require_once $class_file;
 		}
 	}
 
@@ -152,6 +135,7 @@ class Plugin_Bootstrap {
 		$this->include( 'class-synced-chart-auto-publish.php' );
 		$this->include( 'class-block-utils.php' );
 		$this->include( 'utils/class-table-export.php' );
+		$this->include( 'class-canonical-parent.php' );
 		$this->include( 'class-seo.php' );
 		$this->include( 'class-block-migration.php' );
 		$this->include( 'class-wp-cli-commands.php' );
@@ -259,7 +243,9 @@ class Plugin_Bootstrap {
 			PRC_CHART_BUILDER_DIR . '/build/blocks-manifest.php'
 		);
 		if ( ! defined( 'WP_PLAYGROUND' ) || true !== WP_PLAYGROUND ) {
-			new Synced_Chart( $this->get_loader() );
+			if ( class_exists( __NAMESPACE__ . '\Synced_Chart' ) ) {
+				new Synced_Chart( $this->get_loader() );
+			}
 		}
 		new Controller( $this->get_loader() );
 		new Chart( $this->get_loader() );

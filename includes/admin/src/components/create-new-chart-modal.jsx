@@ -38,7 +38,7 @@ import {
 /**
  * Internal Dependencies
  */
-import * as variationTemplates from '../../../../.shared/variation-templates/index';
+import * as variationTemplates from '../../../../src/controller/variation-templates/index';
 import { csvToTableAttributes, inferCategories, parseCsv } from '../utils/csv';
 import AICreateStep from './ai-create-step';
 import CsvDataInput from './csv-data-input';
@@ -61,6 +61,7 @@ const CHART_TYPE_ICON_MAP = {
 	'map-usa-counties': globe,
 	'map-usa-hex': globe,
 	'map-world': globe,
+	'map-world-orthographic': globe,
 	pie: chartBar,
 	sankey: trendingUp,
 	scatter: trendingUp,

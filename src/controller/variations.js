@@ -20,6 +20,7 @@ import {
 	USABlockMap,
 	USAHexMap,
 	worldMap,
+	worldGlobe,
 	freeformIcon,
 } from './icons';
 
@@ -45,8 +46,9 @@ import {
 	mapUsaBlockTemplate,
 	mapUsaHexTemplate,
 	mapWorldTemplate,
+	mapWorldOrthographicTemplate,
 	freeformTemplate,
-} from '../../.shared/variation-templates';
+} from './variation-templates';
 
 const variations = [
 	{
@@ -292,6 +294,16 @@ const variations = [
 		scope: ['block', 'transform'],
 	},
 	{
+		name: 'cbWorldOrthographicMap',
+		title: __('World Globe Map'),
+		keywords: [__('map'), __('world'), __('globe'), __('orthographic')],
+		description: __('Create an orthographic globe map of the world.'),
+		icon: worldGlobe,
+		attributes: { chartType: 'map-world-orthographic' },
+		innerBlocks: mapWorldOrthographicTemplate,
+		scope: ['block', 'transform'],
+	},
+	{
 		name: 'freeform',
 		title: __('Freeform'),
 		keywords: [__('freeform'), __('chart'), __('freeform chart')],
@@ -333,6 +345,7 @@ const VARIATION_TO_LAYOUT_TYPE = {
 	cbUSABlockMap: 'map-usa-block',
 	cbUSAHexMap: 'map-usa-hex',
 	cbWorldMap: 'map-world',
+	cbWorldOrthographicMap: 'map-world-orthographic',
 	freeform: 'freeform',
 };
 

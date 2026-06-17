@@ -26,8 +26,16 @@ import controllerStore from './store';
 import useChartEditorPresence from './use-chart-editor-presence';
 
 export default function Edit({ attributes, setAttributes, clientId, context }) {
-	const { id, tabsActive, shareActive, chartType, enableSchemaOutput } =
-		attributes;
+	const {
+		id,
+		tabsActive,
+		chartTabActive,
+		dataTabActive,
+		downloadImageTabActive,
+		shareActive,
+		chartType,
+		enableSchemaOutput,
+	} = attributes;
 
 	useChartEditorPresence({
 		controllerClientId: clientId,
@@ -69,6 +77,8 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 	const {
 		layoutType,
 		chartClientId,
+		chartIo,
+		allowDataDownload,
 		tableClientId,
 		selectedBlockClientId,
 		selectedBlockParents,
@@ -91,6 +101,9 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 			return {
 				layoutType: chartBlock?.attributes?.layout?.type,
 				chartClientId: chartBlock?.clientId,
+				chartIo: chartBlock?.attributes?.io || {},
+				allowDataDownload:
+					chartBlock?.attributes?.io?.allowDataDownload ?? true,
 				tableClientId: tableBlock?.clientId,
 				selectedBlockClientId: sel,
 				selectedBlockParents: sel ? getBlockParents(sel) : [],
@@ -166,6 +179,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		'map-usa-block': 'map-usa-block',
 		'map-usa-hex': 'map-usa-hex',
 		'map-world': 'map-world',
+		'map-world-orthographic': 'map-world-orthographic',
 		freeform: 'freeform',
 	};
 
@@ -268,10 +282,16 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		[clientId]
 	);
 
-	const innerBlocksProps = useInnerBlocksProps(blockProps, {
-		renderAppender: false,
-		templateLock: false,
-	});
+	// Keep blockProps on the figure only. Passing blockProps into
+	// useInnerBlocksProps duplicates the controller class onto the
+	// inner-blocks layout, which breaks direct-child view-mode CSS.
+	const innerBlocksProps = useInnerBlocksProps(
+		{},
+		{
+			renderAppender: false,
+			templateLock: false,
+		}
+	);
 
 	if (!hasInnerBlocks) {
 		return <Placeholder {...{ attributes, setAttributes, clientId }} />;
@@ -279,12 +299,6 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 
 	return (
 		<Fragment>
-			<ViewModeControls
-				view={view}
-				showBoth={showBoth}
-				onChangeView={(next) => setControllerView(id, next)}
-				onChangeShowBoth={(next) => setControllerShowBoth(id, next)}
-			/>
 			<InspectorControls>
 				{/* check if layout.type has substring of 'map' */}
 				{layoutType && layoutType.includes('map') && (
@@ -314,27 +328,64 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 						</ul>
 					</PanelBody>
 				)}
-				<PanelBody>
-					<ToggleControl
-						label={__('Show tabs')}
-						checked={tabsActive}
-						help={__(
-							'If unchecked, only the chart will be shown. Disable this for small multiples and charts where you do not want to show underlying data.'
+				<PanelBody
+					title={__('Tab Controls / Data Download / Schema.org')}
+					initialOpen={true}
+				>
+					<p
+						style={{
+							marginTop: 0,
+							marginBottom: '12px',
+							fontSize: '12px',
+						}}
+					>
+						{__(
+							'Control which tabs appear below the chart. Hiding a tab removes it from the frontend entirely — users can only interact with what is shown.'
 						)}
+					</p>
+					<ToggleControl
+						label={__('Chart tab')}
+						checked={chartTabActive}
 						onChange={() =>
-							setAttributes({ tabsActive: !tabsActive })
+							setAttributes({ chartTabActive: !chartTabActive })
 						}
 					/>
 					<ToggleControl
-						label={__('Show share tab')}
-						help={__(
-							'If unchecked, only chart and data tabs will be shown.'
-						)}
-						checked={shareActive}
+						label={__('Data tab')}
+						checked={dataTabActive}
+						onChange={() =>
+							setAttributes({ dataTabActive: !dataTabActive })
+						}
+					/>
+					<ToggleControl
+						label={__('Allow data download')}
+						checked={allowDataDownload}
+						disabled={!dataTabActive || !chartClientId}
+						onChange={() => {
+							if (chartClientId) {
+								updateBlockAttributes(chartClientId, {
+									io: {
+										...chartIo,
+										allowDataDownload: !allowDataDownload,
+									},
+								});
+							}
+						}}
+					/>
+					<ToggleControl
+						label={__('Download Image tab')}
+						checked={downloadImageTabActive}
 						onChange={() =>
 							setAttributes({
-								shareActive: !shareActive,
+								downloadImageTabActive: !downloadImageTabActive,
 							})
+						}
+					/>
+					<ToggleControl
+						label={__('Share tab')}
+						checked={shareActive}
+						onChange={() =>
+							setAttributes({ shareActive: !shareActive })
 						}
 					/>
 					<ToggleControl
@@ -351,6 +402,12 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 					/>
 				</PanelBody>
 			</InspectorControls>
+			<ViewModeControls
+				view={view}
+				showBoth={showBoth}
+				onChangeView={(next) => setControllerView(id, next)}
+				onChangeShowBoth={(next) => setControllerShowBoth(id, next)}
+			/>
 			<figure {...blockProps}>
 				<div {...innerBlocksProps} />
 			</figure>

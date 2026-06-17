@@ -92,10 +92,13 @@ class Chart {
 		$block_attributes = $attributes;
 
 		// Conditionally load prc-custom-charts if the block has a customAttributes property.
+		// Custom-charts is still on the classic-script handle; the default path
+		// uses the Preact Script Module registered in
+		// PRC_Charting_Library::init_charting_library_script_module().
 		if ( isset( $block_attributes['io']['customAttributes'] ) && isset( $block_attributes['io']['customAttributes']['chartType'] ) ) {
 			wp_enqueue_script( 'prc-custom-charts' );
 		} else {
-			wp_enqueue_script( 'prc-charting-library' );
+			wp_enqueue_script_module( '@prc/charting-library' );
 		}
 
 		$block_id = $block_attributes['id'] ?? null;
@@ -138,6 +141,11 @@ class Chart {
 		$chart_data            = $block_attributes['io']['chartData'] ?? array();
 		$is_static_chart       = $block_attributes['io']['isStaticChart'] ?? false;
 		$is_freeform_chart     = $block_attributes['io']['isFreeformChart'] ?? false;
+		$is_custom_chart       = ! empty( $block_attributes['io']['isCustomChart'] )
+			|| (
+				isset( $block_attributes['io']['customAttributes']['chartType'] )
+				&& ! empty( $block_attributes['io']['customAttributes']['chartType'] )
+			);
 		$table_data            = $block_attributes['io']['tableData'] ?? '';
 		$has_preformatted_data = $block_attributes['io']['hasPreformattedData'] ?? false;
 		$preformatted_data     = $block_attributes['io']['preformattedData'] ?? array();
@@ -158,19 +166,27 @@ class Chart {
 		$public_attributes = $attributes;
 		unset( $public_attributes['_legacy'], $public_attributes['_v1Original'], $public_attributes['_migrationMeta'] );
 
+		// Nested + camelCased per-chart slice. Addressable by chart id so any
+		// block on the page (sibling chart, scrollytelling step, REST poller)
+		// can read/write `state.charts[ chartId ]` through @wordpress/interactivity.
+		// The wrapper div carries data-prc-chart-id so consumer blocks can
+		// resolve the target id from the DOM without needing the controller's
+		// context.
 		wp_interactivity_state(
 			$target_namespace,
 			array(
-				$block_id => array(
-					'chart-data'         => $chart_data,
-					// Decode the table data to ensure it is an array.
-					'table-data'         => $table_data ? json_decode( $table_data, true ) : null,
-					'chart-hash'         => $block_id,
-					'iframe-height'      => null,
-					'should-render'      => $should_render,
-					'attributes'         => $public_attributes,
-					'isQuestionExpanded' => false,
-					'currentViewport'    => $device_type,
+				'charts' => array(
+					$block_id => array(
+						'data'               => $chart_data,
+						// Decode the table data to ensure it is an array.
+						'tableData'          => $table_data ? json_decode( $table_data, true ) : null,
+						'chartHash'          => $block_id,
+						'iframeHeight'       => null,
+						'shouldRender'       => $should_render,
+						'attributes'         => $public_attributes,
+						'isQuestionExpanded' => false,
+						'currentViewport'    => $device_type,
+					),
 				),
 			),
 		);
@@ -179,7 +195,7 @@ class Chart {
 			'id'                          => wp_unique_id( 'chart-block-' ),
 			'data-wp-key'                 => $block_id,
 			'data-wp-interactive'         => $target_namespace,
-			'data-wp-router-region'       => 'chart-' . $block_id,
+			'data-prc-chart-id'           => $block_id,
 			'data-wp-context'             => wp_json_encode(
 				array(
 					'id' => $block_id,
@@ -187,8 +203,19 @@ class Chart {
 			),
 			'class'                       => 'wp-chart-builder-inner',
 			'data-wp-watch--init-render'  => $is_static_chart || $is_freeform_chart ? null : 'callbacks.watchForRender',
-			'data-wp-on-window--resize'   => 'callbacks.watchForResize',
+			// Re-seed the live store slice from server state after a router
+			// navigation (the router merges server state with override=false,
+			// so the live slice is otherwise frozen at its mount-time values).
+			'data-wp-watch--sync-navigation' => $is_static_chart || $is_freeform_chart || $is_custom_chart ? null : 'callbacks.syncOnNavigation',
+			'data-wp-on-window--resize'   => $is_custom_chart ? null : 'callbacks.watchForResize',
 		);
+
+		// Custom charts (e.g. RLS rls-stacked-bar) render inside parent router
+		// regions and use the legacy prc-custom-charts renderer — no per-chart
+		// region or viewport-rehydration navigation.
+		if ( ! $is_custom_chart ) {
+			$block_attrs['data-wp-router-region'] = 'chart-' . $block_id;
+		}
 
 
 		$block_wrapper_attrs = get_block_wrapper_attributes( $block_attrs );
@@ -278,8 +305,8 @@ class Chart {
 						<div class="cb__subtitle">%5$s</div>
 						%6$s
 						%7$s
-						<div class="cb__note">%8$s</div>
-						<div class="cb__note">%9$s</div>
+						<div class="cb__note cb__note--note">%8$s</div>
+						<div class="cb__note cb__note--source">%9$s</div>
 						<div class="cb__tag">%10$s</div>
 						%11$s
 					</div>

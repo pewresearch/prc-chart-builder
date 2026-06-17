@@ -204,7 +204,9 @@ class Distributor {
 	 * @return array Modified array with usage meta excluded.
 	 */
 	public static function exclude_usage_meta( array $excluded ): array {
-		$excluded[] = Synced_Chart::$synced_chart_usage_meta_key;
+		if ( class_exists( __NAMESPACE__ . '\Synced_Chart' ) ) {
+			$excluded[] = Synced_Chart::$synced_chart_usage_meta_key;
+		}
 		return $excluded;
 	}
 }

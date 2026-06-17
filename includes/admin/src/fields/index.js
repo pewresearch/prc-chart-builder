@@ -40,6 +40,7 @@ const CHART_TYPE_ICON_MAP = {
 	'map-usa-county': globe,
 	'map-usa-hex': globe,
 	'map-world': globe,
+	'map-world-orthographic': globe,
 	pie: chartBar,
 	sankey: trendingUp,
 	scatter: trendingUp,
@@ -116,7 +117,11 @@ export function ChartPreviewField({ item, viewportWidth = 1160 }) {
 					borderRadius: '2px',
 				}}
 			>
-				<Icon icon={iconDescriptor} size={32} style={{ fill: '#757575' }} />
+				<Icon
+					icon={iconDescriptor}
+					size={32}
+					style={{ fill: '#757575' }}
+				/>
 			</div>
 		);
 	}

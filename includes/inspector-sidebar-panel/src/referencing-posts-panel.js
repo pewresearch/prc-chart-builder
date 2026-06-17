@@ -3,19 +3,28 @@
  */
 import { __ } from '@wordpress/i18n';
 import { useEffect, useState } from '@wordpress/element';
-import { useSelect } from '@wordpress/data';
-import { PluginDocumentSettingPanel, store as editorStore } from '@wordpress/editor';
-import { Spinner, Notice, ExternalLink } from '@wordpress/components';
+import { useSelect, useDispatch } from '@wordpress/data';
+import {
+	PluginDocumentSettingPanel,
+	store as editorStore,
+} from '@wordpress/editor';
+import {
+	Spinner,
+	Notice,
+	ExternalLink,
+	RadioControl,
+} from '@wordpress/components';
 
 import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Component to display a single referencing post.
  *
- * @param {Object} props      Component props
- * @param {Object} props.post Post data
+ * @param {Object}  props                   Component props
+ * @param {Object}  props.post               Post data
+ * @param {boolean} props.isCanonicalParent  Whether this post is the canonical parent
  */
-function ReferencingPostItem({ post }) {
+function ReferencingPostItem({ post, isCanonicalParent }) {
 	const getPostTypeLabel = (postType) => {
 		const labels = {
 			post: __('Post', 'prc-chart-builder'),
@@ -46,7 +55,13 @@ function ReferencingPostItem({ post }) {
 	};
 
 	return (
-		<div className="referencing-post-item">
+		<div
+			className={
+				isCanonicalParent
+					? 'referencing-post-item is-canonical-parent'
+					: 'referencing-post-item'
+			}
+		>
 			<div className="post-header">
 				<div className="post-content">
 					<h4 className="post-title">
@@ -55,6 +70,11 @@ function ReferencingPostItem({ post }) {
 								__('(No title)', 'prc-chart-builder')}
 						</ExternalLink>
 						{getStatusBadge(post.status)}
+						{isCanonicalParent && (
+							<span className="canonical-parent-badge">
+								{__('Canonical parent', 'prc-chart-builder')}
+							</span>
+						)}
 					</h4>
 					<p className="post-meta">
 						{getPostTypeLabel(post.type)} • ID: {post.id}
@@ -73,17 +93,46 @@ function ReferencingPostItem({ post }) {
 }
 
 /**
+ * Resolve which post ID is the effective canonical parent for display.
+ *
+ * @param {number}   selectedParentId Explicit selection from post meta (0 = automatic).
+ * @param {Object[]} referencingPosts Referencing posts from the REST API.
+ * @return {number} Resolved parent post ID, or 0.
+ */
+function resolveCanonicalParentId(selectedParentId, referencingPosts) {
+	if (selectedParentId > 0) {
+		const selected = referencingPosts.find(
+			(post) => post.id === selectedParentId && post.status === 'publish'
+		);
+		if (selected) {
+			return selected.id;
+		}
+	}
+
+	const firstPublished = referencingPosts.find(
+		(post) => post.status === 'publish'
+	);
+
+	return firstPublished ? firstPublished.id : 0;
+}
+
+/**
  * Referencing Posts Panel Component
  * Shows a list of posts that reference this chart
  */
 export function ReferencingPostsPanel() {
-	const { postId, postType } = useSelect(
+	const { postId, postType, canonicalParentId } = useSelect(
 		(select) => ({
 			postId: select(editorStore).getCurrentPostId(),
 			postType: select(editorStore).getCurrentPostType(),
+			canonicalParentId:
+				select(editorStore).getEditedPostAttribute('meta')
+					?.canonical_parent_id || 0,
 		}),
 		[]
 	);
+
+	const { editPost } = useDispatch(editorStore);
 
 	const [referencingPosts, setReferencingPosts] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
@@ -116,6 +165,37 @@ export function ReferencingPostsPanel() {
 				setIsLoading(false);
 			});
 	}, [postId, postType]);
+
+	const publishedPosts = referencingPosts.filter(
+		(post) => post.status === 'publish'
+	);
+
+	const resolvedCanonicalParentId = resolveCanonicalParentId(
+		canonicalParentId,
+		referencingPosts
+	);
+
+	const canonicalParentOptions = [
+		{
+			label: __(
+				'Automatic (first published referencing post)',
+				'prc-chart-builder'
+			),
+			value: '0',
+		},
+		...publishedPosts.map((post) => ({
+			label: post.title || __('(No title)', 'prc-chart-builder'),
+			value: String(post.id),
+		})),
+	];
+
+	const handleCanonicalParentChange = (value) => {
+		editPost({
+			meta: {
+				canonical_parent_id: parseInt(value, 10) || 0,
+			},
+		});
+	};
 
 	// Only show panel for chart post type
 	if (postType !== 'chart') {
@@ -155,6 +235,24 @@ export function ReferencingPostsPanel() {
 				</p>
 			)}
 
+			{!isLoading && !error && publishedPosts.length > 0 && (
+				<div className="canonical-parent-control">
+					<RadioControl
+						label={__(
+							'Canonical parent article',
+							'prc-chart-builder'
+						)}
+						help={__(
+							'Search engines use this article as the canonical URL for this chart page. When set to automatic, the first published referencing post is used.',
+							'prc-chart-builder'
+						)}
+						selected={String(canonicalParentId || 0)}
+						options={canonicalParentOptions}
+						onChange={handleCanonicalParentChange}
+					/>
+				</div>
+			)}
+
 			{!isLoading && !error && referencingPosts.length > 0 && (
 				<div>
 					<p className="posts-list-header">
@@ -166,7 +264,13 @@ export function ReferencingPostsPanel() {
 							: `${__('This chart is referenced in', 'prc-chart-builder')} ${referencingPosts.length} ${__('posts:', 'prc-chart-builder')}`}
 					</p>
 					{referencingPosts.map((post) => (
-						<ReferencingPostItem key={post.id} post={post} />
+						<ReferencingPostItem
+							key={post.id}
+							post={post}
+							isCanonicalParent={
+								post.id === resolvedCanonicalParentId
+							}
+						/>
 					))}
 				</div>
 			)}

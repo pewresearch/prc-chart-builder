@@ -275,7 +275,7 @@ class PCH_Import_Endpoint {
 	 *
 	 * CB expects: first column = independent axis (key `x` in chartData), further columns =
 	 * one per series/category. See class-chart-ai-ability::serialize_chart_blocks and
-	 * .shared/variation-templates/stacked-bar.js.
+	 * src/controller/variation-templates/stacked-bar.js.
 	 *
 	 * @param array $data PCH data object (values, xColumn, yColumn, categoryColumn).
 	 * @return array{

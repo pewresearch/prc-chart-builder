@@ -1,6 +1,6 @@
 # PRC Chart Builder
 
-Version 3.8.0
+Version 3.10.0
 
 A WordPress plugin for building, managing, and embedding interactive SVG charts on the Pew Research Center platform. Charts are authored as a custom post type (`chart`) using the Gutenberg block editor and rendered via the PRC Charting Library (`prc-charting-library`), which is built on `@visx` and D3.
 
@@ -63,7 +63,7 @@ All chart attributes support per-viewport overrides via the `mobile` and `tablet
 
 **Per-element styling:**
 
-Click any bar, label, line segment, pie slice, map region, or axis tick label in the editor canvas to open the element popover. Changes update live and are stored in the `labels.custom`* and `shapes.custom*` block attributes using a `{x}::{category}` key.
+Click any bar, label, line segment, pie slice, map region, or axis tick label in the editor canvas to open the element popover. Changes update live and are stored in the `labels.custom`* and `shapes.custom`* block attributes using a `{x}::{category}` key.
 
 ---
 
@@ -585,32 +585,32 @@ Applies to: `scatter`.
 Renders a calculated difference column alongside bar-family and dot-plot charts (not pie).
 
 
-| Attribute                          | Type    | Default     | Notes                                                    |
-| ---------------------------------- | ------- | ----------- | -------------------------------------------------------- |
-| `diffColumn.active`                | boolean | `false`     | Show/hide the diff column                                |
-| `diffColumn.category`              | string  | `""`        | Column key whose values are displayed in the diff column |
-| `diffColumn.columnHeader`          | string  | `"Diff"`    | Header label for the column                              |
-| `diffColumn.customLabels`          | object  | `{}`        | Per-cell overrides keyed by `x::category` or `x::category::group` |
-| `diffColumn.dx`                    | number  | `0`         | Horizontal nudge of the column (px)                      |
-| `diffColumn.dy`                    | number  | `0`         | Vertical nudge of the column (px)                        |
-| `diffColumn.style.rectStrokeWidth` | number  | `0`         | Border width of column cells (px)                        |
-| `diffColumn.style.rectStrokeColor` | string  | `"white"`   | Border color of column cells                             |
-| `diffColumn.style.rectFill`        | string  | `"none"`    | Background fill of column cells                          |
-| `diffColumn.style.fill`            | string  | `"#2a2a2a"` | Default cell text color                                  |
-| `diffColumn.style.headerFill`      | string  | `"#2a2a2a"` | Header text color                                        |
-| `diffColumn.style.textOutline`     | boolean | `false`     | Column-wide cell text outline toggle                     |
-| `diffColumn.style.headerTextOutline` | boolean | `false`   | Column-wide header text outline toggle                   |
-| `diffColumn.style.fontWeight`      | string  | `"normal"`  | Font weight of cell text                                 |
-| `diffColumn.style.fontStyle`       | string  | `"normal"`  | Font style of cell text                                  |
-| `diffColumn.style.headerFontWeight`| string  | `"normal"`  | Header font weight (separate from cell text)           |
-| `diffColumn.style.headerFontStyle` | string  | `"normal"`  | Header font style (separate from cell text)            |
-| `diffColumn.style.headerFontFamily`| string  | `""`        | Header font family (separate from cell text)           |
-| `diffColumn.style.fontAppearance`  | string  | `"default"` | Semantic appearance variant (e.g. colored diffs)         |
-| `diffColumn.style.fontSize`        | string  | `"10px"`    | Cell font size                                           |
-| `diffColumn.style.headerFontSize`  | string  | `"12px"`    | Column header font size                                  |
-| `diffColumn.style.marginLeft`      | number  | `10`        | Left margin before the column (px)                       |
-| `diffColumn.style.width`           | number  | `30`        | Column width (px)                                        |
-| `diffColumn.style.heightOffset`    | number  | `0`         | Vertical adjustment to cell height (px)                  |
+| Attribute                            | Type    | Default     | Notes                                                             |
+| ------------------------------------ | ------- | ----------- | ----------------------------------------------------------------- |
+| `diffColumn.active`                  | boolean | `false`     | Show/hide the diff column                                         |
+| `diffColumn.category`                | string  | `""`        | Column key whose values are displayed in the diff column          |
+| `diffColumn.columnHeader`            | string  | `"Diff"`    | Header label for the column                                       |
+| `diffColumn.customLabels`            | object  | `{}`        | Per-cell overrides keyed by `x::category` or `x::category::group` |
+| `diffColumn.dx`                      | number  | `0`         | Horizontal nudge of the column (px)                               |
+| `diffColumn.dy`                      | number  | `0`         | Vertical nudge of the column (px)                                 |
+| `diffColumn.style.rectStrokeWidth`   | number  | `0`         | Border width of column cells (px)                                 |
+| `diffColumn.style.rectStrokeColor`   | string  | `"white"`   | Border color of column cells                                      |
+| `diffColumn.style.rectFill`          | string  | `"none"`    | Background fill of column cells                                   |
+| `diffColumn.style.fill`              | string  | `"#2a2a2a"` | Default cell text color                                           |
+| `diffColumn.style.headerFill`        | string  | `"#2a2a2a"` | Header text color                                                 |
+| `diffColumn.style.textOutline`       | boolean | `false`     | Column-wide cell text outline toggle                              |
+| `diffColumn.style.headerTextOutline` | boolean | `false`     | Column-wide header text outline toggle                            |
+| `diffColumn.style.fontWeight`        | string  | `"normal"`  | Font weight of cell text                                          |
+| `diffColumn.style.fontStyle`         | string  | `"normal"`  | Font style of cell text                                           |
+| `diffColumn.style.headerFontWeight`  | string  | `"normal"`  | Header font weight (separate from cell text)                      |
+| `diffColumn.style.headerFontStyle`   | string  | `"normal"`  | Header font style (separate from cell text)                       |
+| `diffColumn.style.headerFontFamily`  | string  | `""`        | Header font family (separate from cell text)                      |
+| `diffColumn.style.fontAppearance`    | string  | `"default"` | Semantic appearance variant (e.g. colored diffs)                  |
+| `diffColumn.style.fontSize`          | string  | `"10px"`    | Cell font size                                                    |
+| `diffColumn.style.headerFontSize`    | string  | `"12px"`    | Column header font size                                           |
+| `diffColumn.style.marginLeft`        | number  | `10`        | Left margin before the column (px)                                |
+| `diffColumn.style.width`             | number  | `30`        | Column width (px)                                                 |
+| `diffColumn.style.heightOffset`      | number  | `0`         | Vertical adjustment to cell height (px)                           |
 
 
 #### `treemap` — Treemap Charts
@@ -736,38 +736,38 @@ Replace auto-generated legend item labels with custom text.
 Stores the chart's data payload, static image fallback, and miscellaneous I/O flags.
 
 
-| Attribute                     | Type     | Default     | Notes                                                                                  |
-| ----------------------------- | -------- | ----------- | -------------------------------------------------------------------------------------- |
-| `io.isConvertedChart`         | boolean  | `false`     | Marks charts migrated from the legacy chart builder                                    |
-| `io.isStaticChart`            | boolean  | `false`     | Render a static image instead of an interactive SVG                                    |
-| `io.isFreeformChart`          | boolean  | `false`     | Marks charts created outside the structured builder UI                                 |
-| `io.staticImageId`            | string   | `""`        | WordPress attachment ID of the static fallback image                                   |
-| `io.staticImageUrl`           | string   | `""`        | URL of the static fallback image                                                       |
-| `io.staticImageInnerHTML`     | string   | `""`        | (Deprecated in v2) Rendered html from image used in static image variation             |
-| `io.staticImageAltText`       | string   | `""`        | (Deprecated in v2) Alt text for the static image variation                             |
-| `io.chartConverted.converted` | boolean  | `false`     | Whether a conversion from Highcharts has been performed                                |
-| `io.chartConverted.requester` | string   | `""`        | User or process that triggered the conversion                                          |
-| `io.chartConverted.timestamp` | string   | `""`        | ISO timestamp of the conversion                                                        |
-| `io.defaultShouldRender`      | boolean  | `true`      | Whether the chart should render on page load by default                                |
-| `io.pngUrl`                   | string   | `""`        | URL of the server-generated PNG (3.6.0+). Set automatically by `PNG_Export` via ScreenshotOne on post save or WP-CLI backfill.                       |
-| `io.pngId`                    | string   | `""`        | WordPress attachment ID of the server-generated PNG. Set alongside `io.pngUrl` by `PNG_Export`.                                                      |
-| `io.colorValue`               | string   | `"general"` | Named color palette variant (e.g. `"general"`, `"sequential"`)                         |
-| `io.customColors`             | string[] | `[]`        | Editor-supplied color overrides (takes precedence over `colors`)                       |
-| `io.chartFamily`              | string   | `"chart"`   | Top-level chart family used for routing in the charting library (eg. "map" or "chart") |
-| `io.chartData`                | object[] | `[]`        | The raw chart data rows                                                                |
-| `io.tableData`                | string   | `""`        | Serialised table data (used for accessible data table view)                            |
-| `io.availableCategories`      | string[] | `[]`        | All column keys present in `chartData`                                                 |
-| `io.independentVariable`      | string   | `""`        | Column key treated as the independent variable (mirrors `dataRender.x`)                |
-| `io.hasPreformattedData`      | boolean  | `false`     | Skip data normalisation when data is already in chart-ready format                     |
-| `io.preformattedData`         | object[] | `[]`        | Pre-normalised data rows used when `hasPreformattedData` is `true`                     |
-| `io.questionWordingActive`    | boolean  | `false`     | Show survey question wording below the chart                                           |
-| `io.questionWording`          | string   | `""`        | Survey question text                                                                   |
-| `io.tabsActive`               | boolean  | `false`     | Enable tabbed chart views (e.g. chart / table toggle)                                  |
-| `io.allowDataDownload`        | boolean  | `true`      | Show a data download button                                                            |
-| `io.elementHasStroke`         | boolean  | `false`     | Apply a stroke to rendered chart elements (bars, segments)                             |
-| `io.isCustomChart`            | boolean  | `false`     | Enable custom chart type rendering path                                                |
-| `io.customAttributes`         | object   | `{}`        | Free-form attributes passed to a custom chart renderer                                 |
-| `io.preserveStringKeys`       | string[] | `[]`        | Column keys that should remain as strings during data parsing                          |
+| Attribute                     | Type     | Default     | Notes                                                                                                                          |
+| ----------------------------- | -------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `io.isConvertedChart`         | boolean  | `false`     | Marks charts migrated from the legacy chart builder                                                                            |
+| `io.isStaticChart`            | boolean  | `false`     | Render a static image instead of an interactive SVG                                                                            |
+| `io.isFreeformChart`          | boolean  | `false`     | Marks charts created outside the structured builder UI                                                                         |
+| `io.staticImageId`            | string   | `""`        | WordPress attachment ID of the static fallback image                                                                           |
+| `io.staticImageUrl`           | string   | `""`        | URL of the static fallback image                                                                                               |
+| `io.staticImageInnerHTML`     | string   | `""`        | (Deprecated in v2) Rendered html from image used in static image variation                                                     |
+| `io.staticImageAltText`       | string   | `""`        | (Deprecated in v2) Alt text for the static image variation                                                                     |
+| `io.chartConverted.converted` | boolean  | `false`     | Whether a conversion from Highcharts has been performed                                                                        |
+| `io.chartConverted.requester` | string   | `""`        | User or process that triggered the conversion                                                                                  |
+| `io.chartConverted.timestamp` | string   | `""`        | ISO timestamp of the conversion                                                                                                |
+| `io.defaultShouldRender`      | boolean  | `true`      | Whether the chart should render on page load by default                                                                        |
+| `io.pngUrl`                   | string   | `""`        | URL of the server-generated PNG (3.6.0+). Set automatically by `PNG_Export` via ScreenshotOne on post save or WP-CLI backfill. |
+| `io.pngId`                    | string   | `""`        | WordPress attachment ID of the server-generated PNG. Set alongside `io.pngUrl` by `PNG_Export`.                                |
+| `io.colorValue`               | string   | `"general"` | Named color palette variant (e.g. `"general"`, `"sequential"`)                                                                 |
+| `io.customColors`             | string[] | `[]`        | Editor-supplied color overrides (takes precedence over `colors`)                                                               |
+| `io.chartFamily`              | string   | `"chart"`   | Top-level chart family used for routing in the charting library (eg. "map" or "chart")                                         |
+| `io.chartData`                | object[] | `[]`        | The raw chart data rows                                                                                                        |
+| `io.tableData`                | string   | `""`        | Serialised table data (used for accessible data table view)                                                                    |
+| `io.availableCategories`      | string[] | `[]`        | All column keys present in `chartData`                                                                                         |
+| `io.independentVariable`      | string   | `""`        | Column key treated as the independent variable (mirrors `dataRender.x`)                                                        |
+| `io.hasPreformattedData`      | boolean  | `false`     | Skip data normalisation when data is already in chart-ready format                                                             |
+| `io.preformattedData`         | object[] | `[]`        | Pre-normalised data rows used when `hasPreformattedData` is `true`                                                             |
+| `io.questionWordingActive`    | boolean  | `false`     | Show survey question wording below the chart                                                                                   |
+| `io.questionWording`          | string   | `""`        | Survey question text                                                                                                           |
+| `io.tabsActive`               | boolean  | `false`     | Enable tabbed chart views (e.g. chart / table toggle)                                                                          |
+| `io.allowDataDownload`        | boolean  | `true`      | Show a data download button                                                                                                    |
+| `io.elementHasStroke`         | boolean  | `false`     | Apply a stroke to rendered chart elements (bars, segments)                                                                     |
+| `io.isCustomChart`            | boolean  | `false`     | Enable custom chart type rendering path                                                                                        |
+| `io.customAttributes`         | object   | `{}`        | Free-form attributes passed to a custom chart renderer                                                                         |
+| `io.preserveStringKeys`       | string[] | `[]`        | Column keys that should remain as strings during data parsing                                                                  |
 
 
 ---

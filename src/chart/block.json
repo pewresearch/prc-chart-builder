@@ -199,7 +199,7 @@
 		"tooltip": {
 			"type": "object",
 			"default": {
-				"active": true,
+				"active": false,
 				"activeOnMobile": true,
 				"headerActive": true,
 				"headerValue": "categoryValue",
@@ -274,8 +274,8 @@
 				"fontSize": 10,
 				"fontFamily": "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
 				"labelPositionBar": "inside",
-				"labelCutoff": 10,
-				"labelCutoffMobile": 5,
+				"labelCutoff": 0,
+				"labelCutoffMobile": 0,
 				"labelPositionDX": 0,
 				"labelPositionDY": 0,
 				"pieLabelRadius": 60,
@@ -621,6 +621,10 @@
 				"animationWhitelist": [],
 				"duration": 2000
 			}
+		},
+		"animation": {
+			"type": "object",
+			"default": {}
 		},
 		"io": {
 			"type": "object",

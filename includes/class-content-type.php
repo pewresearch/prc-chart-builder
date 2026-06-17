@@ -40,6 +40,7 @@ class Content_Type {
 		$loader->add_action( 'init', $this, 'register_types' );
 		$loader->add_action( 'init', $this, 'register_revisions_support', 11 );
 		$loader->add_action( 'init', $this, 'register_chart_meta' );
+		$loader->add_action( 'save_post_' . self::$post_type, Canonical_Parent::class, 'sanitize_meta_on_save', 10, 3 );
 		$loader->add_action( 'init', $this, 'register_chart_type_taxonomy' );
 		$loader->add_action( 'init', $this, 'register_export_endpoint' );
 		$loader->add_action( 'save_post_' . self::$post_type, $this, 'sync_chart_type_on_save', 10, 3 );
@@ -72,7 +73,8 @@ class Content_Type {
 		'map-usa-block'  => 'USA Block Map',
 		'map-usa-county' => 'USA County Map',
 		'map-usa-hex'    => 'USA Hex Map',
-		'map-world'      => 'World Map',
+		'map-world'                => 'World Map',
+		'map-world-orthographic'   => 'World Globe Map',
 		'pie'            => 'Pie',
 		'sankey'         => 'Sankey',
 		'scatter'        => 'Scatter Plot',
@@ -386,6 +388,22 @@ class Content_Type {
 				'single'       => true,
 				'show_in_rest' => false,
 				'default'      => '',
+			)
+		);
+
+		register_post_meta(
+			self::$post_type,
+			Canonical_Parent::$meta_key,
+			array(
+				'type'              => 'integer',
+				'description'       => __( 'Post ID of the article that should be treated as the canonical parent for this chart.', 'prc-chart-builder' ),
+				'single'            => true,
+				'show_in_rest'      => true,
+				'default'           => 0,
+				'sanitize_callback' => 'absint',
+				'auth_callback'     => function () {
+					return current_user_can( 'edit_posts' );
+				},
 			)
 		);
 	}

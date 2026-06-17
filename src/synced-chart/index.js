@@ -15,6 +15,7 @@ import ConvertToSyncedChartBlockSettingMenuItem from './convert-to-synced-chart'
 import controllerStore from '../controller/store';
 // import registerChartLibraryMediaPanel from './__wip__media-inserter-panel';
 import './editor.scss';
+import './style.scss';
 
 // Ensure controller store is registered for table visibility controls
 register(controllerStore);

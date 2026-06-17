@@ -580,6 +580,9 @@ class JSON_LD {
 	 * @return string[] Array of permalink URLs (may be empty).
 	 */
 	private function get_published_referencing_urls( int $chart_post_id ): array {
+		if ( ! class_exists( __NAMESPACE__ . '\Synced_Chart' ) ) {
+			return array();
+		}
 		$post_ids = Synced_Chart::get_chart_usage_post_ids( $chart_post_id );
 		if ( empty( $post_ids ) ) {
 			return array();
@@ -672,12 +675,23 @@ class JSON_LD {
 		$is_part_of = array();
 
 		if ( $has_cpt ) {
-			$referencing_urls = $this->get_published_referencing_urls( $post_id );
-			foreach ( $referencing_urls as $url ) {
-				$is_part_of[] = array(
-					'@type' => 'WebPage',
-					'url'   => $url,
-				);
+			$parent_id = Canonical_Parent::resolve_parent_id( $post_id );
+			if ( $parent_id > 0 ) {
+				$parent_url = get_permalink( $parent_id );
+				if ( $parent_url ) {
+					$is_part_of[] = array(
+						'@type' => 'WebPage',
+						'url'   => $parent_url,
+					);
+				}
+			} else {
+				$referencing_urls = $this->get_published_referencing_urls( $post_id );
+				foreach ( $referencing_urls as $url ) {
+					$is_part_of[] = array(
+						'@type' => 'WebPage',
+						'url'   => $url,
+					);
+				}
 			}
 		}
 

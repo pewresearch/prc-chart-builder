@@ -196,7 +196,20 @@ User-facing downloads use a shared sanitization rule: **chart metadata title** (
 
 ### prc-charting-library
 
-React component library built on `@visx` and D3 that renders SVG charts. Consumed by `prc-chart-builder/chart` at render time (both in the editor and on the frontend via `view.js`).
+Visx/D3 SVG chart library with a **dual build** (PRC-17):
+
+| Surface | Bundle | Runtime |
+| --- | --- | --- |
+| Editor (`prc-chart-builder/chart` edit component) | `build/editor.js` (classic script) | React |
+| Frontend (`prc-chart-builder/chart` `view.js`) | `build/view.js` (Script Module `@prc/charting-library`) | Preact via `preact/compat` |
+
+On the frontend, chart components subscribe to the `prc-chart-builder/chart`
+interactivity store via `useChartStore` so any block can call `setChart` /
+`setData` / `setConfig` on a chart by `chartId`. The editor build keeps passing
+inline props — `useChartStore` is a no-op there.
+
+See [reactive-store.md](reactive-store.md)
+for the store contract and consumer-block recipes.
 
 Chart types available as of 3.9.0:
 

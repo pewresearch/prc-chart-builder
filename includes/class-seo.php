@@ -43,6 +43,7 @@ class SEO {
 	public function init() {
 		$this->loader->add_filter( 'prc_schema_seo_description_fallback', $this, 'filter_chart_description', 11, 2 );
 		$this->loader->add_filter( 'prc_schema_seo_og_image_url', $this, 'filter_chart_og_image_url', 10, 3 );
+		$this->loader->add_filter( 'prc_schema_seo_canonical_url', $this, 'filter_chart_canonical_url', 10, 3 );
 	}
 
 	/**
@@ -121,5 +122,25 @@ class SEO {
 		$thumbnail_id = get_post_thumbnail_id( $post_id );
 
 		return $thumbnail_id ? (string) wp_get_attachment_url( $thumbnail_id ) : $og_image_url;
+	}
+
+	/**
+	 * Point chart post canonical URLs at the resolved parent article.
+	 *
+	 * @hook prc_schema_seo_canonical_url 10
+	 *
+	 * @param string $canonical_url Current canonical URL.
+	 * @param int    $post_id       Post ID.
+	 * @param array  $seo_data      Resolved SEO data.
+	 * @return string
+	 */
+	public function filter_chart_canonical_url( string $canonical_url, int $post_id, array $seo_data ): string {
+		if ( ! $post_id || Content_Type::$post_type !== get_post_type( $post_id ) ) {
+			return $canonical_url;
+		}
+
+		$parent_url = Canonical_Parent::resolve_parent_url( $post_id );
+
+		return $parent_url ?: $canonical_url;
 	}
 }

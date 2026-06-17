@@ -22,6 +22,11 @@ import {
 import { __ } from '@wordpress/i18n';
 
 /**
+ * PRC dependencies
+ */
+import { MAP_REGION_PRESETS } from '@prc/charting-utilities';
+
+/**
  * Internal dependencies
  */
 import { BUBBLE_MAP_CHART_TYPES } from '../utils/chart-types';
@@ -52,144 +57,9 @@ const Help = styled.div`
 	margin-bottom: 0px;
 `;
 
-// Map projection presets
-const MAP_PROJECTION_PRESETS = {
-	default: {
-		label: 'Default (World)',
-		centerLongitude: 0,
-		centerLatitude: 0,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 1,
-	},
-	europe: {
-		label: 'Europe',
-		centerLongitude: 15,
-		centerLatitude: 50,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 3,
-	},
-	asia: {
-		label: 'Asia',
-		centerLongitude: 90,
-		centerLatitude: 35,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 2,
-	},
-	'east-asia': {
-		label: 'East Asia',
-		centerLongitude: 120,
-		centerLatitude: 35,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 3,
-	},
-	'south-asia': {
-		label: 'South Asia',
-		centerLongitude: 80,
-		centerLatitude: 20,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 3,
-	},
-	'southeast-asia': {
-		label: 'Southeast Asia',
-		centerLongitude: 110,
-		centerLatitude: 5,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 3.5,
-	},
-	'middle-east': {
-		label: 'Middle East',
-		centerLongitude: 45,
-		centerLatitude: 30,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 3.5,
-	},
-	africa: {
-		label: 'Africa',
-		centerLongitude: 20,
-		centerLatitude: 0,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 2,
-	},
-	'north-africa': {
-		label: 'North Africa',
-		centerLongitude: 15,
-		centerLatitude: 25,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 3,
-	},
-	'sub-saharan-africa': {
-		label: 'Sub-Saharan Africa',
-		centerLongitude: 20,
-		centerLatitude: -5,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 2.5,
-	},
-	'north-america': {
-		label: 'North America',
-		centerLongitude: -100,
-		centerLatitude: 45,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 2,
-	},
-	'central-america': {
-		label: 'Central America & Caribbean',
-		centerLongitude: -80,
-		centerLatitude: 15,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 4,
-	},
-	'south-america': {
-		label: 'South America',
-		centerLongitude: -60,
-		centerLatitude: -15,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 2.5,
-	},
-	oceania: {
-		label: 'Oceania',
-		centerLongitude: 140,
-		centerLatitude: -25,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 3,
-	},
-	custom: {
-		label: 'Custom',
-		centerLongitude: 0,
-		centerLatitude: 0,
-		rotateLambda: 0,
-		rotatePhi: 0,
-		rotateGamma: 0,
-		customScale: 1,
-	},
-};
+// Map projection presets — single source of truth lives in
+// `@prc/charting-utilities` (MAP_REGION_PRESETS).
+const MAP_PROJECTION_PRESETS = MAP_REGION_PRESETS;
 
 function MapControls({ attributes, setAttributes, clientId }) {
 	// Viewport-aware attribute management
@@ -231,6 +101,12 @@ function MapControls({ attributes, setAttributes, clientId }) {
 			customScale: preset.customScale,
 		});
 	};
+
+	// Orthographic globe config lives under `map.globe`; merge partial updates.
+	const globe = getCurrentValue('map', 'globe') || {};
+	const updateGlobe = (updates) =>
+		updateAttributeForDevice('map', { globe: { ...globe, ...updates } });
+
 	return (
 		<div ref={panelRef}>
 			<PanelBody title={__('Map')} opened={isOpen} onToggle={onToggle}>
@@ -445,8 +321,9 @@ function MapControls({ attributes, setAttributes, clientId }) {
 								</WidePanelItem>
 							</>
 						)}
-					{/* Projection Controls - for World Map */}
-					{'map-world' === chartType && (
+					{/* Projection Controls - for World Map (Robinson + orthographic globe) */}
+					{('map-world' === chartType ||
+						'map-world-orthographic' === chartType) && (
 						<>
 							<WidePanelItem
 								hasValue={() => true}
@@ -633,29 +510,159 @@ function MapControls({ attributes, setAttributes, clientId }) {
 									)}
 								/>
 							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Interactive Zoom')}
-								isShownByDefault={false}
-								panelId={clientId}
-							>
-								<ToggleControl
-									label={__('Enable Interactive Zoom')}
-									checked={getCurrentValue(
-										'map',
-										'zoomActive'
-									)}
-									onChange={(newValue) =>
-										updateAttributeForDevice('map', {
-											zoomActive: newValue,
+							{'map-world' === chartType && (
+								<WidePanelItem
+									hasValue={() => true}
+									label={__('Interactive Zoom')}
+									isShownByDefault={false}
+									panelId={clientId}
+								>
+									<ToggleControl
+										label={__('Enable Interactive Zoom')}
+										checked={getCurrentValue(
+											'map',
+											'zoomActive'
+										)}
+										onChange={(newValue) =>
+											updateAttributeForDevice('map', {
+												zoomActive: newValue,
+											})
+										}
+										help={__(
+											'Allow users to zoom and pan the map interactively'
+										)}
+									/>
+								</WidePanelItem>
+							)}
+						</>
+					)}
+					{/* Globe Appearance Controls - orthographic world map only */}
+					{'map-world-orthographic' === chartType && (
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Globe Appearance')}
+							isShownByDefault={true}
+							panelId={clientId}
+						>
+							<ToggleControl
+								label={__('Show Graticule')}
+								checked={globe.showGraticule ?? true}
+								onChange={(value) =>
+									updateGlobe({ showGraticule: value })
+								}
+								help={__(
+									'Display latitude and longitude grid lines on the globe.'
+								)}
+							/>
+							<PanelColorSettings
+								__experimentalHasMultipleOrigins
+								__experimentalIsRenderedInSidebar
+								title={__('Globe Colors')}
+								initialOpen
+								colorSettings={[
+									{
+										value: globe.sphereFill ?? '',
+										onChange: (value) =>
+											updateGlobe({
+												sphereFill: value ?? '',
+											}),
+										label: __('Ocean Fill'),
+									},
+									{
+										value: globe.graticuleStroke ?? '',
+										onChange: (value) =>
+											updateGlobe({
+												graticuleStroke: value ?? '',
+											}),
+										label: __('Graticule Stroke'),
+									},
+								]}
+							/>
+						</WidePanelItem>
+					)}
+					{/* Globe Interaction Controls - orthographic world map only */}
+					{'map-world-orthographic' === chartType && (
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Globe Interaction')}
+							isShownByDefault={true}
+							panelId={clientId}
+						>
+							<ToggleControl
+								label={__('Drag to Rotate')}
+								checked={globe.dragToRotate ?? true}
+								onChange={(value) =>
+									updateGlobe({ dragToRotate: value })
+								}
+								help={__(
+									'Allow visitors to click and drag to spin the globe.'
+								)}
+							/>
+							<ToggleControl
+								label={__('Auto-Spin')}
+								checked={globe.autoSpin ?? false}
+								onChange={(value) =>
+									updateGlobe({ autoSpin: value })
+								}
+								help={__(
+									'Continuously rotate the globe automatically. Disabled when the visitor prefers reduced motion unless they press play.'
+								)}
+							/>
+							{(globe.autoSpin ?? false) && (
+								<NumberControl
+									label={__('Spin Speed')}
+									value={globe.spinSpeed ?? 0.2}
+									onChange={(value) =>
+										updateGlobe({
+											spinSpeed: formatNum(
+												value,
+												'float'
+											),
 										})
 									}
+									min={0.05}
+									max={2}
+									step={0.05}
 									help={__(
-										'Allow users to zoom and pan the map interactively'
+										'Degrees of rotation per animation frame.'
 									)}
 								/>
-							</WidePanelItem>
-						</>
+							)}
+							<ToggleControl
+								label={__('Show Play/Pause Control')}
+								checked={globe.showPlayPause ?? true}
+								onChange={(value) =>
+									updateGlobe({ showPlayPause: value })
+								}
+								help={__(
+									'Display a play/pause button for visitors to control globe rotation.'
+								)}
+							/>
+							{(globe.showPlayPause ?? true) && (
+								<SelectControl
+									label={__('Control Position')}
+									value={
+										globe.playPausePosition ??
+										'bottom-right'
+									}
+									options={[
+										{
+											label: __('Bottom left'),
+											value: 'bottom-left',
+										},
+										{
+											label: __('Bottom right'),
+											value: 'bottom-right',
+										},
+									]}
+									onChange={(value) =>
+										updateGlobe({
+											playPausePosition: value,
+										})
+									}
+								/>
+							)}
+						</WidePanelItem>
 					)}
 					{/* TODO: this doesn't quite work yet */}
 					{/* {'map-usa-block' === chartType && (

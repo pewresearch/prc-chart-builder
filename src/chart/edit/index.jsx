@@ -67,12 +67,13 @@ const getCellContent = (cell) => {
  * This ensures that alignment state updates don't break drag interactions.
  */
 const MemoizedChartBuilder = memo(
-	({ className, config, data, wpEditorFunctions }) => (
+	({ className, config, data, wpEditorFunctions, animationPreview }) => (
 		<ChartBuilderWrapper
 			className={className}
 			config={config}
 			data={data}
 			wpEditorFunctions={wpEditorFunctions}
+			animationPreview={animationPreview}
 		/>
 	)
 );
@@ -860,6 +861,47 @@ function EditInner({
 	const [strokeWidth, setStrokeWidth] = useState(1);
 	const [selectedDrawingId, setSelectedDrawingId] = useState(null);
 
+	// Animation preview (PRC-17). `useAnimationConfig` forces `immediate: true`
+	// in the editor so authors aren't fighting in-flight spring values while
+	// dragging/clicking. Clicking "Preview animation" remounts the chart
+	// subtree (bumping `previewKey` so every primitive re-runs its entrance)
+	// and flips `isPreviewing` true, which threads into DataContext as
+	// `animationPreview` and lifts that one source of suppression for a single
+	// entrance. Restart-on-click: a fresh click bumps the key again. Auto-
+	// clear: a timer flips `isPreviewing` back off once the entrance settles,
+	// so subsequent edits stay instant.
+	const [previewKey, setPreviewKey] = useState(0);
+	const [isPreviewing, setIsPreviewing] = useState(false);
+	const previewTimerRef = useRef(null);
+
+	useEffect(
+		() => () => {
+			if (previewTimerRef.current) {
+				clearTimeout(previewTimerRef.current);
+			}
+		},
+		[]
+	);
+
+	const handlePreviewAnimation = () => {
+		const animation = getCurrentValue('animation') || {};
+		const duration =
+			animation.initial?.duration ?? animation.duration ?? 400;
+		const delay = animation.initial?.delay ?? animation.delay ?? 0;
+		// Buffer past the spring's settle so we don't clear mid-flight.
+		const clearAfter = delay + duration + 150;
+
+		if (previewTimerRef.current) {
+			clearTimeout(previewTimerRef.current);
+		}
+		setPreviewKey((key) => key + 1);
+		setIsPreviewing(true);
+		previewTimerRef.current = setTimeout(() => {
+			setIsPreviewing(false);
+			previewTimerRef.current = null;
+		}, clearAfter);
+	};
+
 	function handleDrawingComplete(drawingData) {
 		setAttributes({
 			drawings: [...(drawings || []), drawingData],
@@ -881,6 +923,8 @@ function EditInner({
 				setAttributes={setAttributes}
 				parentBlock={parentBlockId}
 				clientId={clientId}
+				onPreviewAnimation={handlePreviewAnimation}
+				isPreviewingAnimation={isPreviewing}
 				isDrawingMode={isDrawingMode}
 				drawingTool={drawingTool}
 				onDrawingModeChange={handleDrawingModeChange}
@@ -941,6 +985,7 @@ function EditInner({
 									}}
 								>
 									<MemoizedChartBuilder
+										key={previewKey}
 										className="cb__chart"
 										config={config}
 										data={
@@ -949,6 +994,7 @@ function EditInner({
 											memoizedChartData
 										}
 										wpEditorFunctions={wpEditorFunctions}
+										animationPreview={isPreviewing}
 									/>
 									{/* Chart Element Customization Popover (Labels, Shapes, Segments, Annotations, etc.) */}
 									{selectedElement && (

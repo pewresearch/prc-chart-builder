@@ -219,7 +219,7 @@ return array(
 			'tooltip' => array(
 				'type' => 'object',
 				'default' => array(
-					'active' => true,
+					'active' => false,
 					'activeOnMobile' => true,
 					'headerActive' => true,
 					'headerValue' => 'categoryValue',
@@ -296,8 +296,8 @@ return array(
 					'fontSize' => 10,
 					'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
 					'labelPositionBar' => 'inside',
-					'labelCutoff' => 10,
-					'labelCutoffMobile' => 5,
+					'labelCutoff' => 0,
+					'labelCutoffMobile' => 0,
 					'labelPositionDX' => 0,
 					'labelPositionDY' => 0,
 					'pieLabelRadius' => 60,
@@ -705,6 +705,12 @@ return array(
 					'duration' => 2000
 				)
 			),
+			'animation' => array(
+				'type' => 'object',
+				'default' => array(
+					
+				)
+			),
 			'io' => array(
 				'type' => 'object',
 				'default' => array(
@@ -861,6 +867,18 @@ return array(
 				'type' => 'boolean',
 				'default' => true
 			),
+			'chartTabActive' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'dataTabActive' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
+			'downloadImageTabActive' => array(
+				'type' => 'boolean',
+				'default' => true
+			),
 			'shareActive' => array(
 				'type' => 'boolean',
 				'default' => true
@@ -921,6 +939,7 @@ return array(
 			'refId' => 'ref'
 		),
 		'editorScript' => 'file:./index.js',
-		'editorStyle' => 'file:./index.css'
+		'editorStyle' => 'file:./index.css',
+		'style' => 'file:./style-index.css'
 	)
 );

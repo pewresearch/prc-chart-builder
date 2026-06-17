@@ -84,6 +84,9 @@ class PNG_Export {
 		$loader->add_action( 'prc_platform_on_chart_publish', $this, 'maybe_schedule_png_generation' );
 		$loader->add_action( 'prc_platform_on_chart_update', $this, 'maybe_schedule_png_generation' );
 
+		// Expose a REST endpoint so editors can force-schedule PNG regeneration.
+		$loader->add_action( 'rest_api_init', $this, 'register_rest_routes' );
+
 		// Register the Action Scheduler callback. Must be registered on every
 		// request (not just WP-CLI) so the hook is available when AS processes
 		// queued jobs. Mirrors the pattern in prc-pdf-extraction.
@@ -355,5 +358,92 @@ class PNG_Export {
 
 		// The featured image is the canonical reference to the server-generated PNG.
 		set_post_thumbnail( $post_id, $attachment_id );
+	}
+
+	/**
+	 * Register REST routes for editor-side PNG regeneration.
+	 *
+	 * @hook rest_api_init
+	 */
+	public function register_rest_routes(): void {
+		register_rest_route(
+			'prc-chart-builder/v1',
+			'/chart/(?P<id>\d+)/regenerate-png',
+			array(
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => array( $this, 'handle_force_regenerate_rest' ),
+				'permission_callback' => function () {
+					return current_user_can( 'edit_posts' );
+				},
+				'args'                => array(
+					'id' => array(
+						'required'          => true,
+						'type'              => 'integer',
+						'sanitize_callback' => 'absint',
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * REST callback: force-schedule PNG regeneration for a chart post.
+	 *
+	 * Clears the stored attributes hash so that the next publish/update also
+	 * triggers a fresh capture, then immediately enqueues an async Action
+	 * Scheduler job if one is not already pending.
+	 *
+	 * @param \WP_REST_Request $request REST request.
+	 * @return \WP_REST_Response|\WP_Error
+	 */
+	public function handle_force_regenerate_rest( \WP_REST_Request $request ): \WP_REST_Response|\WP_Error {
+		if ( ! function_exists( 'as_enqueue_async_action' ) ) {
+			return new \WP_Error(
+				'action_scheduler_unavailable',
+				__( 'Action Scheduler is not available.', 'prc-chart-builder' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		$post_id = $request->get_param( 'id' );
+		$post    = get_post( $post_id );
+
+		if ( ! $post || Content_Type::$post_type !== $post->post_type ) {
+			return new \WP_Error(
+				'invalid_chart',
+				__( 'Chart not found.', 'prc-chart-builder' ),
+				array( 'status' => 404 )
+			);
+		}
+
+		if ( ! $this->screenshot_service->is_configured() ) {
+			return new \WP_Error(
+				'service_not_configured',
+				__( 'Screenshot service is not configured.', 'prc-chart-builder' ),
+				array( 'status' => 503 )
+			);
+		}
+
+		// Clear the stored hash so the next save also triggers regeneration.
+		delete_post_meta( $post_id, '_chart_attributes_hash' );
+
+		// Schedule immediately unless a job is already in the queue.
+		$scheduled = false;
+		if ( ! $this->is_action_pending( $post_id ) ) {
+			as_enqueue_async_action(
+				self::ACTION_HOOK,
+				array( 'post_id' => $post_id ),
+				self::ACTION_GROUP
+			);
+			$scheduled = true;
+		}
+
+		return new \WP_REST_Response(
+			array(
+				'scheduled' => $scheduled,
+				'post_id'   => $post_id,
+			),
+			200
+		);
 	}
 }

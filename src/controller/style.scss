@@ -27,28 +27,43 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		margin-inline-end: 0 !important;
 	}
 	&.aligncenter {
-		display: block;
+		width: fit-content;
+		max-width: 100%;
 		margin-inline-start: auto !important;
 		margin-inline-end: auto !important;
 	}
 	// Editor view mode: show only the chart, only the data table, or both.
 	// Driven by the `view` local state in controller/Edit.jsx. Per-user
 	// editor preference only — does not affect the saved/published output.
-	&[data-view-mode="chart"] .chart-builder-data-table {
-		display: none !important;
+	// Direct-child selectors keep nested controller view modes independent
+	// (e.g. freeform/small-multiples charts containing inner controllers).
+	// Match both figure > layout and layout-as-root (legacy duplicate class).
+	&[data-view-mode="chart"] {
+		> .block-editor-block-list__layout > [data-type="prc-block/table"],
+		&.block-editor-block-list__layout > [data-type="prc-block/table"] {
+			display: none !important;
+		}
 	}
-	&[data-view-mode="data"] .wp-block-prc-chart-builder-chart {
-		display: none !important;
+	&[data-view-mode="data"] {
+		> .block-editor-block-list__layout
+			> [data-type="prc-chart-builder/chart"],
+		&.block-editor-block-list__layout
+			> [data-type="prc-chart-builder/chart"] {
+			display: none !important;
+		}
 	}
 	// In data view mode the chart's validation Notice sits between the
 	// table and the (now hidden) chart wrapper. Flex the inner-blocks
 	// layout so we can pull the Notice up above the table.
-	&[data-view-mode="data"] .block-editor-block-list__layout {
-		display: flex;
-		flex-direction: column;
+	&[data-view-mode="data"] {
+		> .block-editor-block-list__layout,
+		&.block-editor-block-list__layout {
+			display: flex;
+			flex-direction: column;
 
-		> .components-notice.is-warning {
-			order: -1;
+			> .components-notice.is-warning {
+				order: -1;
+			}
 		}
 	}
 	.wp-chart-builder-chart,
@@ -162,6 +177,35 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 		color: $thunder !important;
 		margin-top: 10px;
 	}
+
+	// Default Power Table layout for Chart Builder data tables.
+	.chart-builder-data-table > table {
+		th,
+		td {
+			line-height: 1.1;
+		}
+
+		thead tr:first-child {
+			th,
+			td {
+				vertical-align: bottom;
+			}
+		}
+
+		tr > :first-child {
+			text-align: left;
+		}
+
+		tr > :not(:first-child) {
+			text-align: center;
+		}
+
+		&:has(thead tr > :nth-child(5)) {
+			width: 640px;
+			min-width: 640px;
+		}
+	}
+
 	.wp-chart-builder-table,
 	.wp-chart-builder-table.wp-block-prc-block-table {
 		table {

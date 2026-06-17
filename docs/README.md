@@ -5,6 +5,8 @@ This directory contains general documentation for the PRC Chart Builder plugin.
 ## Core Docs
 
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — System architecture, data flow, state management patterns, decision matrix, synced-chart visibility rules, and export filename / share-URL behavior. Start here for a structural overview of how the three tiers (Admin, Block Editor, Charting Library) fit together.
+- **[reactive-store.md](reactive-store.md)** — The `prc-chart-builder/chart` interactivity store: addressable per-chart state, the `setChart` / `setData` / `setConfig` action surface, data↔config coupling + color contracts, the `useChartStore` hook, and consumer-block recipes.
+- **[console-helpers.md](console-helpers.md)** — `window.prcChartingLibrary.debug.*` devtools handles for poking charts from the console or Playwright.
 - **[VIEWPORT_ATTRIBUTES.md](VIEWPORT_ATTRIBUTES.md)** — How viewport-aware block attributes work (Desktop / Tablet / Mobile overrides)
 - **[VIEWPORT_BREAKPOINTS.md](VIEWPORT_BREAKPOINTS.md)** — Breakpoint values and their role in responsive chart rendering
 - **[VIEWPORT_USAGE_GUIDE.md](VIEWPORT_USAGE_GUIDE.md)** — Practical guide to authoring responsive chart customizations

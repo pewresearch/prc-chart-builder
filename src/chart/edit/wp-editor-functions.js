@@ -764,6 +764,31 @@ export function createWpEditorFunctions({
 					},
 				}
 			: undefined,
+		globe:
+			chartType === 'map-world-orthographic'
+				? {
+						/**
+						 * Called when the user begins dragging the orthographic globe.
+						 * Disables Gutenberg block selection/drag so rotation wins.
+						 */
+						onDragStart: () => {
+							if (toggleSelection) {
+								toggleSelection(false);
+							}
+							if (setIsDragging) {
+								setIsDragging(true);
+							}
+						},
+						onDragEnd: () => {
+							if (setIsDragging) {
+								setIsDragging(false);
+							}
+							if (toggleSelection) {
+								toggleSelection(true);
+							}
+						},
+					}
+				: undefined,
 		legend: {
 			onDragStart: () => {
 				// Disable block selection to prevent block dragging

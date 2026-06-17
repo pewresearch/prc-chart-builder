@@ -1,0 +1,444 @@
+import { mergeWithDefaults } from './helpers';
+
+const USAHexMapTemplate = [
+	[
+		'prc-block/table',
+		{
+			isScrollOnPc: true,
+			isScrollOnMobile: true,
+			sticky: 'first-column',
+			className: 'chart-builder-data-table',
+			fontSize: 'small',
+			fontFamily: 'sans-serif',
+			head: [
+				{
+					cells: [
+						{ content: 'Name', tag: 'th' },
+						{ content: 'FIPS', tag: 'th' },
+						{ content: 'Response', tag: 'th' },
+					],
+				},
+			],
+			body: [
+				{
+					cells: [
+						{ content: 'Alabama', tag: 'td' },
+						{ content: '01', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Alaska', tag: 'td' },
+						{ content: '02', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Arizona', tag: 'td' },
+						{ content: '04', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Arkansas', tag: 'td' },
+						{ content: '05', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'California', tag: 'td' },
+						{ content: '06', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Colorado', tag: 'td' },
+						{ content: '08', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Connecticut', tag: 'td' },
+						{ content: '09', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Delaware', tag: 'td' },
+						{ content: '10', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'District of Columbia', tag: 'td' },
+						{ content: '11', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Florida', tag: 'td' },
+						{ content: '12', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Georgia', tag: 'td' },
+						{ content: '13', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Hawaii', tag: 'td' },
+						{ content: '15', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Idaho', tag: 'td' },
+						{ content: '16', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Illinois', tag: 'td' },
+						{ content: '17', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Indiana', tag: 'td' },
+						{ content: '18', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Iowa', tag: 'td' },
+						{ content: '19', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Kansas', tag: 'td' },
+						{ content: '20', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Kentucky', tag: 'td' },
+						{ content: '21', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Louisiana', tag: 'td' },
+						{ content: '22', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Maine', tag: 'td' },
+						{ content: '23', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Maryland', tag: 'td' },
+						{ content: '24', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Massachusetts', tag: 'td' },
+						{ content: '25', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Michigan', tag: 'td' },
+						{ content: '26', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Minnesota', tag: 'td' },
+						{ content: '27', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Mississippi', tag: 'td' },
+						{ content: '28', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Missouri', tag: 'td' },
+						{ content: '29', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Montana', tag: 'td' },
+						{ content: '30', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Nebraska', tag: 'td' },
+						{ content: '31', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Nevada', tag: 'td' },
+						{ content: '32', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'New Hampshire', tag: 'td' },
+						{ content: '33', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'New Jersey', tag: 'td' },
+						{ content: '34', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'New Mexico', tag: 'td' },
+						{ content: '35', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'New York', tag: 'td' },
+						{ content: '36', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'North Carolina', tag: 'td' },
+						{ content: '37', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'North Dakota', tag: 'td' },
+						{ content: '38', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Ohio', tag: 'td' },
+						{ content: '39', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Oklahoma', tag: 'td' },
+						{ content: '40', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Oregon', tag: 'td' },
+						{ content: '41', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Pennsylvania', tag: 'td' },
+						{ content: '42', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Rhode Island', tag: 'td' },
+						{ content: '44', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'South Carolina', tag: 'td' },
+						{ content: '45', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'South Dakota', tag: 'td' },
+						{ content: '46', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Tennessee', tag: 'td' },
+						{ content: '47', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Texas', tag: 'td' },
+						{ content: '48', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Utah', tag: 'td' },
+						{ content: '49', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Vermont', tag: 'td' },
+						{ content: '50', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Virginia', tag: 'td' },
+						{ content: '51', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Washington', tag: 'td' },
+						{ content: '53', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'West Virginia', tag: 'td' },
+						{ content: '54', tag: 'td' },
+						{ content: 'no', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Wisconsin', tag: 'td' },
+						{ content: '55', tag: 'td' },
+						{ content: 'maybe', tag: 'td' },
+					],
+				},
+				{
+					cells: [
+						{ content: 'Wyoming', tag: 'td' },
+						{ content: '56', tag: 'td' },
+						{ content: 'yes', tag: 'td' },
+					],
+				},
+			],
+		},
+	],
+	[
+		'prc-chart-builder/chart',
+		mergeWithDefaults({
+			_version: 'v2',
+			lock: {
+				move: true,
+				remove: true,
+			},
+			layout: {
+				type: 'map-usa-hex',
+				width: 640,
+				height: 400,
+				padding: {
+					left: 20,
+					bottom: 30,
+					right: 20,
+				},
+			},
+			metadata: {
+				active: true,
+				title: 'USA States Hex Map',
+				subtitle: 'A subtitle for the chart',
+				source: 'Source: Add source note here',
+				note: 'Note: About the chart',
+				tag: 'PEW RESEARCH CENTER',
+			},
+			colors: {
+				value: 'blue-spectrum',
+			},
+			tooltip: {
+				active: false,
+				offsetX: 30,
+				offsetY: 30,
+				headerValue: 'categoryValue',
+				format: '{{row}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				fontSize: 16,
+				labelPositionDX: 0,
+				labelPositionDY: 0,
+				color: 'contrast',
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			dataRender: {
+				categories: ['Response'],
+				mapScale: 'ordinal',
+				mapScaleDomain: ['yes', 'maybe', 'no'],
+			},
+			io: {
+				isConvertedChart: false,
+				chartFamily: 'map',
+				colorValue: 'blue-spectrum',
+			},
+		}),
+	],
+];
+
+export default USAHexMapTemplate;

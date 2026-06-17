@@ -16,7 +16,7 @@ import { mergeLegendCategoryOrder } from './merge-legend-category-order';
  * Resolve fill colors in diff column per-cell customizations.
  *
  * @param {Object} customLabels
- * @return {Object}
+ * @return {Object} Custom labels with any per-cell fill colors resolved.
  */
 function resolveDiffColumnCustomLabels(customLabels = {}) {
 	const resolved = {};
@@ -118,6 +118,7 @@ const getConfig = (
 		sankey,
 		regression,
 		errorBars,
+		animation,
 	} = mergedAttributes;
 	const {
 		customColors,
@@ -343,6 +344,31 @@ const getConfig = (
 		animate: {
 			...baseConfig.animate,
 		},
+		// Author-controllable animation config (PRC-17 slice 3c/3d). The
+		// block attribute defaults to `{}`, so untouched charts inherit
+		// `baseConfig.animation` (disabled by default). The Inspector's
+		// AnimationControls panel writes `enabled`/`duration`/`easing` plus
+		// the nested `initial`/`update` sections here. Shallow merge is
+		// correct: `baseConfig.animation` has no nested sections of its own,
+		// so the author's whole `animation` object (including its `initial`/
+		// `update`) passes through intact. `setConfig` (slice 4) layers a
+		// deep-merge on top of this.
+		//
+		// `viewportDelay` is a delivery mechanism (when to start), not a
+		// style property. Map it to `initial.delay` so the charting library's
+		// `useAnimationConfig` applies it as an animation-start offset rather
+		// than as a render-blocking pause.
+		animation: (() => {
+			const anim = { ...baseConfig.animation, ...(animation ?? {}) };
+			const delay = animation?.viewportDelay ?? 0;
+			if (delay > 0) {
+				anim.initial = {
+					...(anim.initial ?? {}),
+					delay,
+				};
+			}
+			return anim;
+		})(),
 		events: {
 			...baseConfig.events,
 			click: editorClickEvent,

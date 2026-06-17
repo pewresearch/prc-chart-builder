@@ -9,28 +9,28 @@ import styled from '@emotion/styled';
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
 import {
-	ToggleControl,
-	SelectControl,
-	TextControl,
+	Button,
 	Flex,
 	FlexItem,
-	Button,
 	__experimentalNumberControl as NumberControl,
-	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
+	PanelBody,
+	SelectControl,
+	TextControl,
+	ToggleControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
-	PanelBody,
+	__experimentalToolsPanel as ToolsPanel,
+	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
+import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-import { POSITION_DISABLED_CHART_TYPES } from './popover/utils';
 import { useFocusedPanel } from './inspector-focus-context';
+import { POSITION_DISABLED_CHART_TYPES } from './popover/utils';
+import { useViewportAttributes } from './use-viewport-attributes';
 
 const PanelDescription = styled.div`
 	grid-column: span 2;
@@ -609,7 +609,7 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 									</Help>
 								</PanelDescription>
 							</WidePanelItem>
-							<SingleColumnItem
+							<WidePanelItem
 								hasValue={() =>
 									getCurrentValue('labels', 'labelCutoff')
 								}
@@ -617,7 +617,7 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 								panelId={clientId}
 							>
 								<NumberControl
-									label={__('🖥️ Label Cutoff')}
+									label={__('Label Cutoff')}
 									value={getCurrentValue(
 										'labels',
 										'labelCutoff'
@@ -642,53 +642,11 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 								<PanelDescription>
 									<Help>
 										{__(
-											'Hide labels that are smaller than this value.'
+											'Hide labels that are smaller than this value. Use the device preview to set a different cutoff for mobile or tablet.'
 										)}
 									</Help>
 								</PanelDescription>
-							</SingleColumnItem>
-							<SingleColumnItem
-								hasValue={() =>
-									getCurrentValue(
-										'labels',
-										'labelCutoffMobile'
-									)
-								}
-								label={__('Label Cutoff Mobile')}
-								panelId={clientId}
-							>
-								<NumberControl
-									label={__('📱 Label Cutoff')}
-									value={getCurrentValue(
-										'labels',
-										'labelCutoffMobile'
-									)}
-									disabled={
-										!getCurrentValue('labels', 'active') ||
-										'outside' ===
-											getCurrentValue(
-												'labels',
-												'labelPositionBar'
-											) ||
-										'vertical' === orientation
-									}
-									onChange={(value) =>
-										updateAttributeForDevice('labels', {
-											labelCutoffMobile: formatNum(
-												value,
-												'integer'
-											),
-										})
-									}
-								/>
-								<PanelDescription>
-									<Help>
-										{__(
-											'Hide labels that are smaller than this value on mobile.'
-										)}
-									</Help>
-								</PanelDescription>
-							</SingleColumnItem>
+							</WidePanelItem>
 						</>
 					)}
 					<WidePanelItem

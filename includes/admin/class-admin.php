@@ -135,7 +135,7 @@ class Admin {
 
 		$plugin_root = dirname( dirname( dirname( __FILE__ ) ) );
 		$variation_images_url = plugins_url(
-			'.shared/variation-images/',
+			'assets/variation-images/',
 			$plugin_root . '/prc-chart-builder.php'
 		);
 
