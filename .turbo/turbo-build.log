@@ -1,5 +1,5 @@
 
-> @prc/chart-builder@3.11.0 build
+> @prc/chart-builder@3.12.0 build
 > wp-scripts build --webpack-copy-php --experimental-modules && wp-scripts build-blocks-manifest && wp-scripts build --source-path=includes/inspector-sidebar-panel/src/ --output-path=includes/inspector-sidebar-panel/build/ && wp-scripts build --source-path=includes/admin/src/ --output-path=includes/admin/build/
 
 assets by path [1m[32msynced-chart/[39m[22m 43.9 KiB
@@ -47,7 +47,7 @@ Entrypoints:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/[39m[22m
 
-webpack 5.106.2 compiled with [1m[33m3 warnings[39m[22m in 16927 ms
+webpack 5.106.2 compiled with [1m[33m3 warnings[39m[22m in 35727 ms
 
 assets by path [1m[32mcontroller/[39m[22m 36.2 KiB
   asset [1m[32mcontroller/view.js[39m[22m 36.1 KiB [1m[32m[emitted][39m[22m [javascript module] [1m[32m[minimized][39m[22m (name: controller/view)
@@ -62,7 +62,7 @@ built modules 203 KiB [1m[33m[built][39m[22m
   [1m./src/chart/view.js + 14 modules[39m[22m 97.4 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1m./src/controller/view.js + 5 modules[39m[22m 106 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1mexternal "@wordpress/interactivity-router"[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 10011 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 21428 ms
 Block metadata PHP file generated at: build/blocks-manifest.php
 assets by path [1m[32m*.css[39m[22m 4.7 KiB
   asset [1m[32mindex-rtl.css[39m[22m 2.35 KiB [1m[33m[compared for emit][39m[22m (name: index)
@@ -75,7 +75,7 @@ runtime modules 663 bytes 3 modules
 built modules 12.2 KiB (javascript) 2.35 KiB (css/mini-extract) [1m[33m[built][39m[22m
   [1m./includes/inspector-sidebar-panel/src/index.js + 11 modules[39m[22m 12.2 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./includes/inspector-sidebar-panel/src/editor.scss[39m[22m 2.35 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 2132 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 3182 ms
 assets by chunk 229 KiB (name: index)
   asset [1m[32mindex.js[39m[22m 229 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: index)
   asset [1m[32mindex.asset.php[39m[22m 333 bytes [1m[32m[emitted][39m[22m (name: index)
@@ -108,4 +108,4 @@ Entrypoints:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/[39m[22m
 
-webpack 5.106.2 compiled with [1m[33m2 warnings[39m[22m in 10564 ms
+webpack 5.106.2 compiled with [1m[33m2 warnings[39m[22m in 12510 ms
