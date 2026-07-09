@@ -30,6 +30,7 @@ Release notes are in [`release-notes/`](release-notes/). Each file covers one ve
 
 Active and completed planning documents are in [`plans/`](plans/):
 
+- **[CHART_BUILDER_THEME_PLAN.md](plans/CHART_BUILDER_THEME_PLAN.md)** — Master plan for PRC-528 per-site chart theme (chart.json): slices 1–12 done, slice 13 config grid next
 - **[CHART_GALLERY_PLAN.md](plans/CHART_GALLERY_PLAN.md)** — Full implementation plan for the DataViews chart gallery, Create New Chart modal, AI Chart Wizard, and live block previews
 - **[CHART_GALLERY_PHASE_5_BACKLOG.md](plans/CHART_GALLERY_PHASE_5_BACKLOG.md)** — Deferred polish items (bulk actions, URL state, keyboard nav, search, CSV drop-to-create) for future issues
 - **[CHARTING_PATTERNS_PLAN.md](plans/CHARTING_PATTERNS_PLAN.md)** — Plan for chart pattern templates used in the Create New Chart flow

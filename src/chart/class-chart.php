@@ -23,41 +23,6 @@ class Chart {
 	}
 
 	/**
-	 * Merge viewport-specific overrides into base attributes
-	 *
-	 * @param array  $attributes The full block attributes object.
-	 * @param string $device_type Current device type ('mobile', 'tablet', or 'desktop').
-	 * @return array Merged attributes with viewport overrides applied.
-	 */
-	private function merge_viewport_attributes( $attributes, $device_type ) {
-		// Desktop uses base attributes only (no override).
-		if ( ! $device_type || 'desktop' === $device_type ) {
-			return $attributes;
-		}
-
-		// Get viewport-specific overrides.
-		$viewport_overrides = $attributes[ $device_type ] ?? array();
-
-		// If no overrides exist, return base attributes.
-		if ( empty( $viewport_overrides ) ) {
-			return $attributes;
-		}
-
-		// Deep merge: viewport overrides take precedence over base attributes.
-		$merged = $attributes;
-
-		// Merge each top-level attribute group that has overrides.
-		foreach ( $viewport_overrides as $attribute_group => $group_overrides ) {
-			if ( isset( $merged[ $attribute_group ] ) && is_array( $merged[ $attribute_group ] ) && is_array( $group_overrides ) ) {
-				// Deep merge the attribute group.
-				$merged[ $attribute_group ] = array_merge( $merged[ $attribute_group ], $group_overrides );
-			}
-		}
-
-		return $merged;
-	}
-
-	/**
 	 * Render block callback
 	 *
 	 * @param mixed $attributes Attributes.
@@ -75,21 +40,16 @@ class Chart {
 			$attributes = \PRC\Platform\Chart_Builder\Block_Migration::migrate_attributes_v1_to_v2( $attributes );
 		}
 
-		// Detect current device type and merge viewport-specific overrides.
-		// Allow client-side viewport override via query param for responsive rehydration.
-		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Read-only viewport hint, no state change.
-		$viewport_override = isset( $_GET['cb_viewport'] ) ? sanitize_key( $_GET['cb_viewport'] ) : null;
-		$device_type       = $viewport_override && in_array( $viewport_override, array( 'mobile', 'tablet', 'desktop' ), true )
-			? $viewport_override
-			: \PRC\BlockUtils\get_current_device();
-		$attributes        = $this->merge_viewport_attributes( $attributes, $device_type );
+		// First-paint device detection only — viewport switching is client-side.
+		$device_type = \PRC\BlockUtils\get_current_device();
 
 		// Prevent double rendering by tracking rendered blocks.
 		static $rendered_blocks = array();
 
-		// After migration and viewport merging, $attributes has ALL values (nested + flat for compatibility)
-		// No need for get_block_attributes() since migration sets all defaults
-		$block_attributes = $attributes;
+		// Base attributes (with mobile/tablet override objects intact) feed the
+		// Interactivity store; merged attributes drive first-paint HTML only.
+		$block_attributes  = $attributes;
+		$render_attributes = Block_Utils::merge_viewport_attributes( $attributes, $device_type );
 
 		// Conditionally load prc-custom-charts if the block has a customAttributes property.
 		// Custom-charts is still on the classic-script handle; the default path
@@ -203,24 +163,12 @@ class Chart {
 			),
 			'class'                       => 'wp-chart-builder-inner',
 			'data-wp-watch--init-render'  => $is_static_chart || $is_freeform_chart ? null : 'callbacks.watchForRender',
-			// Re-seed the live store slice from server state after a router
-			// navigation (the router merges server state with override=false,
-			// so the live slice is otherwise frozen at its mount-time values).
-			'data-wp-watch--sync-navigation' => $is_static_chart || $is_freeform_chart || $is_custom_chart ? null : 'callbacks.syncOnNavigation',
 			'data-wp-on-window--resize'   => $is_custom_chart ? null : 'callbacks.watchForResize',
 		);
 
-		// Custom charts (e.g. RLS rls-stacked-bar) render inside parent router
-		// regions and use the legacy prc-custom-charts renderer — no per-chart
-		// region or viewport-rehydration navigation.
-		if ( ! $is_custom_chart ) {
-			$block_attrs['data-wp-router-region'] = 'chart-' . $block_id;
-		}
-
-
 		$block_wrapper_attrs = get_block_wrapper_attributes( $block_attrs );
 
-		$fallback_width = isset( $block_attributes['layout']['width'] ) ? (int) $block_attributes['layout']['width'] : null;
+		$fallback_width = isset( $render_attributes['layout']['width'] ) ? (int) $render_attributes['layout']['width'] : null;
 		$fallback_style = $fallback_width ? sprintf( ' style="width:%dpx;height:auto;"', $fallback_width ) : '';
 		if ( $static_fallback_url ) {
 			$chart = wp_sprintf(
@@ -260,14 +208,14 @@ class Chart {
 		}
 
 		// Scaffold chart text elements.
-		$meta_text_active = $block_attributes['metadata']['active'] ?? false;
+		$meta_text_active = $render_attributes['metadata']['active'] ?? false;
 		if ( $meta_text_active ) {
-			$max_width = $block_attributes['layout']['width'] . 'px';
-			$top_rule      = $block_attributes['layout']['horizontalRules'] ? wp_sprintf(
+			$max_width = $render_attributes['layout']['width'] . 'px';
+			$top_rule      = $render_attributes['layout']['horizontalRules'] ? wp_sprintf(
 				'<hr class="cb__hr" style="margin: 0 0 10px; max-width:%1$s;" />',
 				$max_width
 			) : '';
-			$bottom_rule   = $block_attributes['layout']['horizontalRules'] ? wp_sprintf(
+			$bottom_rule   = $render_attributes['layout']['horizontalRules'] ? wp_sprintf(
 				'<hr class="cb__hr" style="margin: 10px 0 0; max-width:%1$s;" />',
 				$max_width
 			) : '';
@@ -301,26 +249,26 @@ class Chart {
 				<div %1$s>
 					<div class="cb__text-wrapper" style="max-width:%2$s;">
 						%3$s
-						<div class="cb__title">%4$s</div>
-						<div class="cb__subtitle">%5$s</div>
+						<div class="cb__title" data-meta-field="title">%4$s</div>
+						<div class="cb__subtitle" data-meta-field="subtitle">%5$s</div>
 						%6$s
 						%7$s
-						<div class="cb__note cb__note--note">%8$s</div>
-						<div class="cb__note cb__note--source">%9$s</div>
-						<div class="cb__tag">%10$s</div>
+						<div class="cb__note cb__note--note" data-meta-field="note">%8$s</div>
+						<div class="cb__note cb__note--source" data-meta-field="source">%9$s</div>
+						<div class="cb__tag" data-meta-field="tag">%10$s</div>
 						%11$s
 					</div>
 				</div>',
 					wp_kses_post( $block_wrapper_attrs ),
 					esc_attr( $max_width ),
 					$top_rule, // phpcs:ignore
-					wp_kses_post( $block_attributes['metadata']['title'] ),
-					wp_kses_post( $block_attributes['metadata']['subtitle'] ),
+					wp_kses_post( $render_attributes['metadata']['title'] ),
+					wp_kses_post( $render_attributes['metadata']['subtitle'] ),
 					$is_freeform_chart ? $freeform_content : ( $is_static_chart ? $static_chart : $chart ), //phpcs:ignore
 					$question_wording_html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean.
-					wp_kses_post( $block_attributes['metadata']['note'] ?? '' ),
-					wp_kses_post( $block_attributes['metadata']['source'] ?? '' ),
-					wp_kses_post( $block_attributes['metadata']['tag'] ?? '' ),
+					wp_kses_post( $render_attributes['metadata']['note'] ?? '' ),
+					wp_kses_post( $render_attributes['metadata']['source'] ?? '' ),
+					wp_kses_post( $render_attributes['metadata']['tag'] ?? '' ),
 					$bottom_rule // phpcs:ignore
 				);
 		} else {

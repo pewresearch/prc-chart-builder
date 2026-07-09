@@ -1,6 +1,7 @@
+/* eslint-disable @wordpress/no-unused-vars-before-return */
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
-import { colors as colorPalette } from './colors';
+import { getAvailableLegendCategories } from './get-available-legend-categories';
 import {
 	generateDefaultAltText,
 	getDomain,
@@ -8,9 +9,16 @@ import {
 	stringToArray,
 	stringToArrayOfNums,
 } from './helpers';
-import { resolveColor, resolveColorInString } from './resolve-color';
-import { getAvailableLegendCategories } from './get-available-legend-categories';
 import { mergeLegendCategoryOrder } from './merge-legend-category-order';
+import { migrateLegacyMobileAttributes } from './migrate-legacy-mobile-attributes';
+import { resolveColor, resolveColorInString } from './resolve-color';
+import { resolveFontFamily } from './resolve-font-family';
+import {
+	applyGlobalTokens,
+	getResolvedPalettes,
+	getStaticBaseConfig,
+	resolveChartSeriesColors,
+} from './resolve-defaults';
 
 /**
  * Resolve fill colors in diff column per-cell customizations.
@@ -33,6 +41,33 @@ function resolveDiffColumnCustomLabels(customLabels = {}) {
 		};
 	});
 	return resolved;
+}
+
+/**
+ * Resolve preset font tokens on annotation items for SVG render.
+ *
+ * @param {Array|undefined} items Annotation items from block attrs.
+ * @return {Array|undefined}
+ */
+function resolveAnnotationItems(items) {
+	if (!Array.isArray(items) || items.length === 0) {
+		return items;
+	}
+
+	return items.map((item) => {
+		if (!item || typeof item !== 'object') {
+			return item;
+		}
+
+		if (item.fontFamily === undefined || item.fontFamily === '') {
+			return item;
+		}
+
+		return {
+			...item,
+			fontFamily: resolveFontFamily(item.fontFamily),
+		};
+	});
 }
 
 /**
@@ -77,15 +112,26 @@ export function mergeViewportOverrides(baseAttributes, deviceType) {
 	return merged;
 }
 
-const { baseConfig } = window.prcCustomCharts || window.prcChartingLibrary;
 const getConfig = (
 	attributes,
 	clientId,
 	editorClickEvent = null,
 	deviceType = 'desktop'
 ) => {
-	// Merge viewport-specific overrides before extracting attributes
-	const mergedAttributes = mergeViewportOverrides(attributes, deviceType);
+	// Render from the shipped static base only. theme.config (Bucket 3: per-role
+	// fonts, axes, layout) is a "new charts only" default — it is frozen into a
+	// chart's attributes at insert (apply-theme-block-defaults), never merged at
+	// render. Merging it here would retroactively restyle already-published
+	// charts whose attributes predate a given key. Palette-by-name (Bucket 2)
+	// and theme.json webfonts (Bucket 1) stay live via their own paths.
+	const baseConfig = getStaticBaseConfig();
+	const { colors: resolvedColorPalette } = getResolvedPalettes();
+
+	// Promote legacy *Mobile/*OnMobile keys, then merge viewport overrides.
+	const mergedAttributes = mergeViewportOverrides(
+		migrateLegacyMobileAttributes(attributes),
+		deviceType
+	);
 
 	// layout attributes
 	const {
@@ -182,9 +228,10 @@ const getConfig = (
 					? alt
 					: generateDefaultAltText(chartType, title),
 		},
-		colors: (customColors && customColors.length > 0
-			? customColors
-			: colorPalette[colorValue]
+		colors: resolveChartSeriesColors(
+			customColors,
+			colorValue,
+			resolvedColorPalette
 		).map(resolveColor),
 		plotBands: {
 			...baseConfig.plotBands,
@@ -206,6 +253,10 @@ const getConfig = (
 					independentAxis.tickLabels?.fill ??
 						baseConfig.independentAxis.tickLabels?.fill
 				),
+				fontFamily: resolveFontFamily(
+					independentAxis.tickLabels?.fontFamily ??
+						baseConfig.independentAxis.tickLabels?.fontFamily
+				),
 			},
 			axisLabel: {
 				...baseConfig.independentAxis.axisLabel,
@@ -213,6 +264,10 @@ const getConfig = (
 				fill: resolveColor(
 					independentAxis.axisLabel?.fill ??
 						baseConfig.independentAxis.axisLabel?.fill
+				),
+				fontFamily: resolveFontFamily(
+					independentAxis.axisLabel?.fontFamily ??
+						baseConfig.independentAxis.axisLabel?.fontFamily
 				),
 			},
 			axis: {
@@ -257,6 +312,10 @@ const getConfig = (
 					dependentAxis.tickLabels?.fill ??
 						baseConfig.dependentAxis.tickLabels?.fill
 				),
+				fontFamily: resolveFontFamily(
+					dependentAxis.tickLabels?.fontFamily ??
+						baseConfig.dependentAxis.tickLabels?.fontFamily
+				),
 			},
 			axisLabel: {
 				...baseConfig.dependentAxis.axisLabel,
@@ -264,6 +323,10 @@ const getConfig = (
 				fill: resolveColor(
 					dependentAxis.axisLabel?.fill ??
 						baseConfig.dependentAxis.axisLabel?.fill
+				),
+				fontFamily: resolveFontFamily(
+					dependentAxis.axisLabel?.fontFamily ??
+						baseConfig.dependentAxis.axisLabel?.fontFamily
 				),
 			},
 			axis: {
@@ -395,15 +458,25 @@ const getConfig = (
 				border: resolveColorInString(
 					tooltip.style?.border ?? baseConfig.tooltip.style?.border
 				),
+				fontFamily: resolveFontFamily(
+					tooltip.style?.fontFamily ??
+						baseConfig.tooltip.style?.fontFamily
+				),
 			},
 		},
 		legend: {
 			...baseConfig.legend,
 			...legend,
-			borderStroke: resolveColor(
-				legend.borderStroke ?? baseConfig.legend?.borderStroke
+			// Empty string means "no box border/background" (block.json default).
+			// Never pass resolveColor('') — it becomes 'transparent', which is
+			// truthy and StyledLegend renders `1px solid transparent`.
+			borderStroke: legend.borderStroke
+				? resolveColor(legend.borderStroke)
+				: '',
+			fill: legend.fill ? resolveColor(legend.fill) : '',
+			fontFamily: resolveFontFamily(
+				legend.fontFamily ?? baseConfig.legend?.fontFamily
 			),
-			fill: resolveColor(legend.fill ?? baseConfig.legend?.fill),
 			customLabels: customLegendLabels ?? {},
 			categories: (() => {
 				const availableLegendCategories = getAvailableLegendCategories({
@@ -505,6 +578,9 @@ const getConfig = (
 			// branch its logic. Resolving it here to a light-dark() string breaks
 			// the === comparisons inside getBarLabelFill.
 			color: labels.color ?? baseConfig.labels?.color ?? 'inherit',
+			fontFamily: resolveFontFamily(
+				labels.fontFamily ?? baseConfig.labels?.fontFamily
+			),
 		},
 		shapes: {
 			customStyles: shapes?.customStyles || {},
@@ -529,6 +605,22 @@ const getConfig = (
 			neutralBar: {
 				...baseConfig.divergingBar.neutralBar,
 				...divergingBar.neutralBar,
+			},
+			positive: {
+				...baseConfig.divergingBar?.positive,
+				...divergingBar.positive,
+				fontFamily: resolveFontFamily(
+					divergingBar.positive?.fontFamily ??
+						baseConfig.divergingBar?.positive?.fontFamily
+				),
+			},
+			negative: {
+				...baseConfig.divergingBar?.negative,
+				...divergingBar.negative,
+				fontFamily: resolveFontFamily(
+					divergingBar.negative?.fontFamily ??
+						baseConfig.divergingBar?.negative?.fontFamily
+				),
 			},
 		},
 		diffColumn: {
@@ -592,13 +684,14 @@ const getConfig = (
 		annotations: {
 			...baseConfig.annotations,
 			...annotations,
+			items: resolveAnnotationItems(annotations?.items),
 		},
 		drawings: {
 			active: drawings && drawings.length > 0,
 			items: drawings || [],
 		},
 	};
-	return renderedConfig;
+	return applyGlobalTokens(renderedConfig);
 };
 
 export default getConfig;

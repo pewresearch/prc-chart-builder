@@ -64,7 +64,7 @@ mount and never sees another mutation — the subscription is effectively free.
 
 To discover ids on a page: every chart wrapper carries `data-prc-chart-id`, so
 `document.querySelectorAll('[data-prc-chart-id]')` (or
-`prcChartingLibrary.debug.listCharts()`) enumerates them.
+[`prcChartBuilder.debug.listCharts()`](../src/debug/index.js)) enumerates them.
 
 ## Action surface
 
@@ -104,6 +104,55 @@ call lands. `setChart` makes that impossible.
 > fine. Changing which categories/series exist → `setChart` with both `data` and
 > `config` in the same call.
 
+## One update funnel
+
+The chart SVG updates **reactively** via `useChartStore` inside the chart
+region. Server-rendered surfaces — the underlying-numbers table and metadata
+text — update **imperatively** through a single helper,
+[`syncControllerSurfaces`](../src/chart/utils/sync-controller-surfaces.js),
+invoked from `setChart`, `switchViewport`, and `renderChart`.
+
+```mermaid
+flowchart TD
+    consumer["Consumer: roper expand,<br/>scrollytelling, REST poller, debug"] -->|"setData / setConfig / setTableData"| setChart["setChart(chartId, patch)"]
+    resize["Viewport resize"] --> switchViewport["switchViewport(viewport)"]
+    initMount["Initial mount (onRun / data-wp-init)"] --> renderChart["renderChart()"]
+
+    setChart --> applyPatch["applyChartPatch(slice, patch)"]
+    switchViewport --> applyPatch
+    renderChart --> seedSlice["seed slice from serverState"]
+
+    applyPatch -->|"reactive signal"| useChartStore["useChartStore (Preact, in chart region)"]
+    useChartStore --> svg["Chart SVG re-renders"]
+
+    applyPatch --> funnel["syncControllerSurfaces(chartId, slice)<br/>= rebuildDataTable + resolveChartMetadataField(DOMPurify)"]
+    seedSlice --> funnel
+    switchViewport --> funnel
+
+    funnel --> table["Underlying-numbers table<br/>(rebuildDataTable)"]
+    funnel --> meta["Metadata HTML<br/>([data-meta-field] innerHTML, sanitized)"]
+
+    ssr["PHP SSR (wp_kses_post)"] -->|"first paint only"| meta
+
+    nav["Router navigation (node reuse)"] --> watchChart["watchChart:<br/>router-url reset via getServerState"]
+    watchChart --> funnel
+```
+
+**Key invariant:** the table and metadata each have exactly **one runtime
+writer** — `syncControllerSurfaces` — for same-page mutations. PHP SSR provides
+first paint; after mount the funnel owns those surfaces. The controller's
+`watchChart` callback reconciles both table and metadata after Interactivity
+Router navigation using `getServerState()` as the source of truth (not the live
+store slice, which may retain stale data per `populateServerData` `override = false`
+semantics).
+
+Metadata no longer uses per-field `data-wp-watch` callbacks; `config.metadata`
+only mutates through `applyChartPatch` or the wholesale config seed, both of
+which run through the funnel. The chart block is registered with
+`parent: ["prc-chart-builder/controller"]`, so metadata scoping normally finds
+`.wp-chart-builder-wrapper`; the funnel falls back to
+`.wp-block-prc-chart-builder-chart` when no controller wrapper is present.
+
 ### `tableData` fans out to three surfaces
 
 `tableData` is a lossy `{ header: string[], rows: string[][] }` projection of
@@ -115,7 +164,7 @@ updates all three:
 | Surface | How it consumes the slice |
 | --- | --- |
 | Chart ARIA description | `useChartStore` → `getAria` inside the chart tree (reactive). |
-| Visible "underlying numbers" table | `controller/view.js`'s `watchChart` `watch`es the slice and updates the cell content of the server-rendered `.chart-builder-data-table` in place. |
+| Visible "underlying numbers" table | `syncControllerSurfaces` → [`rebuildDataTable`](../src/controller/utils/rebuild-data-table.js) patches the server-rendered `.chart-builder-data-table` in place (`setChart`, `switchViewport`, `renderChart`). After Interactivity Router navigation, `watchChart` reconciles via `syncControllerSurfaces` using `getServerState()`. |
 | CSV export | `controller/view.js`'s `downloadData` reads the slice (falling back to the server-seeded controller `context.tableData` for freeform charts). |
 
 The visible table is **server-rendered by the real Power Table block**
@@ -130,63 +179,92 @@ The projection is derived from that **rendered** markup (not the raw saved
 `innerHTML`), so `tableData` / CSV / ARIA reflect exactly what is displayed —
 e.g. a column rounded to 0 decimals projects `31`, not the stored `30.7`.
 
-On a live update the client `watch` takes over and patches **content only**:
-`rebuildDataTable` rewrites the `innerHTML` of the existing, non-hidden cells (so
-all element-level formatting is preserved) and never rebuilds rows or cells. It
-is deliberately strict — an update is applied only when its shape matches the
-rendered table exactly (same row count, same visible-column count per row);
-any mismatch is ignored with a dev-console warning, leaving the correct server
-render in place. **Reshaping the table (adding/removing rows or columns) is
-unsupported by design**, as is the parser's existing rectangular contract
-(single header row, `<th>` headers, `<td>` body cells, no `colspan`/`rowspan`).
-Consumers must send the same structure with production-ready values — "copy the
-current `tableData`, change some values". Charts that ship with no table block
-have no CSV button or table container to update.
+On a live update, same-page mutations go through
+[`syncControllerSurfaces`](../src/chart/utils/sync-controller-surfaces.js) inside
+`setChart` / `switchViewport` / `renderChart`. After Interactivity Router
+navigation, `watchChart` reconciles both table and metadata via
+`syncControllerSurfaces` using `getServerState()` (see [One update
+funnel](#one-update-funnel) above).
+
+[`rebuildDataTable`](../src/controller/utils/rebuild-data-table.js) logic:
+
+- **Same shape** (row count and visible column count unchanged) → patch existing
+  cell `innerHTML` only (preserves Power Table formatting).
+- **Row count change** → rebuild `<tbody>` in place, keep the header row.
+- **Column count change** → rebuild `<thead>` and `<tbody>`.
+
+Hidden columns (`is-column-hidden`) are ignored when comparing shape. The
+projection still assumes a rectangular table (single header row, `<th>` headers,
+`<td>` body cells).
+
+Charts that ship with no table block have no CSV button or table container to
+update.
 
 ### Metadata text live-updates too
 
-`config.metadata.{ title, subtitle, note, source, tag }` is mirrored onto the
-controller's server-rendered metadata elements (`.cb__title`, `.cb__subtitle`,
-`.cb__note--note`, `.cb__note--source`, `.cb__tag`) by the same
-`callbacks.watchChart` init in
-[`controller/view.js`](../src/controller/view.js). Patch it through
-`setConfig(chartId, { metadata: { title } })` (or `setChart`); the deep-merge
-preserves sibling metadata. Every match in the controller subtree is updated —
-metadata renders in up to three places (the chart block, the data-tab table, the
-freeform wrapper). Values are written via `innerHTML` to match the server's
-`wp_kses_post` output. Note that `metadata.title` is **not** rendered inside the
-chart SVG itself (only `metadata.alt` feeds ARIA), and the controller's static
-header title is the surface this updates.
+`config.metadata.{ title, subtitle, note, source, tag }` (plus viewport
+overrides merged via [`resolveChartMetadata`](../src/chart/utils/resolve-metadata.js))
+is mirrored onto server-rendered `[data-meta-field]` elements by
+`syncControllerSurfaces` — called from `setChart`, `switchViewport`, and
+`renderChart`. Patch through `setConfig(chartId, { metadata: { title } })`
+(or `setChart`); the deep-merge preserves sibling metadata. Values are
+sanitized with DOMPurify before writing `innerHTML`. SSR (`wp_kses_post`) still
+provides first paint; the funnel is the sole runtime writer after mount.
+Note that `metadata.title` is **not** rendered inside the chart SVG itself
+(only `metadata.alt` feeds ARIA).
 
-### Surviving client-side navigation
+### Viewport switching (client-side)
 
-The live slice is the single source of truth, but the Interactivity Router does
-**not** refresh it on navigation. `@wordpress/interactivity`'s
-`populateServerData` merges the new page's server state with
-`deepMerge(state, serverState, override = false)`, so any leaf already present in
-`state.charts[chartId]` (`data`, `config`, `tableData`, `attributes`) keeps its
-mount-time value — only `getServerState()` reflects the navigated payload.
+Tablet/mobile attribute overrides are applied **in the browser** on window
+resize using Gutenberg breakpoints (`< 480px` mobile, `480–781px` tablet,
+`≥ 782px` desktop) — the same thresholds as the block editor device preview.
+There is no per-chart `data-wp-router-region`, no `cb_viewport` query param,
+and no Interactivity Router round-trip for breakpoints.
 
-Left alone, that produces a split: the chart graphic lives in its own
-`data-wp-router-region`, so the router re-patches it directly and it updates,
-while the controller's table and metadata read the live slice and would stay
-frozen at their first-paint values.
+1. First paint: PHP detects device via `get_current_device()` and merges
+   viewport attributes for SSR only; the Interactivity store seeds **unmerged**
+   base attributes plus `currentViewport`.
+2. On resize: `callbacks.watchForResize` (debounced) calls `switchViewport`,
+   which re-derives `(data, config, tableData)` from base attributes +
+   `currentViewport` and **wholesale-replaces** the live slice (not deep-merge —
+   deep-merge would leave stale nested keys like `shapes.customStyles` from the
+   previous breakpoint).
 
-`view.js`'s `syncOnNavigation` callback closes the gap. Because
-`getServerState()` is reactive to the router's navigation signal, the callback
-re-runs after every navigation, re-derives `(data, config, tableData)` from the
-fresh server payload via `buildChartInputs`, and writes them back onto
-`state.charts[chartId]`. Those top-level writes flow through the same signals the
-wrapper and the controller `watch`es already subscribe to, so the chart, table,
-and metadata all reconverge on the navigated chart. The first (mount) pass is
-skipped per chart id — `renderChart` already seeds the slice then.
+**File**: [`src/chart/view.js`](../src/chart/view.js)
 
-This reuses the runtime update path, so a navigation and a `setData` /
-`setTableData` call drive the same machinery rather than two parallel ones. (An
-earlier alternative — giving the controller its own router region — was rejected
-because the chart region nests inside the controller, so re-rendering the
-controller would clobber the client-mounted chart, and it still wouldn't serve
-the runtime action surface.)
+### Client-side navigation (Interactivity Router)
+
+**Standard Pew Research articles** (chart CPT embedded in a post via
+`prc-chart-builder/controller`) do **not** rely on Interactivity Router for
+chart lifecycle. Article-to-article navigation is a full page load; viewport
+changes use client-side `switchViewport` (above). Removing the per-chart router
+region and the old `syncOnNavigation` callback is intentional for this path.
+
+**Parent router regions** (e.g. RLS `prc-rls/context-provider`, lookbook query)
+can still swap HTML that *contains* `prc-chart-builder/chart` blocks. The
+Interactivity Router does **not** wholesale-refresh `state.charts[chartId]` on
+navigate — `populateServerData` merges with `override = false`, so existing
+slice leaves can stick at mount-time values while `getServerState()` reflects
+the new payload.
+
+Mitigations today:
+
+| Chart type | Behavior after parent router swap |
+| --- | --- |
+| **Custom charts** (`prc-custom-charts`, e.g. RLS `rls-stacked-bar`) | `renderChart` detects an empty mount node (`mountHasLiveChart`), clears the `config` sentinel, and re-seeds from `getServerState()` via `buildChartInputs`. |
+| **Standard Preact charts** | `renderChart` early-returns once `slice.config` is set; a router swap that reuses the same `chartId` with different data may show stale graphics/metadata/table until a full reload. This is not a supported Pew article flow. |
+
+RLS uses custom charts inside its own router region and separate table/metadata
+markup (`rls__chart__*`), not the controller data-tab `watchChart` path. Verify
+RLS dialog chart switching and year-pill navigation on a dev env after major
+store changes.
+
+The pre-3.11 **`syncOnNavigation`** callback (removed) re-seeded the live slice
+from `getServerState()` on every router navigation; it existed alongside the
+old per-chart router region used for **`cb_viewport`** viewport switching. Both
+were removed when viewport switching moved client-side. Restore
+`syncOnNavigation` only if a consumer embeds **standard** chart-builder charts
+inside a router region and needs live slice re-seeding without a full reload.
 
 ## Data ↔ config coupling contract
 
@@ -245,7 +323,7 @@ plus a per-family seed in `getConfig`. No `buildColorScale`; maps untouched.
 ## Subscribing inside the library: `useChartStore`
 
 Chart components read live store data through the
-[`useChartStore`](../../prc-charting-library/src/lib/hooks/useChartStore.ts) hook. You normally don't call
+[`useChartStore`](../../prc-charting-library/src/lib/store/useChartStore.ts) hook. You normally don't call
 it directly — `ChartBuilderWrapper` does, and falls back to inline
 `data`/`config`/`tableData` props when it returns `undefined`. Reach for it only
 when building a new component that needs its own live store slice.
@@ -275,8 +353,8 @@ How it works, and the gotchas baked into the implementation:
   to subscribe at every path the deep-merge can touch. If you add a component that
   reacts to nested mutations on some *other* slice prop, you'll need to extend the
   tracking the same way.
-- **Editor swap:** webpack `resolve.alias` points `./hooks/useChartStore` at
-  [`useChartStore.editor.ts`](../../prc-charting-library/src/lib/hooks/useChartStore.editor.ts) in the
+- **Editor swap:** webpack `resolve.alias` points `./store/useChartStore` at
+  [`useChartStore.editor.ts`](../../prc-charting-library/src/lib/store/useChartStore.editor.ts) in the
   editor config, so `@wordpress/interactivity` is never imported into the editor
   bundle.
 
@@ -378,7 +456,7 @@ setInterval(async () => {
 
 ## Verifying without building a UI
 
-`window.prcChartingLibrary.debug` mirrors the action surface
+`window.prcChartBuilder.debug` mirrors the action surface
 (`setChart`/`setData`/`setConfig`/`setTableData`) and adds read primitives
 (`getChart`, `listCharts`) plus `randomize` / `prcChartUpdate`. Full reference and
 merge-rule examples in [`console-helpers.md`](console-helpers.md). The

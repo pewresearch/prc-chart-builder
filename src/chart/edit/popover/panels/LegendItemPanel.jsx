@@ -43,7 +43,7 @@ const MARKER_STYLE_OPTIONS = [
  * @param {string}   props.defaultLabel          - The default rendered label text
  * @param {Object}   props.currentCustomizations - Current customLegendLabels block attr
  * @param {Function} props.onUpdate              - Callback to update
- * @param {string}   props.legendVariation       - 'grouped' | 'detached'
+ * @param {string}   props.legendVariation       - 'grouped' | 'detached' | 'direct'
  */
 export function LegendItemPanel({
 	categoryValue,
@@ -60,9 +60,13 @@ export function LegendItemPanel({
 		fontFamily,
 		fontSize,
 		maxWidth,
+		lineHeight,
+		textAlign,
+		letterSpacing,
 		textOutline,
 		markerStyle,
 		markerFill,
+		positioningContext,
 		offsetX,
 		offsetY,
 		hasCustomizations,
@@ -76,6 +80,8 @@ export function LegendItemPanel({
 	);
 
 	const isDetached = legendVariation === 'detached';
+	const isDirect = legendVariation === 'direct';
+	const showPositionOffsets = isDetached || isDirect;
 
 	const handleTextStyleChange = (field, value) => {
 		if (field === 'fill') {
@@ -95,12 +101,44 @@ export function LegendItemPanel({
 				{__('Legend item', 'prc-chart-builder')}: {defaultLabel}
 			</Text>
 
-			{/* ── Position offsets (detached only) ─────────────────── */}
-			{isDetached && (
+			{/* ── Position offsets (detached / direct) ─────────────────── */}
+			{showPositionOffsets && (
 				<>
 					<Heading level={6}>
 						{__('Position', 'prc-chart-builder')}
 					</Heading>
+					{isDetached && (
+						<SelectControl
+							label={__(
+								'Positioning Context',
+								'prc-chart-builder'
+							)}
+							value={positioningContext}
+							options={[
+								{
+									label: __(
+										'Full Chart Area',
+										'prc-chart-builder'
+									),
+									value: 'chart',
+								},
+								{
+									label: __(
+										'Data Area (Inner)',
+										'prc-chart-builder'
+									),
+									value: 'inner',
+								},
+							]}
+							onChange={(value) =>
+								handleChange('positioningContext', value)
+							}
+							help={__(
+								'Use Data Area when placing labels directly above or beside plotted data.',
+								'prc-chart-builder'
+							)}
+						/>
+					)}
 					<Text size="11px" color="#757575">
 						{__(
 							'Drag the item on the chart, or set offsets manually.',
@@ -212,6 +250,69 @@ export function LegendItemPanel({
 					'prc-chart-builder'
 				)}
 			/>
+
+			{isDetached && (
+				<>
+					<Heading level={6}>
+						{__('Paragraph', 'prc-chart-builder')}
+					</Heading>
+					<NumberControl
+						label={__('Line Height', 'prc-chart-builder')}
+						value={lineHeight}
+						onChange={(v) =>
+							handleChange(
+								'lineHeight',
+								v !== '' && v !== undefined ? Number(v) : ''
+							)
+						}
+						min={0.8}
+						max={3}
+						step={0.1}
+						help={__(
+							'Unitless multiplier (e.g. 1.4). Leave empty for default.',
+							'prc-chart-builder'
+						)}
+					/>
+					<SelectControl
+						label={__('Text Align', 'prc-chart-builder')}
+						value={textAlign}
+						options={[
+							{
+								label: __('Default', 'prc-chart-builder'),
+								value: '',
+							},
+							{
+								label: __('Left', 'prc-chart-builder'),
+								value: 'left',
+							},
+							{
+								label: __('Center', 'prc-chart-builder'),
+								value: 'center',
+							},
+							{
+								label: __('Right', 'prc-chart-builder'),
+								value: 'right',
+							},
+						]}
+						onChange={(value) => handleChange('textAlign', value)}
+					/>
+					<NumberControl
+						label={__('Letter Spacing', 'prc-chart-builder')}
+						value={letterSpacing}
+						onChange={(v) =>
+							handleChange(
+								'letterSpacing',
+								v !== '' && v !== undefined ? Number(v) : ''
+							)
+						}
+						step={0.5}
+						help={__(
+							'Extra space between characters in px. Leave empty for default.',
+							'prc-chart-builder'
+						)}
+					/>
+				</>
+			)}
 
 			{hasCustomizations && (
 				<Button

@@ -104,7 +104,7 @@ const sankeyTemplate = [
 				subtitle: 'Energy flow from source to end use',
 				source: 'Source: Add source note here',
 				note: 'Note: Add note about the chart',
-				tag: 'PEW RESEARCH CENTER',
+				tag: '',
 			},
 			independentAxis: {
 				active: false,

@@ -81,7 +81,7 @@ const radarTemplate = [
 				subtitle: 'Compare attributes across categories',
 				source: 'Source: Add source note here',
 				note: 'Note: Add note about the chart',
-				tag: 'PEW RESEARCH CENTER',
+				tag: '',
 			},
 			independentAxis: {
 				active: false,

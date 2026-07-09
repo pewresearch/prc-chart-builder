@@ -60,7 +60,7 @@ const legacyLineTemplate = [
 			},
 			metadata: {
 				active: true,
-				tag: 'PEW RESEARCH CENTER',
+				tag: '',
 			},
 			independentAxis: {
 				domain: {

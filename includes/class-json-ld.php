@@ -215,6 +215,14 @@ class JSON_LD {
 			);
 		}
 
+		if ( empty( $chart_data['allow_data_download'] ) ) {
+			return new WP_Error(
+				'download_disabled',
+				__( 'Data download is disabled for this chart.', 'prc-chart-builder' ),
+				array( 'status' => 403 )
+			);
+		}
+
 		$csv      = $this->build_csv( $chart_data );
 		$slug     = sanitize_title( $chart_data['title'] ?: 'chart' );
 		$pub_date = $chart_data['date_published'] ?? gmdate( 'Y-m-d' );
@@ -302,19 +310,20 @@ class JSON_LD {
 		}
 
 		return array(
-			'post_id'        => $chart_post_id,
-			'title'          => wp_strip_all_tags( $metadata['title'] ?? '' ),
-			'subtitle'       => wp_strip_all_tags( $metadata['subtitle'] ?? '' ),
-			'note'           => wp_strip_all_tags( $metadata['note'] ?? '' ),
-			'source'         => wp_strip_all_tags( $metadata['source'] ?? '' ),
-			'tag'            => wp_strip_all_tags( $metadata['tag'] ?? '' ),
-			'alt_text'       => wp_strip_all_tags( $metadata['alt'] ?? '' ),
-			'chart_type'     => $chart_type,
-			'image_url'      => $image_url,
-			'table_data'     => $table_data,
-			'permalink'      => get_permalink( $chart_post_id ),
-			'date_published' => get_the_date( 'Y-m-d', $chart_post_id ),
-			'date_modified'  => get_the_modified_date( 'Y-m-d', $chart_post_id ),
+			'post_id'              => $chart_post_id,
+			'title'                => wp_strip_all_tags( $metadata['title'] ?? '' ),
+			'subtitle'             => wp_strip_all_tags( $metadata['subtitle'] ?? '' ),
+			'note'                 => wp_strip_all_tags( $metadata['note'] ?? '' ),
+			'source'               => wp_strip_all_tags( $metadata['source'] ?? '' ),
+			'tag'                  => wp_strip_all_tags( $metadata['tag'] ?? '' ),
+			'alt_text'             => wp_strip_all_tags( $metadata['alt'] ?? '' ),
+			'chart_type'           => $chart_type,
+			'image_url'            => $image_url,
+			'table_data'           => $table_data,
+			'allow_data_download'  => $io['allowDataDownload'] ?? true,
+			'permalink'            => get_permalink( $chart_post_id ),
+			'date_published'       => get_the_date( 'Y-m-d', $chart_post_id ),
+			'date_modified'        => get_the_modified_date( 'Y-m-d', $chart_post_id ),
 		);
 	}
 
@@ -399,19 +408,20 @@ class JSON_LD {
 				}
 
 			$results[] = array(
-				'post_id'        => 0,
-				'title'          => wp_strip_all_tags( $metadata['title'] ?? '' ),
-				'subtitle'       => wp_strip_all_tags( $metadata['subtitle'] ?? '' ),
-				'note'           => wp_strip_all_tags( $metadata['note'] ?? '' ),
-				'source'         => wp_strip_all_tags( $metadata['source'] ?? '' ),
-				'tag'            => wp_strip_all_tags( $metadata['tag'] ?? '' ),
-				'alt_text'       => wp_strip_all_tags( $metadata['alt'] ?? '' ),
-				'chart_type'     => $chart_type,
-				'image_url'      => $image_url,
-				'table_data'     => $table_data,
-				'permalink'      => $permalink,
-				'date_published' => $pub_date,
-				'date_modified'  => $mod_date,
+				'post_id'             => 0,
+				'title'               => wp_strip_all_tags( $metadata['title'] ?? '' ),
+				'subtitle'            => wp_strip_all_tags( $metadata['subtitle'] ?? '' ),
+				'note'                => wp_strip_all_tags( $metadata['note'] ?? '' ),
+				'source'              => wp_strip_all_tags( $metadata['source'] ?? '' ),
+				'tag'                 => wp_strip_all_tags( $metadata['tag'] ?? '' ),
+				'alt_text'            => wp_strip_all_tags( $metadata['alt'] ?? '' ),
+				'chart_type'          => $chart_type,
+				'image_url'           => $image_url,
+				'table_data'          => $table_data,
+				'allow_data_download' => $io['allowDataDownload'] ?? true,
+				'permalink'           => $permalink,
+				'date_published'      => $pub_date,
+				'date_modified'       => $mod_date,
 			);
 				// Never recurse into a controller's children — freeform sub-charts
 				// are implementation details of the parent, not separate datasets.
@@ -653,7 +663,7 @@ class JSON_LD {
 			'license'             => home_url( '/terms-and-conditions/' ),
 		);
 
-		if ( $has_cpt ) {
+		if ( $has_cpt && ( $chart_data['allow_data_download'] ?? true ) ) {
 			$csv_url                = rest_url( self::REST_NAMESPACE . '/charts/' . $post_id . '/data.csv' );
 			$dataset['distribution'] = array(
 				'@type'          => 'DataDownload',

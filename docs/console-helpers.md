@@ -85,3 +85,28 @@ These are folded into `config` before `setChart` (same as passing them under `co
 | `scale` / `jitter` / `data` | data array transform |
 
 Implementation: [`src/debug/chartUpdate.js`](../src/debug/chartUpdate.js), [`src/chart/utils/apply-deep-patch.js`](../src/chart/utils/apply-deep-patch.js).
+
+## Testing table and metadata sync
+
+On any frontend page with a chart controller + underlying-numbers table, open
+DevTools after a hard reload (rebuild `@prc/chart-builder` first if you changed
+source):
+
+```js
+const id = prcChartBuilder.debug.listCharts()[0];
+
+// Table: adds a row via setTableData and polls store vs DOM for ~3s
+await prcChartBuilder.debug.smokeTestAddRow(id);
+
+// Metadata: patch config.metadata (sanitized HTML on [data-meta-field])
+prcChartBuilder.debug.setConfig(id, {
+  metadata: {
+    subtitle: 'Updated — <em>with HTML</em>',
+    note: 'See <a href="https://example.com">link</a>.',
+  },
+});
+```
+
+Open the **Data** tab before table probes so `.chart-builder-data-table` is in
+the DOM. See [`reactive-store.md`](reactive-store.md#one-update-funnel) for the
+full update-funnel architecture.

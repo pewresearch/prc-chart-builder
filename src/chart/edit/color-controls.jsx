@@ -22,7 +22,10 @@ import {
 /**
  * Internal dependencies
  */
-import { colorNames, colors } from '../utils/colors';
+import {
+	getResolvedPalettes,
+	resolveChartSeriesColors,
+} from '../utils/resolve-defaults';
 import { HIGHLIGHTABLE_CHART_TYPES } from '../utils/chart-types';
 import { getAvailableLegendCategories } from '../utils/get-available-legend-categories';
 import ColorSorter from './color-sorter';
@@ -37,6 +40,29 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 	const { io, dataRender = {}, divergingBar, sankey } = attributes;
 	const { chartFamily } = io;
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('colors');
+	const { colors, colorNames } = getResolvedPalettes();
+
+	const paletteOptions = useMemo(() => {
+		const { colorValue } = io;
+		if (
+			!colorValue ||
+			colorNames.some((option) => option.value === colorValue)
+		) {
+			return colorNames;
+		}
+		return [
+			...colorNames,
+			{
+				label: colorValue,
+				value: colorValue,
+			},
+		];
+	}, [colorNames, io.colorValue]);
+
+	const activePaletteColors = useMemo(
+		() => resolveChartSeriesColors(io.customColors, io.colorValue, colors),
+		[io.customColors, io.colorValue, colors]
+	);
 
 	const highlightControlsVisible =
 		HIGHLIGHTABLE_CHART_TYPES.includes(chartType);
@@ -88,7 +114,7 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 						<SelectControl
 							label={__('Color Palette')}
 							value={io.colorValue}
-							options={colorNames}
+							options={paletteOptions}
 							onChange={(c) => {
 								setAttributes({
 									io: {
@@ -127,11 +153,7 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 						isShownByDefault
 					>
 						<ColorSorter
-							colors={
-								0 < (io.customColors || []).length
-									? io.customColors
-									: colors[io.colorValue]
-							}
+							colors={activePaletteColors}
 							setAttributes={setAttributes}
 							io={io}
 						/>

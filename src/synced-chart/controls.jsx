@@ -2,87 +2,155 @@
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
-import { useMemo } from '@wordpress/element';
-import { InspectorControls } from '@wordpress/block-editor';
-import { useEntityProp } from '@wordpress/core-data';
+import { useMemo, useCallback, useState } from '@wordpress/element';
+import { Notice, ToolbarGroup, ToolbarButton } from '@wordpress/components';
+import { ungroup } from '@wordpress/icons';
+import { parse, serialize } from '@wordpress/blocks';
+import { useDispatch } from '@wordpress/data';
+import { store as noticesStore } from '@wordpress/notices';
+import apiFetch from '@wordpress/api-fetch';
+import { SyncedEntityIsolationControls } from '@prc/components';
+
+/**
+ * Internal Dependencies
+ */
 import {
-	Button,
-	Notice,
-	TextControl,
-	PanelBody,
-	PanelRow,
-} from '@wordpress/components';
+	collectSyncedChartRefs,
+	findControllerBlock,
+	hasNestedSyncedCharts,
+	replaceSyncedCharts,
+} from './flatten';
 
 export default function Controls({
 	attributes,
-	clientId,
-	blocks,
+	entityTitle = '',
+	permalink = '',
 	effectiveRef,
 	isForkActive,
-	isLocked = false,
+	blocks = [],
+	canEdit,
+	invalidate,
 }) {
 	const { ref } = attributes;
 	const displayRef = effectiveRef ?? ref;
 
-	const [title, setTitle] = useEntityProp(
-		'postType',
-		'chart',
-		'title',
-		displayRef
+	const { createSuccessNotice, createErrorNotice } =
+		useDispatch(noticesStore);
+
+	const [isFlattening, setIsFlattening] = useState(false);
+
+	const hasNestedSyncedChartBlocks = useMemo(
+		() => hasNestedSyncedCharts(blocks),
+		[blocks]
 	);
-	const [permalink] = useEntityProp('postType', 'chart', 'link', displayRef);
+
+	const canFlatten = canEdit !== false && hasNestedSyncedChartBlocks;
+
+	const handleFlatten = useCallback(async () => {
+		if (!effectiveRef || !blocks.length) {
+			return;
+		}
+
+		setIsFlattening(true);
+		try {
+			const refs = [...collectSyncedChartRefs(blocks)];
+			const records = await Promise.all(
+				refs.map((chartRef) =>
+					apiFetch({
+						path: `/wp/v2/chart/${chartRef}?context=edit`,
+					})
+				)
+			);
+			const controllerByRef = {};
+			records.forEach((record, index) => {
+				const controller = findControllerBlock(
+					parse(record?.content?.raw || '', {
+						__unstableSkipMigrationLogs: true,
+					})
+				);
+				if (controller) {
+					controllerByRef[refs[index]] = controller;
+				}
+			});
+			const flattened = replaceSyncedCharts(blocks, controllerByRef);
+			await apiFetch({
+				path: `/wp/v2/chart/${effectiveRef}`,
+				method: 'POST',
+				data: { content: serialize(flattened) },
+			});
+			invalidate?.();
+			createSuccessNotice(
+				__('Flattened nested synced charts.', 'prc-chart-builder'),
+				{ type: 'snackbar' }
+			);
+		} catch (error) {
+			createErrorNotice(
+				error?.message ||
+					__(
+						'Failed to flatten nested synced charts.',
+						'prc-chart-builder'
+					),
+				{ type: 'snackbar' }
+			);
+		} finally {
+			setIsFlattening(false);
+		}
+	}, [
+		effectiveRef,
+		blocks,
+		invalidate,
+		createSuccessNotice,
+		createErrorNotice,
+	]);
+
 	const editLink = useMemo(() => {
-		if (!displayRef) return '';
+		if (!displayRef) {
+			return '';
+		}
 		const url = new URL(window.location.href);
 		url.searchParams.set('post', displayRef);
 		return url.toString();
 	}, [displayRef]);
 
+	const extraToolbarItems =
+		canFlatten && handleFlatten ? (
+			<ToolbarGroup>
+				<ToolbarButton
+					icon={ungroup}
+					label={__('Flatten Incorrect Nesting', 'prc-chart-builder')}
+					onClick={handleFlatten}
+					isBusy={isFlattening}
+					disabled={isFlattening}
+					showTooltip
+				>
+					{__('Flatten Incorrect Nesting', 'prc-chart-builder')}
+				</ToolbarButton>
+			</ToolbarGroup>
+		) : null;
+
+	const extraInspectorContent = isForkActive ? (
+		<Notice status="warning" isDismissible={false}>
+			{__(
+				'Preview and edit links will open the future revision.',
+				'prc-chart-builder'
+			)}
+		</Notice>
+	) : null;
+
 	return (
-		<>
-			<InspectorControls>
-				<PanelBody>
-					{isForkActive && (
-						<Notice status="warning" isDismissible={false}>
-							{__(
-								'Preview and edit links will open the future revision.',
-								'prc-chart-builder'
-							)}
-						</Notice>
-					)}
-					<div>
-						<TextControl
-							__nextHasNoMarginBottom
-							label={__('Chart Title')}
-							value={title}
-							onChange={setTitle}
-							disabled={isLocked}
-						/>
-						<PanelRow>
-							<Button
-								variant="secondary"
-								onClick={() => {
-									window.open(permalink, '_blank');
-								}}
-							>
-								{__('Preview chart in isolation')}
-							</Button>
-						</PanelRow>
-						<PanelRow>
-							<Button
-								variant="secondary"
-								onClick={() => {
-									window.open(editLink, '_blank');
-								}}
-							>
-								{isLocked
-									? __('View chart in isolation')
-									: __('Edit chart in isolation')}
-							</Button>
-						</PanelRow>
-					</div>
-				</PanelBody>
-			</InspectorControls>
-		</>
+		<SyncedEntityIsolationControls
+			attributes={attributes}
+			panelTitle={__('Synced Chart', 'prc-chart-builder')}
+			entityTitle={entityTitle}
+			entityTitleLabel={__('Chart Title', 'prc-chart-builder')}
+			editLink={editLink}
+			previewLink={permalink}
+			labels={{
+				edit: __('Edit chart in isolation', 'prc-chart-builder'),
+				preview: __('Preview chart in isolation', 'prc-chart-builder'),
+			}}
+			extraToolbarItems={extraToolbarItems}
+			extraInspectorContent={extraInspectorContent}
+		/>
 	);
 }

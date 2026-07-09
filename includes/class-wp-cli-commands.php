@@ -767,6 +767,217 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 			restore_current_blog();
 		}
 	}
+
+	/**
+	 * Seed the frozen legacy PRC chart theme when the site has no active theme.
+	 *
+	 * Idempotent: skips when prc_chart_builder_theme is already non-empty
+	 * (including manual smoke-test values). Delete the option first to re-seed.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp prc-chart-builder seed-theme
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Associative arguments.
+	 * @when after_wp_load
+	 * @subcommand seed-theme
+	 */
+	public function seed_theme( $args, $assoc_args ) {
+		unset( $args, $assoc_args );
+
+		$result = Theme_Seeder::seed_if_empty();
+
+		if ( is_wp_error( $result ) ) {
+			\WP_CLI::error( $result->get_error_message() );
+		}
+
+		if ( false === $result ) {
+			\WP_CLI::log( 'Chart theme already configured; seed skipped (idempotent no-op).' );
+			return;
+		}
+
+		\WP_CLI::success( 'Seeded legacy PRC chart theme from prc-legacy-theme.json.' );
+	}
+
+	/**
+	 * Restore legacy chart theme data when palettes are missing or corrupt.
+	 *
+	 * - Empty/deleted option: seeds the full legacy theme (config + palettes) via seed_if_empty().
+	 * - Partial option (config/colorNames present, colors missing): merges palette swatches only.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp prc-chart-builder repair-theme
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Associative arguments.
+	 * @when after_wp_load
+	 * @subcommand repair-theme
+	 */
+	public function repair_theme( $args, $assoc_args ) {
+		unset( $args, $assoc_args );
+
+		$raw          = get_option( Settings::OPTION_KEY, false );
+		$before       = is_array( $raw ) ? $raw : array();
+		$before_count = Settings::count_palette_colors( $before );
+
+		if ( $before_count > 0 ) {
+			\WP_CLI::log(
+				sprintf(
+					'Palette colors already valid (%d palettes).',
+					$before_count
+				)
+			);
+			return;
+		}
+
+		if ( false === $raw || array() === $before ) {
+			$result = Theme_Seeder::seed_if_empty();
+			if ( is_wp_error( $result ) ) {
+				\WP_CLI::error( $result->get_error_message() );
+			}
+
+			$after_count = Settings::count_palette_colors( Settings::get_active_theme() );
+
+			if ( 0 === $after_count ) {
+				\WP_CLI::error(
+					'Could not restore the legacy chart theme. Confirm prc-legacy-theme.json exists on this environment.'
+				);
+			}
+
+			\WP_CLI::success(
+				sprintf(
+					'Seeded legacy chart theme from prc-legacy-theme.json (%d palette catalogs).',
+					$after_count
+				)
+			);
+			return;
+		}
+
+		// Partial theme (config and/or colorNames) with missing/corrupt palette swatches.
+		Settings::get_active_theme();
+
+		$after_count = Settings::count_palette_colors( Settings::get_active_theme() );
+
+		if ( 0 === $after_count ) {
+			\WP_CLI::error(
+				'Could not repair palette colors. Confirm prc-legacy-theme.json exists on this environment.'
+			);
+		}
+
+		\WP_CLI::success(
+			sprintf(
+				'Repaired palette colors (%d palette catalogs).',
+				$after_count
+			)
+		);
+	}
+
+	/**
+	 * List distinct chart block fontFamily values and the preset token map.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--post-type=<type>]
+	 * : Post type to scan (default: chart).
+	 *
+	 * [--limit=<number>]
+	 * : Maximum number of posts to scan (default: all).
+	 *
+	 * [--batch-size=<number>]
+	 * : Posts to process per batch (default: 100).
+	 *
+	 * [--offset=<number>]
+	 * : Skip this many matching posts before scanning.
+	 *
+	 * [--sleep=<seconds>]
+	 * : Pause between full batches (default: 1).
+	 *
+	 * [--post-id=<id>]
+	 * : Audit only this single post ID (ignores post-type/limit/offset).
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp prc-chart-builder font-tokens-audit
+	 *     wp prc-chart-builder font-tokens-audit --post-type=post --limit=100
+	 *     wp prc-chart-builder font-tokens-audit --batch-size=50 --offset=200
+	 *     wp prc-chart-builder font-tokens-audit --post-id=12345
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Associative arguments.
+	 * @when after_wp_load
+	 * @subcommand font-tokens-audit
+	 */
+	public function font_tokens_audit( $args, $assoc_args ) {
+		unset( $args );
+
+		Theme_Font_Tokens_Migration::run_cli_audit(
+			array_merge(
+				array( 'dry_run' => false ),
+				Theme_Font_Tokens_Migration::parse_cli_batch_args( $assoc_args )
+			)
+		);
+	}
+
+	/**
+	 * Replace known literal font stacks with preset tokens in chart block attributes.
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--dry-run]
+	 * : Report changes without writing to the database.
+	 *
+	 * [--post-type=<type>]
+	 * : Post type to scan (default: chart).
+	 *
+	 * [--limit=<number>]
+	 * : Maximum number of posts to update (default: all).
+	 *
+	 * [--batch-size=<number>]
+	 * : Posts to process per batch (default: 100).
+	 *
+	 * [--offset=<number>]
+	 * : Skip this many matching posts before migrating.
+	 *
+	 * [--sleep=<seconds>]
+	 * : Pause between full batches (default: 1).
+	 *
+	 * [--post-id=<id>]
+	 * : Migrate only this single post ID (ignores post-type/limit/offset). Useful for diagnosing one post.
+	 *
+	 * [--skip-probe]
+	 * : Skip the pre-migration write-path safety probe (not recommended).
+	 *
+	 * [--probe-sample=<number>]
+	 * : Posts to probe before migrating (default: 25).
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp prc-chart-builder font-tokens-migrate --dry-run
+	 *     wp prc-chart-builder font-tokens-migrate
+	 *     wp prc-chart-builder font-tokens-migrate --batch-size=50 --sleep=2
+	 *     wp prc-chart-builder font-tokens-migrate --post-id=12345 --dry-run
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Associative arguments.
+	 * @when after_wp_load
+	 * @subcommand font-tokens-migrate
+	 */
+	public function font_tokens_migrate( $args, $assoc_args ) {
+		unset( $args );
+
+		Theme_Font_Tokens_Migration::run_cli_migrate(
+			array_merge(
+				array(
+					'dry_run'    => isset( $assoc_args['dry-run'] ),
+					'skip_probe' => isset( $assoc_args['skip-probe'] ),
+					'sample'     => isset( $assoc_args['probe-sample'] ) ? (int) $assoc_args['probe-sample'] : 25,
+				),
+				Theme_Font_Tokens_Migration::parse_cli_batch_args( $assoc_args )
+			)
+		);
+	}
 }
 
 // Register the WP-CLI commands.

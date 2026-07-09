@@ -1,0 +1,672 @@
+{
+	"config": {
+		"layout": {
+			"name": "wp-block-prc-block-chart-builder-controller",
+			"type": "bar",
+			"orientation": "horizontal",
+			"width": 640,
+			"height": 400,
+			"padding": {
+				"top": 20,
+				"bottom": 25,
+				"left": 60,
+				"right": 0
+			},
+			"overflowX": "responsive",
+			"horizontalRules": true,
+			"mobileBreakpoint": 480,
+			"parentClass": "wp-chart-builder-wrapper"
+		},
+		"metadata": {
+			"active": true,
+			"title": "Title",
+			"subtitle": "Subtitle",
+			"note": "Note: This is a note.",
+			"source": "Source: This is your source.",
+			"tag": "PEW RESEARCH CENTER",
+			"alt": ""
+		},
+		"plotBands": {
+			"active": false,
+			"allowDrag": false,
+			"allowResize": false,
+			"dimension": "x",
+			"bands": []
+		},
+		"independentAxis": {
+			"active": true,
+			"label": "",
+			"scale": "linear",
+			"dateFormat": "%Y",
+			"domain": [0, 100],
+			"domainPadding": 20,
+			"showZero": true,
+			"padding": 30,
+			"tickMarksActive": false,
+			"tickCount": 5,
+			"tickValues": null,
+			"tickFormat": null,
+			"ticksToLocaleString": false,
+			"abbreviateTicks": false,
+			"abbreviateTicksDecimals": 0,
+			"tickUnit": "",
+			"tickUnitPosition": "end",
+			"tickLabels": {
+				"fontSize": 12,
+				"padding": 0,
+				"angle": 0,
+				"dx": 0,
+				"dy": 0,
+				"textAnchor": "middle",
+				"verticalAnchor": "end",
+				"fill": "#2a2a2a",
+				"fontFamily": "var:preset|font-family|sans-serif",
+				"maxWidth": 50
+			},
+			"axisLabel": {
+				"fontSize": 12,
+				"fill": "#2a2a2a",
+				"padding": 15,
+				"angle": 0,
+				"dx": 0,
+				"dy": 0,
+				"textAnchor": "end",
+				"verticalAnchor": "middle",
+				"fontFamily": "var:preset|font-family|sans-serif",
+				"maxWidth": 100
+			},
+			"axis": {
+				"stroke": "#818181",
+				"strokeWidth": 1
+			},
+			"ticks": {
+				"stroke": "#818181",
+				"size": 5,
+				"strokeWidth": 0
+			},
+			"grid": {
+				"stroke": "",
+				"strokeOpacity": 0.2,
+				"strokeWidth": 2,
+				"strokeDasharray": ""
+			}
+		},
+		"dependentAxis": {
+			"active": true,
+			"label": "",
+			"scale": "linear",
+			"domain": [0, 100],
+			"showZero": false,
+			"tickMarksActive": true,
+			"tickCount": 5,
+			"tickValues": null,
+			"tickFormat": null,
+			"tickAngle": 0,
+			"ticksToLocaleString": false,
+			"abbreviateTicks": true,
+			"abbreviateTicksDecimals": 0,
+			"tickUnit": "",
+			"tickUnitPosition": "end",
+			"tickLabels": {
+				"fontSize": 12,
+				"padding": 15,
+				"angle": 0,
+				"dx": 0,
+				"dy": 0,
+				"textAnchor": "end",
+				"verticalAnchor": "middle",
+				"fill": "#565656",
+				"fontFamily": "var:preset|font-family|sans-serif",
+				"maxWidth": 50
+			},
+			"axisLabel": {
+				"fontSize": 12,
+				"fill": "#565656",
+				"padding": 30,
+				"angle": 270,
+				"dx": 0,
+				"dy": 0,
+				"textAnchor": "middle",
+				"verticalAnchor": "middle",
+				"fontFamily": "var:preset|font-family|sans-serif",
+				"maxWidth": 200
+			},
+			"axis": {
+				"stroke": "#818181",
+				"strokeWidth": 1
+			},
+			"ticks": {
+				"stroke": "#818181",
+				"size": 5,
+				"strokeWidth": 0
+			},
+			"grid": {
+				"stroke": "",
+				"strokeOpacity": 0.2,
+				"strokeWidth": 1,
+				"strokeDasharray": ""
+			}
+		},
+		"tooltip": {
+			"active": false,
+			"headerActive": true,
+			"headerValue": "categoryValue",
+			"format": "{{row}}: {{value}}",
+			"offsetX": 10,
+			"offsetY": 10,
+			"abbreviateValue": false,
+			"absoluteValue": false,
+			"toFixedDecimal": 0,
+			"toLocaleString": true,
+			"customFormat": null,
+			"rlsFormat": false,
+			"dateFormat": "%-m/%Y",
+			"caretPosition": "bottom",
+			"deemphasizeSiblings": false,
+			"deemphasizeOpacity": 0.5,
+			"emphasizeStrokeActive": false,
+			"emphasizeStrokeColor": "black",
+			"emphasizeStrokeWidth": 1,
+			"style": {
+				"minWidth": 50,
+				"maxWidth": 200,
+				"maxHeight": 100,
+				"minHeight": 20,
+				"width": "auto",
+				"height": "auto",
+				"fontSize": 13,
+				"fontFamily": "var:preset|font-family|sans-serif",
+				"background": "white",
+				"border": "1px solid #CBCBCB",
+				"padding": "10px",
+				"borderRadius": "0px",
+				"color": "black"
+			}
+		},
+		"legend": {
+			"active": false,
+			"variation": "grouped",
+			"orientation": "row",
+			"title": "",
+			"alignment": "center",
+			"offsetX": 0,
+			"offsetY": 0,
+			"markerStyle": "rect",
+			"markerFill": "solid",
+			"borderStroke": "",
+			"fill": "",
+			"categories": [],
+			"labelDelimiter": "to",
+			"labelLower": "Less than ",
+			"labelUpper": "More than ",
+			"fontSize": 12,
+			"fontWeight": "normal",
+			"fontFamily": "var:preset|font-family|sans-serif",
+			"margin": {
+				"top": 0,
+				"right": 5,
+				"bottom": 0,
+				"left": 0
+			}
+		},
+		"labels": {
+			"active": false,
+			"showFirstLastPointsOnly": false,
+			"color": "inherit",
+			"fontWeight": 200,
+			"fontSize": 10,
+			"fontFamily": "var:preset|font-family|sans-serif",
+			"labelPositionBar": "inside",
+			"labelCutoff": 0,
+			"labelPositionDX": 0,
+			"labelPositionDY": 0,
+			"pieLabelRadius": 60,
+			"abbreviateValue": false,
+			"absoluteValue": false,
+			"toLocaleString": true,
+			"truncateDecimal": true,
+			"toFixedDecimal": 3,
+			"labelUnit": "",
+			"labelUnitPosition": "end",
+			"textAnchor": "middle",
+			"customLabelFormat": null,
+			"autoDeclutter": false,
+			"declutterPadding": 4,
+			"declutterLeaderLines": false,
+			"textOutline": false,
+			"textOutlineMode": "contrast",
+			"customPositions": {},
+			"customLabels": {},
+			"customVisibility": {},
+			"customStyles": {}
+		},
+		"shapes": {
+			"customStyles": {},
+			"segmentStyles": {},
+			"segmentsActive": false
+		},
+		"bar": {
+			"barPadding": 0.2,
+			"barGroupPadding": 0.2,
+			"hasRectStroke": false,
+			"stackOffset": "none"
+		},
+		"line": {
+			"interpolation": "curveLinear",
+			"strokeDasharray": "",
+			"strokeWidth": 3,
+			"showPoints": true,
+			"showArea": false,
+			"areaFillOpacity": 0.4
+		},
+		"dotPlot": {
+			"connectPoints": true,
+			"connectingLine": {
+				"stroke": "#E6E7E8",
+				"strokeWidth": 6,
+				"strokeDasharray": "",
+				"strokeOpacity": 1
+			}
+		},
+		"errorBars": {
+			"enabled": false,
+			"defaultStyles": {
+				"stroke": "#E6E7E8",
+				"strokeWidth": 6,
+				"strokeDasharray": "",
+				"strokeOpacity": 1
+			},
+			"categories": {},
+			"customStyles": {}
+		},
+		"explodedBar": {
+			"columnGap": 16
+		},
+		"pie": {
+			"hasPathStroke": false,
+			"pathStrokeColor": "white",
+			"pathStrokeWidth": 1,
+			"showCategoryLabels": true,
+			"innerRadius": 0,
+			"padAngle": 0,
+			"cornerRadius": 0,
+			"sortByValue": false,
+			"groupGapAngle": 10,
+			"showGroupArcs": false,
+			"groupArcStyle": {
+				"stroke": "#666666",
+				"strokeWidth": 1,
+				"strokeDasharray": "4,4"
+			}
+		},
+		"nodes": {
+			"pointSize": 3,
+			"pointFill": "inherit",
+			"pointStrokeWidth": 1,
+			"pointStroke": "inherit"
+		},
+		"regression": {
+			"active": false,
+			"type": "linear",
+			"stroke": "#2a2a2a",
+			"strokeWidth": 2,
+			"strokeDasharray": "",
+			"perGroupBreak": false,
+			"groupBreakStyles": {}
+		},
+		"map": {
+			"ignoreSmallStateLabels": false,
+			"ignoredLabels": [],
+			"abbreviateLabels": true,
+			"blockRectSize": 44,
+			"pathBackgroundFill": "#f7f7f7",
+			"pathStroke": "#d3d3d3",
+			"pathStrokeWidth": 0.5,
+			"showCountyBoundaries": true,
+			"showStateBoundaries": true,
+			"zoomActive": false,
+			"projectionPreset": "default",
+			"topologyRegion": "default",
+			"centerLongitude": 0,
+			"centerLatitude": 0,
+			"rotateLambda": 0,
+			"rotatePhi": 0,
+			"rotateGamma": 0,
+			"customScale": 1
+		},
+		"divergingBar": {
+			"positiveCategories": [],
+			"negativeCategories": [],
+			"netPositiveCategory": "",
+			"netNegativeCategory": "",
+			"percentOfInnerWidth": 0.7,
+			"neutralBar": {
+				"active": true,
+				"category": "",
+				"offsetX": 0,
+				"separator": true,
+				"separatorOffsetX": -1
+			},
+			"secondary": {
+				"active": false,
+				"positiveCategories": [],
+				"negativeCategories": [],
+				"fill": "#D9D9D9",
+				"stroke": "#000000",
+				"strokeWidth": 0.5,
+				"opacity": 0.4,
+				"categoryStyles": {},
+				"showInLegend": false
+			}
+		},
+		"diffColumn": {
+			"active": false,
+			"category": "",
+			"columnHeader": "Diff",
+			"customLabels": {},
+			"dx": 0,
+			"dy": 0,
+			"style": {
+				"rectStrokeWidth": 0,
+				"rectStrokeColor": "white",
+				"rectFill": "none",
+				"fill": "#2a2a2a",
+				"headerFill": "#2a2a2a",
+				"textOutline": false,
+				"headerTextOutline": false,
+				"fontWeight": "normal",
+				"fontStyle": "normal",
+				"headerFontWeight": "normal",
+				"headerFontStyle": "normal",
+				"headerFontFamily": "var:preset|font-family|sans-serif",
+				"fontAppearance": "default",
+				"fontSize": "10px",
+				"headerFontSize": "12px",
+				"marginLeft": 10,
+				"width": 30,
+				"heightOffset": 0
+			}
+		},
+		"netValues": {
+			"active": false,
+			"positive": {
+				"active": true,
+				"category": "",
+				"color": "black",
+				"fontWeight": 700,
+				"fontSize": 10,
+				"fontFamily": "var:preset|font-family|sans-serif",
+				"textAnchor": "middle",
+				"labelPositionDX": 0,
+				"labelPositionDY": 0,
+				"abbreviateValue": false,
+				"absoluteValue": false,
+				"truncateDecimal": false,
+				"toFixedDecimal": 0,
+				"toLocaleString": false,
+				"labelUnit": "",
+				"labelUnitPosition": "end",
+				"margin": 5
+			},
+			"negative": {
+				"active": false,
+				"category": "",
+				"color": "black",
+				"fontWeight": 700,
+				"fontSize": 10,
+				"fontFamily": "var:preset|font-family|sans-serif",
+				"textAnchor": "middle",
+				"labelPositionDX": 0,
+				"labelPositionDY": 0,
+				"abbreviateValue": false,
+				"absoluteValue": false,
+				"truncateDecimal": false,
+				"toFixedDecimal": 0,
+				"toLocaleString": false,
+				"labelUnit": "",
+				"labelUnitPosition": "end",
+				"margin": 5
+			}
+		},
+		"treemap": {
+			"tile": "squarify",
+			"rectStroke": "#ffffff",
+			"rectStrokeWidth": 2,
+			"labelMinArea": 1600,
+			"paddingInner": 2,
+			"paddingOuter": 4,
+			"scaleOpacity": false,
+			"opacityRange": [0.4, 1],
+			"borderRadius": 0,
+			"showValues": false
+		},
+		"sankey": {
+			"nodeAlign": "justify",
+			"nodeWidth": 12,
+			"nodePadding": 10,
+			"linkOpacity": 0.5,
+			"nodeRadius": 0,
+			"sourceKey": "x",
+			"targetKey": "target",
+			"valueKey": "value"
+		},
+		"annotations": {
+			"active": false,
+			"items": []
+		}
+	},
+	"palettes": {
+		"colors": {
+			"general": ["#456A83", "#BF3B27", "#756a7e", "#ea9e2c"],
+			"politics-main": ["#d1a730", "#a55a26", "#949d48"],
+			"global-main": ["#949d48", "#1F497D", "#a55a26"],
+			"religion-main": ["#0090C0", "#a55a26", "#949d48"],
+			"social-trends-main": ["#387668", "#d1a730", "#949d48"],
+			"journalism-main": ["#733d47", "#d1a730", "#949d48"],
+			"internet-main": ["#006699", "#949d48", "#d1a730"],
+			"hispanic-main": ["#a55a26", "#d1a730", "#949d48"],
+			"politics-spectrum": [
+				"#D1A730",
+				"#F6EED6",
+				"#ECDBAC",
+				"#E4CB83",
+				"#9E7F2D",
+				"#6A5522"
+			],
+			"global-spectrum": [
+				"#949D48",
+				"#EAECD8",
+				"#D6DAB3",
+				"#C2C98B",
+				"#6E7537",
+				"#494E24"
+			],
+			"religion-spectrum": [
+				"#0090C0",
+				"#C9DEEE",
+				"#9DC7E1",
+				"#71B2D6",
+				"#0073A5",
+				"#00557E"
+			],
+			"journalism-spectrum": [
+				"#733D47",
+				"#E8D3D7",
+				"#D1A8AF",
+				"#BC7B86",
+				"#552E35",
+				"#391E22"
+			],
+			"social-trends-spectrum": [
+				"#387668",
+				"#D1E9E4",
+				"#A2D2C8",
+				"#64B6AA",
+				"#005645",
+				"#003A2C"
+			],
+			"hispanic-spectrum": [
+				"#A55A26",
+				"#F2DBCD",
+				"#E7BA9A",
+				"#DE996A",
+				"#7C441C",
+				"#532E16"
+			],
+			"internet-spectrum": [
+				"#006699",
+				"#C9D1E1",
+				"#9DAECB",
+				"#7591B7",
+				"#004A75",
+				"#002748"
+			],
+			"blue-spectrum": [
+				"#456A83",
+				"#D5E1E9",
+				"#ACC4D3",
+				"#82A6BF",
+				"#335062",
+				"#213441"
+			],
+			"green-spectrum": [
+				"#949D48",
+				"#EAECD8",
+				"#D6DAB3",
+				"#C2C98B",
+				"#6E7537",
+				"#494E24"
+			],
+			"purple-spectrum": [
+				"#746A7E",
+				"#E3E1E5",
+				"#C7C1CB",
+				"#ACA4B1",
+				"#584F5E",
+				"#3A343F"
+			],
+			"medium-brown-spectrum": [
+				"#A55A26",
+				"#F2DBCD",
+				"#E7BA9A",
+				"#DE996A",
+				"#7C441C",
+				"#532E16"
+			],
+			"light-brown-spectrum": [
+				"#D1A730",
+				"#F6EED6",
+				"#ECDBAC",
+				"#E4CB83",
+				"#9E7F2D",
+				"#6A5522"
+			],
+			"orange-spectrum": [
+				"#EA9E2C",
+				"#F9EAD4",
+				"#F5D6A9",
+				"#F1C37F",
+				"#BB792A",
+				"#7C5220"
+			],
+			"red-spectrum": [
+				"#BF3B27",
+				"#F5D4CF",
+				"#EBABA2",
+				"#E37F73",
+				"#902D1E",
+				"#5F1D14"
+			]
+		},
+		"colorNames": [
+			{
+				"label": "General",
+				"value": "general"
+			},
+			{
+				"label": "Politics Main",
+				"value": "politics-main"
+			},
+			{
+				"label": "Global Main",
+				"value": "global-main"
+			},
+			{
+				"label": "Religion Main",
+				"value": "religion-main"
+			},
+			{
+				"label": "Social Trends Main",
+				"value": "social-trends-main"
+			},
+			{
+				"label": "Journalism Main",
+				"value": "journalism-main"
+			},
+			{
+				"label": "Internet Main",
+				"value": "internet-main"
+			},
+			{
+				"label": "Hispanic Main",
+				"value": "hispanic-main"
+			},
+			{
+				"label": "Politics Spectrum",
+				"value": "politics-spectrum"
+			},
+			{
+				"label": "Global Spectrum",
+				"value": "global-spectrum"
+			},
+			{
+				"label": "Religion Spectrum",
+				"value": "religion-spectrum"
+			},
+			{
+				"label": "Social Trends Spectrum",
+				"value": "social-trends-spectrum"
+			},
+			{
+				"label": "Journalism Spectrum",
+				"value": "journalism-spectrum"
+			},
+			{
+				"label": "Internet Spectrum",
+				"value": "internet-spectrum"
+			},
+			{
+				"label": "Hispanic Spectrum",
+				"value": "hispanic-spectrum"
+			},
+			{
+				"label": "Blue Spectrum",
+				"value": "blue-spectrum"
+			},
+			{
+				"label": "Green Spectrum",
+				"value": "green-spectrum"
+			},
+			{
+				"label": "Purple Spectrum",
+				"value": "purple-spectrum"
+			},
+			{
+				"label": "Medium Brown Spectrum",
+				"value": "medium-brown-spectrum"
+			},
+			{
+				"label": "Light Brown Spectrum",
+				"value": "light-brown-spectrum"
+			},
+			{
+				"label": "Orange Spectrum",
+				"value": "orange-spectrum"
+			},
+			{
+				"label": "Red Spectrum",
+				"value": "red-spectrum"
+			}
+		]
+	}
+}

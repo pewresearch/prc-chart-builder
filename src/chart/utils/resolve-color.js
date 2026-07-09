@@ -174,6 +174,26 @@ function normalizeRgba(value) {
 	return value.replace(/\s+/g, '');
 }
 
+/** @param {string} value Candidate hex string. */
+function isHexColor(value) {
+	return /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim());
+}
+
+/**
+ * Wrap an unmapped hex in light-dark() so chart fills share one CSS format.
+ *
+ * Custom palette swatches from theme.json presets (e.g. #7bdcb5) often lack
+ * PRC dual-mode pairs. Passthrough hex mixed with mapped light-dark() strings
+ * breaks react-spring fill updates on animated bars.
+ *
+ * @param {string} hex Normalized or original hex (#RGB / #RRGGBB).
+ * @return {string} light-dark() with the same value for both modes.
+ */
+function wrapHexAsLightDark(hex) {
+	const trimmed = hex.trim();
+	return `light-dark(${trimmed}, ${trimmed})`;
+}
+
 /**
  * Resolve a single color value to its light-dark() equivalent.
  *
@@ -183,7 +203,7 @@ function normalizeRgba(value) {
  * 3. Already a light-dark() string → passthrough
  * 4. Named color (white, black, gray) → themed equivalent
  * 5. rgba() value → known mapping or passthrough
- * 6. Hex value → palette lookup or passthrough
+ * 6. Hex value → palette lookup, else light-dark(hex, hex) for format parity
  *
  * @param {string} color - The color value to resolve.
  * @return {string} The resolved light-dark() string, or the original value if no match.
@@ -224,7 +244,16 @@ export function resolveColor(color) {
 	}
 
 	// Hex lookup (normalize to lowercase)
-	return HEX_TO_LIGHT_DARK.get(lower) || color;
+	const mapped = HEX_TO_LIGHT_DARK.get(lower);
+	if (mapped) {
+		return mapped;
+	}
+
+	if (isHexColor(color)) {
+		return wrapHexAsLightDark(color);
+	}
+
+	return color;
 }
 
 /**
@@ -247,8 +276,7 @@ export function resolveColorInString(cssValue) {
 	}
 
 	// Match hex colors: #RRGGBB or #RGB (word-bounded to avoid partial matches)
-	return cssValue.replace(/#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g, (hex) => {
-		const resolved = HEX_TO_LIGHT_DARK.get(hex.toLowerCase());
-		return resolved || hex;
-	});
+	return cssValue.replace(/#(?:[0-9a-fA-F]{6}|[0-9a-fA-F]{3})\b/g, (hex) =>
+		resolveColor(hex)
+	);
 }

@@ -7,6 +7,7 @@ import { register } from '@wordpress/data';
 /**
  * Internal Dependencies
  */
+import './apply-theme-block-defaults-filter';
 import metadata from './block.json';
 import deprecated from './deprecations';
 import edit from './edit';

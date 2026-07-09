@@ -64,7 +64,7 @@ const pieTemplate = [
 				subtitle: 'A subtitle for the chart',
 				source: 'Source: Add source note here',
 				note: 'Note: Add note about the chart',
-				tag: 'PEW RESEARCH CENTER',
+				tag: '',
 			},
 			independentAxis: {
 				tickCount: null,
@@ -84,7 +84,7 @@ const pieTemplate = [
 				color: 'contrast',
 			},
 			legend: {
-				active: true,
+				active: false,
 				markerStyle: 'circle',
 			},
 			dataRender: {

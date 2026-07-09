@@ -137,13 +137,25 @@ function resolveEntries(entries, dataPoint, groupBreaksCategory) {
 	grouped.forEach(([entryKey, value]) => {
 		const groupSepIdx = entryKey.indexOf('::');
 		const category = entryKey.substring(0, groupSepIdx);
-		const groupValue = entryKey.substring(groupSepIdx + 2);
+		const discriminator = entryKey.substring(groupSepIdx + 2);
 
-		if (
-			groupBreaksCategory &&
-			String(dataPoint[groupBreaksCategory]) === groupValue
-		) {
-			resolved[category] = value;
+		if (groupBreaksCategory) {
+			// Standard group-break path: match on the group column value
+			if (String(dataPoint[groupBreaksCategory]) === discriminator) {
+				resolved[category] = value;
+			}
+		} else {
+			// Scatter-specific path: when there are no group breaks, a 3-part key
+			// was saved with the category's y-value as the discriminator. Match
+			// against the data point's actual value for that category so duplicate-x
+			// points each resolve their own position independently.
+			if (
+				dataPoint[category] !== undefined &&
+				dataPoint[category] !== null &&
+				String(dataPoint[category]) === discriminator
+			) {
+				resolved[category] = value;
+			}
 		}
 	});
 

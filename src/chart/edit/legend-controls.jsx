@@ -38,6 +38,7 @@ import {
 	getAvailableLegendCategories,
 	isBubbleMapLegendMode,
 } from '../utils/get-available-legend-categories';
+import { LINE_CHART_TYPES } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import {
 	isLegendCategoryOrderStale,
@@ -94,6 +95,7 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 	const { chartFamily } = io;
 	const { mapScale, mapStyle } = dataRender;
 	const isBubbleMode = isBubbleMapLegendMode(chartType, mapStyle);
+	const isLineFamilyChart = LINE_CHART_TYPES.includes(chartType);
 
 	const availableLegendCategories = useMemo(
 		() =>
@@ -472,7 +474,7 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 								</PanelDescription>
 							</WidePanelItem>
 						)}
-					{!isBubbleMode && (
+					{!isBubbleMode && isLineFamilyChart && (
 						<WidePanelItem
 							hasValue={() => true}
 							label={__('Layout')}
@@ -484,6 +486,52 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 								value={
 									getCurrentValue('legend', 'variation') ||
 									'grouped'
+								}
+								onChange={(value) =>
+									updateAttributeForDevice('legend', {
+										variation: value,
+									})
+								}
+							>
+								<ToggleGroupControlOption
+									label={__('Grouped')}
+									value="grouped"
+								/>
+								<ToggleGroupControlOption
+									label={__('Detached')}
+									value="detached"
+								/>
+								<ToggleGroupControlOption
+									label={__('Direct')}
+									value="direct"
+								/>
+							</ToggleGroupControl>
+							<PanelDescription>
+								<Help>
+									{__(
+										'Grouped: all items in one legend block. Detached: each item floats independently. Direct: series names render on their lines (line, area, and stacked area charts) with automatic overlap prevention.'
+									)}
+								</Help>
+							</PanelDescription>
+						</WidePanelItem>
+					)}
+					{!isBubbleMode && !isLineFamilyChart && (
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Layout')}
+							panelId={clientId}
+						>
+							<ToggleGroupControl
+								isBlock
+								label={__('Legend Layout')}
+								value={
+									getCurrentValue('legend', 'variation') ===
+									'direct'
+										? 'grouped'
+										: getCurrentValue(
+												'legend',
+												'variation'
+											) || 'grouped'
 								}
 								onChange={(value) =>
 									updateAttributeForDevice('legend', {

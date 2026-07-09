@@ -55,7 +55,7 @@ const legacyBarTemplate = [
 			},
 			metadata: {
 				active: true,
-				tag: 'PEW RESEARCH CENTER',
+				tag: '',
 			},
 			colors: {
 				value: 'journalism-main',

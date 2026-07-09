@@ -27,6 +27,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
+import { BAR_CHART_TYPES, LINE_CHART_TYPES } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import { useFocusedPanel } from './inspector-focus-context';
 import { POSITION_DISABLED_CHART_TYPES } from './popover/utils';
@@ -163,6 +164,109 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 									}
 								/>
 							</ToolsPanelItem>
+						)}
+						<ToggleControl
+							label={__('Prevent label overlap (auto)')}
+							help={__(
+								'Automatically nudge labels to reduce overlap. Manual label positions always take priority.'
+							)}
+							checked={
+								getCurrentValue('labels', 'autoDeclutter') ||
+								false
+							}
+							disabled={!getCurrentValue('labels', 'active')}
+							onChange={(newValue) =>
+								updateAttributeForDevice('labels', {
+									autoDeclutter: newValue,
+									...(newValue
+										? {}
+										: { declutterLeaderLines: false }),
+								})
+							}
+						/>
+						{(LINE_CHART_TYPES.includes(chartType) ||
+							chartType === 'scatter' ||
+							chartType === 'dot-plot') && (
+							<ToggleControl
+								label={__('Show leader lines')}
+								help={__(
+									'Draw a line from each data point to its label when auto overlap prevention moves the label.'
+								)}
+								checked={
+									getCurrentValue(
+										'labels',
+										'declutterLeaderLines'
+									) || false
+								}
+								disabled={
+									!getCurrentValue('labels', 'active') ||
+									!getCurrentValue('labels', 'autoDeclutter')
+								}
+								onChange={(newValue) =>
+									updateAttributeForDevice('labels', {
+										declutterLeaderLines: newValue,
+									})
+								}
+							/>
+						)}
+						<ToggleControl
+							label={__('Text outline for legibility')}
+							help={__(
+								'Draw a halo behind each label so it stays readable when it overlaps a line, bar, or shape.'
+							)}
+							checked={
+								getCurrentValue('labels', 'textOutline') ||
+								false
+							}
+							disabled={!getCurrentValue('labels', 'active')}
+							onChange={(newValue) =>
+								updateAttributeForDevice('labels', {
+									textOutline: newValue,
+								})
+							}
+						/>
+						{getCurrentValue('labels', 'textOutline') && (
+							<SelectControl
+								label={__('Outline color')}
+								help={
+									BAR_CHART_TYPES.includes(chartType) ||
+									chartType === 'pie' ||
+									chartType === 'treemap'
+										? __(
+												'Contrast with text is recommended for labels inside bars or colored shapes. Chart background works well when labels float over empty space.'
+											)
+										: __(
+												'Chart background works well when labels float over lines or empty space. Contrast with text is better inside colored shapes.'
+											)
+								}
+								value={
+									getCurrentValue(
+										'labels',
+										'textOutlineMode'
+									) ||
+									(BAR_CHART_TYPES.includes(chartType) ||
+									chartType === 'pie' ||
+									chartType === 'treemap'
+										? 'contrast'
+										: 'background')
+								}
+								options={[
+									{
+										label: __('Chart background'),
+										value: 'background',
+									},
+									{
+										label: __('Contrast with text'),
+										value: 'contrast',
+									},
+								]}
+								disabled={!getCurrentValue('labels', 'active')}
+								onChange={(newValue) =>
+									updateAttributeForDevice('labels', {
+										textOutlineMode: newValue,
+									})
+								}
+							/>
 						)}
 						{chartType === 'pie' && (
 							<ToolsPanelItem
@@ -610,10 +714,15 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 								</PanelDescription>
 							</WidePanelItem>
 							<WidePanelItem
-								hasValue={() =>
-									getCurrentValue('labels', 'labelCutoff')
-								}
+								hasValue={() => {
+									const cutoff = getCurrentValue(
+										'labels',
+										'labelCutoff'
+									);
+									return cutoff !== null && cutoff !== '';
+								}}
 								label={__('Label Cutoff')}
+								isShownByDefault
 								panelId={clientId}
 							>
 								<NumberControl

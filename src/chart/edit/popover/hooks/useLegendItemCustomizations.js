@@ -11,11 +11,15 @@
  *   fontFamily  - override font family
  *   fontSize    - override font size (number, px)
  *   maxWidth    - max width for text wrapping (number, px; 0 = no limit)
+ *   lineHeight  - unitless line-height multiplier for wrapped text
+ *   textAlign   - horizontal text alignment ('left' | 'center' | 'right')
+ *   letterSpacing - letter spacing in px
  *   textOutline - add contrasting outline behind text (boolean)
  *   markerStyle - override swatch shape ('' | 'circle' | 'square' | 'line' | 'none')
  *   markerFill  - override marker fill ( 'solid' | 'outline')
- *   offsetX     - horizontal position offset (detached mode only, number px)
- *   offsetY     - vertical position offset (detached mode only, number px)
+ *   positioningContext - 'chart' | 'inner' (detached mode; default 'chart')
+ *   offsetX     - horizontal position offset in layout px (detached mode only)
+ *   offsetY     - vertical position offset in layout px (detached mode only)
  */
 
 import { useCallback, useEffect, useState } from '@wordpress/element';
@@ -99,9 +103,13 @@ export function useLegendItemCustomizations(
 		fontFamily: styles.fontFamily ?? '',
 		fontSize: styles.fontSize ?? '',
 		maxWidth: styles.maxWidth ?? 0,
+		lineHeight: styles.lineHeight ?? '',
+		textAlign: styles.textAlign ?? '',
+		letterSpacing: styles.letterSpacing ?? '',
 		textOutline: styles.textOutline ?? false,
 		markerStyle: styles.markerStyle ?? '',
 		markerFill: styles.markerFill ?? '',
+		positioningContext: styles.positioningContext ?? 'chart',
 		offsetX: styles.offsetX ?? '',
 		offsetY: styles.offsetY ?? '',
 		defaultLabel,

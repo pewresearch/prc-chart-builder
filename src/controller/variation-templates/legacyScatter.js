@@ -59,7 +59,7 @@ const legacyScatterTemplate = [
 			},
 			metadata: {
 				active: true,
-				tag: 'PEW RESEARCH CENTER',
+				tag: '',
 			},
 			independentAxis: {
 				domain: {

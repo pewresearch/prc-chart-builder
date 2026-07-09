@@ -97,7 +97,6 @@ function AnnotationControls({ attributes, setAttributes }) {
 			borderRadius: 0,
 			opacity: 1,
 			maxWidth: 200,
-			activeOnMobile: true,
 			positioningContext: 'chart',
 		};
 

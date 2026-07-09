@@ -6,7 +6,7 @@
  */
 import { Icon as PRCIcon } from '@prc/icons';
 import apiFetch from '@wordpress/api-fetch';
-import { BlockEditorProvider, BlockPreview } from '@wordpress/block-editor';
+import * as blockEditor from '@wordpress/block-editor';
 import {
 	createBlock,
 	createBlocksFromInnerBlocksTemplate,
@@ -39,6 +39,7 @@ import {
  * Internal Dependencies
  */
 import * as variationTemplates from '../../../../src/controller/variation-templates/index';
+import { applyThemeToInnerBlocksTemplate } from '../../../../src/controller/variation-templates/helpers';
 import { csvToTableAttributes, inferCategories, parseCsv } from '../utils/csv';
 import AICreateStep from './ai-create-step';
 import CsvDataInput from './csv-data-input';
@@ -73,6 +74,19 @@ const CHART_TYPE_ICON_MAP = {
 
 const PREVIEW_VIEWPORT_WIDTH = 1200;
 const EMPTY_BLOCKS = [];
+const { BlockEditorProvider, BlockPreview } = blockEditor;
+
+function ModalPreviewShell({ children }) {
+	if (!BlockEditorProvider) {
+		return children;
+	}
+
+	return (
+		<BlockEditorProvider value={EMPTY_BLOCKS} settings={{}}>
+			{children}
+		</BlockEditorProvider>
+	);
+}
 
 // DataViews previewSize snaps to these discrete pixel widths (from preview-size-picker.tsx).
 // We map each card width to a BlockPreview viewportWidth so the content scales
@@ -108,19 +122,24 @@ function slugToTemplateKey(slug) {
 
 /**
  * Serialize a variation template into raw block markup.
- * Mirrors the logic in src/synced-chart/chart-create.jsx.
+ * Injects a chart title into serialized block content before POST.
  * @param {string} chartTypeSlug
  */
 function serializeVariationTemplate(chartTypeSlug) {
 	const key = slugToTemplateKey(chartTypeSlug);
-	const innerBlocks = variationTemplates[key] ?? null;
+	const innerBlocks = applyThemeToInnerBlocksTemplate(
+		variationTemplates[key] ?? null
+	);
 	if (!innerBlocks) {
 		return null;
 	}
 	const innerBlockObjects = createBlocksFromInnerBlocksTemplate(innerBlocks);
 	const controllerBlock = createBlock(
 		'prc-chart-builder/controller',
-		{ chartType: chartTypeSlug },
+		{
+			chartType: chartTypeSlug,
+			...(chartTypeSlug === 'freeform' ? { isFreeform: true } : {}),
+		},
 		innerBlockObjects
 	);
 	return serialize(controllerBlock);
@@ -137,8 +156,8 @@ function getEditUrl(postId) {
 	return url.toString();
 }
 
-async function createChartAndRedirect(title, content) {
-	const chart = await apiFetch({
+async function createChartPost(title, content) {
+	return apiFetch({
 		path: '/wp/v2/chart',
 		method: 'POST',
 		data: {
@@ -147,7 +166,6 @@ async function createChartAndRedirect(title, content) {
 			status: 'draft',
 		},
 	});
-	window.location.href = getEditUrl(chart.id);
 }
 
 // ── Pattern preview — mirrors edit-site/src/components/page-patterns/fields.js
@@ -188,6 +206,14 @@ function PreviewField({ item, viewportWidth = PREVIEW_VIEWPORT_WIDTH }) {
 		return (
 			<div className="prc-chart-modal__pattern-preview-fallback">
 				<Icon icon={chartBar} size={48} />
+			</div>
+		);
+	}
+
+	if (!BlockPreview) {
+		return (
+			<div className="prc-chart-modal__pattern-preview-fallback">
+				<Icon icon={layout} size={48} />
 			</div>
 		);
 	}
@@ -513,7 +539,14 @@ function injectTitleIntoContent(content, title) {
 	return serialize(blocks);
 }
 
-function CreateStep({ chartType, pattern, initialCsvText = '', onBack }) {
+function CreateStep({
+	chartType,
+	pattern,
+	initialCsvText = '',
+	onBack,
+	onChartCreated,
+	mode = 'create-post',
+}) {
 	const [title, setTitle] = useState('');
 	const [csvText, setCsvText] = useState(initialCsvText);
 	const [isCreating, setIsCreating] = useState(false);
@@ -532,15 +565,22 @@ function CreateStep({ chartType, pattern, initialCsvText = '', onBack }) {
 			if (title.trim()) {
 				content = injectTitleIntoContent(content, title);
 			}
-			await createChartAndRedirect(title, content);
+			if (mode === 'inline') {
+				await onChartCreated(null, { content, title });
+			} else {
+				const chart = await createChartPost(title, content);
+				await onChartCreated(chart.id, chart);
+			}
 		} catch (err) {
 			setError(
 				err?.message ||
-					__('Failed to create chart.', 'prc-chart-builder')
+					(mode === 'inline'
+						? __('Failed to insert chart.', 'prc-chart-builder')
+						: __('Failed to create chart.', 'prc-chart-builder'))
 			);
 			setIsCreating(false);
 		}
-	}, [title, csvText, pattern]);
+	}, [title, csvText, pattern, onChartCreated, mode]);
 
 	return (
 		<div className="prc-chart-modal__create-step">
@@ -600,8 +640,12 @@ function CreateStep({ chartType, pattern, initialCsvText = '', onBack }) {
 						{isCreating ? (
 							<Flex gap={2}>
 								<Spinner />
-								{__('Creating…', 'prc-chart-builder')}
+								{mode === 'inline'
+									? __('Inserting…', 'prc-chart-builder')
+									: __('Creating…', 'prc-chart-builder')}
 							</Flex>
+						) : mode === 'inline' ? (
+							__('Insert Chart', 'prc-chart-builder')
 						) : (
 							__('Create Chart', 'prc-chart-builder')
 						)}
@@ -629,6 +673,9 @@ export default function CreateNewChartModal({
 	onOpen,
 	onClose,
 	initialCsvText = '',
+	afterCreate,
+	hideTrigger = false,
+	mode = 'create-post',
 }) {
 	const [selectedType, setSelectedType] = useState(null);
 	const [selectedPattern, setSelectedPattern] = useState(null);
@@ -790,6 +837,18 @@ export default function CreateNewChartModal({
 		onClose();
 	}, [onClose]);
 
+	const handleChartCreated = useCallback(
+		async (postId, chart) => {
+			if (afterCreate) {
+				await afterCreate(postId, chart);
+				handleClose();
+			} else {
+				window.location.href = getEditUrl(postId);
+			}
+		},
+		[afterCreate, handleClose]
+	);
+
 	const handleSelectType = useCallback((term) => {
 		setSelectedType(term);
 		setSelectedPattern(null);
@@ -826,7 +885,10 @@ export default function CreateNewChartModal({
 		});
 	}, []);
 
-	let modalTitle = __('Add New Chart', 'prc-chart-builder');
+	const isInlineMode = mode === 'inline';
+	let modalTitle = isInlineMode
+		? __('Add Chart', 'prc-chart-builder')
+		: __('Add New Chart', 'prc-chart-builder');
 	if (isPchImport) {
 		modalTitle = __('Import from pewplots', 'prc-chart-builder');
 	} else if (selectedType && !selectedPattern) {
@@ -842,22 +904,26 @@ export default function CreateNewChartModal({
 			)}`;
 		}
 	} else if (selectedPattern) {
-		modalTitle = __('Name Your Chart', 'prc-chart-builder');
+		modalTitle = isInlineMode
+			? __('Configure Chart', 'prc-chart-builder')
+			: __('Name Your Chart', 'prc-chart-builder');
 	}
 
 	return (
 		<>
-			<Button
-				variant="primary"
-				onClick={onOpen}
-				icon={plus}
-				__next40pxDefaultSize
-			>
-				{__('Add New Chart', 'prc-chart-builder')}
-			</Button>
+			{!hideTrigger && (
+				<Button
+					variant="primary"
+					onClick={onOpen}
+					icon={plus}
+					__next40pxDefaultSize
+				>
+					{__('Add New Chart', 'prc-chart-builder')}
+				</Button>
+			)}
 
 			{isOpen && (
-				<BlockEditorProvider value={EMPTY_BLOCKS} settings={{}}>
+				<ModalPreviewShell>
 					<Modal
 						title={modalTitle}
 						onRequestClose={handleClose}
@@ -928,10 +994,12 @@ export default function CreateNewChartModal({
 									''
 								}
 								onBack={handleBackToPatterns}
+								onChartCreated={handleChartCreated}
+								mode={mode}
 							/>
 						)}
 					</Modal>
-				</BlockEditorProvider>
+				</ModalPreviewShell>
 			)}
 		</>
 	);

@@ -739,7 +739,7 @@ Only return the attributes you want to override from defaults. Keep overrides mi
 - `subtitle`: short subtitle if appropriate, else ""
 - `source`: "Source: [inferred from data or description]"
 - `note`: "Note: [any caveats]" or ""
-- `tag`: "PEW RESEARCH CENTER"
+- `tag`: omit — the site chart theme supplies the default metadata tag
 
 **colors** (required when a color scheme is requested):
 - Array of hex color strings. Default palette: ["#456A83","#BF3B27","#756a7e","#ea9e2c","#BB792A","#eeece4"]

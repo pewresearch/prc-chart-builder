@@ -27,6 +27,7 @@ class Synced_Chart {
 	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'block_init' );
+		$loader->add_action( 'enqueue_block_editor_assets', $this, 'enqueue_editor_assets' );
 	}
 
 	/**
@@ -205,6 +206,24 @@ class Synced_Chart {
 			array(
 				'render_callback' => array( $this, 'render_block_callback' ),
 			)
+		);
+	}
+
+	/**
+	 * Localize Chart Library data for the create-new-chart modal in the block editor.
+	 *
+	 * @hook enqueue_block_editor_assets
+	 */
+	public function enqueue_editor_assets() {
+		$block_type = \WP_Block_Type_Registry::get_instance()->get_registered( 'prc-chart-builder/synced-chart' );
+		if ( ! $block_type || empty( $block_type->editor_script_handles ) ) {
+			return;
+		}
+
+		wp_localize_script(
+			$block_type->editor_script_handles[0],
+			'prcChartBuilderLibrary',
+			Admin::get_library_localized_data()
 		);
 	}
 }

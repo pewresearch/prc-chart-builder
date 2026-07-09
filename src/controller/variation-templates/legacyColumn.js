@@ -56,7 +56,7 @@ const legacyColumnTemplate = [
 			},
 			metadata: {
 				active: true,
-				tag: 'PEW RESEARCH CENTER',
+				tag: '',
 			},
 			colors: {
 				value: 'social-trends-spectrum',

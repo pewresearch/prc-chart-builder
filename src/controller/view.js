@@ -1,9 +1,4 @@
 /**
- * External Dependencies
- */
-import DOMPurify from 'dompurify';
-
-/**
  * WordPress Dependencies
  */
 import {
@@ -17,6 +12,7 @@ import {
 /**
  * Internal Dependencies
  */
+import { syncControllerSurfaces } from '../chart/utils/sync-controller-surfaces';
 import { sanitizeChartExportFilename } from '../chart/utils/sanitize-chart-export-filename';
 import { arrayToCSV, UTF8_BOM } from './utils/csv-export';
 import { logMigrationComparison } from './utils/log-migration';
@@ -189,109 +185,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 });
 
-/**
- * Write trusted-but-sanitized cell HTML.
- *
- * Cell content is author/config-trusted (server-seeded from a `wp_kses_post`
- * render, then updated only by consumer blocks via `setTableData` / `setChart`),
- * the same trust boundary the rest of this module relies on. We still run it
- * through DOMPurify so inline markup the parser captured (e.g. `<strong>`,
- * links) survives a live update — matching the server render — while any unsafe
- * markup is stripped.
- *
- * @param {HTMLElement} cell  Target cell.
- * @param {*}           value Cell value (string or HTML fragment).
- */
-function setCellHTML(cell, value) {
-	cell.innerHTML = DOMPurify.sanitize(String(value ?? ''));
-}
-
-/**
- * Visible, non-hidden cells of a row, in document order.
- *
- * The server renders the full Power Table (via `render_block`), so hidden
- * columns are present in the DOM with `.is-column-hidden`. The `{ header, rows }`
- * projection has those columns filtered out, so we map projection values onto
- * the visible cells only.
- *
- * @param {HTMLTableRowElement} row Table row.
- * @return {HTMLTableCellElement[]} Non-hidden cells.
- */
-function visibleCells(row) {
-	return Array.from(row.children).filter(
-		(cell) => !cell.classList.contains('is-column-hidden')
-	);
-}
-
-/**
- * Update the visible underlying-numbers table in place from a `{ header, rows }`
- * projection — content only, never structure.
- *
- * The initial render is the real Power Table block, which carries all author
- * formatting (column widths, scroll, sticky column, sorting, rounding). To keep
- * that formatting intact on a live update we only rewrite the content of cells
- * that already exist; we never rebuild rows or cells. This is deliberately
- * strict: an update is accepted only when its shape matches the rendered table
- * exactly (same row count, and same visible-column count per row). On any
- * mismatch we leave the server-rendered table untouched — a malformed update
- * degrades to "no live update", never to stripped formatting. Reshaping the
- * table (adding/removing rows or columns) is intentionally unsupported; the
- * text-only projection cannot describe layout, and reshaping is not a real
- * chart-data use case.
- *
- * The element passed in is the `.chart-builder-data-table` figure; the `<table>`
- * is resolved from within it.
- *
- * @param {HTMLElement} tableEl   The `.chart-builder-data-table` element (figure or table).
- * @param {Object}      tableData `{ header: string[], rows: string[][] }`.
- */
-function rebuildDataTable(tableEl, tableData) {
-	if (!tableEl || !tableData || !Array.isArray(tableData.header)) {
-		return;
-	}
-	const table = tableEl.matches('table')
-		? tableEl
-		: tableEl.querySelector('table');
-	if (!table) {
-		return;
-	}
-
-	const { header, rows = [] } = tableData;
-	const rowsData = Array.isArray(rows) ? rows : [];
-
-	const headerRow = table.querySelector('thead tr');
-	const headerCells = headerRow ? visibleCells(headerRow) : [];
-	const bodyRows = Array.from(table.querySelectorAll('tbody > tr'));
-
-	// Validate the entire shape BEFORE mutating anything, so a mismatch leaves
-	// the server render fully intact rather than half-updated.
-	const shapeMatches =
-		(!headerRow || headerCells.length === header.length) &&
-		bodyRows.length === rowsData.length &&
-		bodyRows.every((row, r) => {
-			const rowData = Array.isArray(rowsData[r]) ? rowsData[r] : [];
-			return visibleCells(row).length === rowData.length;
-		});
-
-	if (!shapeMatches) {
-		// eslint-disable-next-line no-console -- surface misconfigured updates to developers; keeps the correct server render.
-		console.warn(
-			'[prc-chart-builder] Ignoring table update: shape does not match the rendered table. Updates must keep the same structure (row and visible-column counts).'
-		);
-		return;
-	}
-
-	// Content-only patch. Element-level formatting (styles, classes, column
-	// widths) is preserved because we never touch the cell elements themselves.
-	if (headerRow) {
-		header.forEach((cell, i) => setCellHTML(headerCells[i], cell));
-	}
-	bodyRows.forEach((row, r) => {
-		const rowData = Array.isArray(rowsData[r]) ? rowsData[r] : [];
-		visibleCells(row).forEach((cell, c) => setCellHTML(cell, rowData[c]));
-	});
-}
-
 const { state, actions } = store('prc-chart-builder/controller', {
 	state: {
 		get isActive() {
@@ -410,15 +303,20 @@ const { state, actions } = store('prc-chart-builder/controller', {
 					: controllerEl.querySelector('.cb__chart')) ||
 				controllerEl.querySelector('.wp-block-image');
 
+			const allowDataDownload =
+				controllerEl.closest('.wp-chart-builder-wrapper')?.dataset
+					.allowDataDownload !== 'false';
+			const tableChromeOffset = allowDataDownload ? 37 : 0;
+
 			const applyHeight = () => {
 				const chartHeight = getChartEl()?.offsetHeight;
 				if (!chartHeight) {
 					return;
 				}
-				// -37px ≈ the download-data button + table bottom margin.
+				// -37px ≈ the download-data button + table bottom margin when shown.
 				tableInnerContainer.style.height = '100%';
-				tableInnerContainer.style.minHeight = `${chartHeight - 37}px`;
-				tableInnerContainer.style.maxHeight = `${chartHeight - 37}px`;
+				tableInnerContainer.style.minHeight = `${chartHeight - tableChromeOffset}px`;
+				tableInnerContainer.style.maxHeight = `${chartHeight - tableChromeOffset}px`;
 			};
 
 			// Coalesce bursts of resize callbacks into one measurement.
@@ -478,27 +376,19 @@ const { state, actions } = store('prc-chart-builder/controller', {
 			};
 		},
 		/**
-		 * Keep the controller's server-rendered surfaces in sync with the chart
-		 * store, so a consumer block calling `setChart` / `setData` /
-		 * `setConfig` / `setTableData` on `state.charts[chartId]` updates what's
-		 * visible. Two independent `watch`es are registered:
+		 * Reset the controller's underlying-numbers table and metadata after
+		 * Interactivity Router navigation reuses a DOM node (e.g. paginated
+		 * collapsible charts).
 		 *
-		 * 1. **Underlying-numbers table** — rebuilt in place from the slice's
-		 *    `tableData` (also drives the CSV export via `downloadData` and the
-		 *    chart's ARIA description). Present only when the chart has a table.
-		 * 2. **Metadata text** — `title` / `subtitle` / `note` / `source` /
-		 *    `tag` mirrored from the chart config's `metadata`. These render
-		 *    server-side in up to three places inside the controller (the chart
-		 *    block, the data-tab table, the freeform wrapper), so every match in
-		 *    the subtree is updated.
+		 * Same-page `setChart` / `setTableData` updates are handled by
+		 * `syncControllerSurfaces` in the chart store — not this callback.
+		 * Imperative DOM mutations desync the router's virtual DOM, so on
+		 * navigation we forcibly reconcile both table and metadata to the
+		 * fresh server state (not the live store slice, which may retain
+		 * stale data from the previous question per `populateServerData`
+		 * `override = false` semantics).
 		 *
-		 * Each `watch` auto-subscribes only to the signals it reads, so a
-		 * `tableData` change never re-runs the metadata pass and vice-versa.
-		 * Both skip their first run because the server already rendered the same
-		 * values. Metadata is written via `innerHTML` to match the server's
-		 * `wp_kses_post` render so inline markup (links, emphasis) survives a
-		 * live update; the source is author/config-trusted, the same trust
-		 * boundary as the block attributes the server escapes.
+		 * Skips the first run because SSR already rendered the matching content.
 		 *
 		 * @return {Function|undefined} A dispose fn the init directive cleans up.
 		 */
@@ -508,86 +398,107 @@ const { state, actions } = store('prc-chart-builder/controller', {
 			if (!controllerEl) {
 				return undefined;
 			}
-			const chartId = controllerEl.querySelector('[data-prc-chart-id]')
-				?.dataset?.prcChartId;
-			if (!chartId) {
-				return undefined;
-			}
 
-			let chartStore;
+			let routerStore = null;
 			try {
-				chartStore = store('prc-chart-builder/chart');
+				routerStore = store('core/router');
 			} catch (e) {
-				// Chart store not registered (e.g. custom-charts). CSV download
-				// still falls back to the controller context.
-				return undefined;
+				routerStore = null;
 			}
 
-			const disposers = [];
+			let isFirstRun = true;
+			const disposer = watch(() => {
+				// Reactive dependency: re-run after router navigation so a reused
+				// controller node re-points at the current question's chart/table.
+				void routerStore?.state?.url;
 
-			// 1) Visible underlying-numbers table (only when a table exists).
-			const tableEl = controllerEl.querySelector(
-				'.chart-builder-data-table'
-			);
-			if (tableEl) {
-				let isFirstRun = true;
-				disposers.push(
-					watch(() => {
-						// Read FIRST so the watch subscribes before any return.
-						const tableData =
-							chartStore.state.charts?.[chartId]?.tableData;
-						if (isFirstRun) {
-							isFirstRun = false;
-							return;
-						}
-						rebuildDataTable(tableEl, tableData);
-					})
-				);
+				if (isFirstRun) {
+					isFirstRun = false;
+					return;
+				}
+
+				const chartId = controllerEl.querySelector(
+					'[data-prc-chart-id]'
+				)?.dataset?.prcChartId;
+				if (!chartId) {
+					return;
+				}
+
+				// Use getServerState() as the source of truth after router
+				// navigation. The live store slice may retain stale data from
+				// the previous question because populateServerData merges with
+				// override = false.
+				let serverSlice;
+				try {
+					serverSlice = getServerState('prc-chart-builder/chart')
+						.charts?.[chartId];
+				} catch (e) {
+					return;
+				}
+
+				if (serverSlice) {
+					syncControllerSurfaces(chartId, serverSlice);
+				}
+			});
+
+			return () => disposer();
+		},
+		/**
+		 * Reset the active tab to the server default across Interactivity
+		 * Router navigations.
+		 *
+		 * `activeTab` lives in the persistent Interactivity store, and the
+		 * router merges fresh server state with `override = false` (see
+		 * `populateServerData`). So a user's prior Chart→Data selection
+		 * survives a navigate-away / navigate-back and the chart wrongly
+		 * reopens on the Data tab. Re-apply the server-computed default —
+		 * which already encodes the "table when the Chart tab is hidden" rule
+		 * from the render callback — on every router URL change and once on
+		 * mount (covering both reused and freshly recreated controller nodes).
+		 *
+		 * Must NOT read `state[id].activeTab`: the interactivity runtime
+		 * auto-subscribes this watch to every signal it reads, and reacting to
+		 * `activeTab` would clobber the user's in-page tab clicks. The write
+		 * below is the only touch of that signal, and its reactive surface is
+		 * scoped to the router URL + server state.
+		 *
+		 * @return {Function} A dispose fn the init directive cleans up.
+		 */
+		resetTabOnNavigation() {
+			const { id } = getContext();
+
+			let routerStore = null;
+			try {
+				routerStore = store('core/router');
+			} catch (e) {
+				routerStore = null;
 			}
 
-			// 2) Metadata text fields. Source of truth is config.metadata,
-			//    patched via setConfig / setChart({ config: { metadata } }).
-			const metaFields = [
-				['title', '.cb__title'],
-				['subtitle', '.cb__subtitle'],
-				['note', '.cb__note--note'],
-				['source', '.cb__note--source'],
-				['tag', '.cb__tag'],
-			];
-			let isFirstMetaRun = true;
-			disposers.push(
-				watch(() => {
-					const metadata =
-						chartStore.state.charts?.[chartId]?.config?.metadata;
-					// Read every field up front so the watch subscribes to all
-					// of them before the first-run skip returns.
-					// eslint-disable-next-line @wordpress/no-unused-vars-before-return -- intentional: the reads above register signal dependencies and must run before the early return.
-					const values = metaFields.map(
-						([field]) => metadata?.[field]
+			const disposer = watch(() => {
+				// Reactive dependency: re-run after router navigation.
+				void routerStore?.state?.url;
+
+				if (!state[id]) {
+					return;
+				}
+
+				let serverControllerState;
+				try {
+					serverControllerState = getServerState(
+						'prc-chart-builder/controller'
 					);
-					if (isFirstMetaRun) {
-						isFirstMetaRun = false;
-						return;
-					}
-					metaFields.forEach(([, selector], i) => {
-						const value = values[i];
-						if (value === undefined) {
-							return;
-						}
-						controllerEl
-							.querySelectorAll(selector)
-							.forEach((el) => {
-								// Parity with the server's wp_kses_post render so
-								// inline markup (links, emphasis) survives a live
-								// update. Source is author/config-trusted — the
-								// same trust boundary as the block attributes.
-								el.innerHTML = String(value ?? '');
-							});
-					});
-				})
-			);
+				} catch (e) {
+					return;
+				}
 
-			return () => disposers.forEach((dispose) => dispose && dispose());
+				// The render callback always seeds activeTab — 'chart', or
+				// 'table' when the Chart tab is hidden — so this reapplies the
+				// intended default and clears the stale client selection.
+				state[id].activeTab =
+					serverControllerState?.[id]?.activeTab || 'chart';
+			});
+
+			return () => disposer();
 		},
 	},
 	actions: {
@@ -687,6 +598,7 @@ const { state, actions } = store('prc-chart-builder/controller', {
 				source,
 				tag,
 				postPubDate,
+				isFreeformChart,
 			} = context;
 			// If the event is a keydown event and the key is not Enter or space, return
 			if (
@@ -700,10 +612,17 @@ const { state, actions } = store('prc-chart-builder/controller', {
 			// setChart) so exported CSVs reflect any runtime data updates. Fall
 			// back to the server-seeded controller context for freeform charts
 			// (no chart slice) or before the chart store is registered.
+			//
+			// Freeform charts always use the context table data (the overarching
+			// power table). They may contain multiple inner charts (e.g. mini
+			// multiples), so querying for a chart slice would grab only the first
+			// inner chart's data instead of the full freeform table.
 			let tableData = contextTableData;
 			const controllerEl = document.getElementById(id);
-			const chartId = controllerEl?.querySelector('[data-prc-chart-id]')
-				?.dataset?.prcChartId;
+			const chartId = isFreeformChart
+				? null
+				: controllerEl?.querySelector('[data-prc-chart-id]')?.dataset
+						?.prcChartId;
 			if (chartId) {
 				try {
 					const slice = store('prc-chart-builder/chart').state

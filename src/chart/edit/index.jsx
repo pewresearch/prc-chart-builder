@@ -489,7 +489,6 @@ function EditInner({
 			borderRadius: 0,
 			opacity: 1,
 			maxWidth: 200,
-			activeOnMobile: true,
 			positioningContext: 'chart',
 		};
 		updateAttributeForDevice('annotations', {
@@ -728,7 +727,6 @@ function EditInner({
 			baseConfig.tooltip = {
 				...baseConfig.tooltip,
 				active: false,
-				activeOnMobile: false,
 			};
 		}
 
@@ -802,8 +800,9 @@ function EditInner({
 		const [, ...rest] = headers;
 
 		// Note: We no longer preserve __labelPositions from old chartData here.
-		// Custom label positions are now managed via labels.customPositions (viewport-aware)
-		// and merged into chartData at render time by mergeCustomLabelPositions utility.
+		// Custom label positions are now managed via labels.customPositions
+		// (viewport-aware) and merged into chart inputs at render time by the
+		// custom-label-data merge (see build-chart-inputs / merge-custom-label-data).
 		const newChartData = memoizedChartData;
 
 		// Check if the data actually changed (deep comparison of data values)

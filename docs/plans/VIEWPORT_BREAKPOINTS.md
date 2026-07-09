@@ -6,21 +6,25 @@
 
 ### Client-Side (Browser)
 
-Breakpoints are determined by `window.innerWidth`:
+Breakpoints are determined by `window.innerWidth` using **Gutenberg /
+@wordpress/compose** thresholds (same as the block editor device preview):
 
 ```javascript
+import { resolveViewportFromWidth } from './viewport-breakpoints';
+
 function getViewportFromWidth(width) {
-	if (width <= 640) return 'mobile';
-	if (width <= 1023) return 'tablet';
-	return 'desktop';
+	return resolveViewportFromWidth(width);
 }
 ```
 
-**Breakpoints**:
+**Breakpoints** (aligned with `@wordpress/compose` `useViewportMatch`):
 
-- **Mobile**: `width ≤ 640px`
-- **Tablet**: `641px ≤ width ≤ 1023px`
-- **Desktop**: `width ≥ 1024px`
+- **Mobile**: `width < 480px`
+- **Tablet**: `480px ≤ width < 782px`
+- **Desktop**: `width ≥ 782px`
+
+Editor preview canvas widths are `479px` (Mobile) and `781px` (Tablet) — one
+pixel below each threshold so the preview matches these ranges.
 
 ### Server-Side (PHP)
 
@@ -31,7 +35,9 @@ $device_type = \PRC\Platform\get_current_device();
 // Returns: 'desktop' | 'tablet' | 'mobile'
 ```
 
-The server-side function uses the same breakpoint logic as the client, ensuring consistency.
+The server-side function uses Jetpack User-Agent detection (`is_phone` /
+`is_tablet`), not pixel breakpoints. Client-side resize uses the Gutenberg
+thresholds above so live behavior matches editor device preview overrides.
 
 ### Editor Preview
 
@@ -222,19 +228,19 @@ const deviceType = type ? type.toLowerCase() : 'desktop';
 
 ### Manual Testing
 
-1. **Desktop**: Open browser at ≥1024px width
-2. **Tablet**: Resize browser to 641-1023px width
-3. **Mobile**: Resize browser to ≤640px width
+1. **Desktop**: Open browser at ≥782px width
+2. **Tablet**: Resize browser to 480–781px width
+3. **Mobile**: Resize browser to <480px width
 
 ### Automated Testing
 
 Use browser dev tools or testing frameworks to simulate viewport sizes:
 
 ```javascript
-// Set viewport width
-window.innerWidth = 375; // Mobile
-window.innerWidth = 768; // Tablet
-window.innerWidth = 1200; // Desktop
+// Set viewport width (Gutenberg breakpoints)
+window.innerWidth = 375; // Mobile (< 480)
+window.innerWidth = 640; // Tablet (480–781)
+window.innerWidth = 900; // Desktop (≥ 782)
 ```
 
 ### Server-Side Testing

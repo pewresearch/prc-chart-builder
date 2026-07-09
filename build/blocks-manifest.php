@@ -59,23 +59,23 @@ return array(
 				'type' => 'object',
 				'default' => array(
 					'active' => true,
-					'title' => 'Title',
-					'subtitle' => 'Subtitle',
-					'note' => 'Note: This is a note.',
-					'source' => 'Source: This is your source.',
-					'tag' => 'PEW RESEARCH CENTER',
+					'title' => '',
+					'subtitle' => '',
+					'note' => '',
+					'source' => '',
+					'tag' => '',
 					'alt' => ''
 				)
 			),
 			'colors' => array(
 				'type' => 'array',
 				'default' => array(
-					'#456A83',
-					'#BF3B27',
-					'#756a7e',
-					'#ea9e2c',
-					'#BB792A',
-					'#eeece4'
+					'#F687B3',
+					'#ED64A6',
+					'#D53F8C',
+					'#B83280',
+					'#9F7AEA',
+					'#805AD5'
 				)
 			),
 			'plotBands' => array(
@@ -122,7 +122,7 @@ return array(
 						'textAnchor' => 'middle',
 						'verticalAnchor' => 'end',
 						'fill' => '#2a2a2a',
-						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'fontFamily' => 'var:preset|font-family|sans-serif',
 						'maxWidth' => 50
 					),
 					'axisLabel' => array(
@@ -134,7 +134,7 @@ return array(
 						'dy' => 0,
 						'textAnchor' => 'end',
 						'verticalAnchor' => 'middle',
-						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'fontFamily' => 'var:preset|font-family|sans-serif',
 						'maxWidth' => 100
 					),
 					'axis' => array(
@@ -184,7 +184,7 @@ return array(
 						'textAnchor' => 'end',
 						'verticalAnchor' => 'middle',
 						'fill' => '#565656',
-						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'fontFamily' => 'var:preset|font-family|sans-serif',
 						'maxWidth' => 50
 					),
 					'axisLabel' => array(
@@ -196,7 +196,7 @@ return array(
 						'dy' => 0,
 						'textAnchor' => 'middle',
 						'verticalAnchor' => 'middle',
-						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'fontFamily' => 'var:preset|font-family|sans-serif',
 						'maxWidth' => 200
 					),
 					'axis' => array(
@@ -220,7 +220,6 @@ return array(
 				'type' => 'object',
 				'default' => array(
 					'active' => false,
-					'activeOnMobile' => true,
 					'headerActive' => true,
 					'headerValue' => 'categoryValue',
 					'format' => '{{row}}: {{value}}',
@@ -247,7 +246,7 @@ return array(
 						'width' => 'auto',
 						'height' => 'auto',
 						'fontSize' => 13,
-						'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+						'fontFamily' => 'var:preset|font-family|sans-serif',
 						'background' => 'white',
 						'border' => '1px solid #CBCBCB',
 						'padding' => '10px',
@@ -278,6 +277,7 @@ return array(
 					'labelUpper' => 'More than ',
 					'fontSize' => 12,
 					'fontWeight' => 'normal',
+					'fontFamily' => 'var:preset|font-family|sans-serif',
 					'margin' => array(
 						'top' => 0,
 						'right' => 5,
@@ -294,10 +294,9 @@ return array(
 					'color' => 'inherit',
 					'fontWeight' => 200,
 					'fontSize' => 10,
-					'fontFamily' => '\'franklin-gothic-urw\', Verdana, Geneva, sans-serif',
+					'fontFamily' => 'var:preset|font-family|sans-serif',
 					'labelPositionBar' => 'inside',
 					'labelCutoff' => 0,
-					'labelCutoffMobile' => 0,
 					'labelPositionDX' => 0,
 					'labelPositionDY' => 0,
 					'pieLabelRadius' => 60,
@@ -310,6 +309,11 @@ return array(
 					'labelUnitPosition' => 'end',
 					'textAnchor' => 'middle',
 					'customLabelFormat' => null,
+					'autoDeclutter' => false,
+					'declutterPadding' => 4,
+					'declutterLeaderLines' => false,
+					'textOutline' => false,
+					'textOutlineMode' => 'contrast',
 					'customPositions' => array(
 						
 					),
@@ -521,7 +525,7 @@ return array(
 						'fontStyle' => 'normal',
 						'headerFontWeight' => 'normal',
 						'headerFontStyle' => 'normal',
-						'headerFontFamily' => '',
+						'headerFontFamily' => 'var:preset|font-family|sans-serif',
 						'fontAppearance' => 'default',
 						'fontSize' => '10px',
 						'headerFontSize' => '12px',
@@ -541,7 +545,7 @@ return array(
 						'color' => 'black',
 						'fontWeight' => 700,
 						'fontSize' => 10,
-						'fontFamily' => '',
+						'fontFamily' => 'var:preset|font-family|sans-serif',
 						'textAnchor' => 'middle',
 						'labelPositionDX' => 0,
 						'labelPositionDY' => 0,
@@ -560,7 +564,7 @@ return array(
 						'color' => 'black',
 						'fontWeight' => 700,
 						'fontSize' => 10,
-						'fontFamily' => '',
+						'fontFamily' => 'var:preset|font-family|sans-serif',
 						'textAnchor' => 'middle',
 						'labelPositionDX' => 0,
 						'labelPositionDY' => 0,
@@ -610,7 +614,6 @@ return array(
 				'type' => 'object',
 				'default' => array(
 					'active' => false,
-					'activeOnMobile' => false,
 					'items' => array(
 						
 					)

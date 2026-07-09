@@ -13,9 +13,13 @@ import {
 	useBlockProps,
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
-import { ToggleControl, PanelBody } from '@wordpress/components';
+import {
+	ToggleControl,
+	PanelBody,
+	TextControl,
+	Button,
+} from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
-import { store as blocksStore } from '@wordpress/blocks';
 
 /**
  * Internal Dependencies
@@ -24,6 +28,39 @@ import Placeholder from './placeholder';
 import ViewModeControls from './view-mode-controls';
 import controllerStore from './store';
 import useChartEditorPresence from './use-chart-editor-presence';
+
+/**
+ * Sanitize a user-entered id into a value that is safe as a DOM id and an
+ * Interactivity API store key: keep ASCII letters, digits, hyphens and
+ * underscores; replace anything else with a hyphen.
+ *
+ * @param {string} value Raw input.
+ * @return {string} Sanitized id.
+ */
+function sanitizeChartId(value) {
+	return (value || '').replace(/[^a-zA-Z0-9_-]/g, '-');
+}
+
+/**
+ * Generate a fresh, collision-resistant controller id in standard UUID format.
+ *
+ * @return {string} A new unique id.
+ */
+function generateChartId() {
+	if (
+		typeof crypto !== 'undefined' &&
+		typeof crypto.randomUUID === 'function'
+	) {
+		return crypto.randomUUID();
+	}
+
+	const hex = (length) =>
+		Array.from({ length }, () =>
+			Math.floor(Math.random() * 16).toString(16)
+		).join('');
+
+	return `${hex(8)}-${hex(4)}-${hex(4)}-${hex(4)}-${hex(12)}`;
+}
 
 export default function Edit({ attributes, setAttributes, clientId, context }) {
 	const {
@@ -152,10 +189,23 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 	]);
 
 	const { updateBlockAttributes } = useDispatch(blockEditorStore);
-	const variations = useSelect((select) => {
-		const { getBlockVariations } = select(blocksStore);
-		return getBlockVariations('prc-chart-builder/controller');
-	}, []);
+
+	// Set the controller id and cascade the derived "{id}-chart" id to the
+	// child chart so the pair stays in sync. Editors use this to hand a
+	// copy/pasted chart a fresh, unique id without leaving the block. (The
+	// server also deduplicates ids at render time as a safety net.)
+	const applyControllerId = (nextId) => {
+		const clean = sanitizeChartId(nextId);
+		// An empty id is never valid: persisting it would leave the child
+		// chart's derived "{id}-chart" attribute stale and desync the pair.
+		if (!clean) {
+			return;
+		}
+		setAttributes({ id: clean });
+		if (chartClientId) {
+			updateBlockAttributes(chartClientId, { id: `${clean}-chart` });
+		}
+	};
 
 	// Map chartType to layout.type (matching VARIATION_TO_LAYOUT_TYPE from variations.js)
 	const CHART_TYPE_TO_LAYOUT_TYPE = {
@@ -244,14 +294,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		updateBlockAttributes(chartClientId, {
 			layout: updatedLayout,
 		});
-	}, [
-		chartType,
-		chartClientId,
-		clientId,
-		variations,
-		updateBlockAttributes,
-		getBlock,
-	]);
+	}, [chartType, chartClientId, clientId, updateBlockAttributes, getBlock]);
 
 	const dummyCSVS = [
 		{
@@ -400,6 +443,37 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 							})
 						}
 					/>
+				</PanelBody>
+				<PanelBody
+					title={__('Chart ID (advanced)')}
+					initialOpen={false}
+				>
+					<p
+						style={{
+							marginTop: 0,
+							marginBottom: '12px',
+							fontSize: '12px',
+						}}
+					>
+						{__(
+							'This is the unique identifier for this chart. If you copied this chart from another chart, it may share an ID with the original — which can break rendering when both appear on the same page. Give it a distinct ID, or click Regenerate for a fresh one.'
+						)}
+					</p>
+					<TextControl
+						label={__('Chart ID')}
+						value={id || ''}
+						onChange={(next) => applyControllerId(next)}
+						help={__(
+							'Only letters, numbers, hyphens and underscores are allowed.'
+						)}
+						__nextHasNoMarginBottom
+					/>
+					<Button
+						variant="secondary"
+						onClick={() => applyControllerId(generateChartId())}
+					>
+						{__('Regenerate ID')}
+					</Button>
 				</PanelBody>
 			</InspectorControls>
 			<ViewModeControls

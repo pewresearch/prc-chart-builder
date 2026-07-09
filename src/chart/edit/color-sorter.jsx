@@ -35,10 +35,10 @@ function labelFill(hex = '#000000') {
 	return fill;
 }
 
-const ColorSorter = function ({ colors, setAttributes, io }) {
+const ColorSorter = function ({ colors = [], setAttributes, io }) {
 	const [items, setItems] = useState(colors);
 	useEffect(() => {
-		setItems(colors);
+		setItems(Array.isArray(colors) ? colors : []);
 	}, [colors]);
 	return (
 		<div className="components-base-control">

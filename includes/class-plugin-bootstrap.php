@@ -130,6 +130,15 @@ class Plugin_Bootstrap {
 	private function load_dependencies() {
 		// Include plugin loading class.
 		$this->include( 'class-loader.php' );
+		$this->include( 'settings/class-theme-admin.php' );
+		$this->include( 'settings/class-settings.php' );
+		$this->include( 'settings/class-theme-font-tokens-migration.php' );
+		$this->include( 'settings/class-theme-block-defaults.php' );
+		$this->include( 'settings/class-theme-validator.php' );
+		$this->include( 'settings/class-theme-cache-invalidator.php' );
+		$this->include( 'settings/class-theme-seeder.php' );
+		$this->include( 'settings/class-theme-seeder-cli.php' );
+		$this->include( 'settings/class-theme-rest-controller.php' );
 		$this->include( 'trait-chart-block-defaults.php' );
 		$this->include( 'class-content-type.php' );
 		$this->include( 'class-synced-chart-auto-publish.php' );
@@ -142,6 +151,8 @@ class Plugin_Bootstrap {
 		$this->include( 'class-distributor.php' );
 		$this->include( 'class-markdown-for-agents-integration.php' );
 		$this->include( 'class-email-newsletter-integration.php' );
+		$this->include( 'class-attachments-report-integration.php' );
+		$this->include( 'class-apple-news-integration.php' );
 		$this->include( 'class-json-ld.php' );
 		$this->include( 'class-print-engine-integration.php' );
 		$this->include( 'admin/class-admin.php' );
@@ -170,6 +181,9 @@ class Plugin_Bootstrap {
 	 * @access private
 	 */
 	private function register_modules() {
+		new Settings( $this->get_loader() );
+		new Theme_REST_Controller( $this->get_loader() );
+		new Theme_Admin( $this->get_loader() );
 		new Content_Type( $this->get_loader() );
 		new Synced_Chart_Auto_Publish( $this->get_loader() );
 		new SEO( $this->get_loader() );
@@ -177,6 +191,8 @@ class Plugin_Bootstrap {
 		new Distributor( $this->get_loader() );
 		new Markdown_For_Agents_Integration( $this->get_loader() );
 		new Email_Newsletter_Integration( $this->get_loader() );
+		new Attachments_Report_Integration();
+		new Apple_News_Integration( $this->get_loader() );
 		new JSON_LD( $this->get_loader() );
 		new Print_Engine_Integration( $this->get_loader() );
 		new Admin( $this->get_loader() );

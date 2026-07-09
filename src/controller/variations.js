@@ -59,7 +59,7 @@ const variations = [
 		icon: areaIcon,
 		attributes: { chartType: 'area' },
 		innerBlocks: areaTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbBar',
@@ -67,10 +67,9 @@ const variations = [
 		keywords: [__('bar'), __('chart'), __('bar chart'), __('single bar')],
 		description: __('Create a bar chart.'),
 		icon: barIcon,
-		isDefault: true,
 		attributes: { chartType: 'bar' },
 		innerBlocks: barTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbColumn',
@@ -85,7 +84,7 @@ const variations = [
 		icon: columnIcon,
 		attributes: { chartType: 'column' },
 		innerBlocks: columnTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbDotPlot',
@@ -95,7 +94,7 @@ const variations = [
 		icon: dotPlotIcon,
 		attributes: { chartType: 'dot-plot' },
 		innerBlocks: dotPlotTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbExplodedBar',
@@ -105,7 +104,7 @@ const variations = [
 		icon: barIcon,
 		attributes: { chartType: 'exploded-bar' },
 		innerBlocks: explodedBarTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbDivergingBar',
@@ -120,7 +119,7 @@ const variations = [
 		icon: barIcon,
 		attributes: { chartType: 'diverging-bar' },
 		innerBlocks: divergingBarTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbLine',
@@ -130,7 +129,7 @@ const variations = [
 		icon: lineIcon,
 		attributes: { chartType: 'line' },
 		innerBlocks: lineTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbScatter',
@@ -140,7 +139,7 @@ const variations = [
 		icon: scatterIcon,
 		attributes: { chartType: 'scatter' },
 		innerBlocks: scatterTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbStackedArea',
@@ -150,7 +149,7 @@ const variations = [
 		icon: areaIcon,
 		attributes: { chartType: 'stacked-area' },
 		innerBlocks: stackedAreaTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbStackedBar',
@@ -160,7 +159,7 @@ const variations = [
 		icon: stackedBarIcon,
 		attributes: { chartType: 'stacked-bar' },
 		innerBlocks: stackedBarTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbStackedColumn',
@@ -170,7 +169,7 @@ const variations = [
 		icon: stackedColumnIcon,
 		attributes: { chartType: 'stacked-column' },
 		innerBlocks: stackedColumnTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbPie',
@@ -180,7 +179,7 @@ const variations = [
 		icon: pieIcon,
 		attributes: { chartType: 'pie' },
 		innerBlocks: pieTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbTreemap',
@@ -190,7 +189,7 @@ const variations = [
 		icon: treemapIcon,
 		attributes: { chartType: 'treemap' },
 		innerBlocks: treemapTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbSankey',
@@ -202,7 +201,7 @@ const variations = [
 		icon: sankeyIcon,
 		attributes: { chartType: 'sankey' },
 		innerBlocks: sankeyTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	// {
 	// 	name: 'cbstatic',
@@ -230,7 +229,7 @@ const variations = [
 		icon: USAMap,
 		attributes: { chartType: 'map-usa' },
 		innerBlocks: mapUsaTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbUSACountyMap',
@@ -242,7 +241,7 @@ const variations = [
 		icon: USAMap,
 		attributes: { chartType: 'map-usa-counties' },
 		innerBlocks: mapUsaCountyTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbUSACBSAMap',
@@ -261,7 +260,7 @@ const variations = [
 		icon: USACBSAMap,
 		attributes: { chartType: 'map-usa-cbsa' },
 		innerBlocks: mapUsaCbsaTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbUSABlockMap',
@@ -271,7 +270,7 @@ const variations = [
 		icon: USABlockMap,
 		attributes: { chartType: 'map-usa-block' },
 		innerBlocks: mapUsaBlockTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbUSAHexMap',
@@ -281,7 +280,7 @@ const variations = [
 		icon: USAHexMap,
 		attributes: { chartType: 'map-usa-hex' },
 		innerBlocks: mapUsaHexTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbWorldMap',
@@ -291,7 +290,7 @@ const variations = [
 		icon: worldMap,
 		attributes: { chartType: 'map-world' },
 		innerBlocks: mapWorldTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'cbWorldOrthographicMap',
@@ -301,7 +300,7 @@ const variations = [
 		icon: worldGlobe,
 		attributes: { chartType: 'map-world-orthographic' },
 		innerBlocks: mapWorldOrthographicTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 	{
 		name: 'freeform',
@@ -316,7 +315,7 @@ const variations = [
 			isFreeform: true,
 		},
 		innerBlocks: freeformTemplate,
-		scope: ['block', 'transform'],
+		scope: ['transform'],
 	},
 ];
 
@@ -351,8 +350,8 @@ const VARIATION_TO_LAYOUT_TYPE = {
 
 /**
  * Determine if a variation is active by checking the controller's chartType attribute.
- * The chartType is set when a variation is selected, and then synced to the chart block's
- * layout.type via useEffect in the Edit component.
+ * The chartType is set when a chart is created or transformed, and then synced to the
+ * chart block's layout.type via useEffect in the Edit component.
  *
  * This approach:
  * 1. Variation selection sets chartType on controller (WordPress handles this)

@@ -832,9 +832,8 @@ class Block_Migration {
 
 				// Annotations object
 				'annotations' => array(
-					'active'         => $attributes['annotationsActive'] ?? false,
-					'activeOnMobile' => true,
-					'items'          => $attributes['annotations'] ?? array(),
+					'active' => $attributes['annotationsActive'] ?? false,
+					'items'  => $attributes['annotations'] ?? array(),
 				),
 
 				// Data render object
@@ -859,6 +858,30 @@ class Block_Migration {
 			if ( ! $has_v1_original ) {
 				$cache_key = 'v1_to_v2_' . md5( wp_json_encode( $attributes ) );
 				wp_cache_set( $cache_key, $migrated, 'prc-chart-migration', 0 );
+			}
+
+			$mobile = array();
+
+			if (
+				isset( $attributes['barLabelCutoffMobile'] ) &&
+				( $attributes['barLabelCutoff'] ?? 5 ) !== $attributes['barLabelCutoffMobile']
+			) {
+				$mobile['labels'] = array(
+					'labelCutoff' => $attributes['barLabelCutoffMobile'],
+				);
+			}
+
+			if (
+				( $attributes['tooltipActive'] ?? true ) &&
+				( $attributes['tooltipActiveOnMobile'] ?? true ) === false
+			) {
+				$mobile['tooltip'] = array(
+					'active' => false,
+				);
+			}
+
+			if ( ! empty( $mobile ) ) {
+				$migrated['mobile'] = $mobile;
 			}
 
 			return $migrated;
@@ -1097,7 +1120,6 @@ class Block_Migration {
 
 		return array(
 			'active'                => $attributes['tooltipActive'] ?? true,
-			'activeOnMobile'        => $attributes['tooltipActiveOnMobile'] ?? true,
 			'headerActive'          => $attributes['tooltipHeaderActive'] ?? true,
 			'headerValue'           => $attributes['tooltipHeaderValue'] ?? 'independentValue',
 			'format'                => $attributes['tooltipFormat'] ?? '{{row}}: {{value}}',
@@ -1183,7 +1205,6 @@ class Block_Migration {
 			'fontFamily'               => "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
 			'labelPositionBar'         => $attributes['barLabelPosition'] ?? 'inside',
 			'labelCutoff'              => $attributes['barLabelCutoff'] ?? 5,
-			'labelCutoffMobile'        => $attributes['barLabelCutoffMobile'] ?? 10,
 			'labelPositionDX'          => $attributes['labelPositionDX'] ?? 0,
 			'labelPositionDY'          => $attributes['labelPositionDY'] ?? 0,
 			'pieLabelRadius'           => 60,

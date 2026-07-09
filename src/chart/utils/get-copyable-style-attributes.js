@@ -70,7 +70,6 @@ const LABELS_STYLE_KEYS = [
 	'fontFamily',
 	'labelPositionBar',
 	'labelCutoff',
-	'labelCutoffMobile',
 	'labelPositionDX',
 	'labelPositionDY',
 	'pieLabelRadius',

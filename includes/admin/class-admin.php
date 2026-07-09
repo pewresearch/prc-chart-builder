@@ -133,21 +133,30 @@ class Admin {
 			$asset['version']
 		);
 
+		wp_localize_script(
+			'prc-chart-builder-library',
+			'prcChartBuilderLibrary',
+			self::get_library_localized_data()
+		);
+	}
+
+	/**
+	 * Shared localization payload for Chart Library and block editor consumers.
+	 *
+	 * @return array
+	 */
+	public static function get_library_localized_data() {
 		$plugin_root = dirname( dirname( dirname( __FILE__ ) ) );
 		$variation_images_url = plugins_url(
 			'assets/variation-images/',
 			$plugin_root . '/prc-chart-builder.php'
 		);
 
-		wp_localize_script(
-			'prc-chart-builder-library',
-			'prcChartBuilderLibrary',
-			array(
-				'nonce'               => wp_create_nonce( 'wp_rest' ),
-				'restUrl'             => esc_url_raw( rest_url() ),
-				'chartTypeTerms'      => $this->get_chart_type_terms(),
-				'variationImagesUrl'  => esc_url( $variation_images_url ),
-			)
+		return array(
+			'nonce'              => wp_create_nonce( 'wp_rest' ),
+			'restUrl'            => esc_url_raw( rest_url() ),
+			'chartTypeTerms'     => self::get_chart_type_terms(),
+			'variationImagesUrl' => esc_url( $variation_images_url ),
 		);
 	}
 
@@ -157,7 +166,7 @@ class Admin {
 	 *
 	 * @return array Array of {slug, label} objects, sorted alphabetically by label.
 	 */
-	private function get_chart_type_terms() {
+	public static function get_chart_type_terms() {
 		$types = array();
 		foreach ( Content_Type::$known_chart_types as $slug => $label ) {
 			$types[] = array(

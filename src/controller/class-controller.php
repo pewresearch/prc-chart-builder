@@ -20,6 +20,7 @@ class Controller {
 	 */
 	public function __construct( $loader ) {
 		$loader->add_action( 'init', $this, 'block_init' );
+		$loader->add_action( 'enqueue_block_editor_assets', $this, 'enqueue_editor_assets' );
 		$loader->add_filter( 'prc_table_validation_schemas', $this, 'register_validation_schemas' );
 	}
 
@@ -194,6 +195,43 @@ class Controller {
 			// After migration, use nested structure directly (no need for get_block_attributes)
 			$chart_attributes = $raw_chart_attrs;
 
+			// Chart Builder ids live in saved block content, so copying a chart
+			// block — even into a separate chart post that is later synced onto
+			// the same page — duplicates the controller + chart ids verbatim.
+			// Duplicate ids collide across the render stack: wrapper DOM ids,
+			// wp_interactivity_state() store keys, and the `data-prc-chart-id`
+			// lookup the controller/chart view modules use to pair a controller
+			// with its chart. Claim request-unique ids here so every
+			// controller/chart pair on the page renders into its own store
+			// slice. The first block to use a given id keeps it verbatim
+			// (stable for the common single-instance case); duplicates get a
+			// deterministic suffix.
+			$saved_controller_id = $block_id;
+			$block_id            = Block_Utils::claim_unique_render_id( $block_id );
+
+			$saved_chart_id = $chart_attributes['id'] ?? '';
+			if ( $block_id !== $saved_controller_id ) {
+				// Keep the "{controllerId}-chart" convention when the
+				// controller id had to be rewritten.
+				$chart_id = Block_Utils::claim_unique_render_id( $block_id . '-chart' );
+			} else {
+				$chart_id = Block_Utils::claim_unique_render_id( $saved_chart_id );
+			}
+			$chart_attributes['id']         = $chart_id;
+			$blocks['chart']['attrs']['id'] = $chart_id;
+
+			$chart_block_id          = $chart_attributes['id'] ?? '';
+			$render_chart_attributes = Block_Utils::merge_viewport_attributes(
+				$chart_attributes,
+				\PRC\BlockUtils\get_current_device()
+			);
+			$chart_metadata_context  = wp_json_encode(
+				array(
+					'id' => $chart_block_id,
+				),
+				JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP
+			);
+
 			$width = ( $chart_attributes['layout']['width'] ?? 640 ) . 'px';
 
 			// Check if chart is static - either from controller attribute or chart's io.isStaticChart
@@ -270,26 +308,31 @@ class Controller {
 			// rounded values rather than the raw stored precision).
 			$rendered_table = render_block( $blocks['table'] );
 
-			$table_array = Table_Export::filter_hidden_columns(
-				\PRC\Html\parse_table_block_into_array( $rendered_table ),
+			$parsed_table = \PRC\Html\parse_table_block_into_array( $rendered_table );
+			$table_array  = Table_Export::filter_hidden_columns(
+				is_wp_error( $parsed_table ) ? null : $parsed_table,
 				$blocks['table']['attrs'] ?? array()
 			);
 
-			$meta_title                   = $chart_attributes['metadata']['title'] ?? '';
-			$meta_subtitle                = $chart_attributes['metadata']['subtitle'] ?? '';
-			$meta_source                  = $chart_attributes['metadata']['source'] ?? '';
-			$meta_note                    = $chart_attributes['metadata']['note'] ?? '';
-			$meta_tag                     = $chart_attributes['metadata']['tag'] ?? '';
+			$meta_title                   = $render_chart_attributes['metadata']['title'] ?? '';
+			$meta_subtitle                = $render_chart_attributes['metadata']['subtitle'] ?? '';
+			$meta_source                  = $render_chart_attributes['metadata']['source'] ?? '';
+			$meta_note                    = $render_chart_attributes['metadata']['note'] ?? '';
+			$meta_tag                     = $render_chart_attributes['metadata']['tag'] ?? '';
 			$meta_question_wording        = $chart_attributes['io']['questionWording'] ?? '';
 			$meta_question_wording_active = $chart_attributes['io']['questionWordingActive'] ?? false;
+			$allow_data_download          = $chart_attributes['io']['allowDataDownload'] ?? true;
 			ob_start();
 			?>
 			<hr style="margin: 0px 0px 10px; max-width: <?php echo esc_attr( $width ); ?>;">
-			<div class="cb__title"><?php echo wp_kses_post( $meta_title ); ?></div>
-			<div class="cb__subtitle"><?php echo wp_kses_post( $meta_subtitle ); ?></div>
+			<div data-wp-interactive="prc-chart-builder/chart" data-wp-context="<?php echo esc_attr( $chart_metadata_context ); ?>">
+				<div class="cb__title" data-meta-field="title"><?php echo wp_kses_post( $meta_title ); ?></div>
+				<div class="cb__subtitle" data-meta-field="subtitle"><?php echo wp_kses_post( $meta_subtitle ); ?></div>
+			</div>
 			<div class="wp-chart-builder-table__inner" style="max-width: <?php echo esc_attr( $width ); ?> !important; margin-bottom: 0; overflow: auto;">
 				<?php echo $rendered_table; //phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_block() output is sanitized by the block render pipeline. ?>
 			</div>
+			<?php if ( $allow_data_download ) { ?>
 			<hr class="cb__download-data-button-hr">
 			<div class="cb__download-data-button">
 				<a
@@ -302,6 +345,7 @@ class Controller {
 					Download data as .csv
 				</a>
 			</div>
+			<?php } ?>
 			<?php if ( $meta_question_wording_active ) { ?>
 				<?php
 				$plus_icon  = \PRC\Platform\Icons\render( 'regular', 'circle-plus', 1 );
@@ -317,9 +361,11 @@ class Controller {
 					<?php echo wp_kses_post( $meta_question_wording ); ?>
 				</div>
 			<?php } ?>
-			<div class="cb__note cb__note--note"><?php echo wp_kses_post( $meta_note ); ?></div>
-			<div class="cb__note cb__note--source"><?php echo wp_kses_post( $meta_source ); ?></div>
-			<div class="cb__tag"><?php echo wp_kses_post( $meta_tag ); ?></div>
+			<div data-wp-interactive="prc-chart-builder/chart" data-wp-context="<?php echo esc_attr( $chart_metadata_context ); ?>">
+				<div class="cb__note cb__note--note" data-meta-field="note"><?php echo wp_kses_post( $meta_note ); ?></div>
+				<div class="cb__note cb__note--source" data-meta-field="source"><?php echo wp_kses_post( $meta_source ); ?></div>
+				<div class="cb__tag" data-meta-field="tag"><?php echo wp_kses_post( $meta_tag ); ?></div>
+			</div>
 			<hr style="margin: 10px 0px 0px; max-width: <?php echo esc_attr( $width ); ?>;">
 			<?php
 				$table_with_meta = ob_get_clean();
@@ -342,11 +388,11 @@ class Controller {
 
 			$meta_text_active = $chart_attributes['metadata']['active'] ?? false;
 			if ( $meta_text_active ) {
-				$meta_title                   = $chart_attributes['metadata']['title'] ?? '';
-				$meta_subtitle                = $chart_attributes['metadata']['subtitle'] ?? '';
-				$meta_source                  = $chart_attributes['metadata']['source'] ?? '';
-				$meta_note                    = $chart_attributes['metadata']['note'] ?? '';
-				$meta_tag                     = $chart_attributes['metadata']['tag'] ?? '';
+				$meta_title                   = $render_chart_attributes['metadata']['title'] ?? '';
+				$meta_subtitle                = $render_chart_attributes['metadata']['subtitle'] ?? '';
+				$meta_source                  = $render_chart_attributes['metadata']['source'] ?? '';
+				$meta_note                    = $render_chart_attributes['metadata']['note'] ?? '';
+				$meta_tag                     = $render_chart_attributes['metadata']['tag'] ?? '';
 				$meta_question_wording        = $chart_attributes['io']['questionWording'] ?? '';
 				$meta_question_wording_active = $chart_attributes['io']['questionWordingActive'] ?? false;
 				$top_rule                     = $chart_attributes['layout']['horizontalRules'] ? wp_sprintf(
@@ -382,13 +428,17 @@ class Controller {
 				?>
 				<div class="cb__text-wrapper" style="max-width:<?php echo esc_attr( $width ); ?>;">
 					<?php echo $top_rule; // phpcs:ignore ?>
-					<div class="cb__title"><?php echo wp_kses_post( $meta_title ); ?></div>
-					<div class="cb__subtitle"><?php echo wp_kses_post( $meta_subtitle ); ?></div>
+					<div data-wp-interactive="prc-chart-builder/chart" data-wp-context="<?php echo esc_attr( $chart_metadata_context ); ?>">
+						<div class="cb__title" data-meta-field="title"><?php echo wp_kses_post( $meta_title ); ?></div>
+						<div class="cb__subtitle" data-meta-field="subtitle"><?php echo wp_kses_post( $meta_subtitle ); ?></div>
+					</div>
 					<?php echo $rendered_freeform; // phpcs:ignore ?>
 					<?php echo $question_wording_html; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean. ?>
-					<div class="cb__note cb__note--note"><?php echo wp_kses_post( $meta_note ); ?></div>
-					<div class="cb__note cb__note--source"><?php echo wp_kses_post( $meta_source ); ?></div>
-					<div class="cb__tag"><?php echo wp_kses_post( $meta_tag ); ?></div>
+					<div data-wp-interactive="prc-chart-builder/chart" data-wp-context="<?php echo esc_attr( $chart_metadata_context ); ?>">
+						<div class="cb__note cb__note--note" data-meta-field="note"><?php echo wp_kses_post( $meta_note ); ?></div>
+						<div class="cb__note cb__note--source" data-meta-field="source"><?php echo wp_kses_post( $meta_source ); ?></div>
+						<div class="cb__tag" data-meta-field="tag"><?php echo wp_kses_post( $meta_tag ); ?></div>
+					</div>
 					<?php echo $bottom_rule; // phpcs:ignore ?>
 				</div>
 				<?php
@@ -490,6 +540,7 @@ class Controller {
 			'source'           => $chart_attributes['metadata']['source'] ?? '',
 			'tag'              => $chart_attributes['metadata']['tag'] ?? '',
 			'tableData'        => $table_array,
+			'isFreeformChart'  => $is_freeform_chart,
 		);
 
 		$block_attrs = get_block_wrapper_attributes(
@@ -503,9 +554,11 @@ class Controller {
 				'data-wp-init--detect-web-share-support' => 'callbacks.detectWebShareSupport',
 				'data-wp-init--sync-table-height'        => 'callbacks.syncTableHeight',
 				'data-wp-init--watch-chart'              => 'callbacks.watchChart',
+				'data-wp-init--reset-tab-on-navigation'  => 'callbacks.resetTabOnNavigation',
 				// 'data-wp-init--log-migration-attributes' => 'callbacks.logMigrationAttributes',
 				'data-png-url'                           => esc_url( $featured_image_url ?? '' ),
-				'data-has-csv'                           => $table_array ? 'true' : 'false',
+				'data-has-csv'                           => ( $table_array && ( $chart_attributes['io']['allowDataDownload'] ?? true ) ) ? 'true' : 'false',
+				'data-allow-data-download'               => ( $chart_attributes['io']['allowDataDownload'] ?? true ) ? 'true' : 'false',
 				'data-post-url'                          => esc_url( $permalink ),
 				'data-chart-url'                         => esc_url( $chart_post_url ),
 				'data-chart-title'                       => esc_attr( $chart_attributes['metadata']['title'] ?? '' ),
@@ -642,6 +695,29 @@ class Controller {
 			array(
 				'render_callback' => array( $this, 'render_block_callback' ),
 			)
+		);
+	}
+
+	/**
+	 * Localize Chart Library data for the create-new-chart modal in the block editor.
+	 *
+	 * @hook enqueue_block_editor_assets
+	 */
+	public function enqueue_editor_assets() {
+		$block_type = \WP_Block_Type_Registry::get_instance()->get_registered( 'prc-chart-builder/controller' );
+		if ( ! $block_type || empty( $block_type->editor_script_handles ) ) {
+			return;
+		}
+
+		// BlockPreview in the setup modal needs core + custom block types registered.
+		wp_enqueue_script( 'wp-block-library' );
+		wp_enqueue_style( 'wp-block-library' );
+		wp_enqueue_style( 'wp-edit-blocks' );
+
+		wp_localize_script(
+			$block_type->editor_script_handles[0],
+			'prcChartBuilderLibrary',
+			Admin::get_library_localized_data()
 		);
 	}
 }

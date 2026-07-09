@@ -261,7 +261,8 @@ export function createWpEditorFunctions({
 							category,
 							finalDx,
 							finalDy,
-							groupValue
+							groupValue,
+							categoryValue
 						) => {
 							// Re-enable tooltips
 							if (setIsDragging) {
@@ -275,16 +276,30 @@ export function createWpEditorFunctions({
 
 							// Store custom label positions in viewport-aware labels.customPositions
 							// Format: { "xValue::category": { dx, dy } } or { "xValue::category::groupValue": { dx, dy } }
-							// Get current viewport's customPositions
+							// Scatter-specific: { "xValue::category::yValue": { dx, dy } }
+							//   Scatter charts can have multiple data points with the same x value but
+							//   different y values. Without a y discriminator, dragging one label would
+							//   incorrectly reposition all labels sharing that x+category key.
+							//   We only apply this for scatter (not other chart types) to avoid
+							//   changing the widely-used 2-part key convention.
 							const currentCustomPositions =
 								getCurrentValue('labels', 'customPositions') ||
 								{};
 
-							// Build unique key for this label (x value + category + optional group)
+							// For scatter: use the category's y-value as a discriminator when
+							// groupValue is not already providing uniqueness.
+							const discriminator =
+								chartType === 'scatter' &&
+								!groupValue &&
+								categoryValue !== undefined &&
+								categoryValue !== null
+									? String(categoryValue)
+									: groupValue || null;
+
 							const labelKey = generateLabelKey(
 								x,
 								category,
-								groupValue || null
+								discriminator
 							);
 
 							const newPosition = {
@@ -683,10 +698,13 @@ export function createWpEditorFunctions({
 					 * Called when a detached legend item drag ends.
 					 * Writes the final position back to customLegendLabels[categoryValue].offsetX/offsetY
 					 * via setAttributes (top-level flat attribute, same pattern as customTickLabels).
+					 * Coordinates are in layout space relative to the item's positioningContext
+					 * ('chart' = full chart area, 'inner' = data area only) — ClickableLegend
+					 * converts from display pixels before calling this handler.
 					 *
 					 * @param {string} categoryValue - The category/domain value of the dragged item
-					 * @param {number} finalX        - Final x offset (pixels from chart container left)
-					 * @param {number} finalY        - Final y offset (pixels from chart container top)
+					 * @param {number} finalX        - Final x offset in layout coordinates
+					 * @param {number} finalY        - Final y offset in layout coordinates
 					 */
 					onItemDragEnd: (categoryValue, finalX, finalY) => {
 						if (setIsDragging) {

@@ -19,16 +19,16 @@ The Chart Builder now supports viewport-specific settings, allowing you to custo
 In the WordPress block editor, use the device preview toolbar to switch between:
 
 - **Desktop** (default) - Full-width layout
-- **Tablet** - Medium-width layout (641px - 1023px)
-- **Mobile** - Narrow layout (≤640px)
+- **Tablet** - Medium-width layout (480px – 781px; Gutenberg `medium` breakpoint)
+- **Mobile** - Narrow layout (<480px; Gutenberg `mobile` breakpoint)
 
 When you change a setting while in a specific device preview mode, that setting applies only to that viewport.
 
 ### Viewport Breakpoints
 
-- **Mobile**: ≤640px width
-- **Tablet**: 641px - 1023px width
-- **Desktop**: ≥1024px width
+- **Mobile**: `< 480px` width (matches editor Mobile preview at 479px)
+- **Tablet**: `480px – 781px` width (matches editor Tablet preview at 781px)
+- **Desktop**: `≥ 782px` width
 
 These breakpoints match WordPress's default responsive breakpoints.
 

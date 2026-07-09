@@ -12,7 +12,7 @@
  * Full reference: prc-chart-builder/docs/console-helpers.md
  */
 
-import { store } from '@wordpress/interactivity';
+import { store, getServerState } from '@wordpress/interactivity';
 import { createChartUpdate } from './chartUpdate';
 
 const CHART_NAMESPACE = 'prc-chart-builder/chart';
@@ -109,6 +109,186 @@ export const debug = {
 				err
 			);
 		}
+	},
+
+	/**
+	 * Toggle verbose table-rebuild logging in the controller watch +
+	 * rebuildDataTable util. Reload the page after toggling if watchChart
+	 * already initialised — or call before interacting with the table.
+	 *
+	 * @param {boolean} [enabled=true]
+	 */
+	enableTableRebuildLogging(enabled = true) {
+		window.__PRC_TABLE_REBUILD_DEBUG__ = enabled;
+		console.info(
+			`[prcChartBuilder.debug] table rebuild logging ${enabled ? 'ON' : 'OFF'}`
+		);
+	},
+
+	/**
+	 * Read-only snapshot of the immutable server-state tableData seed.
+	 *
+	 * @param {string} chartId Chart id (matches data-prc-chart-id).
+	 * @return {Object|null|undefined}
+	 */
+	getServerTableData(chartId) {
+		try {
+			const serverState = getServerState();
+			const tableData = serverState.charts?.[chartId]?.tableData;
+			return tableData
+				? JSON.parse(JSON.stringify(tableData))
+				: tableData;
+		} catch (err) {
+			console.error(
+				'[prcChartBuilder.debug.getServerTableData] unavailable',
+				err
+			);
+			return undefined;
+		}
+	},
+
+	/**
+	 * Sample live store tableData vs DOM row/column counts over time.
+	 * Useful when rows flash then revert — shows whether the store or DOM
+	 * is the source of truth at each tick.
+	 *
+	 * @param {string} [chartId]     Omit to use the first chart on the page.
+	 * @param {Object} [options]
+	 * @param {number} [options.durationMs=2500] Total sampling window.
+	 * @param {number} [options.intervalMs=50]   Poll interval.
+	 * @return {Promise<Array<Object>>} Timeline samples.
+	 */
+	async probeTableSync(chartId, { durationMs = 2500, intervalMs = 50 } = {}) {
+		const id = chartId ?? debug.listCharts()[0];
+		if (!id) {
+			throw new Error('No chart id found on page');
+		}
+
+		const tableEl = document.querySelector('.chart-builder-data-table');
+		const readDom = () => {
+			const table = tableEl?.querySelector('table');
+			if (!table) {
+				return { domRows: null, domCols: null, visibleBodyCols: [] };
+			}
+			const headerRow = table.querySelector('thead tr');
+			const domCols = headerRow
+				? Array.from(headerRow.children).filter(
+						(cell) => !cell.classList.contains('is-column-hidden')
+					).length
+				: 0;
+			const bodyRows = Array.from(table.querySelectorAll('tbody > tr'));
+			return {
+				domRows: bodyRows.length,
+				domCols,
+				visibleBodyCols: bodyRows.map(
+					(row) =>
+						Array.from(row.children).filter(
+							(cell) =>
+								!cell.classList.contains('is-column-hidden')
+						).length
+				),
+			};
+		};
+
+		const sample = (label) => {
+			const live = debug.getChart(id)?.tableData;
+			const server = debug.getServerTableData(id);
+			const dom = readDom();
+			const row = {
+				t: Math.round(performance.now()),
+				label,
+				storeRows: live?.rows?.length ?? null,
+				storeCols: live?.header?.length ?? null,
+				serverRows: server?.rows?.length ?? null,
+				serverCols: server?.header?.length ?? null,
+				...dom,
+			};
+			console.log('[probeTableSync]', row);
+			return row;
+		};
+
+		const timeline = [sample('start')];
+		const started = performance.now();
+		while (performance.now() - started < durationMs) {
+			await new Promise((resolve) => {
+				window.setTimeout(resolve, intervalMs);
+			});
+			timeline.push(
+				sample(`+${Math.round(performance.now() - started)}ms`)
+			);
+		}
+		return timeline;
+	},
+
+	/**
+	 * Run an isolated add-row probe with logging enabled. Does not mutate
+	 * columns — use after a hard reload for a clean baseline.
+	 *
+	 * @param {string} [chartId]
+	 * @return {Promise<Array<Object>>} Timeline from probeTableSync.
+	 */
+	async smokeTestAddRow(chartId) {
+		const id = chartId ?? debug.listCharts()[0];
+		if (!id) {
+			throw new Error('No chart found on this page');
+		}
+
+		debug.enableTableRebuildLogging(true);
+
+		const before = debug.getChart(id)?.tableData;
+		if (!before?.header || !Array.isArray(before.rows)) {
+			throw new Error('Chart has no tableData — open the Data tab first');
+		}
+
+		console.group('[smokeTestAddRow] baseline');
+		console.log('chartId', id);
+		console.log('store rows', before.rows.length);
+		console.log('server rows', debug.getServerTableData(id)?.rows?.length);
+		console.log(
+			'DOM rows',
+			document.querySelectorAll('.chart-builder-data-table tbody tr')
+				.length
+		);
+		console.groupEnd();
+
+		const next = {
+			header: before.header,
+			rows: [
+				...before.rows,
+				before.header.map((_, j) => (j === 0 ? 'NEW ROW' : '—')),
+			],
+		};
+
+		console.info('[smokeTestAddRow] setTableData →', {
+			fromRows: before.rows.length,
+			toRows: next.rows.length,
+		});
+		debug.setTableData(id, next);
+
+		// First frame: store should already reflect the write.
+		console.log('[smokeTestAddRow] store immediately after', {
+			storeRows: debug.getChart(id)?.tableData?.rows?.length,
+			domRows: document.querySelectorAll(
+				'.chart-builder-data-table tbody tr'
+			).length,
+		});
+
+		const timeline = await debug.probeTableSync(id, {
+			durationMs: 3000,
+			intervalMs: 50,
+		});
+
+		const last = timeline[timeline.length - 1];
+		console.info('[smokeTestAddRow] summary', {
+			expectedRows: next.rows.length,
+			finalStoreRows: last.storeRows,
+			finalDomRows: last.domRows,
+			finalServerRows: last.serverRows,
+			storeReverted: last.storeRows === before.rows.length,
+			domReverted: last.domRows === before.rows.length,
+		});
+
+		return timeline;
 	},
 
 	/**

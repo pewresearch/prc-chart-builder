@@ -127,7 +127,7 @@ function migrate(attributes) {
 						'#ea9e2c',
 						'#bc7b2b',
 						'#eeece4',
-				  ],
+					],
 
 		// Plot bands object
 		plotBands: {
@@ -192,7 +192,7 @@ function migrate(attributes) {
 			},
 			ticks: {
 				stroke: attributes.xAxisStroke || 'gray',
-				size: attributes.xTickMarksActive ?? true ? 5 : 0, // Default to true if not set (match block.json default)
+				size: (attributes.xTickMarksActive ?? true) ? 5 : 0, // Default to true if not set (match block.json default)
 				strokeWidth: 0, // Match block.json default
 			},
 			grid: {
@@ -255,7 +255,7 @@ function migrate(attributes) {
 			},
 			ticks: {
 				stroke: attributes.yAxisStroke || 'gray',
-				size: attributes.yTickMarksActive ?? true ? 5 : 0, // Default to true if not set (match block.json default)
+				size: (attributes.yTickMarksActive ?? true) ? 5 : 0, // Default to true if not set (match block.json default)
 				strokeWidth: 0, // Match block.json default
 			},
 			grid: {
@@ -270,7 +270,6 @@ function migrate(attributes) {
 		// Tooltip object
 		tooltip: {
 			active: attributes.tooltipActive ?? true,
-			activeOnMobile: attributes.tooltipActiveOnMobile ?? true,
 			headerActive: attributes.tooltipHeaderActive ?? true,
 			headerValue: attributes.tooltipHeaderValue || 'independentValue',
 			format: attributes.tooltipFormat || '{{row}}: {{value}}',
@@ -344,7 +343,6 @@ function migrate(attributes) {
 			fontFamily: "'franklin-gothic-urw', Verdana, Geneva, sans-serif",
 			labelPositionBar: attributes.barLabelPosition || 'inside',
 			labelCutoff: attributes.barLabelCutoff ?? 5,
-			labelCutoffMobile: attributes.barLabelCutoffMobile ?? 10,
 			labelPositionDX: attributes.labelPositionDX ?? -25,
 			labelPositionDY: attributes.labelPositionDY || 0,
 			pieLabelRadius: 60,
@@ -482,7 +480,6 @@ function migrate(attributes) {
 		// Annotations object
 		annotations: {
 			active: attributes.annotationsActive || false,
-			activeOnMobile: false,
 			items: attributes.annotations || [],
 		},
 
@@ -821,6 +818,26 @@ function migrate(attributes) {
 	// 	width: migrated.layout?.width,
 	// 	hasLegacy: Object.keys(migrated._legacy).length > 0,
 	// });
+
+	const mobile = {};
+
+	if (
+		attributes.barLabelCutoffMobile != null &&
+		(attributes.barLabelCutoff ?? 5) !== attributes.barLabelCutoffMobile
+	) {
+		mobile.labels = { labelCutoff: attributes.barLabelCutoffMobile };
+	}
+
+	if (
+		(attributes.tooltipActive ?? true) &&
+		(attributes.tooltipActiveOnMobile ?? true) === false
+	) {
+		mobile.tooltip = { active: false };
+	}
+
+	if (Object.keys(mobile).length > 0) {
+		migrated.mobile = mobile;
+	}
 
 	return migrated;
 }

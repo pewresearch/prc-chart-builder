@@ -271,6 +271,36 @@ export const parseDateString = (dateStr, format) => {
 	return str;
 };
 
+/**
+ * Strip non-numeric characters while preserving decimal precision (e.g. "1.50").
+ *
+ * @param {string} str Raw cell text.
+ * @return {string} Sanitized numeric string, or empty when no digits remain.
+ */
+export const sanitizeNumericString = (str) => {
+	let value = String(str).replace(/[^0-9.-]/g, '');
+
+	if (!value.match(/[0-9]/g)) {
+		return '';
+	}
+
+	const decimalIndex = value.indexOf('.');
+	if (decimalIndex !== -1) {
+		value =
+			value.slice(0, decimalIndex + 1) +
+			value.slice(decimalIndex + 1).replace(/\./g, '');
+	}
+
+	const negativeIndex = value.indexOf('-');
+	if (negativeIndex !== -1) {
+		value =
+			value.slice(0, negativeIndex + 1) +
+			value.slice(negativeIndex + 1).replace(/-/g, '');
+	}
+
+	return value;
+};
+
 // use a reducer to create an array of objects with the headers as keys
 // and the table data as values
 export const formatCellContent = (
@@ -285,40 +315,6 @@ export const formatCellContent = (
 	if ('ordinal' === scale) {
 		return content;
 	}
-	const replaceNonNumeric = (str) => {
-		// Replace all non-numeric, non-decimal characters, and negative sign
-		str = str.replace(/[^0-9.-]/g, '');
-
-		// if string has no numbers, return empty string
-		if (!str.match(/[0-9]/g)) {
-			return '';
-		}
-		// Replace all non-numeric, non-decimal characters, and negative sign
-		str = str.replace(/[^0-9.-]/g, '');
-
-		// if string has no numbers, return empty string
-		if (!str.match(/[0-9]/g)) {
-			return '';
-		}
-
-		// Ensure only the first decimal place is kept
-		const decimalIndex = str.indexOf('.');
-		if (decimalIndex !== -1) {
-			str =
-				str.slice(0, decimalIndex + 1) +
-				str.slice(decimalIndex + 1).replace(/\./g, '');
-		}
-
-		// Likewise, ensure only the first negative sign is kept
-		const negativeIndex = str.indexOf('-');
-		if (negativeIndex !== -1) {
-			str =
-				str.slice(0, negativeIndex + 1) +
-				str.slice(negativeIndex + 1).replace(/-/g, '');
-		}
-
-		return str;
-	};
 
 	// group breaks category is used to identify the category that the group breaks are applied to
 	// if the key is x or groupBreaksCategory, return the content
@@ -338,7 +334,7 @@ export const formatCellContent = (
 	if (content.includes('&lt;') || content.charAt(0) === '<') {
 		return '';
 	}
-	return replaceNonNumeric(content);
+	return sanitizeNumericString(content);
 };
 
 /**
@@ -378,9 +374,12 @@ export const formatCellContentTyped = (
 			case 'number':
 			case 'currency':
 			case 'percentage': {
-				const stripped = String(content).replace(/[^0-9.\-]/g, '');
+				const stripped = sanitizeNumericString(content);
+				if (!stripped) {
+					return '';
+				}
 				const num = parseFloat(stripped);
-				return Number.isNaN(num) ? content : num;
+				return Number.isNaN(num) ? content : stripped;
 			}
 			case 'date':
 				return parseDateString(content, xFormat);

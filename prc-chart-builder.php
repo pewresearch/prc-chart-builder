@@ -6,7 +6,7 @@
  * Plugin Name:       PRC Chart Builder
  * Plugin URI:        https://github.com/pewresearch/prc-chart-builder
  * Description:       Chart Builder is a chart building tool for the PRC Platform. It allows you to create rich, highly interactive charts and data visualizations all from the block editor. Support for synced charts via the Synced Chart block is also possible, allowing you to place one chart in many places and have them all update when the original is updated.
- * Version:           3.10.0
+ * Version:           3.12.0
  * Author:            Pew Research Center
  * Author URI:        https://pewresearch.org
  * License:           GPL-2.0+
@@ -14,7 +14,7 @@
  * Text Domain:       prc-chart-builder
  * Requires at least: 6.7
  * Requires PHP:      8.2
- * Requires Plugins:  prc-scripts, prc-block-library, prc-post-publish-pipeline
+ * Requires Plugins:  prc-scripts, prc-block-tables, prc-post-publish-pipeline
  * @package           prc-chart-builder
  */
 

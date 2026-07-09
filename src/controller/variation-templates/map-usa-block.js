@@ -404,7 +404,7 @@ const USABlockMapTemplate = [
 				subtitle: 'A subtitle for the chart',
 				source: 'Source: Add source note here',
 				note: 'Note: About the chart',
-				tag: 'PEW RESEARCH CENTER',
+				tag: '',
 			},
 			colors: {
 				value: 'blue-spectrum',

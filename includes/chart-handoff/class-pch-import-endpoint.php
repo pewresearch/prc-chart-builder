@@ -415,13 +415,16 @@ class PCH_Import_Endpoint {
 	 * @return array
 	 */
 	private function resolve_metadata( array $meta ): array {
+		$themed_defaults = $this->get_chart_block_defaults();
+		$default_tag     = $themed_defaults['metadata']['tag'] ?? '';
+
 		return array(
 			'active'   => true,
 			'title'    => $meta['title'] ?? '',
 			'subtitle' => $meta['subtitle'] ?? '',
 			'note'     => $meta['note'] ?? '',
 			'source'   => $meta['source'] ?? '',
-			'tag'      => 'PEW RESEARCH CENTER',
+			'tag'      => $meta['tag'] ?? $default_tag,
 			'alt'      => '',
 		);
 	}

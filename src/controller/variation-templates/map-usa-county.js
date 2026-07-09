@@ -377,7 +377,7 @@ const USACountyMapTemplate = [
 					'A subtitle for the chart. NOTE: FIPS code required to match data to map.',
 				source: 'Source: Add source note here',
 				note: 'Note: Add note about the chart',
-				tag: 'PEW RESEARCH CENTER',
+				tag: '',
 			},
 			colors: {
 				value: 'blue-spectrum',

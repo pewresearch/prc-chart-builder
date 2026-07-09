@@ -48,6 +48,39 @@ trait Chart_Block_Defaults {
 			}
 		}
 
+		return $this->apply_theme_config_to_defaults( $defaults );
+	}
+
+	/**
+	 * Layer active theme.config over block.json defaults (PRC-528 slice 6).
+	 *
+	 * Mirrors editor/server default injection so AI, PCH import, and CLI paths
+	 * see the same themed defaults as new charts inserted in the block editor.
+	 *
+	 * @param array<string, mixed> $defaults block.json attribute defaults.
+	 * @return array<string, mixed>
+	 */
+	private function apply_theme_config_to_defaults( array $defaults ): array {
+		$theme  = Settings::get_active_theme();
+		$config = $theme['config'] ?? array();
+
+		if ( ! is_array( $config ) || array_is_list( $config ) || array() === $config ) {
+			return $defaults;
+		}
+
+		foreach ( Theme_Block_Defaults::CURATED_THEME_CONFIG_GROUPS as $group ) {
+			if ( ! isset( $defaults[ $group ] ) || ! is_array( $defaults[ $group ] ) ) {
+				continue;
+			}
+
+			$theme_partial = $config[ $group ] ?? null;
+
+			$defaults[ $group ] = Theme_Block_Defaults::apply_theme_group_default(
+				$defaults[ $group ],
+				$theme_partial
+			);
+		}
+
 		return $defaults;
 	}
 
@@ -58,9 +91,10 @@ trait Chart_Block_Defaults {
 	 * @return array<string, mixed>
 	 */
 	private function get_variation_template_defaults( string $chart_type ): array {
+		// Tag and other brand metadata come from block.json + theme.config
+		// (see apply_theme_config_to_defaults); variation templates only set active.
 		$shared_metadata = array(
 			'active' => true,
-			'tag'    => 'PEW RESEARCH CENTER',
 		);
 		$shared_io = array(
 			'isConvertedChart' => false,

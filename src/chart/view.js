@@ -9,7 +9,7 @@ import {
 } from '@wordpress/interactivity';
 
 /**
- * @prc Dependencies
+ * PRC Dependencies
  *
  * Top-level static import is the dependency-graph signal that orders the
  * `@prc/charting-library` Script Module BEFORE this view module. Without it,
@@ -23,201 +23,23 @@ import { ChartBuilderRenderer as ScriptModuleRenderer } from '@prc/charting-libr
 /**
  * Internal  Dependencies
  */
-import getConfig from './utils/get-config';
-import { mergeCustomLabelData } from './utils/merge-custom-label-data';
-import { mergeCustomTooltipData } from './utils/merge-custom-tooltip-data';
 import { applyChartPatch } from './utils/apply-deep-patch';
+import {
+	buildChartInputs,
+	resolveChartViewport,
+} from './utils/build-chart-inputs';
+import { syncControllerSurfaces } from './utils/sync-controller-surfaces';
+import {
+	isCustomChartSlice,
+	mountHasLiveChart,
+	getViewportFromWidth,
+	attachViewportRenderTrigger,
+} from './utils/view-helpers';
 import debug from '../debug';
 
 // import './styles.scss';
 
-/**
- * Whether a chart store slice is a prc-custom-charts chart (e.g. RLS stacked bar).
- *
- * @param {Object|undefined} slice Per-chart state slice from the store.
- * @return {boolean} True when the chart uses the prc-custom-charts renderer path.
- */
-function isCustomChartSlice(slice) {
-	if (!slice?.attributes) {
-		return false;
-	}
-	const io = slice.attributes.io ?? {};
-	return (
-		!!io.isCustomChart ||
-		!!(io.customAttributes && io.customAttributes.chartType)
-	);
-}
-
-/**
- * Whether a chart mount element contains live chart content (not SSR fallback).
- *
- * @param {HTMLElement|null} mountEl Chart mount root (`#data-prc-chart-id`).
- * @return {boolean} True when a custom chart is already mounted in the node.
- */
-function mountHasLiveChart(mountEl) {
-	if (!mountEl || mountEl.childElementCount === 0) {
-		return false;
-	}
-	return Array.from(mountEl.children).some(
-		(child) => !child.classList.contains('chart-fallback')
-	);
-}
-
-/**
- * Determine viewport based on window width.
- * Uses standard breakpoints: mobile ≤ 640px, tablet 641-1023px, desktop ≥ 1024px.
- *
- * @return {string} 'mobile', 'tablet', or 'desktop'
- */
-function getViewportFromWidth() {
-	if (window.innerWidth <= 640) {
-		return 'mobile';
-	}
-	if (window.innerWidth > 640 && window.innerWidth <= 1023) {
-		return 'tablet';
-	}
-	return 'desktop';
-}
-
-/**
- * Build URL with viewport query param, preserving existing params.
- *
- * @param {string} viewport The viewport to set.
- * @return {string} The new URL.
- */
-function buildViewportUrl(viewport) {
-	const url = new URL(window.location.href);
-	url.searchParams.set('cb_viewport', viewport);
-	return url.toString();
-}
-
 const CHART_NAMESPACE = 'prc-chart-builder/chart';
-
-/**
- * Chart ids that already have a viewport IntersectionObserver attached.
- * Guards against watchForRender attaching a second observer on re-runs.
- *
- * @type {Set<string>}
- */
-const viewportObserverIds = new Set();
-
-/**
- * Chart ids whose `syncOnNavigation` watch has already run its initial pass.
- *
- * The watch fires once at registration (mount) and again on every
- * interactivity-router navigation. We skip the first pass per id because
- * `renderChart` already seeds the live slice on mount and the server payload
- * matches the server-rendered markup — only subsequent (navigation) passes
- * need to re-seed.
- *
- * @type {Set<string>}
- */
-const navSeededIds = new Set();
-
-/**
- * Build the `(data, config, tableData)` inputs for a chart from its current
- * server-state slice.
- *
- * Pulled out of `renderChart` so the navigation watch can reuse the exact same
- * derivation (viewport-aware `getConfig` + label / error-bar / tooltip merges)
- * when re-seeding the live store slice after a router navigation. Always reads
- * `getServerState()`, which the router refreshes on every navigation.
- *
- * @param {string} id Chart id (matches data-prc-chart-id).
- * @return {{data: Array, config: Object, tableData: Object}|null} Inputs, or null when the slice/attributes are unavailable.
- */
-function buildChartInputs(id) {
-	const serverState = getServerState();
-	const slice = serverState.charts?.[id];
-	if (!slice) {
-		return null;
-	}
-	const attributes = slice.attributes;
-	if (!attributes) {
-		return null;
-	}
-	const data = slice.data;
-	const tableData = slice.tableData;
-
-	// Use the server-provided viewport from the slice (mirrors the
-	// state.currentViewport getter without needing a directive context).
-	const currentViewport = slice.currentViewport || 'desktop';
-	const config = getConfig(attributes, id, null, currentViewport);
-
-	// Merge all custom label data from attributes into data.
-	// Get viewport-aware customizations based on currentViewport.
-	const labels = attributes.labels || {};
-	const viewportLabels =
-		currentViewport !== 'desktop'
-			? attributes[currentViewport]?.labels || {}
-			: {};
-
-	// Build label customizations object with viewport overrides.
-	const labelCustomizations = {
-		customPositions:
-			viewportLabels.customPositions || labels.customPositions || {},
-		customLabels: viewportLabels.customLabels || labels.customLabels || {},
-		customVisibility:
-			viewportLabels.customVisibility || labels.customVisibility || {},
-		customStyles: viewportLabels.customStyles || labels.customStyles || {},
-	};
-
-	// Determine group breaks category for key matching.
-	const activeGroupBreaksCategory =
-		config.dataRender?.groupBreaksActive &&
-		config.dataRender?.groupBreaksCategory
-			? config.dataRender.groupBreaksCategory
-			: null;
-
-	const dataWithLabelCustomizations = mergeCustomLabelData(
-		data,
-		labelCustomizations,
-		activeGroupBreaksCategory
-	);
-
-	// Enrich data with __errorBars from column mappings (dot-plot only).
-	let dataWithCustomizations = dataWithLabelCustomizations;
-	if (
-		config.layout?.type === 'dot-plot' &&
-		config.errorBars?.enabled &&
-		config.errorBars?.categories
-	) {
-		const mappingEntries = Object.entries(config.errorBars.categories);
-		if (mappingEntries.length > 0) {
-			const defaultStyles = config.errorBars.defaultStyles || {};
-			dataWithCustomizations = dataWithLabelCustomizations.map((row) => {
-				const bars = {};
-				for (const [catKey, mapping] of mappingEntries) {
-					if (mapping.lowColumn && mapping.highColumn) {
-						const low = parseFloat(row[mapping.lowColumn]);
-						const high = parseFloat(row[mapping.highColumn]);
-						if (!isNaN(low) && !isNaN(high)) {
-							bars[catKey] = {
-								min: low,
-								max: high,
-								...defaultStyles,
-								...(mapping.styles || {}),
-							};
-						}
-					}
-				}
-				return Object.keys(bars).length > 0
-					? { ...row, __errorBars: bars }
-					: row;
-			});
-		}
-	}
-
-	// Merge customTooltips (top-level block attribute) as the final pass.
-	const customTooltips = attributes.customTooltips || {};
-	const dataWithAllCustomizations = mergeCustomTooltipData(
-		dataWithCustomizations,
-		customTooltips,
-		activeGroupBreaksCategory
-	);
-
-	return { data: dataWithAllCustomizations, config, tableData };
-}
 
 /**
  * Expose the debug surface on `window.prcChartBuilder`.
@@ -244,10 +66,9 @@ const { actions, state } = store(CHART_NAMESPACE, {
 			return state.charts?.[id]?.isQuestionExpanded || false;
 		},
 		get currentViewport() {
-			const serverState = getServerState();
 			const context = getContext();
 			const { id } = context;
-			return serverState.charts?.[id]?.currentViewport || 'desktop';
+			return state.charts?.[id]?.currentViewport || 'desktop';
 		},
 	},
 	actions: {
@@ -278,6 +99,11 @@ const { actions, state } = store(CHART_NAMESPACE, {
 				return;
 			}
 			applyChartPatch(slice, patch);
+			// Deterministically push the controller table + metadata DOM via
+			// `syncControllerSurfaces` (the single runtime writer for those
+			// surfaces). The chart SVG still updates reactively via
+			// `useChartStore` inside the chart's own region.
+			syncControllerSurfaces(chartId, slice);
 		},
 		/**
 		 * Replace the data slice for a chart. Thin single-field wrapper
@@ -314,6 +140,35 @@ const { actions, state } = store(CHART_NAMESPACE, {
 		setTableData(chartId, tableData) {
 			actions.setChart(chartId, { tableData });
 		},
+		/**
+		 * Re-derive chart inputs for a new viewport and update the live slice.
+		 *
+		 * @param {string} viewport Target viewport ('mobile', 'tablet', 'desktop').
+		 */
+		switchViewport(viewport) {
+			const context = getContext();
+			const { id } = context;
+			const slice = state.charts?.[id];
+			if (!slice || slice.currentViewport === viewport) {
+				return;
+			}
+
+			slice.currentViewport = viewport;
+
+			const inputs = buildChartInputs(id, slice);
+			if (!inputs) {
+				return;
+			}
+
+			// Wholesale replacement — not applyChartPatch. A viewport switch
+			// re-derives the full config from base attributes + deviceType;
+			// deep-merging would leave stale keys (e.g. tablet
+			// shapes.customStyles entries when switching to mobile).
+			slice.data = inputs.data;
+			slice.config = inputs.config;
+			slice.tableData = inputs.tableData;
+			syncControllerSurfaces(id, slice);
+		},
 		renderChart() {
 			const context = getContext();
 			const { id } = context;
@@ -333,20 +188,38 @@ const { actions, state } = store(CHART_NAMESPACE, {
 			// block would overwrite caller mutations with the immutable
 			// serverState payload. `config` is the seeded sentinel: it is
 			// undefined in the server-emitted slice and populated by the
-			// first call here. The navigation re-seed (syncOnNavigation)
-			// deliberately resets it before re-running this flow.
+			// first call here.
 			//
-			// Custom charts inside parent router regions (e.g. RLS dialogs)
-			// get a fresh mount node on each navigation while the store
-			// slice persists — remount when the node is empty.
+			// The store slice is global and survives Interactivity Router
+			// navigations, but the mount node is recreated from fresh SSR on
+			// each navigation. This happens to both renderer paths: custom
+			// charts in parent router regions (e.g. RLS dialogs) and standard
+			// charts in router-driven lists (e.g. Roper search results, where
+			// re-searching a prior term recreates a node for a chart id whose
+			// slice already has `config`). When the live chart is gone from the
+			// node (only the SSR `.chart-fallback` remains) the wrapper must be
+			// remounted, otherwise later `setChart` mutations update a slice
+			// nothing visible is subscribed to and the SSR fallback persists.
+			// `mountHasLiveChart` stays true for an already-mounted wrapper, so
+			// in-place caller mutations are still never clobbered.
 			if (slice.config) {
-				if (!isCustom || mountHasLiveChart(mountEl)) {
+				if (!mountEl || mountHasLiveChart(mountEl)) {
 					return;
 				}
 				slice.config = undefined;
 			}
 
-			const inputs = buildChartInputs(id);
+			// Resize handler only runs on window resize events, not on load.
+			// Align the live slice with the client breakpoint before building
+			// inputs so tablet/mobile overrides apply on first paint.
+			if (typeof window !== 'undefined') {
+				const clientViewport = getViewportFromWidth();
+				if (clientViewport !== resolveChartViewport(id, slice)) {
+					slice.currentViewport = clientViewport;
+				}
+			}
+
+			const inputs = buildChartInputs(id, slice);
 			if (!inputs) {
 				return;
 			}
@@ -354,6 +227,11 @@ const { actions, state } = store(CHART_NAMESPACE, {
 			slice.data = inputs.data;
 			slice.config = inputs.config;
 			slice.tableData = inputs.tableData;
+
+			// Push table + metadata before either renderer path. Renderer-
+			// agnostic (Preact module + prc-custom-charts) and covers the
+			// client-side `config.metadata` merge that SSR alone cannot know.
+			syncControllerSurfaces(id, slice);
 
 			if (isCustom) {
 				const customRenderer =
@@ -390,26 +268,6 @@ const { actions, state } = store(CHART_NAMESPACE, {
 				fallbackTableData: inputs.tableData,
 			});
 		},
-		/**
-		 * Navigate to trigger server-side viewport rehydration.
-		 *
-		 * @param {string} viewport The viewport to navigate to.
-		 */
-		*navigateToViewport(viewport) {
-			const newUrl = buildViewportUrl(viewport);
-			const { actions: routerActions } =
-				yield import('@wordpress/interactivity-router');
-			yield routerActions.navigate(newUrl, { replace: true });
-			// Strip the viewport param from the URL bar after navigation so it
-			// doesn't persist visibly in the browser bar.
-			const cleanUrl = new URL(window.location.href);
-			cleanUrl.searchParams.delete('cb_viewport');
-			window.history.replaceState(
-				window.history.state,
-				'',
-				cleanUrl.toString()
-			);
-		},
 		toggleQuestionWordingExpanded() {
 			const context = getContext();
 			const { id } = context;
@@ -423,60 +281,6 @@ const { actions, state } = store(CHART_NAMESPACE, {
 	callbacks: {
 		onRun: () => {
 			actions.renderChart();
-		},
-		/**
-		 * Re-seed the live chart slice from server state after a router
-		 * navigation.
-		 *
-		 * `getServerState()` reads the interactivity-router's navigation
-		 * signal, so this watch re-runs after every client-side navigation
-		 * (e.g. `navigateToViewport` or any site-wide router link). The router
-		 * merges the new server payload with
-		 * `deepMerge(state, serverState, false)` — `override=false` — so it
-		 * never refreshes the already-seeded leaves of `state.charts[id]`
-		 * (`data` / `config` / `tableData` / `attributes`). Only
-		 * `getServerState()` reflects the navigated values.
-		 *
-		 * The chart itself updates on navigation because it lives inside its
-		 * own `data-wp-router-region`, but the controller's visible table and
-		 * metadata are rebuilt by `controller/view.js`'s `watchChart`, which
-		 * subscribes to the LIVE slice — so without this re-seed they keep
-		 * their mount-time values. Replacing the slice's `data` / `config` /
-		 * `tableData` here (top-level signal writes) makes the wrapper and the
-		 * controller watches reconverge on the navigated chart.
-		 */
-		syncOnNavigation: () => {
-			const context = getContext();
-			const { id } = context;
-			// Read server state up front so the watch subscribes to the
-			// navigation signal (and to this chart's slice presence).
-			const serverState = getServerState();
-			const hasServerSlice = !!serverState.charts?.[id];
-
-			// Skip the initial pass: renderChart already seeds the live slice
-			// on mount and the server payload matches the rendered markup.
-			if (!navSeededIds.has(id)) {
-				navSeededIds.add(id);
-				return;
-			}
-
-			// Only act once the chart has been mounted/seeded (config set) and
-			// the navigated server payload is available.
-			if (!hasServerSlice || !state.charts?.[id]?.config) {
-				return;
-			}
-
-			const inputs = buildChartInputs(id);
-			if (!inputs) {
-				return;
-			}
-
-			// Wholesale top-level replacements: the wrapper (useChartStore)
-			// re-renders the chart and the controller's watchChart watches
-			// rebuild the visible table + metadata text in place.
-			state.charts[id].data = inputs.data;
-			state.charts[id].config = inputs.config;
-			state.charts[id].tableData = inputs.tableData;
 		},
 		watchForRender: () => {
 			const context = getContext();
@@ -498,32 +302,11 @@ const { actions, state } = store(CHART_NAMESPACE, {
 				// When the viewport-entry trigger is active and the chart
 				// hasn't rendered yet, attach an IntersectionObserver and
 				// defer renderChart() until the element enters the viewport.
-				// The Set guard prevents a second observer on re-runs.
 				if (triggerOnViewport && !state.charts?.[id]?.config) {
-					if (!viewportObserverIds.has(id)) {
-						viewportObserverIds.add(id);
-						const el = document.querySelector(
-							`[data-prc-chart-id="${id}"]`
-						);
-						if (
-							el &&
-							typeof window.IntersectionObserver !== 'undefined'
-						) {
-							const observer = new window.IntersectionObserver(
-								withScope((entries) => {
-									if (entries[0]?.isIntersecting) {
-										observer.disconnect();
-										actions.renderChart();
-									}
-								}),
-								{ threshold: 0.1 }
-							);
-							observer.observe(el);
-						} else {
-							// Fallback: observer unavailable or element missing.
-							actions.renderChart();
-						}
-					}
+					attachViewportRenderTrigger(
+						id,
+						withScope(() => actions.renderChart())
+					);
 					return;
 				}
 				actions.renderChart();
@@ -540,8 +323,7 @@ const { actions, state } = store(CHART_NAMESPACE, {
 						const newViewport = getViewportFromWidth();
 						const currentViewport = state.currentViewport;
 						if (newViewport !== currentViewport) {
-							// TODO: need to update the current viewport to reflect the new viewport
-							actions.navigateToViewport(newViewport);
+							actions.switchViewport(newViewport);
 						}
 						timeoutId = null;
 					}),
