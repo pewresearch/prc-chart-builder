@@ -1,5 +1,5 @@
 
-> @prc/chart-builder@3.13.0 build
+> @prc/chart-builder@3.12.0 build
 > wp-scripts build --webpack-copy-php --experimental-modules && wp-scripts build-blocks-manifest && wp-scripts build --source-path=includes/inspector-sidebar-panel/src/ --output-path=includes/inspector-sidebar-panel/build/ && wp-scripts build --source-path=includes/admin/src/ --output-path=includes/admin/build/ && node bin/sync-field-registry.mjs --check && wp-scripts build --config webpack.settings.config.js
 
 assets by path synced-chart/ 239 KiB
@@ -70,7 +70,7 @@ WARNING in webpack performance recommendations:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/
 
-webpack 5.106.2 compiled with 4 warnings in 4637 ms
+webpack 5.106.2 compiled with 4 warnings in 4351 ms
 
 assets by path chart/ 58.6 KiB
   asset chart/view.js 58.4 KiB [compared for emit] [javascript module] [minimized] (name: chart/view)
@@ -84,7 +84,7 @@ orphan modules 195 KiB [orphan] 28 modules
 built modules 309 KiB [built]
   ./src/chart/view.js + 25 modules 198 KiB [not cacheable] [built] [code generated]
   ./src/controller/view.js + 8 modules 112 KiB [not cacheable] [built] [code generated]
-webpack 5.106.2 compiled successfully in 1852 ms
+webpack 5.106.2 compiled successfully in 1477 ms
 Block metadata PHP file generated at: build/blocks-manifest.php
 assets by path *.css 4.7 KiB
   asset index-rtl.css 2.35 KiB [compared for emit] (name: index)
@@ -97,7 +97,7 @@ runtime modules 663 bytes 3 modules
 built modules 12.2 KiB (javascript) 2.35 KiB (css/mini-extract) [built]
   ./includes/inspector-sidebar-panel/src/index.js + 11 modules 12.2 KiB [not cacheable] [built] [code generated]
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./includes/inspector-sidebar-panel/src/editor.scss 2.35 KiB [built] [code generated]
-webpack 5.106.2 compiled successfully in 563 ms
+webpack 5.106.2 compiled successfully in 576 ms
 assets by chunk 231 KiB (name: index)
   asset index.js 231 KiB [emitted] [minimized] (name: index)
   asset index.asset.php 333 bytes [emitted] [compared for emit] (name: index)
@@ -129,7 +129,7 @@ WARNING in webpack performance recommendations:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/
 
-webpack 5.106.2 compiled with 2 warnings in 2414 ms
+webpack 5.106.2 compiled with 2 warnings in 2441 ms
 Field registry sync OK (24 schema groups: layout, metadata, plotBands, independentAxis, dependentAxis, tooltip, legend, labels, shapes, bar, line, dotPlot, errorBars, explodedBar, pie, nodes, regression, map, divergingBar, diffColumn, netValues, treemap, sankey, annotations).
 assets by status 122 KiB [compared for emit]
   assets by chunk 102 KiB (name: index)
@@ -182,4 +182,4 @@ src/settings/style.scss 136:29  root stylesheet
  @ ./src/settings/app.jsx 5:0-22
  @ ./src/settings/index.js 2:0-37 3:60-76
 
-webpack 5.106.2 compiled with 2 warnings in 1134 ms
+webpack 5.106.2 compiled with 2 warnings in 1128 ms
