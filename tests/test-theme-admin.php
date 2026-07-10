@@ -20,11 +20,18 @@ class Test_Theme_Admin extends WP_UnitTestCase {
 	private int $admin_id;
 
 	/**
-	 * Editor without edit_theme_options.
+	 * Editor without manage_options.
 	 *
 	 * @var int
 	 */
 	private int $editor_id;
+
+	/**
+	 * Designer with edit_theme_options but not manage_options.
+	 *
+	 * @var int
+	 */
+	private int $designer_id;
 
 	/**
 	 * Set up users and register hooks.
@@ -44,6 +51,14 @@ class Test_Theme_Admin extends WP_UnitTestCase {
 			)
 		);
 
+		$this->designer_id = self::factory()->user->create(
+			array(
+				'role' => 'editor',
+			)
+		);
+		$designer = new WP_User( $this->designer_id );
+		$designer->add_cap( 'edit_theme_options' );
+
 		new Theme_Admin( new Loader() );
 		do_action( 'admin_menu' );
 	}
@@ -51,7 +66,7 @@ class Test_Theme_Admin extends WP_UnitTestCase {
 	/**
 	 * Chart Theme submenu is registered under Charts.
 	 */
-	public function test_submenu_registered_for_edit_theme_options(): void {
+	public function test_submenu_registered_for_manage_options(): void {
 		global $submenu;
 
 		$this->assertArrayHasKey( 'edit.php?post_type=chart', $submenu );
@@ -68,7 +83,7 @@ class Test_Theme_Admin extends WP_UnitTestCase {
 		}
 
 		$this->assertNotNull( $theme_entry );
-		$this->assertSame( 'edit_theme_options', $theme_entry[1] );
+		$this->assertSame( 'manage_options', $theme_entry[1] );
 	}
 
 	/**
@@ -90,6 +105,18 @@ class Test_Theme_Admin extends WP_UnitTestCase {
 	 */
 	public function test_editor_cannot_render_page(): void {
 		wp_set_current_user( $this->editor_id );
+
+		$this->expectException( 'WPDieException' );
+
+		$admin = new Theme_Admin( new Loader() );
+		$admin->render_admin_page();
+	}
+
+	/**
+	 * Designers with edit_theme_options cannot render the page.
+	 */
+	public function test_designer_cannot_render_page(): void {
+		wp_set_current_user( $this->designer_id );
 
 		$this->expectException( 'WPDieException' );
 

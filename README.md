@@ -105,7 +105,7 @@ Each site stores one active chart theme in the `prc_chart_builder_theme` option:
 }
 ```
 
-**Admin UI:** `Charts > Chart Theme` (`edit_theme_options` — admins and designers only).
+**Admin UI:** `Charts > Chart Theme` (`manage_options` — administrators only).
 
 | Tab            | What it edits                                            | Retroactive?                                                                     |
 | -------------- | -------------------------------------------------------- | -------------------------------------------------------------------------------- |

@@ -75,16 +75,7 @@ class Test_Theme_REST_Controller extends WP_UnitTestCase {
 		$this->assertSame( 403, $response->get_status() );
 	}
 
-	public function test_get_theme_allowed_for_edit_theme_options_capability(): void {
-		update_option(
-			Settings::OPTION_KEY,
-			array(
-				'config' => array(
-					'layout' => array( 'width' => 720 ),
-				),
-			)
-		);
-
+	public function test_get_theme_forbidden_for_edit_theme_options_capability(): void {
 		$user_id = self::factory()->user->create( array( 'role' => 'subscriber' ) );
 		$user    = new WP_User( $user_id );
 		$user->add_cap( 'edit_theme_options' );
@@ -92,8 +83,7 @@ class Test_Theme_REST_Controller extends WP_UnitTestCase {
 
 		$response = rest_do_request( new WP_REST_Request( 'GET', self::ROUTE ) );
 
-		$this->assertSame( 200, $response->get_status() );
-		$this->assertSame( 720, $response->get_data()['config']['layout']['width'] );
+		$this->assertSame( 403, $response->get_status() );
 	}
 
 	public function test_post_theme_persists_for_admin(): void {
@@ -114,7 +104,7 @@ class Test_Theme_REST_Controller extends WP_UnitTestCase {
 		$this->assertSame( $payload, Settings::get_active_theme() );
 	}
 
-	public function test_post_theme_allowed_for_edit_theme_options_capability(): void {
+	public function test_post_theme_forbidden_for_edit_theme_options_capability(): void {
 		$user_id = self::factory()->user->create( array( 'role' => 'subscriber' ) );
 		$user    = new WP_User( $user_id );
 		$user->add_cap( 'edit_theme_options' );
@@ -128,8 +118,8 @@ class Test_Theme_REST_Controller extends WP_UnitTestCase {
 			)
 		);
 
-		$this->assertSame( 200, $response->get_status() );
-		$this->assertSame( 'Georgia, serif', Settings::get_active_theme()['config']['legend']['fontFamily'] );
+		$this->assertSame( 403, $response->get_status() );
+		$this->assertSame( array(), Settings::get_active_theme() );
 	}
 
 	public function test_post_theme_forbidden_for_author(): void {

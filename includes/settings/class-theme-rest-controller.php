@@ -56,10 +56,10 @@ class Theme_REST_Controller {
 	/**
 	 * Whether the current user may read or write the chart theme.
 	 *
-	 * Admins and designers (edit_theme_options) — not writers/editors/authors.
+	 * Administrators only (manage_options).
 	 */
 	public function can_manage_theme(): bool {
-		return current_user_can( 'edit_theme_options' );
+		return current_user_can( 'manage_options' );
 	}
 
 	/**

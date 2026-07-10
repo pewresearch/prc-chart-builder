@@ -53,19 +53,14 @@ export function migrateLegacyMobileAttributes(attributes) {
 	}
 
 	if (migrated.annotations?.activeOnMobile !== undefined) {
+		// Strip the legacy group-level key only. Unlike tooltip.activeOnMobile,
+		// this flag was never consulted at render — the old mobile gate lived on
+		// each annotation item (items[].activeOnMobile), and the group-level key
+		// defaulted to false. Promoting that dormant default into a mobile
+		// override would hide annotations on mobile for every previously-saved
+		// chart, so we discard it without producing a viewport override.
 		const { activeOnMobile, ...annotations } = migrated.annotations;
 		migrated.annotations = annotations;
-
-		if (annotations.active && activeOnMobile === false) {
-			mobile = {
-				...mobile,
-				annotations: {
-					...mobile.annotations,
-					active: false,
-				},
-			};
-			mobileChanged = true;
-		}
 	}
 
 	if (Array.isArray(migrated.annotations?.items)) {

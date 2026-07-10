@@ -40,7 +40,7 @@ class Theme_Admin {
 	}
 
 	/**
-	 * Register Charts > Chart Theme for users with edit_theme_options.
+	 * Register Charts > Chart Theme for administrators only.
 	 *
 	 * @hook admin_menu
 	 */
@@ -49,7 +49,7 @@ class Theme_Admin {
 			'edit.php?post_type=chart',
 			__( 'Chart Theme', 'prc-chart-builder' ),
 			__( 'Chart Theme', 'prc-chart-builder' ),
-			'edit_theme_options',
+			'manage_options',
 			self::ADMIN_PAGE_SLUG,
 			array( $this, 'render_admin_page' )
 		);
@@ -59,7 +59,7 @@ class Theme_Admin {
 	 * Render the React mount node.
 	 */
 	public function render_admin_page(): void {
-		if ( ! current_user_can( 'edit_theme_options' ) ) {
+		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die(
 				esc_html__( 'Sorry, you are not allowed to access this page.', 'prc-chart-builder' )
 			);
