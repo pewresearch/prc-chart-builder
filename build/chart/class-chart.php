@@ -262,8 +262,8 @@ class Chart {
 					wp_kses_post( $block_wrapper_attrs ),
 					esc_attr( $max_width ),
 					$top_rule, // phpcs:ignore
-					wp_kses_post( $render_attributes['metadata']['title'] ),
-					wp_kses_post( $render_attributes['metadata']['subtitle'] ),
+					wp_kses_post( $render_attributes['metadata']['title'] ?? '' ),
+					wp_kses_post( $render_attributes['metadata']['subtitle'] ?? '' ),
 					$is_freeform_chart ? $freeform_content : ( $is_static_chart ? $static_chart : $chart ), //phpcs:ignore
 					$question_wording_html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean.
 					wp_kses_post( $render_attributes['metadata']['note'] ?? '' ),
