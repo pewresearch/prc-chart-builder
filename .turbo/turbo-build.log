@@ -13,7 +13,7 @@ assets by path controller/ 379 KiB
   asset controller/class-controller.php 30.4 KiB [compared for emit] [from: src/controller/class-controller.php] [copied]
   asset controller/block.json 1.9 KiB [compared for emit] [from: src/controller/block.json] [copied]
 assets by path chart/ 358 KiB
-  assets by status 329 KiB [emitted] 2 assets
+  assets by chunk 329 KiB (name: chart/index) 2 assets
   asset chart/block.json 17.8 KiB [compared for emit] [from: src/chart/block.json] [copied]
   asset chart/class-chart.php 11.6 KiB [compared for emit] [from: src/chart/class-chart.php] [copied]
 Entrypoint chart/index [big] 329 KiB = chart/index.js 328 KiB chart/index.asset.php 378 bytes
@@ -70,11 +70,11 @@ WARNING in webpack performance recommendations:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/
 
-webpack 5.106.2 compiled with 4 warnings in 5846 ms
+webpack 5.106.2 compiled with 4 warnings in 11860 ms
 
-assets by status 58.5 KiB [emitted]
-  asset chart/view.js 58.3 KiB [emitted] [javascript module] [minimized] (name: chart/view)
-  asset chart/view.asset.php 155 bytes [emitted] [compared for emit] (name: chart/view)
+assets by path chart/ 58.5 KiB
+  asset chart/view.js 58.3 KiB [compared for emit] [javascript module] [minimized] (name: chart/view)
+  asset chart/view.asset.php 155 bytes [compared for emit] (name: chart/view)
 assets by path controller/ 38.4 KiB
   asset controller/view.js 38.3 KiB [compared for emit] [javascript module] [minimized] (name: controller/view)
   asset controller/view.asset.php 130 bytes [compared for emit] (name: controller/view)
@@ -84,7 +84,7 @@ orphan modules 196 KiB [orphan] 28 modules
 built modules 310 KiB [built]
   ./src/chart/view.js + 25 modules 198 KiB [not cacheable] [built] [code generated]
   ./src/controller/view.js + 8 modules 112 KiB [not cacheable] [built] [code generated]
-webpack 5.106.2 compiled successfully in 2932 ms
+webpack 5.106.2 compiled successfully in 3913 ms
 Block metadata PHP file generated at: build/blocks-manifest.php
 assets by path *.css 4.7 KiB
   asset index-rtl.css 2.35 KiB [compared for emit] (name: index)
@@ -97,7 +97,7 @@ runtime modules 663 bytes 3 modules
 built modules 12.2 KiB (javascript) 2.35 KiB (css/mini-extract) [built]
   ./includes/inspector-sidebar-panel/src/index.js + 11 modules 12.2 KiB [not cacheable] [built] [code generated]
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./includes/inspector-sidebar-panel/src/editor.scss 2.35 KiB [built] [code generated]
-webpack 5.106.2 compiled successfully in 843 ms
+webpack 5.106.2 compiled successfully in 1297 ms
 assets by chunk 231 KiB (name: index)
   asset index.js 231 KiB [emitted] [minimized] (name: index)
   asset index.asset.php 333 bytes [emitted] [compared for emit] (name: index)
@@ -129,7 +129,7 @@ WARNING in webpack performance recommendations:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/
 
-webpack 5.106.2 compiled with 2 warnings in 2975 ms
+webpack 5.106.2 compiled with 2 warnings in 5420 ms
 Field registry sync OK (24 schema groups: layout, metadata, plotBands, independentAxis, dependentAxis, tooltip, legend, labels, shapes, bar, line, dotPlot, errorBars, explodedBar, pie, nodes, regression, map, divergingBar, diffColumn, netValues, treemap, sankey, annotations).
 assets by status 122 KiB [compared for emit]
   assets by chunk 102 KiB (name: index)
@@ -182,4 +182,4 @@ src/settings/style.scss 136:29  root stylesheet
  @ ./src/settings/app.jsx 5:0-22
  @ ./src/settings/index.js 2:0-37 3:60-76
 
-webpack 5.106.2 compiled with 2 warnings in 1447 ms
+webpack 5.106.2 compiled with 2 warnings in 1221 ms

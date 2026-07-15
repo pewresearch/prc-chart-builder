@@ -33,4 +33,4 @@ WARNING in webpack performance recommendations:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/
 
-webpack 5.106.2 compiled with 2 warnings in 4315 ms
+webpack 5.106.2 compiled with 2 warnings in 9633 ms
