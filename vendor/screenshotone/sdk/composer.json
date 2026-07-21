@@ -1,0 +1,32 @@
+{
+    "name": "screenshotone/sdk",
+    "description": "A PHP SDK for the ScreenshotOne.com API to take screenshots of any URL",
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/screenshotone/phpsdk"
+        }
+    ],
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "ScreenshotOne\\Sdk\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Dmytro Krasun",
+            "email": "hey@screenshotone.com"
+        }
+    ],
+    "require": {
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9"
+    },
+    "scripts": {
+        "tests": "phpunit ./tests"
+    }
+}

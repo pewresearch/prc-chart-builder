@@ -1,0 +1,7 @@
+* text=auto eol=lf
+
+/tests export-ignore
+/bin/install-wp-tests.sh export-ignore
+/phpunit.xml.dist export-ignore
+/phpcs.xml.dist export-ignore
+/.github export-ignore

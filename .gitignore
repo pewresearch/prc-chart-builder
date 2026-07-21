@@ -1,7 +1,6 @@
 .vscode
 node_modules
 node_modules/
-vendor/
 
 # Yarn v2
 .pnp.*
@@ -18,7 +17,6 @@ vendor/
 artifacts/
 
 # Composer
-/vendor/
 
 # PHPUnit
 /coverage/
@@ -27,3 +25,6 @@ artifacts/
 # WordPress Tests
 /tmp/
 /wordpress-tests-lib/
+
+# vendor/ is committed for standalone installs (populated by platform ship CI).
+!vendor/

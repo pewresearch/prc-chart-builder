@@ -1,0 +1,61 @@
+{
+	"name": "pewresearch/wp-html-processors",
+	"description": "PHP HTML parsing utilities that extend WP_HTML_Tag_Processor for extracting structured data from WordPress block output.",
+	"type": "library",
+	"license": "GPL-2.0-or-later",
+	"keywords": [
+		"wordpress",
+		"html",
+		"parser",
+		"blocks",
+		"tag-processor"
+	],
+	"authors": [
+		{
+			"name": "Pew Research Center",
+			"homepage": "https://github.com/pewresearch"
+		}
+	],
+	"require": {
+		"php": ">=8.2"
+	},
+	"require-dev": {
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"phpunit/phpunit": "^11.0",
+		"squizlabs/php_codesniffer": "^3.9",
+		"wp-coding-standards/wpcs": "^3.1"
+	},
+	"autoload": {
+		"psr-4": {
+			"PRC\\Html\\": "src/"
+		},
+		"files": [
+			"src/functions.php"
+		]
+	},
+	"autoload-dev": {
+		"psr-4": {
+			"PRC\\Html\\Tests\\": "tests/"
+		}
+	},
+	"config": {
+		"sort-packages": true,
+		"allow-plugins": {
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		},
+		"audit": {
+			"block-insecure": false
+		}
+	},
+	"minimum-stability": "stable",
+	"extra": {
+		"branch-alias": {
+			"dev-main": "1.x-dev"
+		}
+	},
+	"scripts": {
+		"phpcs": "phpcs",
+		"phpcbf": "phpcbf",
+		"test": "phpunit"
+	}
+}
