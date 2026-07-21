@@ -912,12 +912,7 @@ export default function CreateNewChartModal({
 	return (
 		<>
 			{!hideTrigger && (
-				<Button
-					variant="primary"
-					onClick={onOpen}
-					icon={plus}
-					__next40pxDefaultSize
-				>
+				<Button variant="primary" onClick={onOpen} icon={plus}>
 					{__('Add New Chart', 'prc-chart-builder')}
 				</Button>
 			)}

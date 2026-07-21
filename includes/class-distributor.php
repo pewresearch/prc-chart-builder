@@ -195,8 +195,9 @@ class Distributor {
 	 * Exclude usage tracking meta from distribution.
 	 *
 	 * The prc_synced_chart_used_in_posts meta tracks which posts use a chart.
-	 * This data is specific to the source site and rebuilds automatically
-	 * when posts with synced-chart blocks are rendered on the target site.
+	 * This data is specific to the source site and rebuilds on the post-publish
+	 * pipeline (prc_platform_on_publish / on_update) when parent posts change.
+	 * The parent reverse index (_prc_synced_chart_refs) is likewise site-local.
 	 *
 	 * @hook dt_excluded_meta
 	 *
@@ -206,6 +207,7 @@ class Distributor {
 	public static function exclude_usage_meta( array $excluded ): array {
 		if ( class_exists( __NAMESPACE__ . '\Synced_Chart' ) ) {
 			$excluded[] = Synced_Chart::$synced_chart_usage_meta_key;
+			$excluded[] = Synced_Chart::$synced_chart_refs_meta_key;
 		}
 		return $excluded;
 	}

@@ -1,11 +1,18 @@
 .wp-block-prc-chart-builder-synced-chart {
+	// Cap floated synced charts to the content column. Without this the
+	// floated wrapper shrink-to-fits to the chart's layout width (e.g. 420px)
+	// and the responsive chart measures that width, so it never shrinks and
+	// gets cropped in a narrower column on mobile (PRC-618). `aligncenter`
+	// already sets `max-width: 100%`; `alignleft`/`alignright` need the same.
 	&.alignleft {
 		float: left;
+		max-width: 100%;
 		margin-inline-start: 0 !important;
 		margin-inline-end: 2em !important;
 	}
 	&.alignright {
 		float: right;
+		max-width: 100%;
 		margin-inline-start: 2em !important;
 		margin-inline-end: 0 !important;
 	}

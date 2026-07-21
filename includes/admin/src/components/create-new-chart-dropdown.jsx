@@ -21,7 +21,6 @@ export default function CreateNewChartDropdown() {
 				className: 'create-new-chart-dropdown',
 				variant: 'primary',
 				showTooltip: false,
-				__next40pxDefaultSize: true,
 			}}
 			children={({ onClose }) => (
 				<MenuGroup>

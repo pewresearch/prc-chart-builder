@@ -24,7 +24,7 @@ Displays all posts currently referencing the chart through Synced Chart blocks i
 
 **Features:**
 
-- **Automatic Detection**: Uses the existing `prc_synced_chart_used_in_posts` meta key to find referencing posts
+- **Automatic Detection**: Uses the `prc_synced_chart_used_in_posts` meta key (maintained by the post-publish pipeline when parent posts publish/update) to find referencing posts
 - **Quick Access**: Provides direct links to edit referencing posts
 - **Status Information**: Shows post type, publication status, and other relevant details
 - **Chart-Specific**: Only appears when editing chart post types

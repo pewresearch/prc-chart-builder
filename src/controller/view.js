@@ -8,6 +8,7 @@ import {
 	store,
 	watch,
 } from '@wordpress/interactivity';
+import { addQueryArgs } from '@wordpress/url';
 
 /**
  * Internal Dependencies
@@ -17,7 +18,6 @@ import { sanitizeChartExportFilename } from '../chart/utils/sanitize-chart-expor
 import { arrayToCSV, UTF8_BOM } from './utils/csv-export';
 import { logMigrationComparison } from './utils/log-migration';
 
-const { addQueryArgs } = window.wp.url;
 const { innerWidth, innerHeight } = window;
 
 /**

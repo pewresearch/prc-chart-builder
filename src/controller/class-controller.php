@@ -78,7 +78,6 @@ class Controller {
 			return '';
 		}
 
-		wp_enqueue_script( 'wp-url' );
 		wp_enqueue_script( 'prc-functions' );
 
 		/**

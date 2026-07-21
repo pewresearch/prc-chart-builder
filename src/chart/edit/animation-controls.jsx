@@ -500,7 +500,6 @@ function AnimationControls({
 										prefersReducedMotion ||
 										isPreviewingAnimation
 									}
-									__next40pxDefaultSize
 								>
 									{isPreviewingAnimation
 										? __('Previewing…')
