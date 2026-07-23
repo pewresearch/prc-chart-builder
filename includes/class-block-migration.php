@@ -1416,22 +1416,22 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WPCOM_VIP_CLI_Command' ) ) 
 		 * ## EXAMPLES
 		 *
 		 *     # Run a dry-run to see what would be migrated
-		 *     wp prc-chart-builder migrate --dry-run
+		 *     wp prc chart-builder migrate --dry-run
 		 *
 		 *     # Run the actual migration
-		 *     wp prc-chart-builder migrate
+		 *     wp prc chart-builder migrate
 		 *
 		 *     # Process only 500 posts starting from offset 1000
-		 *     wp prc-chart-builder migrate --offset=1000 --limit=500
+		 *     wp prc chart-builder migrate --offset=1000 --limit=500
 		 *
 		 *     # Resume from where the last run left off
-		 *     wp prc-chart-builder migrate --resume
+		 *     wp prc chart-builder migrate --resume
 		 *
 		 *     # Migrate single post by ID
-		 *     wp prc-chart-builder migrate --post-id=123
+		 *     wp prc chart-builder migrate --post-id=123
 		 *
 		 *     # Target a specific site (use WP-CLI --url parameter)
-		 *     wp prc-chart-builder migrate --url=https://example.com
+		 *     wp prc chart-builder migrate --url=https://example.com
 		 *
 		 * @subcommand migrate
 		 * @synopsis [--dry-run] [--posts-per-page=<number>] [--offset=<number>] [--limit=<number>] [--resume] [--post-id=<id>]
@@ -1548,7 +1548,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WPCOM_VIP_CLI_Command' ) ) 
 		 * ## EXAMPLES
 		 *
 		 *     # Check migration status
-		 *     wp prc-chart-builder status
+		 *     wp prc chart-builder status
 		 *
 		 * @subcommand status
 		 */
@@ -1583,7 +1583,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WPCOM_VIP_CLI_Command' ) ) 
 		 * ## EXAMPLES
 		 *
 		 *     # Reset migration status
-		 *     wp prc-chart-builder reset
+		 *     wp prc chart-builder reset
 		 *
 		 * @subcommand reset
 		 */
@@ -1609,7 +1609,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WPCOM_VIP_CLI_Command' ) ) 
 		 * ## EXAMPLES
 		 *
 		 *     # Test migration on sample content
-		 *     wp prc-chart-builder test "<!-- wp:prc-block/chart -->"
+		 *     wp prc chart-builder test "<!-- wp:prc-block/chart -->"
 		 *
 		 * @subcommand test
 		 * @synopsis <content>
@@ -1645,7 +1645,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WPCOM_VIP_CLI_Command' ) ) 
 		 * ## EXAMPLES
 		 *
 		 *     # Show posts with chart-related blocks
-		 *     wp prc-chart-builder debug
+		 *     wp prc chart-builder debug
 		 *
 		 * @subcommand debug
 		 * @synopsis [--limit=<number>]
@@ -1727,5 +1727,5 @@ if ( defined( 'WP_CLI' ) && WP_CLI && class_exists( 'WPCOM_VIP_CLI_Command' ) ) 
 	}
 
 
-	WP_CLI::add_command( 'prc-chart-builder', '\PRC\Platform\Chart_Builder\PRC_Chart_Builder_Migration_CLI_Command' );
+	WP_CLI::add_command( 'prc chart-builder', '\PRC\Platform\Chart_Builder\PRC_Chart_Builder_Migration_CLI_Command' );
 }

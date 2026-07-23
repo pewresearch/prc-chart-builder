@@ -64,7 +64,7 @@ Per-role `fontFamily` values are stored as **WordPress preset tokens** (`var:pre
 - **Literal custom stack** → passthrough unchanged → editor intent preserved.
 - **Missing key on legacy charts** → static `DEFAULT_FONT_FAMILY` shipped fallback (Bucket 3 guard).
 
-The theme editor font picker stores tokens; new charts freeze the token at insert. Chart-theme per-role changes remain new-charts-only (the token choice is frozen, not the resolved stack). Legacy literal stacks can be migrated to tokens via `wp prc-chart-builder font-tokens-audit` / `font-tokens-migrate --dry-run`.
+The theme editor font picker stores tokens; new charts freeze the token at insert. Chart-theme per-role changes remain new-charts-only (the token choice is frozen, not the resolved stack). Legacy literal stacks can be migrated to tokens via `wp prc chart-builder font-tokens-audit` / `font-tokens-migrate --dry-run`.
 
 Token helpers: [font-family-tokens.js](../../src/chart/utils/font-family-tokens.js). Migration utilities: [class-theme-font-tokens-migration.php](../../includes/settings/class-theme-font-tokens-migration.php) (CLI: `WP_CLI_Commands::font_tokens_audit` / `font_tokens_migrate`).
 
@@ -175,7 +175,7 @@ Implementation backbone: **`chart-theme-field-registry`** (JSON/TS), keyed by do
 
 ## Slice 9 - Legacy seeder
 
-- **STATUS (DONE):** [prc-legacy-theme.json](../../includes/settings/prc-legacy-theme.json), `wp prc-chart-builder seed-theme` / `repair-theme`.
+- **STATUS (DONE):** [prc-legacy-theme.json](../../includes/settings/prc-legacy-theme.json), `wp prc chart-builder seed-theme` / `repair-theme`.
 
 ## Slice 10 - Genericize shipped defaults
 

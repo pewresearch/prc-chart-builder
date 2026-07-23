@@ -32,13 +32,13 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Run the block migration
-	 *     wp prc-chart-builder migrate_blocks
+	 *     wp prc chart-builder migrate_blocks
 	 *
 	 *     # Run migration with dry-run to see what would be changed
-	 *     wp prc-chart-builder migrate_blocks --dry-run
+	 *     wp prc chart-builder migrate_blocks --dry-run
 	 *
 	 *     # Force re-run migration (reset and run again)
-	 *     wp prc-chart-builder migrate_blocks --force
+	 *     wp prc chart-builder migrate_blocks --force
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -109,7 +109,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Migrate a specific post
-	 *     wp prc-chart-builder migrate_single_post 12345
+	 *     wp prc chart-builder migrate_single_post 12345
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -159,7 +159,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Test migration patterns
-	 *     wp prc-chart-builder test-migration
+	 *     wp prc chart-builder test-migration
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -209,7 +209,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Reset migration status
-	 *     wp prc-chart-builder reset-migration
+	 *     wp prc chart-builder reset-migration
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -236,7 +236,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Show current migration status
-	 *     wp prc-chart-builder migration-status
+	 *     wp prc chart-builder migration-status
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -280,8 +280,8 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-chart-builder backfill_chart_types --dry-run
-	 *     wp prc-chart-builder backfill_chart_types
+	 *     wp prc chart-builder backfill_chart_types --dry-run
+	 *     wp prc chart-builder backfill_chart_types
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -502,19 +502,19 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * ## EXAMPLES
 	 *
 	 *     # Preview which charts would be processed (no API calls)
-	 *     wp prc-chart-builder backfill_pngs --dry-run
+	 *     wp prc chart-builder backfill_pngs --dry-run
 	 *
 	 *     # Backfill a single chart
-	 *     wp prc-chart-builder backfill_pngs --post-id=123
+	 *     wp prc chart-builder backfill_pngs --post-id=123
 	 *
 	 *     # Backfill all charts missing a PNG
-	 *     wp prc-chart-builder backfill_pngs
+	 *     wp prc chart-builder backfill_pngs
 	 *
 	 *     # Re-generate all PNGs regardless of current state
-	 *     wp prc-chart-builder backfill_pngs --force-regenerate
+	 *     wp prc chart-builder backfill_pngs --force-regenerate
 	 *
 	 *     # Test against a specific remote export URL from local
-	 *     wp prc-chart-builder backfill_pngs --post-id=123 --export-url={{remote-url}}/chart/some-slug/export/
+	 *     wp prc chart-builder backfill_pngs --post-id=123 --export-url={{remote-url}}/chart/some-slug/export/
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -776,7 +776,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-chart-builder seed-theme
+	 *     wp prc chart-builder seed-theme
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -808,7 +808,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-chart-builder repair-theme
+	 *     wp prc chart-builder repair-theme
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -899,10 +899,10 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-chart-builder font-tokens-audit
-	 *     wp prc-chart-builder font-tokens-audit --post-type=post --limit=100
-	 *     wp prc-chart-builder font-tokens-audit --batch-size=50 --offset=200
-	 *     wp prc-chart-builder font-tokens-audit --post-id=12345
+	 *     wp prc chart-builder font-tokens-audit
+	 *     wp prc chart-builder font-tokens-audit --post-type=post --limit=100
+	 *     wp prc chart-builder font-tokens-audit --batch-size=50 --offset=200
+	 *     wp prc chart-builder font-tokens-audit --post-id=12345
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -954,10 +954,10 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 *
 	 * ## EXAMPLES
 	 *
-	 *     wp prc-chart-builder font-tokens-migrate --dry-run
-	 *     wp prc-chart-builder font-tokens-migrate
-	 *     wp prc-chart-builder font-tokens-migrate --batch-size=50 --sleep=2
-	 *     wp prc-chart-builder font-tokens-migrate --post-id=12345 --dry-run
+	 *     wp prc chart-builder font-tokens-migrate --dry-run
+	 *     wp prc chart-builder font-tokens-migrate
+	 *     wp prc chart-builder font-tokens-migrate --batch-size=50 --sleep=2
+	 *     wp prc chart-builder font-tokens-migrate --post-id=12345 --dry-run
 	 *
 	 * @param array $args       Positional arguments.
 	 * @param array $assoc_args Associative arguments.
@@ -981,4 +981,4 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 }
 
 // Register the WP-CLI commands.
-\WP_CLI::add_command( 'prc-chart-builder', 'PRC\Platform\Chart_Builder\WP_CLI_Commands' );
+\WP_CLI::add_command( 'prc chart-builder', 'PRC\Platform\Chart_Builder\WP_CLI_Commands' );

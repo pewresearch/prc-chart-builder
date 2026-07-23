@@ -117,11 +117,11 @@ Each site stores one active chart theme in the `prc_chart_builder_theme` option:
 **WP-CLI:**
 
 ```bash
-wp prc-chart-builder seed-theme          # seed legacy PRC theme from prc-legacy-theme.json
-wp prc-chart-builder repair-theme        # validate + re-seed if corrupt
-wp prc-chart-builder font-tokens-audit   # audit literal font stacks in chart blocks
-wp prc-chart-builder font-tokens-migrate --dry-run
-wp prc-chart-builder font-tokens-migrate --batch-size=100 --sleep=1
+wp prc chart-builder seed-theme          # seed legacy PRC theme from prc-legacy-theme.json
+wp prc chart-builder repair-theme        # validate + re-seed if corrupt
+wp prc chart-builder font-tokens-audit   # audit literal font stacks in chart blocks
+wp prc chart-builder font-tokens-migrate --dry-run
+wp prc chart-builder font-tokens-migrate --batch-size=100 --sleep=1
 ```
 
 **Distributor:** Chart blocks keep palette slugs in `io.colorValue`; the destination site resolves colors from its own `theme.palettes` — the theme option is not distributed.

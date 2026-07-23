@@ -17,10 +17,10 @@
 	},
 	"scripts": {
 		"test": [
-			"phpunit"
+			"phpunit --configuration ../../tests/prc-chart-builder/phpunit/phpunit.xml.dist"
 		],
 		"test-ms": [
-			"WP_MULTISITE=1 phpunit"
+			"WP_MULTISITE=1 phpunit --configuration ../../tests/prc-chart-builder/phpunit/phpunit.xml.dist"
 		]
 	},
 	"config": {

@@ -1,12 +1,19 @@
 /**
- * Jest configuration for chart-builder plugin
+ * Jest configuration for chart-builder plugin.
+ * Unit tests live under monorepo root tests/prc-chart-builder/unit/.
  */
+const path = require('path');
+
+const unitRoot = path.resolve(__dirname, '../../tests/prc-chart-builder/unit');
+
 module.exports = {
 	...require('@wordpress/scripts/config/jest-unit.config'),
-	testMatch: ['**/tests/**/*.test.js'],
-	setupFilesAfterEnv: ['<rootDir>/tests/setup-jest.js'],
+	rootDir: __dirname,
+	roots: [unitRoot],
+	testMatch: ['**/*.test.js'],
+	setupFilesAfterEnv: [`${unitRoot}/setup-jest.js`],
 	moduleNameMapper: {
-		'\\.(scss|css)$': '<rootDir>/tests/__mocks__/styleMock.js',
+		'\\.(scss|css)$': `${unitRoot}/__mocks__/styleMock.js`,
 	},
 	transform: {
 		'^.+\\.(js|jsx|ts|tsx)$':

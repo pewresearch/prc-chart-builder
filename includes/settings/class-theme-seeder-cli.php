@@ -26,7 +26,7 @@ if ( class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
  */
 function register_theme_seeder_cli_command(): void {
 	\WP_CLI::add_command(
-		'prc-chart-builder seed-theme',
+		'prc chart-builder seed-theme',
 		static function (): void {
 			$result = Theme_Seeder::seed_if_empty();
 
@@ -44,7 +44,7 @@ function register_theme_seeder_cli_command(): void {
 	);
 
 	\WP_CLI::add_command(
-		'prc-chart-builder repair-theme',
+		'prc chart-builder repair-theme',
 		static function (): void {
 			$raw          = get_option( Settings::OPTION_KEY, false );
 			$before       = is_array( $raw ) ? $raw : array();
@@ -103,7 +103,7 @@ function register_theme_seeder_cli_command(): void {
 	);
 
 	\WP_CLI::add_command(
-		'prc-chart-builder font-tokens-audit',
+		'prc chart-builder font-tokens-audit',
 		static function ( array $args, array $assoc_args ): void {
 			unset( $args );
 			Theme_Font_Tokens_Migration::run_cli_audit(
@@ -116,7 +116,7 @@ function register_theme_seeder_cli_command(): void {
 	);
 
 	\WP_CLI::add_command(
-		'prc-chart-builder font-tokens-migrate',
+		'prc chart-builder font-tokens-migrate',
 		static function ( array $args, array $assoc_args ): void {
 			unset( $args );
 			Theme_Font_Tokens_Migration::run_cli_migrate(

@@ -32,19 +32,19 @@ You can control the migration process using WP-CLI commands:
 
 ```bash
 # Check migration status
-wp prc-chart-builder migration_status
+wp prc chart-builder migration_status
 
 # Run migration manually
-wp prc-chart-builder migrate_blocks
+wp prc chart-builder migrate_blocks
 
 # Run migration with dry-run to see what would be changed
-wp prc-chart-builder migrate_blocks --dry-run
+wp prc chart-builder migrate_blocks --dry-run
 
 # Force re-run migration (reset and run again)
-wp prc-chart-builder migrate_blocks --force
+wp prc chart-builder migrate_blocks --force
 
 # Migrate a single chart
-wp prc-chart-builder migrate_single_post 123456
+wp prc chart-builder migrate_single_post 123456
 
 ```
 

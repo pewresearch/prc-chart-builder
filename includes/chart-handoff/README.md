@@ -18,7 +18,7 @@ plugins/prc-chart-builder/
         schema.json                    ← authoritative PCH JSON Schema (v1)
         pch-to-chart-builder.js        ← JS converter (used by tests; PHP is the live path)
     trait-chart-block-defaults.php     ← shared 3-layer merge logic (used by PCH + AI endpoints)
-  tests/
+  ../../../../tests/prc-chart-builder/unit/
     integration/chart-handoff/
       pch-to-chart-builder.test.js     ← unit tests for the JS converter
     fixtures/chart-handoff/
@@ -225,6 +225,6 @@ Layer 3: PCH overrides                (only what PCH actually specifies)
 3. Add a mapping entry to `resolveLayoutType()` in `pch-to-chart-builder.js`
 4. Add the same mapping to `resolve_cb_chart_type()` in `class-pch-import-endpoint.php`
 5. Add type-specific option handling to `resolveTypeSpecificOptions()` (JS) and `resolve_type_specific_options()` (PHP)
-6. Add a fixture file to `tests/fixtures/chart-handoff/`
+6. Add a fixture file to `tests/prc-chart-builder/unit/fixtures/chart-handoff/`
 7. Add test cases to `pch-to-chart-builder.test.js`
 8. Update this README's chart type mapping table
