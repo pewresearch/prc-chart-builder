@@ -1,3 +1,4 @@
+import { getGroupColorDomain } from '../../../../prc-scripts/includes/scripts/src/@prc/charting-utilities/compute/groupColorDomain.ts';
 import { BUBBLE_MAP_CHART_TYPES, POINT_CHART_TYPES } from './chart-types';
 
 /**
@@ -127,6 +128,7 @@ export function getAvailableLegendCategories({
 		mapScale,
 		mapScaleDomain = [],
 		groupBreaksCategory,
+		groupBreaksCategoryValues = [],
 	} = dataRender;
 	const { neutralBar = {} } = divergingBar;
 
@@ -164,13 +166,9 @@ export function getAvailableLegendCategories({
 	}
 
 	if (POINT_CHART_TYPES.includes(chartType) && groupBreaksCategory) {
-		return [
-			...new Set(
-				chartData
-					.map((d) => d[groupBreaksCategory])
-					.filter((v) => v !== null && v !== undefined && v !== '')
-			),
-		];
+		return getGroupColorDomain(chartData, groupBreaksCategory, {
+			groupOrder: groupBreaksCategoryValues,
+		});
 	}
 
 	if (chartType === 'treemap') {
