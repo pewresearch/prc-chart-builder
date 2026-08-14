@@ -1,0 +1,213 @@
+/**
+ * Shared chart inspector / curated control chrome.
+ * Human-readable BEM classes — do not replace with emotion `styled` hashes.
+ */
+
+.prc-chart-controls {
+	&__description {
+		grid-column: span 2;
+	}
+
+	&__wide-item {
+		display: block;
+		grid-column: span 2;
+	}
+
+	&__single-item {
+		grid-column: span 1;
+	}
+
+	&__label {
+		font-size: 11px;
+		font-weight: 500;
+		line-height: 1.4;
+		text-transform: uppercase;
+		display: inline-block;
+		margin-bottom: 8px;
+		padding: 0;
+	}
+
+	&__help {
+		margin-top: 8px;
+		margin-bottom: 0;
+		font-size: 12px;
+		font-style: normal;
+		color: #757575;
+	}
+}
+
+.prc-chart-color-sorter {
+	&__label {
+		font-size: 11px;
+		font-weight: 500;
+		line-height: 1.4;
+		text-transform: uppercase;
+		display: inline-block;
+		margin-bottom: 8px;
+		padding: 0;
+	}
+
+	&__empty {
+		margin: 0;
+		font-size: 12px;
+		color: #757575;
+	}
+
+	&__grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		column-gap: 8px;
+		align-items: start;
+
+		&--labeled {
+			grid-template-columns: minmax(0, 1fr) minmax(88px, 42%);
+		}
+	}
+
+	&__categories,
+	&__list {
+		display: grid;
+		grid-auto-rows: 32px;
+		row-gap: 4px;
+	}
+
+	&__category,
+	&__item {
+		height: 32px;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		overflow: hidden;
+	}
+
+	&__category {
+		padding: 0 4px 0 0;
+		font-size: 12px;
+		line-height: 1.3;
+		color: #1e1e1e;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	&__item {
+		padding: 0 10px;
+		border-radius: 4px;
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		cursor: grab;
+		font-size: 12px;
+
+		&--dragging {
+			cursor: grabbing;
+			box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+		}
+	}
+}
+
+.prc-chart-sorter {
+	width: 100%;
+
+	&__list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__item {
+		list-style-type: none;
+		cursor: grab;
+		padding-top: 5px;
+		padding-bottom: 5px;
+		border-bottom: 1px solid #ccc;
+		background-color: #fff;
+		color: #333;
+
+		&--dragging,
+		&--selected {
+			background-color: #eee;
+			cursor: grabbing;
+		}
+
+		&--disabled {
+			color: #888;
+			text-decoration: line-through;
+		}
+	}
+
+	&__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	&__handle {
+		flex: 1 1 auto;
+		min-width: 0;
+		cursor: grab;
+	}
+
+	&__toggle {
+		flex: 0 0 auto;
+		border: none;
+		margin: 0;
+		padding: 0;
+		width: auto;
+		overflow: visible;
+		cursor: pointer;
+		background: transparent;
+	}
+}
+
+/* Curated multi-palette swatch picker (Style Chart Appearance). */
+.prc-chart-modal {
+	&__swatch-picker {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+	}
+
+	&__swatch-empty {
+		margin: 0;
+		font-size: 12px;
+		color: #757575;
+	}
+
+	&__swatch-group {
+		margin: 0;
+	}
+
+	&__swatch-group-label {
+		font-size: 11px;
+		font-weight: 500;
+		line-height: 1.4;
+		text-transform: uppercase;
+		display: inline-block;
+		margin: 0 0 8px;
+		padding: 0;
+	}
+
+	&__swatch-grid {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(28px, 1fr));
+		gap: 4px;
+	}
+
+	&__swatch-button {
+		display: block;
+		width: 100%;
+		aspect-ratio: 1;
+		border-radius: 2px;
+		border: 1px solid rgba(0, 0, 0, 0.12);
+		cursor: pointer;
+		padding: 0;
+
+		&.is-selected {
+			box-shadow:
+				0 0 0 2px #fff,
+				0 0 0 4px #2271b1;
+		}
+	}
+}

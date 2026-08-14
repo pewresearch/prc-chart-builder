@@ -4,8 +4,8 @@ import { Button } from '@wordpress/components';
 import { plus } from '@wordpress/icons';
 
 import { store } from '../store';
-import { getPalettes, getPaletteColors } from '../palette-utils';
-import { colorForPreviewMode } from '../theme-colors';
+import { getPalettes, getPaletteColors } from '../model';
+import { colorForPreviewMode } from '../site-theme';
 import { TEXT_DOMAIN } from '../constants';
 
 /**

@@ -23,6 +23,11 @@ import { useCallback, useRef, useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { chevronLeft, upload } from '@wordpress/icons';
 
+import {
+	buildChartEditUrl,
+	CHART_FLOW_CREATE,
+} from '../../../../src/shared/chart-flow-handoff';
+
 const SUPPORTED_SCHEMA = 'prc-chart-handoff/v1';
 
 /**
@@ -42,7 +47,10 @@ function parsePch(text) {
 	} catch {
 		return {
 			pch: null,
-			error: __('Invalid JSON — could not parse the pasted text.', 'prc-chart-builder'),
+			error: __(
+				'Invalid JSON — could not parse the pasted text.',
+				'prc-chart-builder'
+			),
 		};
 	}
 	if (parsed.$schema !== SUPPORTED_SCHEMA) {
@@ -64,12 +72,7 @@ function parsePch(text) {
 }
 
 function getEditUrl(postId) {
-	const url = new URL(window.location.href);
-	url.pathname = url.pathname.replace(/\/wp-admin\/.*/, '/wp-admin/post.php');
-	url.search = '';
-	url.searchParams.set('post', postId);
-	url.searchParams.set('action', 'edit');
-	return url.toString();
+	return buildChartEditUrl(postId, { chartFlow: CHART_FLOW_CREATE });
 }
 
 /**
@@ -208,9 +211,11 @@ export default function PchImportStep({ onBack }) {
 						{__('Chart import warnings:', 'prc-chart-builder')}
 					</strong>
 					<ul style={{ margin: '4px 0 0', paddingLeft: '20px' }}>
-					{warnings.map((w, i) => (
-						<li key={i}>{typeof w === 'string' ? w : w.message}</li>
-					))}
+						{warnings.map((w, i) => (
+							<li key={i}>
+								{typeof w === 'string' ? w : w.message}
+							</li>
+						))}
 					</ul>
 				</Notice>
 			)}

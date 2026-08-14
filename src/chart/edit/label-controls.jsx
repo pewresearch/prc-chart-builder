@@ -2,11 +2,6 @@
 /* eslint-disable max-lines-per-function */
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-
-/**
  * WordPress dependencies
  */
 import {
@@ -27,39 +22,29 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { BAR_CHART_TYPES, LINE_CHART_TYPES } from '../utils/chart-types';
-import { formatNum } from '../utils/helpers';
-import { useFocusedPanel } from './inspector-focus-context';
+import {
+	BAR_CHART_TYPES,
+	LINE_CHART_TYPES,
+	effectiveChartTypeForControls,
+} from '../utils/chart-types';
+import { formatNum, formatOptionalNum } from '../utils/helpers';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
 import { POSITION_DISABLED_CHART_TYPES } from './popover/utils';
-import { useViewportAttributes } from './use-viewport-attributes';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import {
+	PanelDescription,
+	WidePanelItem,
+	SingleColumnItem,
+	StyledLabel,
+	Help,
+} from './control-ui';
 
-const PanelDescription = styled.div`
-	grid-column: span 2;
-`;
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-`;
-const SingleColumnItem = styled(ToolsPanelItem)`
-	grid-column: span 1;
-`;
-const StyledLabel = styled.div`
-	font-size: 11px;
-	font-weight: 500;
-	line-height: 1.4;
-	text-transform: uppercase;
-	display: inline-block;
-	margin-bottom: calc(8px) !important;
-	padding: 0px;
-`;
-const Help = styled.div`
-	margin-top: calc(8px);
-	font-size: 12px;
-	font-style: normal;
-	color: rgb(117, 117, 117);
-	margin-bottom: 0px;
-`;
-
-function LabelControls({ attributes, setAttributes, clientId }) {
+function LabelControls({
+	attributes,
+	setAttributes,
+	clientId,
+	curated = false,
+}) {
 	// Viewport-aware attribute management
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -68,8 +53,12 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('labels');
 
 	const layoutObj = getCurrentValue('layout') || {};
-	const { type: chartType, orientation } = layoutObj;
-	const positionDisabled = POSITION_DISABLED_CHART_TYPES.includes(chartType);
+	const { type: layoutType, orientation } = layoutObj;
+	const chartType = effectiveChartTypeForControls({
+		layout: layoutObj,
+		smallMultiples: attributes.smallMultiples,
+	});
+	const positionDisabled = POSITION_DISABLED_CHART_TYPES.includes(layoutType);
 	// Content attribute - NOT viewport-aware
 	const currentIo = attributes.io || {};
 	const chartData = currentIo.chartData || [];
@@ -119,7 +108,7 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 								})
 							}
 						/>
-						{'map-usa' === chartType && (
+						{'map-usa' === layoutType && (
 							<ToggleControl
 								label={__('Ignore Small State Labels')}
 								checked={
@@ -139,7 +128,7 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 							/>
 						)}
 
-						{'line' === chartType && (
+						{LINE_CHART_TYPES.includes(chartType) && (
 							<ToolsPanelItem
 								hasValue={() => true}
 								label={__('Show First and Last Points Only')}
@@ -165,6 +154,60 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 								/>
 							</ToolsPanelItem>
 						)}
+						{LINE_CHART_TYPES.includes(chartType) &&
+							getCurrentValue(
+								'labels',
+								'showFirstLastPointsOnly'
+							) && (
+								<WidePanelItem
+									hasValue={() =>
+										'default' !==
+										(getCurrentValue(
+											'labels',
+											'firstLastLabelLayout'
+										) || 'default')
+									}
+									label={__('First / Last Label Layout')}
+									isShownByDefault
+									panelId={clientId}
+								>
+									<ToggleGroupControl
+										__nextHasNoMarginBottom
+										isBlock
+										value={
+											getCurrentValue(
+												'labels',
+												'firstLastLabelLayout'
+											) || 'default'
+										}
+										disabled={
+											!getCurrentValue('labels', 'active')
+										}
+										label={__('First / Last Label Layout')}
+										onChange={(type) => {
+											updateAttributeForDevice('labels', {
+												firstLastLabelLayout: type,
+											});
+										}}
+									>
+										<ToggleGroupControlOption
+											label={__('Default')}
+											value="default"
+										/>
+										<ToggleGroupControlOption
+											label={__('Outside')}
+											value="outside"
+										/>
+									</ToggleGroupControl>
+									<PanelDescription>
+										<Help>
+											{__(
+												'Outside places the first label to the left of its point and the last label to the right. DX/DY offsets still apply on top.'
+											)}
+										</Help>
+									</PanelDescription>
+								</WidePanelItem>
+							)}
 						<ToggleControl
 							label={__('Prevent label overlap (auto)')}
 							help={__(
@@ -373,36 +416,52 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 							</>
 						)}
 					</ToolsPanelItem>
-					<WidePanelItem
-						hasValue={() => getCurrentValue('labels', 'fontSize')}
-						label={__('Label Font Size')}
-						panelId={clientId}
-					>
-						<ToggleGroupControl
-							__nextHasNoMarginBottom
-							isBlock
-							value={getCurrentValue('labels', 'fontSize')}
+					{!curated && (
+						<WidePanelItem
+							hasValue={() =>
+								getCurrentValue('labels', 'fontSize')
+							}
 							label={__('Label Font Size')}
-							disabled={!getCurrentValue('labels', 'active')}
-							onChange={(value) => {
-								updateAttributeForDevice('labels', {
-									fontSize: formatNum(value, 'integer'),
-								});
-							}}
+							panelId={clientId}
 						>
-							<ToggleGroupControlOption label="10px" value={10} />
-							<ToggleGroupControlOption label="12px" value={12} />
-							<ToggleGroupControlOption label="14px" value={14} />
-							<ToggleGroupControlOption label="16px" value={16} />
-						</ToggleGroupControl>
-						<PanelDescription>
-							<Help>
-								{__(
-									'Select the font size of the label. Default is 10px.'
-								)}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
+							<ToggleGroupControl
+								__nextHasNoMarginBottom
+								isBlock
+								value={getCurrentValue('labels', 'fontSize')}
+								label={__('Label Font Size')}
+								disabled={!getCurrentValue('labels', 'active')}
+								onChange={(value) => {
+									updateAttributeForDevice('labels', {
+										fontSize: formatNum(value, 'integer'),
+									});
+								}}
+							>
+								<ToggleGroupControlOption
+									label="10px"
+									value={10}
+								/>
+								<ToggleGroupControlOption
+									label="12px"
+									value={12}
+								/>
+								<ToggleGroupControlOption
+									label="14px"
+									value={14}
+								/>
+								<ToggleGroupControlOption
+									label="16px"
+									value={16}
+								/>
+							</ToggleGroupControl>
+							<PanelDescription>
+								<Help>
+									{__(
+										'Select the font size of the label. Default is 10px.'
+									)}
+								</Help>
+							</PanelDescription>
+						</WidePanelItem>
+					)}
 					<WidePanelItem
 						hasValue={() =>
 							getCurrentValue('labels', 'labelPositionDX')
@@ -500,6 +559,7 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 							getCurrentValue('labels', 'absoluteValue')
 						}
 						label={__('Absolute Value')}
+						isShownByDefault
 						panelId={clientId}
 					>
 						<ToggleControl
@@ -523,86 +583,144 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 							</Help>
 						</PanelDescription>
 					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() =>
-							getCurrentValue('labels', 'toLocaleString')
-						}
-						label={__('Format Value')}
-						panelId={clientId}
-						isShownByDefault
-					>
-						<ToggleControl
-							label={__('Format Value to Locale String')}
-							checked={
-								getCurrentValue('labels', 'toLocaleString') ||
-								false
-							}
-							disabled={!getCurrentValue('labels', 'active')}
-							onChange={(newValue) =>
-								updateAttributeForDevice('labels', {
-									toLocaleString: newValue,
-								})
-							}
-						/>
-						<PanelDescription>
-							<Help>
-								{__(
-									'If checked, formats number into locale string (eg. 100000 -> 100,000).'
-								)}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-					{/* HERE */}
-					<WidePanelItem
-						hasValue={() =>
-							getCurrentValue('labels', 'truncateDecimal')
-						}
-						label={__('Truncate Trailing Decimals')}
-						panelId={clientId}
-						isShownByDefault
-					>
-						<ToggleControl
-							label={__('Truncate Trailing Decimals')}
-							checked={
-								getCurrentValue('labels', 'truncateDecimal') ||
-								false
-							}
-							disabled={!getCurrentValue('labels', 'active')}
-							onChange={(newValue) =>
-								updateAttributeForDevice('labels', {
-									truncateDecimal: newValue,
-								})
-							}
-						/>
-						<PanelDescription>
-							<Help>
-								{__(
-									'If checked and number has fewer decimal places than the configuration requests, will remove all extraneous decimals from numbers. Eg. 1.6000 -> 1.6.'
-								)}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() =>
-							getCurrentValue('labels', 'toFixedDecimal')
-						}
-						label={__('Decimal Places')}
-						panelId={clientId}
-						isShownByDefault
-					>
-						<NumberControl
-							label={__('Decimal Places')}
-							value={getCurrentValue('labels', 'toFixedDecimal')}
-							disabled={!getCurrentValue('labels', 'active')}
-							min={0}
-							max={100}
-							onChange={(value) =>
-								updateAttributeForDevice('labels', {
-									toFixedDecimal: formatNum(value, 'integer'),
-								})
-							}
-						/>
-					</WidePanelItem>
+					{!curated && (
+						<>
+							<WidePanelItem
+								hasValue={() =>
+									getCurrentValue('labels', 'toLocaleString')
+								}
+								label={__('Format Value')}
+								panelId={clientId}
+								isShownByDefault
+							>
+								<ToggleControl
+									label={__('Format Value to Locale String')}
+									checked={
+										getCurrentValue(
+											'labels',
+											'toLocaleString'
+										) || false
+									}
+									disabled={
+										!getCurrentValue('labels', 'active')
+									}
+									onChange={(newValue) =>
+										updateAttributeForDevice('labels', {
+											toLocaleString: newValue,
+										})
+									}
+								/>
+								<PanelDescription>
+									<Help>
+										{__(
+											'If checked, formats number into locale string (eg. 100000 -> 100,000).'
+										)}
+									</Help>
+								</PanelDescription>
+							</WidePanelItem>
+							<WidePanelItem
+								hasValue={() =>
+									getCurrentValue('labels', 'truncateDecimal')
+								}
+								label={__('Truncate Trailing Decimals')}
+								panelId={clientId}
+								isShownByDefault
+							>
+								<ToggleControl
+									label={__('Truncate Trailing Decimals')}
+									checked={
+										getCurrentValue(
+											'labels',
+											'truncateDecimal'
+										) || false
+									}
+									disabled={
+										!getCurrentValue('labels', 'active')
+									}
+									onChange={(newValue) =>
+										updateAttributeForDevice('labels', {
+											truncateDecimal: newValue,
+										})
+									}
+								/>
+								<PanelDescription>
+									<Help>
+										{__(
+											'If checked and number has fewer decimal places than the configuration requests, will remove all extraneous decimals from numbers. Eg. 1.6000 -> 1.6.'
+										)}
+									</Help>
+								</PanelDescription>
+							</WidePanelItem>
+							<WidePanelItem
+								hasValue={() =>
+									getCurrentValue('labels', 'toFixedDecimal')
+								}
+								label={__('Decimal Places')}
+								panelId={clientId}
+								isShownByDefault
+							>
+								<NumberControl
+									label={__('Decimal Places')}
+									value={getCurrentValue(
+										'labels',
+										'toFixedDecimal'
+									)}
+									disabled={
+										!getCurrentValue('labels', 'active')
+									}
+									min={0}
+									max={100}
+									onChange={(value) =>
+										updateAttributeForDevice('labels', {
+											toFixedDecimal: formatNum(
+												value,
+												'integer'
+											),
+										})
+									}
+								/>
+							</WidePanelItem>
+							<WidePanelItem
+								hasValue={() =>
+									null !==
+									(getCurrentValue(
+										'labels',
+										'minDisplayValue'
+									) ?? null)
+								}
+								label={__('Minimum Display Value')}
+								panelId={clientId}
+							>
+								<NumberControl
+									label={__('Minimum Display Value')}
+									value={
+										getCurrentValue(
+											'labels',
+											'minDisplayValue'
+										) ?? ''
+									}
+									disabled={
+										!getCurrentValue('labels', 'active')
+									}
+									min={0}
+									step="any"
+									onChange={(value) =>
+										updateAttributeForDevice('labels', {
+											minDisplayValue:
+												formatOptionalNum(value),
+										})
+									}
+								/>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Values below this read as "<value" instead of rounding to zero. Eg. with 0.1 and one decimal place, 0.04 reads "<0.1" rather than "0.0". Leave empty to format every value normally.'
+										)}
+									</Help>
+								</PanelDescription>
+							</WidePanelItem>
+						</>
+					)}
 					<WidePanelItem
 						hasValue={() => getCurrentValue('labels', 'labelUnit')}
 						label={__('Label Unit')}
@@ -630,6 +748,7 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 							getCurrentValue('labels', 'labelUnitPosition')
 						}
 						label={__('Label Unit Position')}
+						isShownByDefault
 						panelId={clientId}
 					>
 						<ToggleGroupControl
@@ -673,6 +792,7 @@ function LabelControls({ attributes, setAttributes, clientId }) {
 									)
 								}
 								label={__('Label Position')}
+								isShownByDefault
 								panelId={clientId}
 							>
 								<ToggleGroupControl

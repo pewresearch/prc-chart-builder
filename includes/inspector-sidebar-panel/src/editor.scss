@@ -1,3 +1,71 @@
+// Create → CPT handoff continuity chrome (portaled into the editor content).
+.prc-chart-flow-handoff {
+	flex-shrink: 0;
+	margin: 0;
+	padding: 12px 24px 8px;
+	border-bottom: 1px solid #ddd;
+	background: #fff;
+
+	&__label {
+		margin: 0 0 10px;
+		font-size: 13px;
+		color: #1e1e1e;
+	}
+
+	.prc-chart-wizard__steps {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.prc-chart-wizard__step {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: #757575;
+		font-size: 13px;
+		font-weight: 500;
+
+		&:not(:last-child)::after {
+			content: "";
+			width: 40px;
+			height: 1px;
+			margin-left: 8px;
+			background: #ddd;
+		}
+	}
+
+	.prc-chart-wizard__step-num {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 22px;
+		height: 22px;
+		border-radius: 50%;
+		background: #e0e0e0;
+		color: #1e1e1e;
+		font-size: 12px;
+		font-weight: 600;
+	}
+
+	.prc-chart-wizard__step.is-active {
+		color: #1e1e1e;
+
+		.prc-chart-wizard__step-num {
+			background: #007cba;
+			color: #fff;
+		}
+	}
+
+	.prc-chart-wizard__step.is-complete .prc-chart-wizard__step-num {
+		background: #1e1e1e;
+		color: #fff;
+	}
+}
+
 .prc-chart-builder-inspector-panel {
 	.referencing-post-item {
 		padding: 12px;

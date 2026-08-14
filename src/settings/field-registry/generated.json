@@ -38,7 +38,7 @@
       ],
       "type": "string",
       "themeable": true,
-      "description": "`\"horizontal\"`.",
+      "description": "Rarely used. Controls the orientation of the chart. 'vertical' will display the chart vertically, and 'horizontal' will display the chart horizontally.",
       "enum": [
         "vertical",
         "horizontal"
@@ -50,7 +50,7 @@
       ],
       "type": "string",
       "themeable": true,
-      "description": "'scroll' \\.",
+      "description": "Controls the overflow behavior of the chart. 'responsive' will scale the chart to fit the container, 'scroll' will allow the chart to scroll if it exceeds the container, and 'preserve-aspect-ratio' will preserve the aspect ratio of the chart.",
       "enum": [
         "responsive",
         "scroll",
@@ -107,7 +107,7 @@
       ],
       "type": "string",
       "themeable": true,
-      "description": "'line' \\.",
+      "description": "The chart type.",
       "enum": [
         "bar",
         "diverging-bar",
@@ -131,7 +131,10 @@
         "map-europe",
         "treemap",
         "sankey",
-        "radar"
+        "radar",
+        "small-multiples",
+        "waffle",
+        "heat-map-table"
       ]
     },
     {
@@ -369,7 +372,7 @@
       ],
       "type": "string",
       "themeable": true,
-      "description": "'end'`.",
+      "description": "Axis label text alignment.",
       "enum": [
         "start",
         "middle",
@@ -383,7 +386,7 @@
       ],
       "type": "string",
       "themeable": true,
-      "description": "'end'`.",
+      "description": "Axis label vertical alignment.",
       "enum": [
         "start",
         "middle",
@@ -446,7 +449,7 @@
       ],
       "type": "numberPair",
       "themeable": true,
-      "description": "Explicit axis extent [min, max]."
+      "description": "Explicit axis extent [min, max], or null to infer from data."
     },
     {
       "path": [
@@ -514,7 +517,7 @@
       ],
       "type": "string",
       "themeable": true,
-      "description": "'log' \\.",
+      "description": "The axis's scale type.",
       "enum": [
         "linear",
         "time",
@@ -867,7 +870,7 @@
       ],
       "type": "numberPair",
       "themeable": true,
-      "description": "Explicit axis extent [min, max]."
+      "description": "Explicit axis extent [min, max], or null to infer from data."
     },
     {
       "path": [
@@ -912,6 +915,14 @@
       "type": "string",
       "themeable": true,
       "description": "Axis title label."
+    },
+    {
+      "path": [
+        "nice"
+      ],
+      "type": "boolean",
+      "themeable": true,
+      "description": "Round the axis domain to clean tick values (d3 nice). On by default to match how published charts have always rendered; disable to honor editor-set domains exactly."
     },
     {
       "path": [
@@ -1298,6 +1309,26 @@
     },
     {
       "path": [
+        "minDisplayValue"
+      ],
+      "type": "number",
+      "themeable": false,
+      "description": "Values below this read as `<value` rather than rounding to zero. Null (the default) formats every value normally."
+    },
+    {
+      "path": [
+        "mode"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "`point` resolves one data point per hover. `unified` reports every series plotted at the hovered x.",
+      "enum": [
+        "point",
+        "unified"
+      ]
+    },
+    {
+      "path": [
         "offsetX"
       ],
       "type": "number",
@@ -1436,6 +1467,14 @@
       "type": "string",
       "themeable": true,
       "description": "Tooltip box width CSS value (e.g. `auto`)."
+    },
+    {
+      "path": [
+        "template"
+      ],
+      "type": "string",
+      "themeable": false,
+      "description": "Rich HTML tooltip body. When non-null, takes precedence over format. Null keeps the legacy mustache format path."
     },
     {
       "path": [
@@ -1767,11 +1806,39 @@
     },
     {
       "path": [
+        "declutterOmitEdgeWithin"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Omit the remaining label in a crowded cluster when its anchor is this close to a plot edge (0 disables)."
+    },
+    {
+      "path": [
+        "declutterOmitWithin"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Omit labels whose anchors sit within this many pixels of a kept label (0 disables)."
+    },
+    {
+      "path": [
         "declutterPadding"
       ],
       "type": "number",
       "themeable": true,
       "description": "Minimum padding between labels when auto-decluttering (px)."
+    },
+    {
+      "path": [
+        "firstLastLabelLayout"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "Placement for first/last labels on line-family charts. `outside` puts the first label left of its point and the last label right; labelPositionDX/DY still apply on top.",
+      "enum": [
+        "default",
+        "outside"
+      ]
     },
     {
       "path": [
@@ -1853,6 +1920,14 @@
         "start",
         "end"
       ]
+    },
+    {
+      "path": [
+        "minDisplayValue"
+      ],
+      "type": "number",
+      "themeable": false,
+      "description": "Values below this read as `<value` rather than rounding to zero. Null (the default) formats every value normally. Unrelated to labelCutoff, which decides whether a label is drawn at all."
     },
     {
       "path": [
@@ -2041,6 +2116,14 @@
       "type": "boolean",
       "themeable": true,
       "description": "Fill the area beneath the line."
+    },
+    {
+      "path": [
+        "showFirstLastPointsOnly"
+      ],
+      "type": "boolean",
+      "themeable": true,
+      "description": "Only render markers on the first and last plotted point in each series."
     },
     {
       "path": [
@@ -2303,6 +2386,22 @@
   "nodes": [
     {
       "path": [
+        "maxPointSize"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Maximum marker radius when sizeCategory is set (px)."
+    },
+    {
+      "path": [
+        "minPointSize"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Minimum marker radius when sizeCategory is set (px)."
+    },
+    {
+      "path": [
         "pointFill"
       ],
       "type": "string",
@@ -2312,6 +2411,14 @@
         "inherit",
         "white"
       ]
+    },
+    {
+      "path": [
+        "pointFillOpacity"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Fill opacity of markers (0–1)."
     },
     {
       "path": [
@@ -2336,6 +2443,65 @@
       "type": "number",
       "themeable": true,
       "description": "Stroke width around markers (px)."
+    },
+    {
+      "path": [
+        "sizeCategory"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "Table column used for proportional marker radius (null = uniform pointSize)."
+    },
+    {
+      "path": [
+        "sizeScale"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "Scale type mapping sizeCategory values to radius.",
+      "enum": [
+        "sqrt",
+        "linear",
+        "log"
+      ]
+    }
+  ],
+  "beeSwarm": [
+    {
+      "path": [
+        "forceStrength"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Force layout: pull strength for x/y forces (0–1)."
+    },
+    {
+      "path": [
+        "groupBy"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "Force layout: column whose values cluster around separate y centers."
+    },
+    {
+      "path": [
+        "layoutMode"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "Beeswarm layout algorithm (dodge = precise x, force = clustered).",
+      "enum": [
+        "dodge",
+        "force"
+      ]
+    },
+    {
+      "path": [
+        "swarmSpread"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Dodge layout: max horizontal drift from anchor x (px). 0 = vertical stacks only."
     }
   ],
   "regression": [
@@ -3515,6 +3681,348 @@
       "type": "string",
       "themeable": true,
       "description": "Data column key for the link flow value."
+    }
+  ],
+  "waffle": [
+    {
+      "path": [
+        "cellGap"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Padding between cells as a fraction of cell size."
+    },
+    {
+      "path": [
+        "cellRadius"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Corner radius for square cells (px)."
+    },
+    {
+      "path": [
+        "cellShape"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "Shape used for each waffle cell.",
+      "enum": [
+        "square",
+        "circle"
+      ]
+    },
+    {
+      "path": [
+        "cellSize"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Preferred cell size in px (used by fixed and clamp modes)."
+    },
+    {
+      "path": [
+        "cellSizeMode"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "fixed = exact size; auto = always fit; clamp = preferred size until overflow then scale down.",
+      "enum": [
+        "fixed",
+        "auto",
+        "clamp"
+      ]
+    },
+    {
+      "path": [
+        "columns"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Number of cells across (grid width)."
+    },
+    {
+      "path": [
+        "displayMode"
+      ],
+      "type": "string",
+      "themeable": false,
+      "description": "Whole uses one grid; portion uses one mini grid per category.",
+      "enum": [
+        "whole",
+        "portion"
+      ]
+    },
+    {
+      "path": [
+        "emptyFill"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "Fill color for empty waffle cells."
+    },
+    {
+      "path": [
+        "max"
+      ],
+      "type": "number",
+      "themeable": false,
+      "description": "Domain ceiling: what a full grid represents. Fill = value / max. Null uses sum (whole) or 100 (portion)."
+    },
+    {
+      "path": [
+        "rows"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Number of cells tall (grid height)."
+    }
+  ],
+  "heatMapTable": [
+    {
+      "path": [
+        "cellGap"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Space between cells (px)."
+    },
+    {
+      "path": [
+        "cellRadius"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Corner radius for each cell (px)."
+    },
+    {
+      "path": [
+        "columnHeaderHeight"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Height reserved for the dependent axis band when it is active (px)."
+    },
+    {
+      "path": [
+        "emptyFill"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "Fill color for empty or missing cells."
+    },
+    {
+      "path": [
+        "minCellHeight"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Minimum height for each data cell (px)."
+    },
+    {
+      "path": [
+        "minCellWidth"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Minimum width for each data cell (px)."
+    },
+    {
+      "path": [
+        "rowLabelWidth"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Optional gap between the independent axis line and the heat grid (px). Labels use chart left padding."
+    },
+    {
+      "path": [
+        "showValues"
+      ],
+      "type": "boolean",
+      "themeable": true,
+      "description": "Show numeric values inside each cell."
+    }
+  ],
+  "smallMultiples": [
+    {
+      "path": [
+        "axisTreatment"
+      ],
+      "type": "string",
+      "themeable": false,
+      "description": "`\"minimal\"` shows y-axis on the first column and x labels on every panel; `\"full\"` draws complete axes (incl. independent grid) on every panel.",
+      "enum": [
+        "minimal",
+        "full"
+      ]
+    },
+    {
+      "path": [
+        "columns"
+      ],
+      "type": "number",
+      "themeable": false,
+      "description": "Number of panel columns in the grid (desktop)."
+    },
+    {
+      "path": [
+        "emphasisMode"
+      ],
+      "type": "string",
+      "themeable": false,
+      "description": "`\"own-series\"` draws only the panel column; `\"highlight\"` ghosts sibling series (line panels only in MVP).",
+      "enum": [
+        "own-series",
+        "highlight"
+      ]
+    },
+    {
+      "path": [
+        "ghost",
+        "opacity"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Opacity for ghosted sibling series."
+    },
+    {
+      "path": [
+        "ghost",
+        "stroke"
+      ],
+      "type": "color",
+      "themeable": true,
+      "description": "Stroke color for ghosted sibling series."
+    },
+    {
+      "path": [
+        "ghost",
+        "strokeWidth"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Stroke width for ghosted sibling series (px)."
+    },
+    {
+      "path": [
+        "minPanelWidth"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Minimum panel cell width in px. When the container is narrower, columns restack until each panel meets this width."
+    },
+    {
+      "path": [
+        "panelGap",
+        "x"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Horizontal gap between panels (px)."
+    },
+    {
+      "path": [
+        "panelGap",
+        "y"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Vertical gap between panels (px)."
+    },
+    {
+      "path": [
+        "panelHeight"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Locked cell height in px (title + plot). Total SVG height is derived from panelHeight × rowCount."
+    },
+    {
+      "path": [
+        "panelTitle",
+        "active"
+      ],
+      "type": "boolean",
+      "themeable": true,
+      "description": "Show the column-name title above each panel."
+    },
+    {
+      "path": [
+        "panelTitle",
+        "fill"
+      ],
+      "type": "color",
+      "themeable": true,
+      "description": "Panel title text color."
+    },
+    {
+      "path": [
+        "panelTitle",
+        "fontFamily"
+      ],
+      "type": "font",
+      "themeable": true,
+      "description": "Panel title font family."
+    },
+    {
+      "path": [
+        "panelTitle",
+        "fontSize"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Panel title font size (px)."
+    },
+    {
+      "path": [
+        "panelTitle",
+        "fontWeight"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Panel title font weight."
+    },
+    {
+      "path": [
+        "panelTitle",
+        "padding"
+      ],
+      "type": "number",
+      "themeable": true,
+      "description": "Space reserved below the panel title (px)."
+    },
+    {
+      "path": [
+        "panelTitle",
+        "textAlign"
+      ],
+      "type": "string",
+      "themeable": true,
+      "description": "Horizontal alignment of the panel title (left|center|right)."
+    },
+    {
+      "path": [
+        "panelType"
+      ],
+      "type": "string",
+      "themeable": false,
+      "description": "Chart mark drawn in each panel.",
+      "enum": [
+        "line",
+        "column",
+        "bar",
+        "pie",
+        "waffle"
+      ]
+    },
+    {
+      "path": [
+        "sharedScale"
+      ],
+      "type": "boolean",
+      "themeable": false,
+      "description": "Share one y-domain across all panels."
     }
   ],
   "annotations": [

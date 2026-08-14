@@ -32,25 +32,78 @@ class Controller {
 	 * @return array
 	 */
 	public function register_validation_schemas( $schemas ) {
+		$fips_reference  = array(
+			'label' => 'County or state FIPS codes',
+			'url'   => 'https://transition.fcc.gov/oet/info/maps/census/fips/fips.txt',
+		);
+		$iso_reference   = array(
+			'label' => '3-digit ISO country codes',
+			'url'   => 'https://www.iban.com/country-codes',
+		);
+		$cbsa_reference  = array(
+			'label' => 'CBSA delineation files (Census)',
+			'url'   => 'https://www.census.gov/geographies/reference-files/time-series/demo/metro-micro/delineation-files.html',
+		);
+		$sample_csv_base = 'https://www.pewresearch.org/wp-content/uploads/sites/20/2024/10';
+
 		$schemas[] = array(
 			'slug'          => 'geo-state',
 			'label'         => 'US State Map',
 			'requiredTypes' => array( 'fips' ),
+			'description'   => 'US state maps match your data to states using a column headed "FIPS" that contains 2-digit state FIPS codes.',
+			'references'    => array(
+				$fips_reference,
+				array(
+					'label' => 'Sample state map CSV',
+					'url'   => $sample_csv_base . '/usa-state.csv',
+				),
+			),
 		);
 		$schemas[] = array(
 			'slug'          => 'geo-county',
 			'label'         => 'US County Map',
 			'requiredTypes' => array( 'fips' ),
+			'description'   => 'US county maps match your data to counties using a column headed "FIPS" that contains 5-digit county FIPS codes.',
+			'references'    => array(
+				$fips_reference,
+				array(
+					'label' => 'Sample county map CSV',
+					'url'   => $sample_csv_base . '/usa-county.csv',
+				),
+			),
+		);
+		$schemas[] = array(
+			'slug'          => 'geo-cbsa',
+			'label'         => 'US Metro (CBSA) Map',
+			'requiredTypes' => array( 'cbsa' ),
+			'description'   => 'US metro maps match your data to metro areas using a column headed "CBSA" (or "GEOID") that contains 5-digit CBSA codes.',
+			'references'    => array( $cbsa_reference ),
 		);
 		$schemas[] = array(
 			'slug'          => 'geo-country',
 			'label'         => 'World Map (Alpha-3)',
 			'requiredTypes' => array( 'iso3alpha' ),
+			'description'   => 'World maps match your data to countries using a column headed "ISO" that contains 3-letter ISO alpha-3 country codes.',
+			'references'    => array(
+				$iso_reference,
+				array(
+					'label' => 'Sample world map CSV',
+					'url'   => $sample_csv_base . '/world.csv',
+				),
+			),
 		);
 		$schemas[] = array(
 			'slug'          => 'geo-country-numeric',
 			'label'         => 'World Map (Numeric)',
 			'requiredTypes' => array( 'iso3numeric' ),
+			'description'   => 'World maps match your data to countries using a column headed "ISO" that contains 3-digit ISO numeric country codes.',
+			'references'    => array(
+				$iso_reference,
+				array(
+					'label' => 'Sample world map CSV',
+					'url'   => $sample_csv_base . '/world.csv',
+				),
+			),
 		);
 		$schemas[] = array(
 			'slug'          => 'timeseries',
@@ -425,7 +478,7 @@ class Controller {
 
 				ob_start();
 				?>
-				<div class="cb__text-wrapper" style="max-width:<?php echo esc_attr( $width ); ?>;">
+				<div class="cb__text-wrapper" style="max-width:<?php echo esc_attr( $width ); ?>;width:100%;margin-left:auto;margin-right:auto;">
 					<?php echo $top_rule; // phpcs:ignore ?>
 					<div data-wp-interactive="prc-chart-builder/chart" data-wp-context="<?php echo esc_attr( $chart_metadata_context ); ?>">
 						<div class="cb__title" data-meta-field="title"><?php echo wp_kses_post( $meta_title ); ?></div>
@@ -443,7 +496,12 @@ class Controller {
 				<?php
 				$freeform_with_meta = ob_get_clean();
 			} else {
-				$freeform_with_meta = $rendered_freeform;
+				// Keep chart width + centering when text fields are off.
+				$freeform_with_meta = wp_sprintf(
+					'<div class="cb__text-wrapper" style="max-width:%1$s;width:100%%;margin-left:auto;margin-right:auto;">%2$s</div>',
+					esc_attr( $width ),
+					$rendered_freeform // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- render_block output.
+				);
 			}
 		}
 

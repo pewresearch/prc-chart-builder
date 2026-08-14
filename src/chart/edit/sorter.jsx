@@ -1,12 +1,26 @@
 /**
- * External Dependencies
+ * Category / series reorder list with optional show/hide toggles.
+ *
+ * react-movable wiring matches the block inspector. Visibility is `isHidden`
+ * (not `disabled`) because react-movable treats `disabled` as non-draggable.
  */
 import { List, arrayMove } from 'react-movable';
-/**
- * Wordpress Dependencies
- */
-import { useState, useEffect } from 'react';
 import { Icon } from '@wordpress/components';
+import { useEffect, useState } from '@wordpress/element';
+
+import { useMovableDocumentBridge } from './use-movable-document-bridge';
+
+/**
+ * @param {Array<{ label: string, disabled?: boolean, isHidden?: boolean }>} options
+ * @return {Array<{ label: string, isHidden: boolean }>} Options with visibility
+ *                                                       normalized onto `isHidden`.
+ */
+function normalizeOptions(options = []) {
+	return (options || []).map((option) => ({
+		label: option.label,
+		isHidden: Boolean(option.isHidden ?? option.disabled ?? false),
+	}));
+}
 
 function Sorter({
 	options,
@@ -16,32 +30,30 @@ function Sorter({
 	parentObjectValue = null,
 	allowDisabled = true,
 }) {
-	const [items, setItems] = useState(options);
+	const movable = useMovableDocumentBridge();
+	const [items, setItems] = useState(() => normalizeOptions(options));
 
-	// Update items when options prop changes, but only if the set of items changed
 	useEffect(() => {
+		const next = normalizeOptions(options);
 		setItems((currentItems) => {
 			const currentLabels = new Set(currentItems.map((i) => i.label));
-			const newLabels = new Set(options.map((o) => o.label));
+			const newLabels = new Set(next.map((o) => o.label));
 
-			// Only update if items were added or removed, not if just order changed
 			const labelsChanged =
 				currentLabels.size !== newLabels.size ||
 				[...currentLabels].some((label) => !newLabels.has(label)) ||
 				[...newLabels].some((label) => !currentLabels.has(label));
 
-			return labelsChanged ? options : currentItems;
+			return labelsChanged ? next : currentItems;
 		});
 	}, [options]);
 
-	// Helper function to update attributes (handles both flat and nested)
 	const updateAttribute = (newItems) => {
 		const filteredValues = newItems
-			.filter((i) => !i.disabled)
+			.filter((i) => !i.isHidden)
 			.map((i) => i.label);
 
 		if (parentObject && parentObjectValue) {
-			// Nested attribute update (e.g., divergingBar.positiveCategories)
 			setAttributes({
 				[parentObject]: {
 					...parentObjectValue,
@@ -49,7 +61,6 @@ function Sorter({
 				},
 			});
 		} else {
-			// Flat attribute update (e.g., categories)
 			setAttributes({
 				[attribute]: filteredValues,
 			});
@@ -57,16 +68,19 @@ function Sorter({
 	};
 
 	return (
-		<div style={{ width: '100%' }}>
+		<div ref={movable.ref} className="prc-chart-sorter">
 			<List
 				values={items}
+				container={movable.container}
 				onChange={({ oldIndex, newIndex }) => {
 					const newItems = arrayMove(items, oldIndex, newIndex);
 					setItems(newItems);
 					updateAttribute(newItems);
 				}}
 				renderList={({ children, props }) => (
-					<ul {...props}>{children}</ul>
+					<ul {...props} className="prc-chart-sorter__list">
+						{children}
+					</ul>
 				)}
 				renderItem={({
 					value,
@@ -77,56 +91,39 @@ function Sorter({
 				}) => (
 					<li
 						{...props}
-						style={{
-							...props.style,
-							listStyleType: 'none',
-							cursor: isDragged ? 'grabbing' : 'grab',
-							color: value.disabled ? '#888' : '#333',
-							textDecoration: value.disabled
-								? 'line-through'
-								: 'none',
-							backgroundColor:
-								isDragged || isSelected ? '#EEE' : '#FFF',
-							paddingTop: '5px',
-							paddingBottom: '5px',
-							borderBottom: '1px solid #CCC',
-						}}
+						className={[
+							'prc-chart-sorter__item',
+							(isDragged || isSelected) &&
+								'prc-chart-sorter__item--dragging',
+							isSelected && 'prc-chart-sorter__item--selected',
+							value.isHidden &&
+								'prc-chart-sorter__item--disabled',
+						]
+							.filter(Boolean)
+							.join(' ')}
+						style={props.style}
 					>
-						<div
-							style={{
-								display: 'flex',
-								alignItems: 'center',
-								justifyContent: 'space-between',
-							}}
-						>
+						<div className="prc-chart-sorter__row">
 							{value.label}
 							{allowDisabled && (
 								<button
 									type="button"
+									className="prc-chart-sorter__toggle"
 									onClick={() => {
 										const newItems = items.map((item, i) =>
 											i === index
 												? {
 														...item,
-														disabled:
-															!item.disabled,
+														isHidden:
+															!item.isHidden,
 													}
 												: item
 										);
 										setItems(newItems);
 										updateAttribute(newItems);
 									}}
-									style={{
-										border: 'none',
-										margin: 0,
-										padding: 0,
-										width: 'auto',
-										overflow: 'visible',
-										cursor: 'pointer',
-										background: 'transparent',
-									}}
 								>
-									{!value.disabled ? (
+									{!value.isHidden ? (
 										<Icon icon="visibility" />
 									) : (
 										<Icon icon="hidden" />

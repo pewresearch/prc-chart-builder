@@ -1,17 +1,17 @@
 /**
  * Shipped color palette catalog for chart-builder resolve layer (PRC-528 slice 10).
  *
- * Pink → purple defaults for unseeded installs (visually distinct from PRC legacy
- * theme swatches). Named palette catalogs come from prc-legacy-theme.json when seeded.
+ * Muted blue-gray defaults for unseeded installs (visually distinct from PRC
+ * theme swatches). Named palette catalogs come from chart-theme.json when seeded.
  */
 
 const NEUTRAL_SERIES = [
-	'#F687B3',
-	'#ED64A6',
-	'#D53F8C',
-	'#B83280',
-	'#9F7AEA',
-	'#805AD5',
+	'#405F76',
+	'#D8E2EA',
+	'#B8C8D4',
+	'#97ADBD',
+	'#7893A7',
+	'#5B798F',
 ];
 
 const colors = {
@@ -20,4 +20,4 @@ const colors = {
 
 const colorNames = [{ label: 'General', value: 'general' }];
 
-export { colors, colorNames };
+export { colorNames, colors };

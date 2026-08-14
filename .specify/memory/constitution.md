@@ -31,7 +31,7 @@ NOTES:
   - Ratification date set to today (first constitution)
   - Last amended date same as ratification (initial version)
   - Constitution reflects current v3.2.2 plugin architecture
-  - Principles derived from ARCHITECTURE.md and actual implementation patterns
+  - Principles derived from docs/plugins/prc-chart-builder/architecture.md and actual implementation patterns
 ════════════════════════════════════════════════════════════════════════════════
 -->
 
@@ -160,7 +160,7 @@ All features MUST be designed for the WordPress block editor first. Frontend ren
 
 ### Documentation
 
-- Architecture decisions documented in `ARCHITECTURE.md`
+- Architecture decisions documented in `docs/plugins/prc-chart-builder/architecture.md`
 - Block configuration documented in `README.md`
 - Migration guides in `MIGRATION.md` when making breaking changes
 - Inline code comments for complex logic
@@ -192,7 +192,7 @@ All features MUST be designed for the WordPress block editor first. Frontend ren
 ### Compliance Review
 
 - All PRs MUST verify compliance with constitution principles
-- Architecture decisions that deviate from principles MUST be justified in `ARCHITECTURE.md`
+- Architecture decisions that deviate from principles MUST be justified in `docs/plugins/prc-chart-builder/architecture.md`
 - Complexity must be justified in implementation plans
 - Use `.specify/templates/plan-template.md` for structured planning
 

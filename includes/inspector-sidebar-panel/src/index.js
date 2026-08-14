@@ -11,6 +11,7 @@ import { registerPlugin } from '@wordpress/plugins';
  */
 import { DesignSlugStatusInfo } from './design-slug-panel';
 import { ReferencingPostsPanel } from './referencing-posts-panel';
+import { ChartFlowHandoffBanner } from './chart-flow-handoff-banner';
 
 /**
  * Styles
@@ -23,6 +24,7 @@ import './editor.scss';
 function ChartEditorPanels() {
 	return (
 		<>
+			<ChartFlowHandoffBanner />
 			<DesignSlugStatusInfo />
 			<ReferencingPostsPanel />
 		</>

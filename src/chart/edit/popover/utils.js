@@ -4,7 +4,10 @@
  * Shared utility functions for popover components.
  */
 
+import { generateSegmentKey } from '@prc/charting-utilities';
 import { BAR_CHART_TYPES } from '../../utils/chart-types';
+
+export { generateSegmentKey };
 
 /**
  * Chart types where label positions are algorithmically determined
@@ -28,6 +31,35 @@ export const POSITION_DISABLED_CHART_TYPES = ['treemap'];
  * Set to a string array to restrict to specific types during future rollouts.
  */
 export const ANNOTATION_POPOVER_CHART_TYPES = null; // null = all chart types
+
+/**
+ * Panel keys for small-multiples annotation/drawing anchoring.
+ * Column facet → series categories; group facet → group break values.
+ * Falls back to `io.availableCategories` when `dataRender.categories` is empty
+ * (categories are often derived at get-config time, not stored on the attr).
+ *
+ * @param {Object} attributes - Chart block attributes (or viewport attrs)
+ * @return {string[]} Panel key strings
+ */
+export function getSmallMultiplesPanelKeys(attributes = {}) {
+	const dataRender = attributes?.dataRender || {};
+	if (
+		dataRender.groupBreaksActive &&
+		Array.isArray(dataRender.groupBreaksCategoryValues) &&
+		dataRender.groupBreaksCategoryValues.length > 0
+	) {
+		return dataRender.groupBreaksCategoryValues.map(String).filter(Boolean);
+	}
+	const fromDataRender = (dataRender.categories || [])
+		.map(String)
+		.filter(Boolean);
+	if (fromDataRender.length > 0) {
+		return fromDataRender;
+	}
+	return (attributes?.io?.availableCategories || [])
+		.map(String)
+		.filter(Boolean);
+}
 
 /**
  * Chart types that support inline tick label editing via click-to-popover.
@@ -72,34 +104,6 @@ export function generateElementKey(x, category, groupValue = null) {
 		return `${normalizedX}::${category}::${groupValue}`;
 	}
 	return `${normalizedX}::${category}`;
-}
-
-/**
- * Format a value for use in keys, handling Date objects.
- *
- * @param {string|number|Date} value - The value to format
- * @return {string} Formatted string value
- */
-function formatKeyValue(value) {
-	if (value instanceof Date) {
-		return value.toISOString();
-	}
-	return String(value);
-}
-
-/**
- * Generate a unique key for a line segment.
- * Used for storing segment customizations in block attributes.
- *
- * @param {string|number|Date} startX   - The start point x value
- * @param {string|number|Date} endX     - The end point x value
- * @param {string}             category - The category/series name
- * @return {string} Key in format "startX::endX::category"
- */
-export function generateSegmentKey(startX, endX, category) {
-	const start = formatKeyValue(startX);
-	const end = formatKeyValue(endX);
-	return `${start}::${end}::${category}`;
 }
 
 /**

@@ -63,10 +63,6 @@ const legacyLineTemplate = [
 				tag: '',
 			},
 			independentAxis: {
-				domain: {
-					min: 2000,
-					max: 2020,
-				},
 				tickMarks: {
 					active: true,
 				},
@@ -91,7 +87,7 @@ const legacyLineTemplate = [
 			},
 			line: {
 				strokeWidth: 4,
-				showNodes: false,
+				showPoints: false,
 			},
 			legend: {
 				active: true,

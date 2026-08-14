@@ -1,10 +1,10 @@
 <?php
 /**
- * Idempotent legacy chart theme seeder (PRC-528 slice 9).
+ * Idempotent chart theme seeder (PRC-528 slice 9 / PRC-560).
  *
- * Loads the frozen prc-legacy-theme.json snapshot and writes it to
+ * Loads the committed chart-theme.json fallback snapshot and writes it to
  * prc_chart_builder_theme when the site has no active theme yet. Edit the JSON
- * directly when the legacy snapshot needs updating.
+ * directly when the fallback snapshot needs updating.
  *
  * @package PRC\Platform\Chart_Builder
  */
@@ -14,38 +14,38 @@ namespace PRC\Platform\Chart_Builder;
 use WP_Error;
 
 /**
- * Seeds the per-site legacy PRC chart theme once.
+ * Seeds the per-site fallback chart theme once.
  */
 class Theme_Seeder {
 
 	/**
-	 * Committed legacy theme JSON filename.
+	 * Committed fallback theme JSON filename.
 	 *
 	 * @var string
 	 */
-	public const LEGACY_THEME_FILENAME = 'prc-legacy-theme.json';
+	public const THEME_FILENAME = 'chart-theme.json';
 
 	/**
-	 * Absolute path to the frozen legacy theme JSON.
+	 * Absolute path to the committed fallback theme JSON.
 	 */
-	public static function get_legacy_theme_path(): string {
-		return PRC_CHART_BUILDER_DIR . '/includes/settings/' . self::LEGACY_THEME_FILENAME;
+	public static function get_theme_file_path(): string {
+		return PRC_CHART_BUILDER_DIR . '/includes/settings/' . self::THEME_FILENAME;
 	}
 
 	/**
-	 * Load and validate the frozen legacy theme payload.
+	 * Load and validate the committed fallback theme payload.
 	 *
 	 * @return array<string, mixed>|WP_Error
 	 */
-	public static function load_legacy_theme() {
-		$path = self::get_legacy_theme_path();
+	public static function load_theme_file() {
+		$path = self::get_theme_file_path();
 
 		if ( ! file_exists( $path ) ) {
 			return new WP_Error(
-				'legacy_theme_missing',
+				'theme_file_missing',
 				sprintf(
 					/* translators: %s: expected file path */
-					__( 'Legacy chart theme file not found: %s', 'prc-chart-builder' ),
+					__( 'Chart theme file not found: %s', 'prc-chart-builder' ),
 					$path
 				)
 			);
@@ -55,18 +55,18 @@ class Theme_Seeder {
 
 		if ( ! is_array( $decoded ) ) {
 			return new WP_Error(
-				'legacy_theme_invalid_json',
-				__( 'Legacy chart theme file contains invalid JSON.', 'prc-chart-builder' )
+				'theme_file_invalid_json',
+				__( 'Chart theme file contains invalid JSON.', 'prc-chart-builder' )
 			);
 		}
 
 		$validated = Theme_Validator::validate( $decoded );
 		if ( is_wp_error( $validated ) ) {
 			return new WP_Error(
-				'legacy_theme_invalid_shape',
+				'theme_file_invalid_shape',
 				sprintf(
 					/* translators: %s: validation error message */
-					__( 'Legacy chart theme file failed validation: %s', 'prc-chart-builder' ),
+					__( 'Chart theme file failed validation: %s', 'prc-chart-builder' ),
 					$validated->get_error_message()
 				)
 			);
@@ -83,7 +83,7 @@ class Theme_Seeder {
 	}
 
 	/**
-	 * Seed the legacy PRC theme when the option is unset or empty.
+	 * Seed the fallback chart theme when the option is unset or empty.
 	 *
 	 * @return bool|WP_Error True when seeded, false when skipped (idempotent no-op).
 	 */
@@ -92,12 +92,12 @@ class Theme_Seeder {
 			return false;
 		}
 
-		$legacy = self::load_legacy_theme();
-		if ( is_wp_error( $legacy ) ) {
-			return $legacy;
+		$theme = self::load_theme_file();
+		if ( is_wp_error( $theme ) ) {
+			return $theme;
 		}
 
-		Settings::save_active_theme( $legacy );
+		Settings::save_active_theme( $theme );
 
 		return true;
 	}

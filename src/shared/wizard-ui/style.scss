@@ -1,0 +1,848 @@
+/**
+ * Shared Chart Wizard / modal UI styles (Select, Data, Configure chrome).
+ * Used by the admin Chart Library and the chart CPT Controller host.
+ *
+ * Colors and type come from the PRC Design System theme.json presets.
+ */
+
+@import "@wordpress/dataviews/build-style/style.css";
+
+$wizard-font: var(--wp--preset--font-family--sans-serif);
+$wizard-font-size-small: 13px;
+$wizard-font-size-medium: 16px;
+$wizard-font-size-large: 20px;
+$wizard-text: var(--wp--preset--color--ui-text-color);
+$wizard-gray-very-dark: var(--wp--preset--color--ui-gray-very-dark);
+$wizard-gray: var(--wp--preset--color--ui-gray);
+$wizard-border: var(--wp--preset--color--ui-gray-light);
+$wizard-surface: var(--wp--preset--color--ui-white);
+$wizard-surface-subtle: var(--wp--preset--color--ui-gray-very-light);
+$wizard-accent: var(--wp--preset--color--ui-link-color);
+$wizard-on-accent: var(--wp--preset--color--ui-white);
+$wizard-ink: var(--wp--preset--color--ui-black);
+$wizard-accent-soft: color-mix(
+	in srgb,
+	var(--wp--preset--color--ui-link-color) 12%,
+	var(--wp--preset--color--ui-white)
+);
+// Compact/modal template grid: cap height so the picker scrolls and preview
+// lazy-loading has a stable scrollport (see use-pattern-preview-visibility).
+$wizard-pattern-picker-max-height: min(65vh, 560px);
+
+@mixin pattern-picker-scrollport {
+	overflow: auto;
+	overscroll-behavior: contain;
+
+	// Let content height the grid; the picker scrolls, not DataViews.
+	.dataviews-wrapper {
+		height: auto;
+		min-height: 0;
+	}
+
+	.dataviews-layout__container {
+		min-height: 0;
+	}
+}
+
+.prc-chart-modal {
+	font-family: $wizard-font;
+	color: $wizard-text;
+
+	// Type grid
+	&__type-picker {
+		.prc-chart-modal__step-label {
+			margin: 0 0 12px;
+			color: $wizard-gray;
+		}
+	}
+
+	&__type-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+		gap: 8px;
+	}
+
+	&__type-card {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 6px;
+		padding: 16px 8px;
+		height: 120px;
+		box-sizing: border-box;
+		border: 1px solid $wizard-border;
+		border-radius: 4px;
+		background: $wizard-surface;
+		cursor: pointer;
+		position: relative;
+		text-align: center;
+		font-family: inherit;
+		transition:
+			border-color 0.1s,
+			box-shadow 0.1s;
+
+		&:hover {
+			border-color: $wizard-accent;
+			box-shadow: 0 0 0 1px $wizard-accent;
+		}
+
+		&.is-active {
+			border-color: $wizard-accent;
+			box-shadow: 0 0 0 1px $wizard-accent;
+			background: $wizard-accent-soft;
+		}
+	}
+
+	&__type-icon {
+		color: $wizard-text;
+	}
+
+	&__type-image {
+		width: 64px;
+		height: 64px;
+		object-fit: cover;
+	}
+
+	&__type-label {
+		font-size: 12px;
+		font-weight: 500;
+		color: $wizard-text;
+		line-height: 1.3;
+		width: 100%;
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+	}
+
+	&__type-description {
+		margin: 0 0 16px;
+		max-width: 42rem;
+		color: $wizard-text;
+		font-size: $wizard-font-size-small;
+		line-height: 1.5;
+	}
+
+	// Pattern list
+	&__pattern-picker {
+		.prc-chart-modal__step-label {
+			margin: 0 0 12px;
+			color: $wizard-gray;
+		}
+	}
+
+	&__pattern-list {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+		gap: 12px;
+		margin-bottom: 16px;
+	}
+
+	&__pattern-card {
+		display: flex;
+		flex-direction: column;
+		border: 1px solid $wizard-border;
+		border-radius: 4px;
+		overflow: hidden;
+		background: $wizard-surface;
+		cursor: pointer;
+		text-align: left;
+		padding: 0;
+		font-family: inherit;
+		transition:
+			border-color 0.1s,
+			box-shadow 0.1s;
+
+		&:hover {
+			border-color: $wizard-accent;
+			box-shadow: 0 0 0 1px $wizard-accent;
+		}
+	}
+
+	&__pattern-preview-fallback {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+		color: $wizard-border;
+	}
+
+	&__pattern-preview-blank {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		width: 100%;
+		height: 100%;
+		color: $wizard-gray-very-dark;
+
+		span {
+			font-size: 11px;
+			font-weight: 500;
+			letter-spacing: 0.5px;
+			text-transform: uppercase;
+		}
+	}
+
+	// Let DataViews drive column count via previewSize (gridTemplateColumns inline style).
+	&__pattern-picker {
+		.dataviews-view-grid__media {
+			overflow: hidden;
+			position: relative;
+			min-height: 160px;
+		}
+
+		.block-editor-block-preview__container {
+			height: 100%;
+		}
+
+		.block-editor-block-preview__content {
+			position: absolute;
+		}
+
+		// Match chart-type card selection (border + soft accent fill).
+		.dataviews-view-grid__card.is-selected {
+			.dataviews-view-grid__media {
+				background: $wizard-accent-soft;
+			}
+
+			.dataviews-view-grid__media::after {
+				box-shadow:
+					inset 0 0 0 1px $wizard-accent,
+					0 0 0 1px $wizard-accent;
+			}
+		}
+
+		.dataviews-selection-checkbox {
+			display: none;
+		}
+
+		@include pattern-picker-scrollport;
+	}
+
+	&__pattern-preview-field {
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		flex-direction: column;
+		width: 100%;
+		height: 100%;
+		min-height: 160px;
+		background: var(--wp--preset--color--base, #f6f7f7);
+		border-radius: 2px;
+		overflow: hidden;
+		pointer-events: none;
+
+		&.is-placeholder {
+			background: linear-gradient(
+				110deg,
+				#f0f0f0 8%,
+				#fafafa 18%,
+				#f0f0f0 33%
+			);
+			background-size: 200% 100%;
+			animation: prc-chart-wizard-pattern-shimmer 1.2s linear infinite;
+		}
+
+		.dataviews-view-grid & {
+			.block-editor-block-preview__container {
+				height: 100%;
+			}
+		}
+	}
+
+	@keyframes prc-chart-wizard-pattern-shimmer {
+		to {
+			background-position-x: -200%;
+		}
+	}
+
+	&__pattern-info {
+		padding: 10px 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+
+		strong {
+			font-size: 13px;
+			color: $wizard-text;
+		}
+
+		span {
+			font-size: 11px;
+			color: $wizard-gray-very-dark;
+		}
+	}
+
+	&__create-meta {
+		font-size: 12px;
+		color: $wizard-gray-very-dark;
+		margin: 0 0 16px;
+	}
+
+	&__control-group-label {
+		margin: 0;
+		font-size: 11px;
+		font-weight: 500;
+		text-transform: uppercase;
+		color: $wizard-gray-very-dark;
+	}
+
+	&__step-label {
+		font-family: $wizard-font;
+		color: $wizard-gray;
+	}
+
+	// ── Step 2 tab bar (Pattern vs AI) ─────────────────────────────────────
+
+	&__tab-bar {
+		display: flex;
+		border-bottom: 1px solid $wizard-border;
+		margin-bottom: 16px;
+		gap: 0;
+	}
+
+	&__tab {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 8px 16px;
+		background: none;
+		border: none;
+		border-bottom: 3px solid transparent;
+		margin-bottom: -1px;
+		font-family: inherit;
+		font-size: 13px;
+		font-weight: 500;
+		color: $wizard-gray-very-dark;
+		cursor: pointer;
+		transition:
+			color 0.1s,
+			border-color 0.1s;
+
+		&:hover {
+			color: $wizard-text;
+		}
+
+		&--active {
+			color: $wizard-accent;
+			border-bottom-color: $wizard-accent;
+		}
+	}
+
+	// Style Chart (step 3) section tabs — denser than Pattern/AI tabs.
+	&__configure-tabs {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		min-width: 0;
+	}
+
+	&__configure-tab-bar {
+		flex-wrap: wrap;
+		gap: 0 4px;
+		margin-bottom: 0;
+	}
+
+	&__configure-tab {
+		padding: 6px 10px;
+		font-size: 12px;
+	}
+
+	&__configure-tab-content {
+		min-width: 0;
+	}
+
+	&__configure-tab-panel {
+		.components-panel__body {
+			border: 1px solid $wizard-border;
+			border-radius: 4px;
+			margin-bottom: 0;
+		}
+
+		.components-panel__body + .components-panel__body {
+			margin-top: 8px;
+		}
+
+		// The curated tabs use ToolsPanel for its two-column grid only. Its
+		// "Attributes" heading just repeats the drawer title above it, and its
+		// reset/visibility menu is redundant because every item the wizard
+		// renders is `isShownByDefault` — nothing is reachable only from there.
+		.components-tools-panel-header {
+			display: none;
+		}
+	}
+
+	&__control-help {
+		margin: 0;
+		font-size: 12px;
+		line-height: 1.4;
+		color: $wizard-gray-very-dark;
+	}
+
+	&__control-label-with-tip {
+		display: flex;
+		align-items: center;
+		gap: 2px;
+	}
+
+	&__control-tip.components-button {
+		min-width: 24px;
+		height: 24px;
+		padding: 0;
+		color: $wizard-gray-very-dark;
+
+		&:hover,
+		&:focus {
+			color: $wizard-text;
+		}
+	}
+
+	// DataStep embedded power table (PRC-527)
+	&__data-table {
+		max-height: 420px;
+		overflow: auto;
+		border: 1px solid $wizard-border;
+		border-radius: 4px;
+		padding: 12px 12px 12px 52px; // extra left room for .ftb-* row controls
+		background: $wizard-surface;
+
+		// The embedded single-block editor should not stretch full-bleed.
+		.block-editor-block-list__layout {
+			margin: 0;
+		}
+
+		// The bare editor has no content-width layout to stretch the table, so
+		// force it to fill the modal (columns distribute via table-layout:fixed).
+		.wp-block-prc-block-table > table {
+			width: 100%;
+		}
+	}
+
+	// Configure + preview step (PRC-527)
+	// Fixed two-column grid: chart on the left, curated controls on the right,
+	// footer spanning the full width below.
+	&__configure {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+		grid-template-areas:
+			"preview controls"
+			"footer footer";
+		gap: 16px;
+		align-items: start;
+		min-height: 420px;
+
+		&-controls {
+			grid-area: controls;
+			max-height: 60vh;
+			overflow: auto;
+			padding-right: 4px;
+		}
+
+		&-footer {
+			grid-area: footer;
+			display: flex;
+			justify-content: space-between;
+			gap: 8px;
+			padding-top: 8px;
+			border-top: 1px solid $wizard-border;
+		}
+	}
+
+	&__preview-pane {
+		grid-area: preview;
+		display: flex;
+		align-items: flex-start;
+		justify-content: center;
+		min-width: 0;
+		min-height: 400px;
+		position: relative;
+		border: 1px solid $wizard-border;
+		border-radius: 4px;
+		background: $wizard-surface-subtle;
+		overflow: auto;
+		box-sizing: border-box;
+	}
+
+	&__preview-unavailable {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: center;
+		box-sizing: border-box;
+		width: 100%;
+		min-height: 400px;
+		padding: 24px;
+	}
+
+	&__preview-unavailable-title {
+		margin: 0 0 8px;
+		color: $wizard-text;
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	&__preview-unavailable-text {
+		margin: 0;
+		max-width: 28rem;
+		color: $wizard-gray-very-dark;
+		font-size: 13px;
+		line-height: 1.5;
+	}
+
+	&__preview-figure {
+		display: block;
+		margin: 20px auto;
+		flex: 0 0 auto;
+		background: $wizard-surface;
+	}
+}
+
+.prc-chart-wizard {
+	font-family: $wizard-font;
+	color: $wizard-text;
+
+	&[data-layout="full"] {
+		display: flex;
+		flex-direction: column;
+		// Stay within the viewport so step panes scroll internally instead of
+		// stretching the admin page (Card header + WP admin bar ≈ 12rem).
+		max-height: calc(100vh - 12rem);
+		min-height: min(70vh, calc(100vh - 12rem));
+
+		// Pin the action bar to the bottom of the available height.
+		.prc-chart-wizard__action-bar {
+			margin-top: auto;
+			flex-shrink: 0;
+		}
+
+		// Step progress stays fixed; active step body fills the middle and clips.
+		> .prc-chart-wizard__steps,
+		> .prc-chart-wizard__explainer {
+			flex-shrink: 0;
+		}
+
+		// The active step's content fills the height between the step-progress
+		// indicator and the action bar (so preview + panels aren't stranded at
+		// the top with dead space below).
+		> .prc-chart-modal__create-step,
+		> .prc-chart-modal__configure,
+		> .prc-chart-wizard__choose {
+			flex: 1 1 auto;
+			min-height: 0;
+			overflow: hidden;
+		}
+
+		> .prc-chart-modal__create-step {
+			display: flex;
+			flex-direction: column;
+
+			.prc-chart-wizard__data {
+				flex: 1 1 auto;
+				min-height: 0;
+				overflow: hidden;
+			}
+		}
+
+		// Configure step: controls (left) + preview (right), 50/50, full height.
+		.prc-chart-modal__configure {
+			grid-template-columns: 1fr 1fr;
+			grid-template-areas:
+				"controls preview"
+				"footer footer";
+			align-items: stretch;
+			min-height: 0;
+
+			.prc-chart-modal__configure-controls {
+				max-height: none;
+				min-height: 0;
+				min-width: 0;
+				overflow: auto;
+			}
+
+			.prc-chart-modal__preview-pane {
+				min-height: 0;
+				min-width: 0;
+				overflow: auto;
+			}
+		}
+
+		// Preview stretches to fill the step height (no resizer).
+		.prc-chart-modal__preview-pane {
+			height: 100%;
+			overflow: auto;
+		}
+	}
+
+	// Modal / inline compact hosts: cap template grid height (full-page uses
+	// flex in __choose instead of this max-height).
+	&[data-layout="compact"] {
+		.prc-chart-modal__pattern-picker {
+			max-height: $wizard-pattern-picker-max-height;
+		}
+	}
+
+	// Top step progress indicator
+	&__steps {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		margin: 0 0 12px;
+		padding: 0;
+		list-style: none;
+	}
+
+	&__template-reset-warning {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 16px;
+		margin: 0 0 16px;
+		padding: 12px 16px;
+		border-left: 4px solid #dba617;
+		background: #fcf9e8;
+		color: $wizard-text;
+
+		p {
+			margin: 0;
+			line-height: 1.4;
+		}
+
+		.components-flex {
+			flex-basis: content;
+		}
+	}
+
+	&__explainer {
+		margin: 0 0 20px;
+		max-width: 52rem;
+
+		.prc-chart-modal__step-label {
+			margin: 0 0 6px;
+		}
+
+		.prc-chart-wizard__explainer-text,
+		.prc-chart-wizard__explainer-link {
+			margin: 0;
+			color: $wizard-text;
+			font-size: $wizard-font-size-small;
+			line-height: 1.5;
+		}
+
+		.prc-chart-wizard__explainer-link {
+			margin-top: 6px;
+		}
+	}
+
+	&__data-upload {
+		margin: 0 0 12px;
+
+		&-input {
+			display: none;
+		}
+	}
+
+	&__step {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		color: $wizard-gray-very-dark;
+		font-size: $wizard-font-size-small;
+		font-weight: 500;
+
+		&:not(:last-child)::after {
+			content: "";
+			width: 40px;
+			height: 1px;
+			margin-left: 8px;
+			background: $wizard-border;
+		}
+
+		&-num {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			width: 22px;
+			height: 22px;
+			border-radius: 50%;
+			background: $wizard-border;
+			color: $wizard-text;
+			font-size: 12px;
+			font-weight: 600;
+		}
+
+		&.is-active {
+			color: $wizard-text;
+
+			.prc-chart-wizard__step-num {
+				background: $wizard-accent;
+				color: $wizard-on-accent;
+			}
+		}
+
+		&.is-complete .prc-chart-wizard__step-num {
+			background: $wizard-ink;
+			color: $wizard-on-accent;
+		}
+
+		// Clickable prior steps (Controller host / free navigation).
+		&-button {
+			display: inline-flex;
+			align-items: center;
+			gap: 8px;
+			margin: 0;
+			padding: 0;
+			border: 0;
+			background: none;
+			color: inherit;
+			font: inherit;
+			cursor: pointer;
+
+			&:hover .prc-chart-wizard__step-label {
+				text-decoration: underline;
+			}
+
+			&:focus-visible {
+				outline: 2px solid $wizard-accent;
+				outline-offset: 2px;
+			}
+		}
+	}
+
+	// Data step: table (left) + live preview (right), 50/50 at full width.
+	&__data {
+		&[data-layout="full"] {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			grid-template-areas: "table preview";
+			gap: 16px;
+			align-items: stretch;
+			min-height: 0;
+
+			.prc-chart-modal__preview-pane {
+				grid-area: preview;
+				min-height: 0;
+				min-width: 0;
+				overflow: auto;
+			}
+
+			.prc-chart-modal__data-table {
+				grid-area: table;
+				margin: 0;
+				min-height: 0;
+				min-width: 0;
+				max-height: none;
+				overflow: auto;
+			}
+		}
+	}
+
+	// Select Chart step (master-detail): type rail (left) + templates (right).
+	&__choose {
+		display: grid;
+		grid-template-columns: 360px minmax(0, 1fr);
+		gap: 24px;
+		align-items: stretch;
+		min-height: 0;
+
+		// Type rail is a fixed 4-column grid of compact cards.
+		.prc-chart-modal__type-grid {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+			gap: 6px;
+		}
+
+		.prc-chart-modal__type-picker {
+			min-height: 0;
+		}
+
+		.prc-chart-modal__type-card {
+			height: 96px;
+			padding: 8px 4px;
+			gap: 4px;
+		}
+
+		.prc-chart-modal__type-image {
+			width: 40px;
+			height: 40px;
+		}
+
+		.prc-chart-wizard__choose-types,
+		.prc-chart-wizard__choose-templates {
+			display: flex;
+			flex-direction: column;
+			// Fill the shared grid row so both columns share one height.
+			height: 100%;
+			min-height: 0;
+			min-width: 0;
+			overflow: hidden;
+		}
+
+		.prc-chart-wizard__choose-types {
+			overflow: auto;
+		}
+
+		.prc-chart-wizard__choose-templates {
+			.prc-chart-modal__step-label,
+			.prc-chart-modal__type-description,
+			.prc-chart-modal__tab-bar {
+				flex-shrink: 0;
+			}
+
+			// Match the type-rail column height; scroll the template grid inside.
+			// flex-basis: 0 forces the picker to take only remaining height so
+			// DataViews cannot grow the panel and defeat overflow scrolling.
+			.prc-chart-modal__pattern-picker {
+				flex: 1 1 0;
+				min-height: 0;
+				@include pattern-picker-scrollport;
+			}
+		}
+	}
+
+	&__choose-templates {
+		min-width: 0;
+	}
+
+	&__choose-empty {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		min-height: 240px;
+		color: $wizard-gray-very-dark;
+		border: 1px dashed $wizard-border;
+		border-radius: 4px;
+	}
+
+	&__pch-link {
+		margin-top: 12px;
+	}
+
+	// Bottom action bar
+	&__action-bar {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		gap: 8px;
+		margin-top: 20px;
+		padding-top: 16px;
+		border-top: 1px solid $wizard-border;
+
+		&-side {
+			display: flex;
+			align-items: center;
+
+			&--end {
+				justify-content: flex-end;
+			}
+		}
+
+		&-center {
+			color: $wizard-gray-very-dark;
+			font-size: 13px;
+			text-align: center;
+		}
+	}
+}

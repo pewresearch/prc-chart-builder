@@ -1,32 +1,21 @@
 // V2
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-
-/**
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
 import {
 	PanelBody,
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
 	__experimentalNumberControl as NumberControl,
 } from '@wordpress/components';
 /**
  * Internal dependencies
  */
+import { effectiveChartTypeForControls } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-import { useFocusedPanel } from './inspector-focus-context';
-
-// const PanelDescription = styled.div`
-// 	grid-column: span 2;
-// `;
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-`;
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
+import { WidePanelItem } from './control-ui';
 
 function BarControls({ attributes, setAttributes, clientId }) {
 	// Viewport-aware attribute management
@@ -38,6 +27,7 @@ function BarControls({ attributes, setAttributes, clientId }) {
 
 	const layout = getCurrentValue('layout') || {};
 	const { type: chartType } = layout;
+	const effectiveType = effectiveChartTypeForControls(attributes);
 
 	return (
 		<div ref={panelRef}>
@@ -54,7 +44,7 @@ function BarControls({ attributes, setAttributes, clientId }) {
 						paddingRight: '0',
 					}}
 				>
-					{chartType === 'bar' && (
+					{effectiveType === 'bar' && (
 						<WidePanelItem
 							hasValue={() => true}
 							label={__('Bar Group Padding')}

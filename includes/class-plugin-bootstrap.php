@@ -132,6 +132,7 @@ class Plugin_Bootstrap {
 		$this->include( 'class-loader.php' );
 		$this->include( 'settings/class-theme-admin.php' );
 		$this->include( 'settings/class-settings.php' );
+		$this->include( 'settings/class-creation-ui-settings.php' );
 		$this->include( 'settings/class-theme-font-tokens-migration.php' );
 		$this->include( 'settings/class-theme-block-defaults.php' );
 		$this->include( 'settings/class-theme-validator.php' );
@@ -152,12 +153,15 @@ class Plugin_Bootstrap {
 		$this->include( 'class-markdown-for-agents-integration.php' );
 		$this->include( 'class-email-newsletter-integration.php' );
 		$this->include( 'class-attachments-report-integration.php' );
+		$this->include( 'class-chart-static-images.php' );
 		$this->include( 'class-apple-news-integration.php' );
 		$this->include( 'class-json-ld.php' );
 		$this->include( 'class-print-engine-integration.php' );
 		$this->include( 'admin/class-admin.php' );
+		$this->include( 'admin/class-chart-list.php' );
 		$this->include( 'chart-handoff/class-pch-import-endpoint.php' );
 		$this->include( 'class-chart-patterns.php' );
+		$this->include( 'class-chart-patterns-endpoint.php' );
 		$this->include( 'inspector-sidebar-panel/class-inspector-sidebar-panel.php' );
 		$this->include( 'class-chart-export-endpoint.php' );
 		if ( file_exists( plugin_dir_path( __DIR__ ) . 'includes/class-screenshot-service.php' ) ) {
@@ -183,6 +187,7 @@ class Plugin_Bootstrap {
 	private function register_modules() {
 		new Settings( $this->get_loader() );
 		new Theme_REST_Controller( $this->get_loader() );
+		new Creation_UI_Settings( $this->get_loader() );
 		new Theme_Admin( $this->get_loader() );
 		new Content_Type( $this->get_loader() );
 		new Synced_Chart_Auto_Publish( $this->get_loader() );
@@ -196,8 +201,10 @@ class Plugin_Bootstrap {
 		new JSON_LD( $this->get_loader() );
 		new Print_Engine_Integration( $this->get_loader() );
 		new Admin( $this->get_loader() );
+		new Chart_List( $this->get_loader() );
 		new PCH_Import_Endpoint( $this->get_loader() );
 		new Chart_Patterns( $this->get_loader() );
+		new Chart_Patterns_Endpoint( $this->get_loader() );
 		new Inspector_Sidebar_Panel( $this->get_loader() );
 		new Chart_Export_Endpoint( $this->get_loader() );
 		if ( class_exists( __NAMESPACE__ . '\Screenshot_Service' ) && class_exists( __NAMESPACE__ . '\PNG_Export' ) ) {

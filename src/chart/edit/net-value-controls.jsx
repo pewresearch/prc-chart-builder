@@ -1,10 +1,5 @@
 /* eslint-disable max-lines-per-function */
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-
-/**
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
@@ -17,7 +12,6 @@ import {
 	Flex,
 	FlexItem,
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
 	__experimentalNumberControl as NumberControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
@@ -26,33 +20,16 @@ import {
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-import { useFocusedPanel } from './inspector-focus-context';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
+import {
+	PanelDescription,
+	WidePanelItem,
+	StyledLabel,
+	Help,
+} from './control-ui';
 
 const NET_VALUE_PREFIX = '__net_';
-
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-`;
-const PanelDescription = styled.div`
-	grid-column: span 2;
-`;
-const StyledLabel = styled.div`
-	font-size: 11px;
-	font-weight: 500;
-	line-height: 1.4;
-	text-transform: uppercase;
-	display: inline-block;
-	margin-bottom: calc(8px) !important;
-	padding: 0px;
-`;
-const Help = styled.div`
-	margin-top: calc(8px);
-	font-size: 12px;
-	font-style: normal;
-	color: rgb(117, 117, 117);
-	margin-bottom: 0px;
-`;
 
 /**
  * Renders the full set of controls for one net value side (positive or negative).
@@ -108,7 +85,7 @@ function NetValueSideControls({
 			</WidePanelItem>
 
 			<WidePanelItem
-				hasValue={() => !!sideData.fontSize && sideData.fontSize !== 10}
+				hasValue={() => !!sideData.fontSize && sideData.fontSize !== 12}
 				label={`${sideLabel} — ${__('Font Size')}`}
 				panelId={clientId}
 				isShownByDefault
@@ -116,7 +93,7 @@ function NetValueSideControls({
 				<ToggleGroupControl
 					__nextHasNoMarginBottom
 					isBlock
-					value={sideData.fontSize ?? 10}
+					value={sideData.fontSize ?? 12}
 					label={__('Font Size')}
 					onChange={(value) => updateSide({ fontSize: value })}
 				>
@@ -220,6 +197,7 @@ function NetValueSideControls({
 				hasValue={() => !!sideData.abbreviateValue}
 				label={`${sideLabel} — ${__('Abbreviate Value')}`}
 				panelId={clientId}
+				isShownByDefault
 			>
 				<ToggleControl
 					label={__('Abbreviate Value')}
@@ -233,6 +211,7 @@ function NetValueSideControls({
 				hasValue={() => !!sideData.absoluteValue}
 				label={`${sideLabel} — ${__('Absolute Value')}`}
 				panelId={clientId}
+				isShownByDefault
 			>
 				<ToggleControl
 					label={__('Absolute Value')}

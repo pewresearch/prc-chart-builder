@@ -8,17 +8,15 @@ import {
 import { SettingsSectionFooter } from '@prc/components';
 
 import { TEXT_DOMAIN } from '../constants';
-import { getFieldsForGroup } from '../field-registry';
-import { getShippedGroupDefault } from '../shipped-defaults';
-import { getAtPath, isFieldOverridden } from '../path-utils';
-import { store } from '../store';
-import { useThemeSave } from '../hooks/use-theme-save';
-import ConfigFieldControl from './config-field-control';
-import { formatShippedDefaultValue } from '../format-shipped-default';
 import {
+	getFieldsForGroup,
+	formatShippedDefaultValue,
 	buildConfigGridRows,
 	configGridNamePadding,
-} from '../field-grid-layout';
+} from '../field-registry';
+import { getShippedGroupDefault, getAtPath, isFieldOverridden } from '../model';
+import { store, useThemeSave } from '../store';
+import ConfigFieldControl from './config-field-control';
 
 /**
  * @param {{ groupKey: string }} props

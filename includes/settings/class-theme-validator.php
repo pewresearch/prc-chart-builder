@@ -15,13 +15,25 @@ use WP_Error;
 class Theme_Validator {
 
 	/**
-	 * Allowed top-level theme keys.
+	 * Allowed top-level theme keys persisted to the option.
+	 *
+	 * `$schema` is accepted on input (IDE pointer on the committed seed / downloads)
+	 * but stripped before persistence — see sanitize().
 	 *
 	 * @var list<string>
 	 */
 	public const ALLOWED_ROOT_KEYS = array(
 		'config',
 		'palettes',
+	);
+
+	/**
+	 * Non-persisted root keys accepted on input.
+	 *
+	 * @var list<string>
+	 */
+	public const TRANSIENT_ROOT_KEYS = array(
+		'$schema',
 	);
 
 	/**
@@ -47,8 +59,10 @@ class Theme_Validator {
 			);
 		}
 
+		$allowed_input_keys = array_merge( self::ALLOWED_ROOT_KEYS, self::TRANSIENT_ROOT_KEYS );
+
 		foreach ( array_keys( $input ) as $key ) {
-			if ( ! in_array( $key, self::ALLOWED_ROOT_KEYS, true ) ) {
+			if ( ! in_array( $key, $allowed_input_keys, true ) ) {
 				return new WP_Error(
 					'invalid_theme_key',
 					sprintf(

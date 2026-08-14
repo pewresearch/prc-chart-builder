@@ -11,11 +11,14 @@ export default function ChartSearch({ setAttributes }) {
 			entitySubType="chart"
 			entityStatus={['publish', 'draft', 'future']}
 			onSelect={(item) => {
-				setAttributes({
-					ref: parseInt(item.entityId),
-				});
+				const ref = parseInt(item?.entityId, 10);
+				if (!Number.isFinite(ref) || ref <= 0) {
+					return;
+				}
+				setAttributes({ ref });
 			}}
 			perPage={10}
+			showType={false}
 			showFeaturedImage={true}
 		/>
 	);

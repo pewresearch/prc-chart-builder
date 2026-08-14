@@ -1,7 +1,7 @@
 {
 	"name": "@prc/chart-builder-inspector-sidebar-panel",
 	"description": "Chart Inspector Sidebar Panel functionality for PRC Chart Builder",
-	"license": "GPL-2.0-or-later",
+	"license": "MIT",
 	"devDependencies": {
 		"@wordpress/scripts": "^31.4.0"
 	},

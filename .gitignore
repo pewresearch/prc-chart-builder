@@ -25,6 +25,7 @@ artifacts/
 # WordPress Tests
 /tmp/
 /wordpress-tests-lib/
+/tests/wp-tests-config.php
 
 # vendor/ is committed for standalone installs (populated by platform ship CI).
 !vendor/

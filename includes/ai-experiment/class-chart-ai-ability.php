@@ -841,11 +841,13 @@ PROMPT;
 			'stacked-area'   => 'Stacked area chart. legend.active=true.',
 			'pie'            => 'Pie/donut chart. Two columns: label and value. pie.innerRadius=0 for pie, >0 for donut. legend.active=true.',
 			'scatter'        => 'Scatter plot. columns: x (category or numeric), y (numeric). nodes.pointSize=5.',
+			'bee-swarm'      => 'Beeswarm distribution. ONE ROW PER DOT. First column = the row label identifying each observation, e.g. Respondent (maps to x) — NOT the plotted value. Second column = the numeric plotted value, e.g. Age; name that column in dataRender.categories (for example dataRender.categories=["Age"]). Optional sibling columns: Group (color category), Size (numeric radius). Do NOT use scatter-style y1/y2 series columns. dataRender.x="x". nodes.sizeCategory="Size" when a size column exists.',
 			'dot-plot'       => 'Dot plot for comparison. Two value columns typically.',
 			'diverging-bar'  => 'Diverging bar chart. Must have positive and negative value columns.',
 			'sankey'         => 'Sankey/flow diagram. Columns MUST be: source, target, value (all strings). No axes. sankey.nodeAlign="justify".',
 			'treemap'        => 'Treemap. Columns: label, value. treemap.tile="squarify".',
 			'exploded-bar'   => 'Exploded bar chart for 100% comparison. Multiple value columns.',
+			'heat-map-table' => 'Heat map table matrix. First column = row label (demographic/group). Remaining columns = numeric values 0–100 for each platform/category; list those column names in dataRender.categories. Use dataRender.mapScale="linear", dataRender.mapScaleDomain=[0,100], io.colorValue="blue-spectrum", labels.color="contrast". No axes. heatMapTable.showValues=true by default.',
 			'freeform'       => 'General-purpose chart. Use bar layout as a sensible default.',
 		);
 

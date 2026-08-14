@@ -29,8 +29,19 @@ class Synced_Chart_Auto_Publish {
 	}
 
 	/**
+	 * Statuses eligible for automatic publication when a parent post publishes.
+	 *
+	 * Private/pending charts are intentionally excluded so auto-publish cannot
+	 * escalate restricted chart statuses.
+	 *
+	 * @var string[]
+	 */
+	const AUTO_PUBLISHABLE_STATUSES = array( 'draft', 'future' );
+
+	/**
 	 * Scan the published/updated post for synced-chart blocks and publish any
-	 * referenced charts that are still in draft status.
+	 * referenced charts that are still in draft/future status when the acting
+	 * user may edit and publish that chart.
 	 *
 	 * @hook prc_platform_async_on_publish 10
 	 * @hook prc_platform_async_on_update  10
@@ -45,6 +56,11 @@ class Synced_Chart_Auto_Publish {
 
 		// Avoid recursion — skip if the post being published is itself a chart.
 		if ( Content_Type::$post_type === $post->post_type ) {
+			return;
+		}
+
+		$acting_user_id = self::resolve_acting_user_id();
+		if ( $acting_user_id <= 0 ) {
 			return;
 		}
 
@@ -65,7 +81,12 @@ class Synced_Chart_Auto_Publish {
 				continue;
 			}
 
-			if ( 'publish' === $chart->post_status ) {
+			if ( ! in_array( $chart->post_status, self::AUTO_PUBLISHABLE_STATUSES, true ) ) {
+				continue;
+			}
+
+			// edit_post enforces ownership (or edit_others_posts); publish_post alone does not.
+			if ( ! user_can( $acting_user_id, 'edit_post', $ref_id ) || ! user_can( $acting_user_id, 'publish_post', $ref_id ) ) {
 				continue;
 			}
 
@@ -76,5 +97,24 @@ class Synced_Chart_Auto_Publish {
 				)
 			);
 		}
+	}
+
+	/**
+	 * Resolve the editor who triggered the publish pipeline.
+	 *
+	 * Action Scheduler workers typically run as user 0; the pipeline stores the
+	 * original editor via get_async_editor_id() for capability checks.
+	 *
+	 * @return int
+	 */
+	private static function resolve_acting_user_id(): int {
+		if ( class_exists( '\PRC\Platform\Post_Publish_Pipeline\Bootstrap' ) ) {
+			$async_editor_id = \PRC\Platform\Post_Publish_Pipeline\Bootstrap::get_async_editor_id();
+			if ( $async_editor_id > 0 ) {
+				return $async_editor_id;
+			}
+		}
+
+		return (int) get_current_user_id();
 	}
 }

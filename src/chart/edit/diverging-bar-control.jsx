@@ -1,10 +1,6 @@
 // V2
 /* eslint-disable max-lines-per-function */
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-/**
  * WordPress dependencies
  */
 import { PanelColorSettings } from '@wordpress/block-editor';
@@ -15,30 +11,15 @@ import {
 	RangeControl,
 	ToggleControl,
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
 
-const PanelDescription = styled.div`
-	grid-column: span 2;
-`;
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-`;
-const StyledLabel = styled.div`
-	font-size: 11px;
-	font-weight: 500;
-	line-height: 1.4;
-	text-transform: uppercase;
-	display: inline-block;
-	margin-bottom: calc(8px) !important;
-	padding: 0px;
-`;
 function DivergingBarControls({ attributes, setAttributes, clientId }) {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -50,7 +31,7 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 	const neutralBar = divergingBar.neutralBar || {};
 
 	return (
-		<PanelBody title={__('Diverging Bar')} initialOpen>
+		<PanelBody title={__('Diverging Bar')} initialOpen={false}>
 			<ToolsPanel
 				label={__('Attributes')}
 				panelId={clientId}
@@ -118,6 +99,7 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 							hasValue={() => neutralBar.offsetX}
 							disabled={!neutralBar.active}
 							label={__('Neutral Bar Positioning')}
+							isShownByDefault
 							panelId={clientId}
 						>
 							<PanelDescription>
@@ -151,6 +133,7 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 							hasValue={() => neutralBar.separatorOffsetX}
 							disabled={!neutralBar.separator}
 							label={__('Neutral Bar Positioning')}
+							isShownByDefault
 							panelId={clientId}
 						>
 							<PanelDescription>
@@ -181,6 +164,7 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						<WidePanelItem
 							hasValue={() => divergingBar.percentOfInnerWidth}
 							label={__('Diverging Bar Width')}
+							isShownByDefault
 							panelId={clientId}
 						>
 							<RangeControl
@@ -302,6 +286,7 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 				<WidePanelItem
 					hasValue={() => secondary.strokeWidth !== undefined}
 					label={__('Secondary Stroke Width')}
+					isShownByDefault
 					panelId={`${clientId}-secondary`}
 				>
 					<NumberControl
@@ -321,6 +306,7 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 				<WidePanelItem
 					hasValue={() => secondary.opacity !== undefined}
 					label={__('Secondary Opacity')}
+					isShownByDefault
 					panelId={`${clientId}-secondary`}
 				>
 					<RangeControl

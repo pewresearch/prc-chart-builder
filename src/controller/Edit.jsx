@@ -1,7 +1,7 @@
 /* eslint-disable import/no-extraneous-dependencies */
 /* eslint-disable import/no-unresolved */
 /* eslint-disable max-lines-per-function */
-import { Fragment, useEffect, useRef } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * WordPress Dependencies
@@ -18,16 +18,22 @@ import {
 	PanelBody,
 	TextControl,
 	Button,
+	Modal,
 } from '@wordpress/components';
 import { useSelect, useDispatch } from '@wordpress/data';
+import { store as editorStore } from '@wordpress/editor';
 
 /**
  * Internal Dependencies
  */
 import Placeholder from './placeholder';
 import ViewModeControls from './view-mode-controls';
+import ChartCptWizardShell from './chart-cpt-wizard-shell';
+import { isNewCreationUiEnabled, shouldHostCptWizard } from './creation-ui';
+import { prefetchChartPatternsLibrary } from '../shared/select-chart-step';
 import controllerStore from './store';
 import useChartEditorPresence from './use-chart-editor-presence';
+import { hasSiblingDuplicateChartId } from './utils/chart-id-conflicts';
 
 /**
  * Sanitize a user-entered id into a value that is safe as a DOM id and an
@@ -83,6 +89,10 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 	// This prevents repeated setAttributes calls when the component remounts
 	// due to entity re-parsing in nested entity contexts (e.g., synced chart in tabs)
 	const hasInitializedId = useRef(false);
+	// Session-scoped ignores so "Keep ID" doesn't reopen for the same conflict.
+	const ignoredDuplicateIds = useRef(new Set());
+	const [isDuplicateIdDialogOpen, setIsDuplicateIdDialogOpen] =
+		useState(false);
 
 	// Generate a stable unique ID on first mount that persists across re-renders
 	// This prevents loops caused by clientId changing on entity re-parse
@@ -111,20 +121,31 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		}
 	}, [id, setAttributes]);
 
+	const hasInitializedLock = useRef(false);
+
 	const {
 		layoutType,
 		chartClientId,
+		chartAttributes,
 		chartIo,
 		allowDataDownload,
 		tableClientId,
+		tableValidationSchema,
 		selectedBlockClientId,
 		selectedBlockParents,
 		view,
 		showBoth,
+		postType,
+		isPreviewMode,
+		controllerBlocks,
 	} = useSelect(
 		(select) => {
-			const { getBlock, getSelectedBlockClientId, getBlockParents } =
-				select(blockEditorStore);
+			const {
+				getBlock,
+				getSelectedBlockClientId,
+				getBlockParents,
+				getBlocksByName,
+			} = select(blockEditorStore);
 			const { getControllerView, getControllerShowBoth } =
 				select(controllerStore);
 			const block = getBlock(clientId);
@@ -135,24 +156,99 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 				(innerBlock) => innerBlock.name === 'prc-block/table'
 			);
 			const sel = getSelectedBlockClientId();
+			const controllerClientIds =
+				typeof getBlocksByName === 'function'
+					? getBlocksByName('prc-chart-builder/controller')
+					: [];
 			return {
 				layoutType: chartBlock?.attributes?.layout?.type,
 				chartClientId: chartBlock?.clientId,
+				chartAttributes: chartBlock?.attributes ?? null,
 				chartIo: chartBlock?.attributes?.io || {},
 				allowDataDownload:
 					chartBlock?.attributes?.io?.allowDataDownload ?? true,
 				tableClientId: tableBlock?.clientId,
+				tableValidationSchema:
+					tableBlock?.attributes?.validationSchema || '',
 				selectedBlockClientId: sel,
 				selectedBlockParents: sel ? getBlockParents(sel) : [],
 				view: getControllerView(id),
 				showBoth: getControllerShowBoth(id),
+				postType: select(editorStore).getCurrentPostType(),
+				// BlockPreview iframes still see postType=chart; skip the CPT
+				// wizard shell there so pattern cards render the chart canvas.
+				isPreviewMode:
+					!!select(blockEditorStore).getSettings().isPreviewMode,
+				controllerBlocks: controllerClientIds
+					.map((controllerClientId) => getBlock(controllerClientId))
+					.filter(Boolean),
 			};
 		},
 		[clientId, id]
 	);
 
+	const hasSiblingDuplicate = hasSiblingDuplicateChartId(
+		controllerBlocks,
+		clientId,
+		id
+	);
+	const isControllerSelected =
+		selectedBlockClientId === clientId ||
+		(selectedBlockParents || []).includes(clientId);
+
+	// Prompt only for the selected controller that shares an id with a sibling.
+	// Render-time dedupe remains the safety net for cross-post embeds on a page.
+	useEffect(() => {
+		if (
+			hasSiblingDuplicate &&
+			isControllerSelected &&
+			id &&
+			!ignoredDuplicateIds.current.has(id)
+		) {
+			setIsDuplicateIdDialogOpen(true);
+			return;
+		}
+		if (!hasSiblingDuplicate) {
+			setIsDuplicateIdDialogOpen(false);
+		}
+	}, [hasSiblingDuplicate, isControllerSelected, id]);
+
 	const { setControllerView, setControllerShowBoth } =
 		useDispatch(controllerStore);
+
+	// Host the 4-step wizard only when the site-level rollout flag is on, and
+	// only for the live chart CPT canvas — not BlockPreview or article embeds.
+	const hostCptWizard = shouldHostCptWizard({
+		enabled: isNewCreationUiEnabled(window?.prcChartBuilderLibrary),
+		postType,
+		isPreviewMode,
+	});
+
+	useEffect(() => {
+		if (hostCptWizard) {
+			prefetchChartPatternsLibrary();
+		}
+	}, [hostCptWizard]);
+
+	// Chart CPT: lock move/remove on the Controller via block attributes
+	// (replaces CPT template_lock so Create pattern stays available).
+	useEffect(() => {
+		if (hasInitializedLock.current || !hostCptWizard) {
+			return;
+		}
+		hasInitializedLock.current = true;
+		const lock = attributes.lock;
+		if (lock?.move && lock?.remove) {
+			return;
+		}
+		setAttributes({
+			lock: {
+				...(lock && typeof lock === 'object' ? lock : {}),
+				move: true,
+				remove: true,
+			},
+		});
+	}, [hostCptWizard, attributes.lock, setAttributes]);
 
 	// Auto-switch the editor view to match whichever pane the user
 	// selects (or selects a descendant of) from the list view or canvas.
@@ -188,7 +284,8 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		setControllerView,
 	]);
 
-	const { updateBlockAttributes } = useDispatch(blockEditorStore);
+	const { updateBlockAttributes, replaceInnerBlocks } =
+		useDispatch(blockEditorStore);
 
 	// Set the controller id and cascade the derived "{id}-chart" id to the
 	// child chart so the pair stays in sync. Editors use this to hand a
@@ -207,6 +304,18 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		}
 	};
 
+	const dismissDuplicateIdDialog = () => {
+		if (id) {
+			ignoredDuplicateIds.current.add(id);
+		}
+		setIsDuplicateIdDialogOpen(false);
+	};
+
+	const regenerateDuplicateId = () => {
+		applyControllerId(generateChartId());
+		setIsDuplicateIdDialogOpen(false);
+	};
+
 	// Map chartType to layout.type (matching VARIATION_TO_LAYOUT_TYPE from variations.js)
 	const CHART_TYPE_TO_LAYOUT_TYPE = {
 		bar: 'bar',
@@ -218,9 +327,14 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		'stacked-area': 'stacked-area',
 		'dot-plot': 'dot-plot',
 		scatter: 'scatter',
+		'bee-swarm': 'bee-swarm',
 		pie: 'pie',
+		'small-multiples': 'small-multiples',
 		treemap: 'treemap',
 		sankey: 'sankey',
+		waffle: 'waffle',
+		'waffle-portion': 'small-multiples',
+		'heat-map-table': 'heat-map-table',
 		'diverging-bar': 'diverging-bar',
 		'exploded-bar': 'exploded-bar',
 		'map-usa': 'map-usa',
@@ -296,38 +410,56 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		});
 	}, [chartType, chartClientId, clientId, updateBlockAttributes, getBlock]);
 
-	const dummyCSVS = [
-		{
-			name: 'US State Map',
-			url: 'https://www.pewresearch.org/wp-content/uploads/sites/20/2024/10/usa-state.csv',
-		},
-		{
-			name: 'US County Map',
-			url: 'https://www.pewresearch.org/wp-content/uploads/sites/20/2024/10/usa-county.csv',
-		},
-		{
-			name: 'US Block Map',
-			url: 'https://www.pewresearch.org/wp-content/uploads/sites/20/2024/10/usa-block-map.csv',
-		},
-		{
-			name: 'World Map',
-			url: 'https://www.pewresearch.org/wp-content/uploads/sites/20/2024/10/world.csv',
-		},
-	];
+	// Map maps to the table validation schema that enforces their geo column.
+	// Block/hex maps key off state FIPS, same as the standard state map.
+	const MAP_LAYOUT_TO_SCHEMA = {
+		'map-usa': 'geo-state',
+		'map-usa-block': 'geo-state',
+		'map-usa-hex': 'geo-state',
+		'map-usa-counties': 'geo-county',
+		'map-usa-cbsa': 'geo-cbsa',
+		'map-world': 'geo-country-numeric',
+		'map-world-orthographic': 'geo-country-numeric',
+	};
+
+	// Keep the sibling table's validation schema in sync with the selected map
+	// type so the table block surfaces the geo column requirements and flags
+	// mis-named headers. Only manage the auto-applied geo-* schemas — leave any
+	// other schema a producer set manually untouched.
+	useEffect(() => {
+		if (!tableClientId) {
+			return;
+		}
+		const targetSchema = MAP_LAYOUT_TO_SCHEMA[layoutType] || '';
+		if (targetSchema) {
+			if (tableValidationSchema !== targetSchema) {
+				updateBlockAttributes(tableClientId, {
+					validationSchema: targetSchema,
+				});
+			}
+		} else if (tableValidationSchema.startsWith('geo-')) {
+			updateBlockAttributes(tableClientId, { validationSchema: '' });
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [layoutType, tableClientId, tableValidationSchema]);
 
 	const viewMode = showBoth ? 'both' : view;
 
-	const blockProps = useBlockProps({
-		'data-view-mode': viewMode,
-	});
+	// Chart CPT wizard: blockProps on the host wrapper. Otherwise on the figure.
+	const blockProps = useBlockProps(
+		hostCptWizard
+			? {}
+			: {
+					'data-view-mode': viewMode,
+				}
+	);
 	const hasInnerBlocks = useSelect(
 		(select) => select(blockEditorStore).getBlocks(clientId).length > 0,
 		[clientId]
 	);
 
-	// Keep blockProps on the figure only. Passing blockProps into
-	// useInnerBlocksProps duplicates the controller class onto the
-	// inner-blocks layout, which breaks direct-child view-mode CSS.
+	// Keep blockProps off useInnerBlocksProps — duplicating the controller
+	// class onto the inner-blocks layout breaks direct-child view-mode CSS.
 	const innerBlocksProps = useInnerBlocksProps(
 		{},
 		{
@@ -336,155 +468,233 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		}
 	);
 
-	if (!hasInnerBlocks) {
+	const onChartAttributesChange = useCallback(
+		(nextAttributes) => {
+			if (chartClientId) {
+				updateBlockAttributes(chartClientId, nextAttributes);
+			}
+		},
+		[chartClientId, updateBlockAttributes]
+	);
+
+	const onEnterDataStep = useCallback(() => {
+		if (!id) {
+			return;
+		}
+		// Table only in the left column — lean preview sits in the right pane.
+		setControllerShowBoth(id, false);
+		setControllerView(id, 'data');
+	}, [id, setControllerShowBoth, setControllerView]);
+
+	const onEnterDesignMode = useCallback(() => {
+		if (!id) {
+			return;
+		}
+		setControllerShowBoth(id, false);
+		setControllerView(id, 'chart');
+	}, [id, setControllerShowBoth, setControllerView]);
+
+	const onEnterPreviewStep = useCallback(() => {
+		if (!id) {
+			return;
+		}
+		setControllerShowBoth(id, false);
+		setControllerView(id, 'chart');
+	}, [id, setControllerShowBoth, setControllerView]);
+
+	// Empty controllers use the trunk Choose Chart Type placeholder unless the
+	// site-level rollout flag hosts the full chart CPT wizard.
+	if (!hasInnerBlocks && !hostCptWizard) {
 		return <Placeholder {...{ attributes, setAttributes, clientId }} />;
+	}
+
+	const canvas = (
+		<>
+			{postType !== 'chart' && (
+				<ViewModeControls
+					view={view}
+					showBoth={showBoth}
+					onChangeView={(next) => setControllerView(id, next)}
+					onChangeShowBoth={(next) => setControllerShowBoth(id, next)}
+				/>
+			)}
+			<figure
+				{...(hostCptWizard
+					? {
+							className: 'wp-block-prc-chart-builder-controller',
+							'data-view-mode': viewMode,
+						}
+					: blockProps)}
+			>
+				<div {...innerBlocksProps} />
+			</figure>
+		</>
+	);
+
+	const inspector = (
+		<InspectorControls>
+			<PanelBody
+				title={__('Tab Controls / Data Download / Schema.org')}
+				initialOpen={true}
+			>
+				<p
+					style={{
+						marginTop: 0,
+						marginBottom: '12px',
+						fontSize: '12px',
+					}}
+				>
+					{__(
+						'Control which tabs appear below the chart. Hiding a tab removes it from the frontend entirely — users can only interact with what is shown.'
+					)}
+				</p>
+				<ToggleControl
+					label={__('Chart tab')}
+					checked={chartTabActive}
+					onChange={() =>
+						setAttributes({ chartTabActive: !chartTabActive })
+					}
+				/>
+				<ToggleControl
+					label={__('Data tab')}
+					checked={dataTabActive}
+					onChange={() =>
+						setAttributes({ dataTabActive: !dataTabActive })
+					}
+				/>
+				<ToggleControl
+					label={__('Allow data download')}
+					checked={allowDataDownload}
+					disabled={!dataTabActive || !chartClientId}
+					onChange={() => {
+						if (chartClientId) {
+							updateBlockAttributes(chartClientId, {
+								io: {
+									...chartIo,
+									allowDataDownload: !allowDataDownload,
+								},
+							});
+						}
+					}}
+				/>
+				<ToggleControl
+					label={__('Download Image tab')}
+					checked={downloadImageTabActive}
+					onChange={() =>
+						setAttributes({
+							downloadImageTabActive: !downloadImageTabActive,
+						})
+					}
+				/>
+				<ToggleControl
+					label={__('Share tab')}
+					checked={shareActive}
+					onChange={() =>
+						setAttributes({ shareActive: !shareActive })
+					}
+				/>
+				<ToggleControl
+					label={__('Include in structured data (schema.org)')}
+					help={__(
+						"When enabled, this chart will be included in the page's JSON-LD schema as a Dataset. Disable for decorative or supplementary charts that should not appear in search results."
+					)}
+					checked={enableSchemaOutput}
+					onChange={() =>
+						setAttributes({
+							enableSchemaOutput: !enableSchemaOutput,
+						})
+					}
+				/>
+			</PanelBody>
+			<PanelBody title={__('Chart ID (advanced)')} initialOpen={false}>
+				<p
+					style={{
+						marginTop: 0,
+						marginBottom: '12px',
+						fontSize: '12px',
+					}}
+				>
+					{__(
+						'This is the unique identifier for this chart. If you copied this chart from another chart, it may share an ID with the original — which can break rendering when both appear on the same page. Give it a distinct ID, or click Regenerate for a fresh one.'
+					)}
+				</p>
+				<TextControl
+					label={__('Chart ID')}
+					value={id || ''}
+					onChange={(next) => applyControllerId(next)}
+					help={__(
+						'Only letters, numbers, hyphens and underscores are allowed.'
+					)}
+					__nextHasNoMarginBottom
+				/>
+				<Button
+					variant="secondary"
+					onClick={() => applyControllerId(generateChartId())}
+				>
+					{__('Regenerate ID')}
+				</Button>
+			</PanelBody>
+		</InspectorControls>
+	);
+
+	const duplicateIdDialog = isDuplicateIdDialogOpen ? (
+		<Modal
+			title={__('Duplicate Chart ID')}
+			onRequestClose={dismissDuplicateIdDialog}
+		>
+			<p>
+				{__(
+					'Another chart in this editor shares this Chart ID. Regenerating gives this chart a unique ID so both can render correctly when they appear on the same page.'
+				)}
+			</p>
+			<div
+				style={{
+					display: 'flex',
+					justifyContent: 'flex-end',
+					gap: '8px',
+					marginTop: '16px',
+				}}
+			>
+				<Button variant="tertiary" onClick={dismissDuplicateIdDialog}>
+					{__('Keep ID')}
+				</Button>
+				<Button variant="primary" onClick={regenerateDuplicateId}>
+					{__('Regenerate ID')}
+				</Button>
+			</div>
+		</Modal>
+	) : null;
+
+	if (hostCptWizard) {
+		return (
+			<Fragment>
+				{inspector}
+				{duplicateIdDialog}
+				<div {...blockProps}>
+					<ChartCptWizardShell
+						refineContent={canvas}
+						chartAttributes={chartAttributes}
+						chartClientId={chartClientId}
+						onChartAttributesChange={onChartAttributesChange}
+						chartType={chartType}
+						clientId={clientId}
+						setAttributes={setAttributes}
+						replaceInnerBlocks={replaceInnerBlocks}
+						tableClientId={tableClientId}
+						onEnterDataStep={onEnterDataStep}
+						onEnterDesignMode={onEnterDesignMode}
+						onEnterPreviewStep={onEnterPreviewStep}
+					/>
+				</div>
+			</Fragment>
+		);
 	}
 
 	return (
 		<Fragment>
-			<InspectorControls>
-				{/* check if layout.type has substring of 'map' */}
-				{layoutType && layoutType.includes('map') && (
-					<PanelBody>
-						<p>
-							<strong>
-								Your table must include{' '}
-								<a href="https://transition.fcc.gov/oet/info/maps/census/fips/fips.txt">
-									county or state FIPS codes
-								</a>{' '}
-								to match the data for a US Map, or{' '}
-								<a href="https://www.iban.com/country-codes">
-									3-digit ISO codes
-								</a>{' '}
-								for world maps.
-							</strong>{' '}
-						</p>
-						<p>Dummy data for maps can be found here:</p>
-						<ul>
-							{dummyCSVS.map((csv) => (
-								<li key={csv.name}>
-									<a href={csv.url} download>
-										{csv.name}
-									</a>
-								</li>
-							))}
-						</ul>
-					</PanelBody>
-				)}
-				<PanelBody
-					title={__('Tab Controls / Data Download / Schema.org')}
-					initialOpen={true}
-				>
-					<p
-						style={{
-							marginTop: 0,
-							marginBottom: '12px',
-							fontSize: '12px',
-						}}
-					>
-						{__(
-							'Control which tabs appear below the chart. Hiding a tab removes it from the frontend entirely — users can only interact with what is shown.'
-						)}
-					</p>
-					<ToggleControl
-						label={__('Chart tab')}
-						checked={chartTabActive}
-						onChange={() =>
-							setAttributes({ chartTabActive: !chartTabActive })
-						}
-					/>
-					<ToggleControl
-						label={__('Data tab')}
-						checked={dataTabActive}
-						onChange={() =>
-							setAttributes({ dataTabActive: !dataTabActive })
-						}
-					/>
-					<ToggleControl
-						label={__('Allow data download')}
-						checked={allowDataDownload}
-						disabled={!dataTabActive || !chartClientId}
-						onChange={() => {
-							if (chartClientId) {
-								updateBlockAttributes(chartClientId, {
-									io: {
-										...chartIo,
-										allowDataDownload: !allowDataDownload,
-									},
-								});
-							}
-						}}
-					/>
-					<ToggleControl
-						label={__('Download Image tab')}
-						checked={downloadImageTabActive}
-						onChange={() =>
-							setAttributes({
-								downloadImageTabActive: !downloadImageTabActive,
-							})
-						}
-					/>
-					<ToggleControl
-						label={__('Share tab')}
-						checked={shareActive}
-						onChange={() =>
-							setAttributes({ shareActive: !shareActive })
-						}
-					/>
-					<ToggleControl
-						label={__('Include in structured data (schema.org)')}
-						help={__(
-							"When enabled, this chart will be included in the page's JSON-LD schema as a Dataset. Disable for decorative or supplementary charts that should not appear in search results."
-						)}
-						checked={enableSchemaOutput}
-						onChange={() =>
-							setAttributes({
-								enableSchemaOutput: !enableSchemaOutput,
-							})
-						}
-					/>
-				</PanelBody>
-				<PanelBody
-					title={__('Chart ID (advanced)')}
-					initialOpen={false}
-				>
-					<p
-						style={{
-							marginTop: 0,
-							marginBottom: '12px',
-							fontSize: '12px',
-						}}
-					>
-						{__(
-							'This is the unique identifier for this chart. If you copied this chart from another chart, it may share an ID with the original — which can break rendering when both appear on the same page. Give it a distinct ID, or click Regenerate for a fresh one.'
-						)}
-					</p>
-					<TextControl
-						label={__('Chart ID')}
-						value={id || ''}
-						onChange={(next) => applyControllerId(next)}
-						help={__(
-							'Only letters, numbers, hyphens and underscores are allowed.'
-						)}
-						__nextHasNoMarginBottom
-					/>
-					<Button
-						variant="secondary"
-						onClick={() => applyControllerId(generateChartId())}
-					>
-						{__('Regenerate ID')}
-					</Button>
-				</PanelBody>
-			</InspectorControls>
-			<ViewModeControls
-				view={view}
-				showBoth={showBoth}
-				onChangeView={(next) => setControllerView(id, next)}
-				onChangeShowBoth={(next) => setControllerShowBoth(id, next)}
-			/>
-			<figure {...blockProps}>
-				<div {...innerBlocksProps} />
-			</figure>
+			{inspector}
+			{duplicateIdDialog}
+			{canvas}
 		</Fragment>
 	);
 }

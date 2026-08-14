@@ -797,13 +797,13 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 			return;
 		}
 
-		\WP_CLI::success( 'Seeded legacy PRC chart theme from prc-legacy-theme.json.' );
+		\WP_CLI::success( 'Seeded chart theme from chart-theme.json.' );
 	}
 
 	/**
-	 * Restore legacy chart theme data when palettes are missing or corrupt.
+	 * Restore chart theme data when palettes are missing or corrupt.
 	 *
-	 * - Empty/deleted option: seeds the full legacy theme (config + palettes) via seed_if_empty().
+	 * - Empty/deleted option: seeds the full fallback theme (config + palettes) via seed_if_empty().
 	 * - Partial option (config/colorNames present, colors missing): merges palette swatches only.
 	 *
 	 * ## EXAMPLES
@@ -842,13 +842,13 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 
 			if ( 0 === $after_count ) {
 				\WP_CLI::error(
-					'Could not restore the legacy chart theme. Confirm prc-legacy-theme.json exists on this environment.'
+					'Could not restore the chart theme. Confirm chart-theme.json exists on this environment.'
 				);
 			}
 
 			\WP_CLI::success(
 				sprintf(
-					'Seeded legacy chart theme from prc-legacy-theme.json (%d palette catalogs).',
+					'Seeded chart theme from chart-theme.json (%d palette catalogs).',
 					$after_count
 				)
 			);
@@ -862,7 +862,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 
 		if ( 0 === $after_count ) {
 			\WP_CLI::error(
-				'Could not repair palette colors. Confirm prc-legacy-theme.json exists on this environment.'
+				'Could not repair palette colors. Confirm chart-theme.json exists on this environment.'
 			);
 		}
 

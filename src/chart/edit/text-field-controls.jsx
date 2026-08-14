@@ -10,7 +10,7 @@ import {
 import { __ } from '@wordpress/i18n';
 
 import { generateDefaultAltText } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
 
 function TextFieldControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management

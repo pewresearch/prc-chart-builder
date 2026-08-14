@@ -8,13 +8,13 @@ import { dragHandle, trash } from '@wordpress/icons';
 import { List } from 'react-movable';
 
 import { TEXT_DOMAIN } from '../constants';
-import { getPaletteColors, getPalettes } from '../palette-utils';
+import { getPaletteColors, getPalettes } from '../model';
 import { store } from '../store';
 import {
 	colorForPreviewMode,
 	getColorDisplayValue,
 	getThemeColorName,
-} from '../theme-colors';
+} from '../site-theme';
 import PaletteDeleteDialog from './palette-delete-dialog';
 import ThemeColorPicker from './theme-color-picker';
 

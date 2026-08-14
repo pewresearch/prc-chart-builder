@@ -7,8 +7,7 @@ import {
 } from '@wordpress/components';
 
 import { TEXT_DOMAIN } from '../constants';
-import { store } from '../store';
-import { useThemeSave } from '../hooks/use-theme-save';
+import { store, useThemeSave } from '../store';
 
 export default function GlobalSaveBar() {
 	const isDirty = useSelect((select) => select(store).isDirty(), []);

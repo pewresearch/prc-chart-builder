@@ -41,6 +41,7 @@ export function AnnotationPanel({
 	variant = 'full',
 	subtitle = '',
 	defaults: customDefaults = null,
+	panelKeys = [],
 }) {
 	const isCompact = variant === 'compact';
 	const {
@@ -56,11 +57,38 @@ export function AnnotationPanel({
 		maxWidth,
 		opacity,
 		positioningContext,
+		panelKey,
 		textOutline,
 		hasCustomizations,
 		handleChange,
 		handleReset,
 	} = useAnnotationCustomizations(annotation, annotationId, onUpdate);
+
+	const hasPanelKeys = Array.isArray(panelKeys) && panelKeys.length > 0;
+	const isPanelContext =
+		positioningContext === 'panel' || positioningContext === 'panel-inner';
+	const positioningOptions = [
+		{
+			label: __('Full Chart Area', 'prc-chart-builder'),
+			value: 'chart',
+		},
+		{
+			label: __('Data Area (Inner)', 'prc-chart-builder'),
+			value: 'inner',
+		},
+		...(hasPanelKeys
+			? [
+					{
+						label: __('Panel (full cell)', 'prc-chart-builder'),
+						value: 'panel',
+					},
+					{
+						label: __('Panel data area', 'prc-chart-builder'),
+						value: 'panel-inner',
+					},
+				]
+			: []),
+	];
 
 	return (
 		<VStack spacing={4}>
@@ -79,18 +107,40 @@ export function AnnotationPanel({
 			<SelectControl
 				label={__('Positioning Context', 'prc-chart-builder')}
 				value={positioningContext}
-				options={[
-					{
-						label: __('Full Chart Area', 'prc-chart-builder'),
-						value: 'chart',
-					},
-					{
-						label: __('Data Area (Inner)', 'prc-chart-builder'),
-						value: 'inner',
-					},
-				]}
-				onChange={(value) => handleChange('positioningContext', value)}
+				options={positioningOptions}
+				onChange={(value) => {
+					if (
+						(value === 'panel' || value === 'panel-inner') &&
+						hasPanelKeys
+					) {
+						handleChange('positioningContext', value, {
+							panelKey: panelKey || String(panelKeys[0]),
+						});
+						return;
+					}
+					handleChange('positioningContext', value);
+				}}
+				help={
+					hasPanelKeys
+						? __(
+								'Chart: full graphic. Inner: data area. Panel: full cell or plot area; travels with the cell on restack.',
+								'prc-chart-builder'
+							)
+						: undefined
+				}
 			/>
+
+			{isPanelContext && hasPanelKeys && (
+				<SelectControl
+					label={__('Panel', 'prc-chart-builder')}
+					value={panelKey || String(panelKeys[0])}
+					options={panelKeys.map((key) => ({
+						label: String(key),
+						value: String(key),
+					}))}
+					onChange={(value) => handleChange('panelKey', value)}
+				/>
+			)}
 
 			<TextStyleControls
 				showText={false}

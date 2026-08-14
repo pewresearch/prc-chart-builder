@@ -17,6 +17,8 @@ import {
 	SelectControl,
 } from '@wordpress/components';
 import { PanelColorSettings } from '@wordpress/block-editor';
+import { getSmallMultiplesPanelKeys } from './popover/utils';
+import { repositionDrawingToContext } from './utils/panel-anchor';
 
 // Stroke dash array presets
 const DASH_PRESETS = [
@@ -232,14 +234,75 @@ function DrawingListItem({ drawing, isSelected, onDelete, onSelect }) {
 /**
  * Style controls for a selected drawing.
  *
- * @param {Object}   props          - Component props
- * @param {Object}   props.drawing  - The selected drawing
- * @param {Function} props.onUpdate - Callback to update drawing properties
+ * @param {Object}   props            - Component props
+ * @param {Object}   props.drawing    - The selected drawing
+ * @param {Function} props.onUpdate   - Callback to update drawing properties
+ * @param {string[]} props.panelKeys  - Small-multiples panel keys (optional)
+ * @param {Object|null} props.smDrawingGeometry - Live SM panel geometry
  */
-function SelectedDrawingStyles({ drawing, onUpdate }) {
+function SelectedDrawingStyles({
+	drawing,
+	onUpdate,
+	panelKeys = [],
+	smDrawingGeometry = null,
+}) {
 	const isShape = isShapeType(drawing.type);
 	const isLine = isLineType(drawing.type);
 	const isLollipop = drawing.type === 'lollipop';
+	const hasPanelKeys = Array.isArray(panelKeys) && panelKeys.length > 0;
+	const isPanelContext = (ctx) => ctx === 'panel' || ctx === 'panel-inner';
+
+	function handlePositioningContextChange(value) {
+		if (!isPanelContext(value)) {
+			if (smDrawingGeometry) {
+				onUpdate(
+					repositionDrawingToContext(
+						drawing,
+						smDrawingGeometry,
+						value,
+						null,
+						{ useDesignGeometry: false }
+					)
+				);
+				return;
+			}
+			onUpdate({ positioningContext: value, panelKey: '' });
+			return;
+		}
+		const panelKey = drawing.panelKey || String(panelKeys[0] || '');
+		if (smDrawingGeometry) {
+			onUpdate(
+				repositionDrawingToContext(
+					drawing,
+					smDrawingGeometry,
+					value,
+					panelKey,
+					{ useDesignGeometry: false }
+				)
+			);
+			return;
+		}
+		onUpdate({
+			positioningContext: value,
+			panelKey,
+		});
+	}
+
+	function handlePanelKeyChange(value) {
+		if (!smDrawingGeometry || !isPanelContext(drawing.positioningContext)) {
+			onUpdate({ panelKey: value });
+			return;
+		}
+		onUpdate(
+			repositionDrawingToContext(
+				drawing,
+				smDrawingGeometry,
+				drawing.positioningContext || 'panel-inner',
+				value,
+				{ useDesignGeometry: false }
+			)
+		);
+	}
 
 	const opacityValue = drawing.opacity !== undefined ? drawing.opacity : 1;
 	const fillOpacityValue =
@@ -310,6 +373,61 @@ function SelectedDrawingStyles({ drawing, onUpdate }) {
 					{getDrawingTypeLabel(drawing)}
 				</p>
 			</PanelRow>
+
+			{hasPanelKeys && (
+				<>
+					<SelectControl
+						label={__('Positioning Context', 'prc-chart-builder')}
+						value={drawing.positioningContext || 'inner'}
+						options={[
+							{
+								label: __(
+									'Full Chart Area',
+									'prc-chart-builder'
+								),
+								value: 'chart',
+							},
+							{
+								label: __(
+									'Data Area (Inner)',
+									'prc-chart-builder'
+								),
+								value: 'inner',
+							},
+							{
+								label: __(
+									'Panel (full cell)',
+									'prc-chart-builder'
+								),
+								value: 'panel',
+							},
+							{
+								label: __(
+									'Panel data area',
+									'prc-chart-builder'
+								),
+								value: 'panel-inner',
+							},
+						]}
+						onChange={handlePositioningContextChange}
+						help={__(
+							'Panel data area stays glued to the cell on restack. New drawings auto-anchor here.',
+							'prc-chart-builder'
+						)}
+					/>
+					{isPanelContext(drawing.positioningContext) && (
+						<SelectControl
+							label={__('Panel', 'prc-chart-builder')}
+							value={drawing.panelKey || String(panelKeys[0])}
+							options={panelKeys.map((key) => ({
+								label: String(key),
+								value: String(key),
+							}))}
+							onChange={handlePanelKeyChange}
+						/>
+					)}
+				</>
+			)}
 
 			{isLine && (
 				<SelectControl
@@ -427,6 +545,7 @@ function SelectedDrawingStyles({ drawing, onUpdate }) {
  * @param {Function} props.onStrokeWidthChange     - Change default stroke width
  * @param {string}   props.selectedDrawingId       - Currently selected drawing ID
  * @param {Function} props.onSelectedDrawingChange - Change selected drawing
+ * @param {Object|null} props.smDrawingGeometry    - Live SM panel geometry
  */
 export default function DrawingControls({
 	attributes,
@@ -441,8 +560,14 @@ export default function DrawingControls({
 	onStrokeWidthChange,
 	selectedDrawingId = null,
 	onSelectedDrawingChange = null,
+	smDrawingGeometry = null,
 }) {
 	const drawings = attributes?.drawings || [];
+	const layoutType = attributes?.layout?.type;
+	const panelKeys =
+		layoutType === 'small-multiples'
+			? getSmallMultiplesPanelKeys(attributes)
+			: [];
 	const selectedDrawing = selectedDrawingId
 		? drawings.find((d) => d.id === selectedDrawingId)
 		: null;
@@ -563,6 +688,8 @@ export default function DrawingControls({
 				<>
 					<SelectedDrawingStyles
 						drawing={selectedDrawing}
+						panelKeys={panelKeys}
+						smDrawingGeometry={smDrawingGeometry}
 						onUpdate={(updates) =>
 							handleUpdateDrawing(selectedDrawingId, updates)
 						}

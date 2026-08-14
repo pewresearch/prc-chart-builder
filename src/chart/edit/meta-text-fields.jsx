@@ -2,7 +2,7 @@ import { RichText } from '@wordpress/block-editor';
 import { useState } from '@wordpress/element';
 
 import { Icon } from '@prc/icons';
-import { useViewportAttributes } from './use-viewport-attributes';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
 
 const TitleSubtitle = ({ attributes, setAttributes }) => {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(

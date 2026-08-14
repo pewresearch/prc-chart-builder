@@ -40,17 +40,26 @@ import { AlignmentOverlay } from './alignment-overlay';
 import { DrawingOverlay } from './drawing-overlay';
 import { DrawingLayer } from './drawing-layer';
 import { DrawingSelectionLayer } from './drawing-selection-layer';
-import { useViewportAttributes } from './use-viewport-attributes';
+import {
+	anchorAnnotationToPanel,
+	anchorDrawingToPanel,
+	anchorItemsToPanels,
+	hasOverlaysNeedingPanelAnchor,
+} from './utils/panel-anchor';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { ChartElementPopover, ELEMENT_TYPES } from './popover';
+import { getSmallMultiplesPanelKeys } from './popover/utils';
 import {
 	InspectorFocusProvider,
 	useInspectorFocus,
-} from './inspector-focus-context';
+} from './hooks/inspector-focus-context';
+import { useWizardChartActions } from '../../shared/wizard-chrome/wizard-chart-actions-context';
 import {
 	BAR_CHART_TYPES,
 	LINE_CHART_TYPES,
 	NODE_CHART_TYPES,
 	MAP_CHART_TYPES,
+	effectiveChartTypeForControls,
 } from '../utils/chart-types';
 
 const getCellContent = (cell) => {
@@ -87,6 +96,7 @@ function EditInner({
 	context,
 }) {
 	const { focusPanels } = useInspectorFocus();
+	const wizardChartActions = useWizardChartActions();
 	const { id, io, metadata, dataRender, drawings = [] } = attrs;
 
 	const { chartData, isStaticChart, isFreeformChart, preserveStringKeys } =
@@ -231,6 +241,7 @@ function EditInner({
 		columnMeta,
 		tableIsValid,
 		tableValidationSchema,
+		tableValidationMessage,
 		parentBlockId,
 		refId,
 	} = useSelect(
@@ -295,6 +306,8 @@ function EditInner({
 				columnMeta: tableAttributes?.columnMeta || [],
 				tableIsValid: tableAttributes?.isValid ?? true,
 				tableValidationSchema: tableAttributes?.validationSchema || '',
+				tableValidationMessage:
+					tableAttributes?.validationMessage || '',
 				parentBlockId: parentControllerId || controllerId,
 				refId: postId,
 			};
@@ -310,14 +323,22 @@ function EditInner({
 
 	// Track drag state to disable tooltips during drag
 	const [isDragging, setIsDragging] = useState(false);
+	// Selected drawing (inspector list + in-chart click via DrawingsLayer)
+	const [selectedDrawingId, setSelectedDrawingId] = useState(null);
+	// Live panel geometry from SmallMultiples (for drawing selection handles)
+	const [smDrawingGeometry, setSmDrawingGeometry] = useState(null);
 
 	// Resolve which inspector panel(s) to open when a SHAPE element is clicked,
 	// based on the current chart type.
 	const resolveShapePanels = (type) => {
-		if (BAR_CHART_TYPES.includes(type)) return ['bar', 'colors'];
-		if (LINE_CHART_TYPES.includes(type)) return ['line', 'colors'];
-		if (NODE_CHART_TYPES.includes(type)) return ['nodes', 'colors'];
-		if (type === 'pie') return ['pie', 'colors'];
+		const effective =
+			type === 'small-multiples'
+				? effectiveChartTypeForControls(attrs)
+				: type;
+		if (BAR_CHART_TYPES.includes(effective)) return ['bar', 'colors'];
+		if (LINE_CHART_TYPES.includes(effective)) return ['line', 'colors'];
+		if (NODE_CHART_TYPES.includes(effective)) return ['nodes', 'colors'];
+		if (effective === 'pie') return ['pie', 'colors'];
 		if (type === 'treemap') return ['treemap', 'colors'];
 		if (type === 'sankey') return ['sankey', 'colors'];
 		if (MAP_CHART_TYPES.includes(type)) return ['map', 'colors'];
@@ -332,6 +353,7 @@ function EditInner({
 		[ELEMENT_TYPES.REGRESSION]: 'regression',
 		[ELEMENT_TYPES.ANNOTATION]: 'annotations',
 		[ELEMENT_TYPES.LEGEND_ITEM]: 'legend',
+		[ELEMENT_TYPES.PANEL_TITLE]: 'smallMultiples',
 		[ELEMENT_TYPES.ERROR_BAR]: 'dotPlot',
 		[ELEMENT_TYPES.DIFF_COLUMN_HEADER]: 'diffColumn',
 		[ELEMENT_TYPES.DIFF_COLUMN_LABEL]: 'diffColumn',
@@ -471,7 +493,7 @@ function EditInner({
 	const handleAddAnnotation = () => {
 		const currentItems = getCurrentValue('annotations', 'items') || [];
 		const layout = getCurrentValue('layout') || {};
-		const newAnnotation = {
+		let newAnnotation = {
 			x: (layout.width || 640) / 2,
 			y: (layout.height || 400) / 2,
 			text: 'New annotation',
@@ -491,10 +513,35 @@ function EditInner({
 			maxWidth: 200,
 			positioningContext: 'chart',
 		};
+		if (attrs?.layout?.type === 'small-multiples' && smDrawingGeometry) {
+			newAnnotation = anchorAnnotationToPanel(
+				newAnnotation,
+				smDrawingGeometry,
+				'panel-inner',
+				{ useDesignGeometry: true }
+			);
+		}
+		// Single update so `active` is not clobbered by a stale second write.
 		updateAttributeForDevice('annotations', {
+			active: true,
 			items: [...currentItems, newAnnotation],
 		});
 	};
+
+	const handleAddAnnotationRef = useRef(handleAddAnnotation);
+	handleAddAnnotationRef.current = handleAddAnnotation;
+
+	useEffect(() => {
+		if (!wizardChartActions) {
+			return undefined;
+		}
+		wizardChartActions.registerAddAnnotation(() =>
+			handleAddAnnotationRef.current()
+		);
+		return () => {
+			wizardChartActions.unregisterAddAnnotation();
+		};
+	}, [wizardChartActions]);
 
 	// Handle regression line customization updates from popover.
 	// Merges groupBreakStyles overrides into the regression attribute.
@@ -513,6 +560,12 @@ function EditInner({
 	const handleLegendItemCustomizationUpdate = (updates) => {
 		if (updates.customLegendLabels !== undefined) {
 			setAttributes({ customLegendLabels: updates.customLegendLabels });
+		}
+	};
+
+	const handlePanelTitleCustomizationUpdate = (updates) => {
+		if (updates.customPanelTitles !== undefined) {
+			setAttributes({ customPanelTitles: updates.customPanelTitles });
 		}
 	};
 
@@ -609,6 +662,9 @@ function EditInner({
 		if (elementType === ELEMENT_TYPES.LEGEND_ITEM) {
 			return handleLegendItemCustomizationUpdate;
 		}
+		if (elementType === ELEMENT_TYPES.PANEL_TITLE) {
+			return handlePanelTitleCustomizationUpdate;
+		}
 		if (elementType === ELEMENT_TYPES.DIFF_COLUMN_HEADER) {
 			return handleDiffColumnHeaderCustomizationUpdate;
 		}
@@ -654,6 +710,9 @@ function EditInner({
 		if (elementType === ELEMENT_TYPES.LEGEND_ITEM) {
 			return getCurrentValue('customLegendLabels') || {};
 		}
+		if (elementType === ELEMENT_TYPES.PANEL_TITLE) {
+			return getCurrentValue('customPanelTitles') || {};
+		}
 		if (elementType === ELEMENT_TYPES.DIFF_COLUMN_HEADER) {
 			return getCurrentValue('diffColumn') || {};
 		}
@@ -689,6 +748,9 @@ function EditInner({
 				setAlignments, // Pass alignment setter (stable reference)
 				setIsDragging, // Pass drag state setter (stable reference)
 				onElementClick: handleElementClick, // Pass callback for popover
+				setSelectedDrawingId,
+				selectedDrawingId,
+				setSmDrawingGeometry,
 			}),
 		[
 			attrs,
@@ -698,7 +760,8 @@ function EditInner({
 			updateAttributeForDevice,
 			setAttributes,
 			toggleSelection,
-		] // setAlignments, setIsDragging, handleElementClick intentionally excluded
+			selectedDrawingId,
+		] // setAlignments, setIsDragging, handleElementClick, setSelectedDrawingId intentionally excluded
 	);
 
 	const config = useMemo(() => {
@@ -858,7 +921,6 @@ function EditInner({
 	const [drawingTool, setDrawingTool] = useState('pen');
 	const [strokeColor, setStrokeColor] = useState('#000000');
 	const [strokeWidth, setStrokeWidth] = useState(1);
-	const [selectedDrawingId, setSelectedDrawingId] = useState(null);
 
 	// Animation preview (PRC-17). `useAnimationConfig` forces `immediate: true`
 	// in the editor so authors aren't fighting in-flight spring values while
@@ -902,10 +964,65 @@ function EditInner({
 	};
 
 	function handleDrawingComplete(drawingData) {
+		const nextDrawing =
+			attrs?.layout?.type === 'small-multiples' && smDrawingGeometry
+				? anchorDrawingToPanel(
+						drawingData,
+						smDrawingGeometry,
+						'panel-inner',
+						// Overlay uses live SM SVG size, so expand with live ratios.
+						{ useDesignGeometry: false }
+					)
+				: drawingData;
 		setAttributes({
-			drawings: [...(drawings || []), drawingData],
+			drawings: [...(drawings || []), nextDrawing],
 		});
 	}
+
+	// Migrate legacy global-space overlays onto panel-inner once SM geometry is live.
+	// Retries until every overlay is panel-anchored or geometry cannot resolve a panel.
+	useEffect(() => {
+		if (attrs?.layout?.type !== 'small-multiples' || !smDrawingGeometry) {
+			return;
+		}
+		const annotationItems = attrs?.annotations?.items || [];
+		if (!hasOverlaysNeedingPanelAnchor(drawings, annotationItems)) {
+			return;
+		}
+		// Existing overlays were authored in layout space — convert via design grid.
+		const drawingResult = anchorItemsToPanels(
+			drawings || [],
+			smDrawingGeometry,
+			'drawing',
+			{ useDesignGeometry: true }
+		);
+		const annotationResult = anchorItemsToPanels(
+			annotationItems,
+			smDrawingGeometry,
+			'annotation',
+			{ useDesignGeometry: true }
+		);
+		if (!drawingResult.changed && !annotationResult.changed) {
+			return;
+		}
+		if (drawingResult.changed) {
+			setAttributes({ drawings: drawingResult.items });
+		}
+		if (annotationResult.changed) {
+			setAttributes({
+				annotations: {
+					...(attrs?.annotations || {}),
+					items: annotationResult.items,
+				},
+			});
+		}
+	}, [
+		attrs?.layout?.type,
+		attrs?.annotations,
+		smDrawingGeometry,
+		drawings,
+		setAttributes,
+	]);
 
 	function handleDrawingModeChange(mode) {
 		setIsDrawingMode(mode);
@@ -934,6 +1051,7 @@ function EditInner({
 				onStrokeWidthChange={setStrokeWidth}
 				selectedDrawingId={selectedDrawingId}
 				onSelectedDrawingChange={setSelectedDrawingId}
+				smDrawingGeometry={smDrawingGeometry}
 			/>
 			<CopyPasteStylesHandler
 				attributes={attrs}
@@ -941,14 +1059,28 @@ function EditInner({
 			/>
 			{hasValidation && !tableIsValid && (
 				<Notice status="warning" isDismissible={true}>
-					{__(
-						'The source table has validation errors. The chart is showing the last valid data.',
-						'prc-chart-builder'
+					<p style={{ margin: 0 }}>
+						{__(
+							'The source table has validation errors. The chart is showing the last valid data.',
+							'prc-chart-builder'
+						)}
+					</p>
+					{tableValidationMessage && (
+						<p style={{ margin: '8px 0 0' }}>
+							{tableValidationMessage}
+						</p>
 					)}
 				</Notice>
 			)}
 			<div {...blockProps}>
-				<figure>
+				<figure
+					style={{
+						width: '100%',
+						maxWidth: `${width}px`,
+						marginLeft: 'auto',
+						marginRight: 'auto',
+					}}
+				>
 					<ChartBuilderTextWrapper
 						active={config.metadata.active}
 						width={width}
@@ -1088,25 +1220,19 @@ function EditInner({
 													: undefined
 											}
 											onClose={handlePopoverClose}
+											panelKeys={
+												chartType === 'small-multiples'
+													? getSmallMultiplesPanelKeys(
+															attrs
+														)
+													: []
+											}
 										/>
 									)}
-									<DrawingLayer
-										drawings={drawings}
-										chartDimensions={{
-											width,
-											height,
-											padding: config.layout.padding,
-										}}
-										chartWidth={width}
-										chartHeight={height}
-										layoutDimensions={{
-											width: config.layout.width,
-											height: config.layout.height,
-											padding: config.layout.padding,
-										}}
-									/>
-									{isSelected && !isDrawingMode && (
-										<DrawingSelectionLayer
+									{/* Small multiples: drawing visuals + drag-to-move live in DrawingsLayer.
+									    Selection handles (resize, bend, breakpoints) use the overlay below. */}
+									{chartType !== 'small-multiples' && (
+										<DrawingLayer
 											drawings={drawings}
 											chartDimensions={{
 												width,
@@ -1120,20 +1246,44 @@ function EditInner({
 												height: config.layout.height,
 												padding: config.layout.padding,
 											}}
-											onDrawingsChange={(newDrawings) =>
-												setAttributes({
-													drawings: newDrawings,
-												})
-											}
-											isDrawingMode={isDrawingMode}
-											selectedDrawingId={
-												selectedDrawingId
-											}
-											onSelectionChange={
-												setSelectedDrawingId
-											}
 										/>
 									)}
+									{isSelected &&
+										!isDrawingMode &&
+										chartType !== 'small-multiples' && (
+											<DrawingSelectionLayer
+												drawings={drawings}
+												chartDimensions={{
+													width,
+													height,
+													padding:
+														config.layout.padding,
+												}}
+												chartWidth={width}
+												chartHeight={height}
+												layoutDimensions={{
+													width: config.layout.width,
+													height: config.layout
+														.height,
+													padding:
+														config.layout.padding,
+												}}
+												onDrawingsChange={(
+													newDrawings
+												) =>
+													setAttributes({
+														drawings: newDrawings,
+													})
+												}
+												isDrawingMode={isDrawingMode}
+												selectedDrawingId={
+													selectedDrawingId
+												}
+												onSelectionChange={
+													setSelectedDrawingId
+												}
+											/>
+										)}
 									<AlignmentOverlay
 										alignments={alignments}
 										chartDimensions={{
@@ -1150,12 +1300,34 @@ function EditInner({
 												handleDrawingComplete
 											}
 											chartDimensions={{
-												width,
-												height,
+												width:
+													chartType ===
+														'small-multiples' &&
+													smDrawingGeometry?.chartWidth
+														? smDrawingGeometry.chartWidth
+														: width,
+												height:
+													chartType ===
+														'small-multiples' &&
+													smDrawingGeometry?.chartHeight
+														? smDrawingGeometry.chartHeight
+														: height,
 												padding: config.layout.padding,
 											}}
-											chartWidth={width}
-											chartHeight={height}
+											chartWidth={
+												chartType ===
+													'small-multiples' &&
+												smDrawingGeometry?.chartWidth
+													? smDrawingGeometry.chartWidth
+													: width
+											}
+											chartHeight={
+												chartType ===
+													'small-multiples' &&
+												smDrawingGeometry?.chartHeight
+													? smDrawingGeometry.chartHeight
+													: height
+											}
 											strokeColor={strokeColor}
 											strokeWidth={strokeWidth}
 											layoutDimensions={{

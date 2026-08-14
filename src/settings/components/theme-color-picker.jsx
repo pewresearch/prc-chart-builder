@@ -6,7 +6,7 @@ import {
 	extractHex,
 	getThemeColors,
 	groupThemeColors,
-} from '../theme-colors';
+} from '../site-theme';
 
 /**
  * Theme.json swatch picker with inferred spectrum/UI group breaks.

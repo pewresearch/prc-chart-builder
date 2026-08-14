@@ -4,6 +4,9 @@
 		"php": "8.2",
 		"wp": "latest"
 	},
+	"features": {
+		"networking": true
+	},
 	"constants": {
 		"WP_PLAYGROUND": true
 	},
@@ -14,24 +17,75 @@
 	},
 	"landingPage": "/wp-admin/post-new.php?post_type=chart",
 	"login": true,
-	"plugins": [
-		"https://raw.githubusercontent.com/pewresearch/prc-chart-builder/playground-test/prc-chart-builder.zip",
-		"https://raw.githubusercontent.com/pewresearch/prc-chart-builder/playground-test/prc-charting-library.zip"
-	],
 	"steps": [
 		{
-			"step": "installTheme",
-			"themeData": {
-				"resource": "wordpress.org/themes",
-				"slug": "twentytwentyfive"
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "git:directory",
+				"url": "https://github.com/pewresearch/prc-scripts",
+				"ref": "trunk",
+				"refType": "branch"
+			},
+			"options": {
+				"targetFolderName": "prc-scripts",
+				"activate": true
 			}
 		},
 		{
-			"step": "importWxr",
-			"file": {
-				"resource": "url",
-				"url": "https://raw.githubusercontent.com/WordPress/theme-test-data/master/themeunittestdata.wordpress.xml"
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "git:directory",
+				"url": "https://github.com/pewresearch/prc-post-publish-pipeline",
+				"ref": "trunk",
+				"refType": "branch"
+			},
+			"options": {
+				"targetFolderName": "prc-post-publish-pipeline",
+				"activate": true
 			}
+		},
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "git:directory",
+				"url": "https://github.com/pewresearch/prc-block-tables",
+				"ref": "trunk",
+				"refType": "branch"
+			},
+			"options": {
+				"targetFolderName": "prc-block-tables",
+				"activate": true
+			}
+		},
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "git:directory",
+				"url": "https://github.com/pewresearch/prc-charting-library",
+				"ref": "trunk",
+				"refType": "branch"
+			},
+			"options": {
+				"targetFolderName": "prc-charting-library",
+				"activate": true
+			}
+		},
+		{
+			"step": "installPlugin",
+			"pluginData": {
+				"resource": "git:directory",
+				"url": "https://github.com/pewresearch/prc-chart-builder",
+				"ref": "trunk",
+				"refType": "branch"
+			},
+			"options": {
+				"targetFolderName": "prc-chart-builder",
+				"activate": true
+			}
+		},
+		{
+			"step": "runPHP",
+			"code": "<?php require_once '/wordpress/wp-load.php'; flush_rewrite_rules();"
 		}
 	]
 }

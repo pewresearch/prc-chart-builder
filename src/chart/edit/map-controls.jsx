@@ -1,10 +1,6 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-/**
  * WordPress dependencies
  */
 import { PanelColorSettings } from '@wordpress/block-editor';
@@ -17,7 +13,6 @@ import {
 	SelectControl,
 	ToggleControl,
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
@@ -31,31 +26,9 @@ import { MAP_REGION_PRESETS } from '@prc/charting-utilities';
  */
 import { BUBBLE_MAP_CHART_TYPES } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
-import { useFocusedPanel } from './inspector-focus-context';
-import { useViewportAttributes } from './use-viewport-attributes';
-
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-	display: block;
-`;
-
-const StyledLabel = styled.div`
-	font-size: 11px;
-	font-weight: 500;
-	line-height: 1.4;
-	text-transform: uppercase;
-	display: inline-block;
-	margin-bottom: calc(8px) !important;
-	padding: 0px;
-`;
-
-const Help = styled.div`
-	margin-top: calc(8px);
-	font-size: 12px;
-	font-style: normal;
-	color: rgb(117, 117, 117);
-	margin-bottom: 0px;
-`;
+import { useFocusedPanel } from './hooks/inspector-focus-context';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { WidePanelItem, StyledLabel, Help } from './control-ui';
 
 // Map projection presets — single source of truth lives in
 // `@prc/charting-utilities` (MAP_REGION_PRESETS).

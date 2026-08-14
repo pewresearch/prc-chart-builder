@@ -64,6 +64,7 @@ const TOOLTIP_STYLE_KEYS = [
 const LABELS_STYLE_KEYS = [
 	'active',
 	'showFirstLastPointsOnly',
+	'firstLastLabelLayout',
 	'color',
 	'fontWeight',
 	'fontSize',

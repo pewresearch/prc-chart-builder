@@ -1,5 +1,39 @@
 import { FORMATTED_DATA_PASSTHROUGH_TYPES } from './chart-types';
 
+/**
+ * Whether an axis domain should be inferred from data.
+ * Keep this local — helpers.js is pulled into view.js (script module), which
+ * cannot import the @prc/charting-utilities barrel (React hooks).
+ *
+ * @param {unknown} domain
+ * @return {boolean} True when the domain should be inferred from data.
+ */
+export function isAutoAxisDomain(domain) {
+	if (domain === null || domain === undefined) {
+		return true;
+	}
+	if (!Array.isArray(domain) || domain.length < 2) {
+		return true;
+	}
+	const [min, max] = domain;
+	if (min instanceof Date && max instanceof Date) {
+		return Number.isNaN(min.getTime()) || Number.isNaN(max.getTime());
+	}
+	const minNum =
+		min === null || min === undefined || min === '' ? NaN : Number(min);
+	const maxNum =
+		max === null || max === undefined || max === '' ? NaN : Number(max);
+	return !Number.isFinite(minNum) || !Number.isFinite(maxNum);
+}
+
+/**
+ * @param {unknown} domain
+ * @return {boolean} True when the domain carries an explicit min/max pair.
+ */
+export function hasExplicitAxisDomain(domain) {
+	return !isAutoAxisDomain(domain);
+}
+
 // Transform data from table block into json useable for chart builder
 export const formattedData = (data, scale, chartType) => {
 	const { body, tableHeaders } = data;
@@ -100,10 +134,148 @@ export const stringToArray = (str) => {
 	return [];
 };
 
-export const getDomain = (min, max, type, scale, axis) => {
-	if (Number.isNaN(min) || Number.isNaN(max)) {
-		return [0, 100];
+const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+/**
+ * Convert an author-set time-domain bound to a Date, or null.
+ *
+ * Bare numbers (and numeric strings) are legacy data, not intent: renderers
+ * before 2026 ignored every stored time domain, so pairs persisted by old
+ * charts ([0, 100] defaults, [2000, 2020] template years) must keep
+ * inferring from data. The editor persists explicit time domains as ISO
+ * `YYYY-MM-DD` strings, parsed as LOCAL time to avoid the UTC-midnight
+ * year drift of `new Date('2000-01-01')`.
+ *
+ * @param {unknown} value Stored domain bound.
+ * @return {Date|null} Date when explicitly author-set, otherwise null.
+ */
+function toExplicitTimeDomainDate(value) {
+	if (value instanceof Date) {
+		return Number.isNaN(value.getTime()) ? null : value;
 	}
+	if (typeof value === 'string' && value.trim() !== '') {
+		if (Number.isFinite(Number(value))) {
+			return null;
+		}
+		const isoMatch = ISO_DATE_PATTERN.exec(value.trim());
+		if (isoMatch) {
+			const date = new Date(
+				Number(isoMatch[1]),
+				Number(isoMatch[2]) - 1,
+				Number(isoMatch[3])
+			);
+			return Number.isNaN(date.getTime()) ? null : date;
+		}
+		const date = new Date(value);
+		return Number.isNaN(date.getTime()) ? null : date;
+	}
+	return null;
+}
+
+/**
+ * Scale-aware "is this domain auto?". On time scales, bare numeric pairs are
+ * legacy data (old renderers ignored them), so only Date / date-string pairs
+ * count as explicit.
+ *
+ * @param {unknown} domain Stored domain value.
+ * @param {string}  scale  Axis scale ('linear', 'time', ...).
+ * @return {boolean} True when the domain should be inferred from data.
+ */
+export function isAutoAxisDomainForScale(domain, scale) {
+	if ('time' === scale) {
+		if (!Array.isArray(domain) || domain.length < 2) {
+			return true;
+		}
+		return (
+			!toExplicitTimeDomainDate(domain[0]) ||
+			!toExplicitTimeDomainDate(domain[1])
+		);
+	}
+	return isAutoAxisDomain(domain);
+}
+
+/**
+ * Year to show in editor number controls for a stored time-domain bound.
+ *
+ * @param {unknown} value Stored bound (legacy number, ISO string, or Date).
+ * @return {number|undefined} Calendar year, or undefined when unreadable.
+ */
+export function timeDomainBoundToYear(value) {
+	if (value instanceof Date && !Number.isNaN(value.getTime())) {
+		return value.getFullYear();
+	}
+	if (typeof value === 'number' && Number.isFinite(value)) {
+		return value;
+	}
+	if (typeof value === 'string' && value.trim() !== '') {
+		const asNumber = Number(value);
+		if (Number.isFinite(asNumber)) {
+			return asNumber;
+		}
+		const date = toExplicitTimeDomainDate(value);
+		if (date) {
+			return date.getFullYear();
+		}
+	}
+	return undefined;
+}
+
+/**
+ * Persisted representation of a year entered in editor time-domain controls.
+ * ISO strings mark the bound as author-set, distinguishing it from legacy
+ * numeric pairs that must stay auto.
+ *
+ * @param {unknown} year Year from a NumberControl.
+ * @return {string|null} `YYYY-01-01`, or null when the input is not a year.
+ */
+export function yearToTimeDomainBound(year) {
+	if (year === null || year === undefined || year === '') {
+		return null;
+	}
+	const yearNum = Number(year);
+	if (!Number.isFinite(yearNum)) {
+		return null;
+	}
+	return `${String(Math.trunc(yearNum)).padStart(4, '0')}-01-01`;
+}
+
+/**
+ * Next `domain` attribute after an editor changes one bound in an axis
+ * domain control. Carries the sibling bound from the current explicit
+ * domain — or from the inferred data domain when the current domain is
+ * auto — so a single edit always yields a complete explicit pair. On time
+ * scales both bounds persist as ISO strings (the author-intent marker).
+ *
+ * @param {Object}     args
+ * @param {number}     args.editedIndex    Which bound changed (0 = min, 1 = max).
+ * @param {unknown}    args.editedValue    Raw control value (a year on time scales).
+ * @param {unknown}    args.currentDomain  Stored domain attribute.
+ * @param {?unknown[]} args.inferredDomain Domain inferred from data, if available.
+ * @param {string}     args.scale          Axis scale ('linear', 'time', ...).
+ * @return {Array} Two-element domain ready to persist.
+ */
+export function buildEditedAxisDomain({
+	editedIndex,
+	editedValue,
+	currentDomain,
+	inferredDomain,
+	scale,
+}) {
+	const isTime = 'time' === scale;
+	const siblingIndex = 0 === editedIndex ? 1 : 0;
+	const siblingSource = isAutoAxisDomainForScale(currentDomain, scale)
+		? inferredDomain?.[siblingIndex]
+		: currentDomain?.[siblingIndex];
+	const sibling = isTime
+		? yearToTimeDomainBound(timeDomainBoundToYear(siblingSource))
+		: (siblingSource ?? (0 === siblingIndex ? 0 : 100));
+	const edited = isTime
+		? yearToTimeDomainBound(editedValue)
+		: formatNum(editedValue, 'integer');
+	return 0 === editedIndex ? [edited, sibling] : [sibling, edited];
+}
+
+export const getDomain = (min, max, type, scale, axis) => {
 	// x axis is a bit of a misnomer for bar types. It refers exclusively to the dependent axis.
 	if ('bar' === type && 'x' === axis) {
 		return null;
@@ -114,15 +286,118 @@ export const getDomain = (min, max, type, scale, axis) => {
 	if ('dot-plot' === type && 'x' === axis) {
 		return null;
 	}
-	// likewise, no domain for a pie chart
-	if ('pie' === type) {
+	// likewise, no domain for a pie, waffle, or heat map table chart
+	if ('pie' === type || 'waffle' === type || 'heat-map-table' === type) {
 		return null;
 	}
 	if ('time' === scale && 'x' === axis) {
-		return [new Date(min, 0), new Date(max, 0)];
+		const start = toExplicitTimeDomainDate(min);
+		const end = toExplicitTimeDomainDate(max);
+		return start && end ? [start, end] : null;
+	}
+	if (Number.isNaN(Number(min)) || Number.isNaN(Number(max))) {
+		return null;
 	}
 	return [parseFloat(min), parseFloat(max)];
 };
+
+/**
+ * Read bounds from a modern `[min, max]` domain attribute.
+ *
+ * Legacy object-form domains (`{ min, max }`) are intentionally ignored.
+ * Scale resolvers historically required an array, so those objects never
+ * affected the rendered axis — charts inferred from data. Promoting
+ * `{ min: 2000, max: 2020 }` (common on published line charts) into Dates
+ * locks every time-scale chart to that false default.
+ *
+ * @param {unknown} domain
+ * @return {[unknown, unknown]} Min and max domain bounds.
+ */
+export const getDomainBounds = (domain) => {
+	if (Array.isArray(domain)) {
+		return [domain[0], domain[1]];
+	}
+	return [undefined, undefined];
+};
+
+/**
+ * Infer the axis domain the chart would use from table data (for editor hints).
+ *
+ * @param {Object}                    chartAttributes Block attributes.
+ * @param {'independent'|'dependent'} axis            Which axis to infer.
+ * @return {[number, number]|null} Min/max when data supports inference.
+ */
+export function getInferredAxisDomainFromData(chartAttributes, axis) {
+	const io = chartAttributes?.io ?? {};
+	const chartData = io.chartData ?? [];
+	if (!Array.isArray(chartData) || chartData.length === 0) {
+		return null;
+	}
+
+	const dataRender = chartAttributes?.dataRender ?? {};
+	const independentAxis = chartAttributes?.independentAxis ?? {};
+	const dependentAxis = chartAttributes?.dependentAxis ?? {};
+
+	if (axis === 'independent') {
+		const xKey = dataRender.x ?? 'x';
+		const scale = dataRender.xScale ?? independentAxis.scale ?? 'linear';
+		const values = chartData
+			.map((row) => row?.[xKey])
+			.filter(
+				(value) => value !== null && value !== undefined && value !== ''
+			)
+			.map((value) => {
+				if (scale === 'time') {
+					const asNumber = Number(value);
+					if (
+						Number.isFinite(asNumber) &&
+						Math.abs(asNumber) < 10000
+					) {
+						return asNumber;
+					}
+					const date = new Date(value);
+					return Number.isNaN(date.getTime())
+						? NaN
+						: date.getFullYear();
+				}
+				return Number(value);
+			})
+			.filter((value) => Number.isFinite(value));
+
+		if (values.length === 0) {
+			return null;
+		}
+
+		return [Math.min(...values), Math.max(...values)];
+	}
+
+	const categories = dataRender.categories ?? [];
+	if (categories.length === 0) {
+		return null;
+	}
+
+	let min = Infinity;
+	let max = -Infinity;
+	chartData.forEach((row) => {
+		categories.forEach((category) => {
+			const value = Number(row?.[category]);
+			if (Number.isFinite(value)) {
+				min = Math.min(min, value);
+				max = Math.max(max, value);
+			}
+		});
+	});
+
+	if (!Number.isFinite(min) || !Number.isFinite(max)) {
+		return null;
+	}
+
+	if (dependentAxis.showZero && min > 0) {
+		min = 0;
+	}
+
+	return [min, max];
+}
 
 export const getTicks = (ticks) => {
 	// Return ticks as-is, parsing will be handled by charting-utilities
@@ -137,6 +412,23 @@ export const formatNum = (num, output) => {
 		return parseFloat(num);
 	}
 	return num;
+};
+
+/**
+ * Read a number input that may legitimately be left empty.
+ *
+ * An empty input means "off", which is not the same as 0 — storing 0 would
+ * keep the option switched on with a floor that nothing falls below.
+ *
+ * @param {string|number|null|undefined} num
+ * @return {number|null} The number, or null when the input is empty.
+ */
+export const formatOptionalNum = (num) => {
+	if ('' === num || null === num || undefined === num) {
+		return null;
+	}
+	const parsed = parseFloat(num);
+	return Number.isNaN(parsed) ? null : parsed;
 };
 
 /**
@@ -344,15 +636,15 @@ export const formatCellContent = (
  * this function uses it directly instead of guessing. Falls back to the
  * existing formatCellContent logic for 'auto' or absent metadata.
  *
- * @param {string}   content              Raw cell HTML/text
- * @param {string}   key                  Header key ('x' for first column, header label otherwise)
- * @param {Object[]} columnMeta           The table's columnMeta array
- * @param {number}   colIndex             0-based column index in the table
- * @param {string}   scale                mapScale value
- * @param {string}   groupBreaksCategory  Active group breaks category
- * @param {string}   xScale               Independent axis scale ('time', 'ordinal', etc.)
- * @param {string}   xFormat              Date format string
- * @param {string[]} preserveStringKeys   Keys that should stay as strings
+ * @param {string}   content             Raw cell HTML/text
+ * @param {string}   key                 Header key ('x' for first column, header label otherwise)
+ * @param {Object[]} columnMeta          The table's columnMeta array
+ * @param {number}   colIndex            0-based column index in the table
+ * @param {string}   scale               mapScale value
+ * @param {string}   groupBreaksCategory Active group breaks category
+ * @param {string}   xScale              Independent axis scale ('time', 'ordinal', etc.)
+ * @param {string}   xFormat             Date format string
+ * @param {string[]} preserveStringKeys  Keys that should stay as strings
  * @return {*} Parsed value
  */
 export const formatCellContentTyped = (
@@ -437,6 +729,7 @@ export const generateDefaultAltText = (chartType, metaTitle) => {
 		'stacked-area': 'stacked area',
 		scatter: 'scatter',
 		pie: 'pie',
+		waffle: 'waffle',
 		'dot-plot': 'dot plot',
 		'stacked-bar': 'stacked bar',
 		'grouped-bar': 'grouped bar',

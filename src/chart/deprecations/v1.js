@@ -371,6 +371,7 @@ function migrate(attributes) {
 			strokeWidth: attributes.lineStrokeWidth || 3,
 			strokeDasharray: attributes.lineStrokeDashArray || '',
 			showPoints: attributes.lineNodes ?? true,
+			showFirstLastPointsOnly: false,
 			showArea: attributes.chartType === 'area',
 			areaFillOpacity: attributes.areaFillOpacity ?? 0.4,
 		},

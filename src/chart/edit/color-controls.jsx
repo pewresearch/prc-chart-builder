@@ -1,9 +1,5 @@
 // V2
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-/**
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
@@ -26,35 +22,46 @@ import {
 	getResolvedPalettes,
 	resolveChartSeriesColors,
 } from '../utils/resolve-defaults';
-import { HIGHLIGHTABLE_CHART_TYPES } from '../utils/chart-types';
+import {
+	HIGHLIGHTABLE_CHART_TYPES,
+	effectiveChartTypeForControls,
+} from '../utils/chart-types';
 import { getAvailableLegendCategories } from '../utils/get-available-legend-categories';
+import { getColorSorterLabels } from '../utils/get-color-sorter-labels';
 import ColorSorter from './color-sorter';
-import { useFocusedPanel } from './inspector-focus-context';
-
-const PanelDescription = styled.div`
-	grid-column: span 2;
-`;
+import { useFocusedPanel } from './hooks/inspector-focus-context';
+import { PanelDescription } from './control-ui';
 
 function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 	// Content attribute - NOT viewport-aware (colors are consistent across all viewports)
-	const { io, dataRender = {}, divergingBar, sankey } = attributes;
+	const {
+		io,
+		dataRender = {},
+		divergingBar,
+		sankey,
+		smallMultiples = {},
+	} = attributes;
 	const { chartFamily } = io;
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('colors');
-	const { colors, colorNames } = getResolvedPalettes();
+	// Memoize so ColorSorter does not get a fresh `colors` object every render
+	// (getResolvedPalettes allocates a new map each call).
+	const { colors, colorNames } = useMemo(() => getResolvedPalettes(), []);
+	// Small multiples: gate highlight/stroke by panelType (column → bar).
+	const controlChartType =
+		effectiveChartTypeForControls(attributes) || chartType;
 
 	const paletteOptions = useMemo(() => {
-		const { colorValue } = io;
 		if (
-			!colorValue ||
-			colorNames.some((option) => option.value === colorValue)
+			!io.colorValue ||
+			colorNames.some((option) => option.value === io.colorValue)
 		) {
 			return colorNames;
 		}
 		return [
 			...colorNames,
 			{
-				label: colorValue,
-				value: colorValue,
+				label: io.colorValue,
+				value: io.colorValue,
 			},
 		];
 	}, [colorNames, io.colorValue]);
@@ -65,19 +72,33 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 	);
 
 	const highlightControlsVisible =
-		HIGHLIGHTABLE_CHART_TYPES.includes(chartType);
+		HIGHLIGHTABLE_CHART_TYPES.includes(controlChartType);
 
 	const categorySuggestions = useMemo(
 		() =>
 			getAvailableLegendCategories({
-				chartType,
+				chartType: controlChartType,
 				chartFamily,
 				io,
 				dataRender,
 				divergingBar,
 				sankey,
+				smallMultiples,
 			}),
-		[chartType, chartFamily, io, dataRender, divergingBar, sankey]
+		[
+			controlChartType,
+			chartFamily,
+			io,
+			dataRender,
+			divergingBar,
+			sankey,
+			smallMultiples,
+		]
+	);
+
+	const legendCategories = useMemo(
+		() => getColorSorterLabels(attributes),
+		[attributes]
 	);
 
 	const updateDataRender = (updates) => {
@@ -154,6 +175,7 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 					>
 						<ColorSorter
 							colors={activePaletteColors}
+							categories={legendCategories}
 							setAttributes={setAttributes}
 							io={io}
 						/>
@@ -281,10 +303,10 @@ function ColorControls({ attributes, setAttributes, clientId, chartType }) {
 						</ExternalLink>
 					</PanelDescription>
 				</ToolsPanel>
-				{(chartType === 'pie' ||
-					chartType === 'diverging-bar' ||
-					chartType === 'stacked-bar' ||
-					chartType === 'stacked-column') && (
+				{(controlChartType === 'pie' ||
+					controlChartType === 'diverging-bar' ||
+					controlChartType === 'stacked-bar' ||
+					controlChartType === 'stacked-column') && (
 					<ToolsPanel
 						label={__('Stroke')}
 						panelId={clientId}

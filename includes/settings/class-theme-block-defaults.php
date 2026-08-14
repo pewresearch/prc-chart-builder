@@ -44,6 +44,7 @@ class Theme_Block_Defaults {
 		'explodedBar',
 		'pie',
 		'nodes',
+		'beeSwarm',
 		'regression',
 		'map',
 		'divergingBar',
@@ -51,6 +52,9 @@ class Theme_Block_Defaults {
 		'netValues',
 		'treemap',
 		'sankey',
+		'waffle',
+		'heatMapTable',
+		'smallMultiples',
 		'annotations',
 	);
 

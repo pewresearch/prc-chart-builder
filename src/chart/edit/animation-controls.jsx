@@ -46,12 +46,14 @@ import { __, sprintf } from '@wordpress/i18n';
  * Internal dependencies
  */
 import {
+	BUBBLE_MAP_CHART_TYPES,
 	LINE_CHART_TYPES,
 	NODE_CHART_TYPES,
 	POINT_CHART_TYPES,
+	effectiveChartTypeForControls,
 } from '../utils/chart-types';
-import { useFocusedPanel } from './inspector-focus-context';
-import { useViewportAttributes } from './use-viewport-attributes';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
 
 const DEFAULT_DURATION = 400;
 const DEFAULT_EASING = 'easeInOutCubic';
@@ -105,7 +107,10 @@ function resolveFamily(chartType) {
 	}
 	if (
 		NODE_CHART_TYPES.includes(chartType) ||
-		POINT_CHART_TYPES.includes(chartType)
+		POINT_CHART_TYPES.includes(chartType) ||
+		// Map bubbles are circles drawn at projected coordinates, so they take
+		// the circle family's entrance ("Pop") rather than the bar default.
+		BUBBLE_MAP_CHART_TYPES.includes(chartType)
 	) {
 		return 'circle';
 	}
@@ -184,7 +189,9 @@ function AnimationControls({
 	const prefersReducedMotion = usePrefersReducedMotion();
 
 	const layout = getCurrentValue('layout') || {};
-	const family = resolveFamily(layout.type);
+	const family = resolveFamily(
+		effectiveChartTypeForControls(attributes) || layout.type
+	);
 
 	// Read the merged animation group so we can spread nested sections on
 	// write. Falls back to `{}` for charts saved before the attribute existed.

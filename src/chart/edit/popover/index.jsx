@@ -25,6 +25,7 @@ import {
 	AnnotationPanel,
 	TickLabelPanel,
 	LegendItemPanel,
+	PanelTitlePanel,
 	ErrorBarPanel,
 	TooltipPanelSection,
 	DiffColumnHeaderPanel,
@@ -44,6 +45,7 @@ export const ELEMENT_TYPES = {
 	ANNOTATION: 'annotation',
 	TICK_LABEL: 'tickLabel',
 	LEGEND_ITEM: 'legendItem',
+	PANEL_TITLE: 'panelTitle',
 	ERROR_BAR: 'errorBar',
 	DIFF_COLUMN_HEADER: 'diffColumnHeader',
 	DIFF_COLUMN_LABEL: 'diffColumnLabel',
@@ -69,6 +71,8 @@ function getPanelTitle(elementType) {
 			return __('Tick Label Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.LEGEND_ITEM:
 			return __('Legend Item Settings', 'prc-chart-builder');
+		case ELEMENT_TYPES.PANEL_TITLE:
+			return __('Panel Title Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.ERROR_BAR:
 			return __('Error Bar Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.DIFF_COLUMN_HEADER:
@@ -109,6 +113,7 @@ function getPanelTitle(elementType) {
  * @param {Function}   props.onTooltipUpdate       - Callback to update customTooltips
  * @param {Function}   props.onDelete              - Callback to delete (for annotations)
  * @param {Function}   props.onClose               - Callback when closing
+ * @param {string[]}   props.panelKeys             - Small-multiples panel keys (for annotations)
  */
 export function ChartElementPopover({
 	anchorRef,
@@ -133,6 +138,7 @@ export function ChartElementPopover({
 	onTooltipUpdate,
 	onDelete,
 	onClose,
+	panelKeys = [],
 }) {
 	// Ref for the popover content to detect clicks outside
 	const popoverRef = useRef(null);
@@ -219,6 +225,7 @@ export function ChartElementPopover({
 						annotation={annotation}
 						onUpdate={onUpdate}
 						onDelete={onDelete}
+						panelKeys={panelKeys}
 					/>
 				);
 			case ELEMENT_TYPES.TICK_LABEL:
@@ -239,6 +246,15 @@ export function ChartElementPopover({
 						currentCustomizations={currentCustomizations}
 						onUpdate={onUpdate}
 						legendVariation={legendVariation}
+					/>
+				);
+			case ELEMENT_TYPES.PANEL_TITLE:
+				return (
+					<PanelTitlePanel
+						categoryValue={categoryValue}
+						defaultLabel={defaultLabel}
+						currentCustomizations={currentCustomizations}
+						onUpdate={onUpdate}
 					/>
 				);
 			case ELEMENT_TYPES.DIFF_COLUMN_HEADER:

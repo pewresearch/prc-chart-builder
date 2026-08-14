@@ -42,6 +42,20 @@ import debug from '../debug';
 const CHART_NAMESPACE = 'prc-chart-builder/chart';
 
 /**
+ * Chart ids whose `syncOnNavigation` watch has already run its initial pass.
+ *
+ * The watch fires once at registration (mount) and again on every
+ * Interactivity Router navigation. Skip the first pass: `renderChart` already
+ * seeds the live slice on mount. Only later navigations need a re-seed —
+ * `populateServerData` merges with `override = false`, so `state.charts[id]`
+ * leaves stay at mount-time values while `getServerState()` reflects the
+ * navigated page (e.g. Religious Projections country → country).
+ *
+ * @type {Set<string>}
+ */
+const navSeededIds = new Set();
+
+/**
  * Expose the debug surface on `window.prcChartBuilder`.
  *
  * Shape:
@@ -280,6 +294,64 @@ const { actions, state } = store(CHART_NAMESPACE, {
 	},
 	callbacks: {
 		onRun: () => {
+			actions.renderChart();
+		},
+		/**
+		 * Re-seed the live chart slice from server state after a router
+		 * navigation.
+		 *
+		 * `getServerState()` reads the interactivity-router navigation signal,
+		 * so this watch re-runs after every client-side navigation. The router
+		 * merges the new server payload with `override = false`, so it never
+		 * refreshes already-seeded `state.charts[id]` leaves (`data` / `config`
+		 * / `tableData` / `attributes`). Only `getServerState()` reflects the
+		 * navigated values — consumers that embed standard charts inside a
+		 * parent router region (Religious Projections, lookbook) need this
+		 * re-seed or the graphic stays on the previous route's data.
+		 */
+		syncOnNavigation: () => {
+			const context = getContext();
+			const { id } = context;
+			const serverState = getServerState();
+			const serverSlice = serverState.charts?.[id];
+
+			if (!navSeededIds.has(id)) {
+				navSeededIds.add(id);
+				return;
+			}
+
+			const slice = state.charts?.[id];
+			if (!serverSlice || !slice?.config) {
+				return;
+			}
+
+			const inputs = buildChartInputs(id, slice);
+			if (!inputs) {
+				return;
+			}
+
+			if (serverSlice.attributes) {
+				slice.attributes = serverSlice.attributes;
+			}
+
+			const mountEl = document.getElementById(id);
+			if (mountEl && mountHasLiveChart(mountEl)) {
+				// Wholesale replacement — same as switchViewport. buildChartInputs
+				// re-derives a full config from the navigated server attributes;
+				// setChart/applyChartPatch deep-merges and would leave stale
+				// nested keys (map.center*, domains, series colors, etc.) from
+				// the prior route. Keep the Preact tree mounted so springs can
+				// tween (e.g. orthographic locator camera).
+				slice.data = inputs.data;
+				slice.config = inputs.config;
+				slice.tableData = inputs.tableData;
+				syncControllerSurfaces(id, slice);
+				return;
+			}
+
+			// Router recreated the mount (SSR fallback only). Remount once from
+			// the navigated server payload — do not write data/config onto a
+			// dead tree first (that snaps geometry, then throws the node away).
 			actions.renderChart();
 		},
 		watchForRender: () => {

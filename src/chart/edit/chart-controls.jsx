@@ -32,11 +32,14 @@ import {
 	NODE_CHART_TYPES,
 	REGRESSION_CHART_TYPES,
 	SUPPLEMENTAL_COLUMN_CHART_TYPES,
+	chartTypeMatches,
+	effectiveChartTypeForControls,
 } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import AnimationControls from './animation-controls';
 import AnnotationControls from './annotation-controls';
 import BarControls from './bar-controls';
+import BeeSwarmControls from './bee-swarm-controls';
 import ColorControls from './color-controls';
 import DataControls from './data-controls';
 import DependentAxisControls from './dependent-axis-controls';
@@ -55,10 +58,13 @@ import PieControls from './pie-controls';
 import PlotBandControls from './plot-band-controls';
 import RegressionControls from './regression-controls';
 import SankeyControls from './sankey-controls';
+import SmallMultiplesControls from './small-multiples-controls';
 import TextFieldControls from './text-field-controls';
 import TooltipControls from './tooltip-controls';
 import TreemapControls from './treemap-controls';
-import { useViewportAttributes } from './use-viewport-attributes';
+import WaffleControls from './waffle-controls';
+import HeatMapTableControls from './heat-map-table-controls';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import ProductionControls from './production-controls';
 
 function ControlSections(props) {
@@ -74,37 +80,65 @@ function ControlSections(props) {
 
 	const { type: chartType } = layout;
 	const { chartFamily } = io;
+	const isSmallMultiples = chartType === 'small-multiples';
+	const effectiveType = effectiveChartTypeForControls(attributes);
+	const showAxes =
+		'map' !== chartFamily &&
+		chartType !== 'waffle' &&
+		!(
+			isSmallMultiples &&
+			(effectiveType === 'pie' || effectiveType === 'waffle')
+		);
+	const showIndependentAxis = showAxes || chartType === 'heat-map-table';
+	const showDependentAxis = showAxes || chartType === 'heat-map-table';
+	const showLineControls = chartTypeMatches(attributes, LINE_CHART_TYPES);
+	const showBarControls = chartTypeMatches(attributes, BAR_CHART_TYPES);
+	const showPieControls = chartTypeMatches(attributes, ['pie']);
+	const showNodeControls =
+		NODE_CHART_TYPES.includes(chartType) || showLineControls;
+	const showAnimationControls = chartTypeMatches(
+		attributes,
+		ANIMATED_CHART_TYPES
+	);
 
 	return (
 		<>
 			<TextFieldControls {...props} />
 			<DataControls {...props} />
 			<ColorControls {...props} chartType={chartType} />
-			{'map' !== chartFamily && (
-				<>
-					<IndependentAxisControls {...props} />
-					<DependentAxisControls {...props} />
-				</>
-			)}
+			{isSmallMultiples && <SmallMultiplesControls {...props} />}
+			{showIndependentAxis && <IndependentAxisControls {...props} />}
+			{showDependentAxis && <DependentAxisControls {...props} />}
 			{'map' === chartFamily && <MapControls {...props} />}
 
-			{BAR_CHART_TYPES.includes(chartType) && <BarControls {...props} />}
+			{showBarControls && <BarControls {...props} />}
 			{'diverging-bar' === chartType && (
 				<DivergingBarControls {...props} />
 			)}
-			{LINE_CHART_TYPES.includes(chartType) && (
+			{showLineControls && (
 				<>
+					{/* Plot bands are consumed by SM line panels too. */}
 					<PlotBandControls {...props} />
 					<LineControls {...props} />
 				</>
 			)}
 			{'dot-plot' === chartType && <DotPlotControls {...props} />}
-			{'pie' === chartType && <PieControls {...props} />}
+			{'bee-swarm' === chartType && <BeeSwarmControls {...props} />}
+			{showPieControls && <PieControls {...props} />}
 			{'treemap' === chartType && <TreemapControls {...props} />}
+			{(chartType === 'waffle' ||
+				(isSmallMultiples && effectiveType === 'waffle')) && (
+				<WaffleControls {...props} />
+			)}
+			{'heat-map-table' === chartType && (
+				<HeatMapTableControls {...props} />
+			)}
 			{'sankey' === chartType && <SankeyControls {...props} />}
-			{(NODE_CHART_TYPES.includes(chartType) ||
-				LINE_CHART_TYPES.includes(chartType)) && (
-				<NodeControls {...props} chartType={chartType} />
+			{showNodeControls && (
+				<NodeControls
+					{...props}
+					chartType={isSmallMultiples ? effectiveType : chartType}
+				/>
 			)}
 			{REGRESSION_CHART_TYPES.includes(chartType) && (
 				<RegressionControls {...props} />
@@ -117,9 +151,7 @@ function ControlSections(props) {
 			<LabelControls {...props} />
 			<TooltipControls {...props} />
 			<LegendControls {...props} />
-			{ANIMATED_CHART_TYPES.includes(chartType) && (
-				<AnimationControls {...props} />
-			)}
+			{showAnimationControls && <AnimationControls {...props} />}
 			<DrawingControls {...props} />
 		</>
 	);

@@ -109,6 +109,17 @@ export const scatterIcon = (
 	</SVG>
 );
 
+export const beeSwarmIcon = (
+	<SVG
+		xmlns="http://www.w3.org/2000/SVG"
+		viewBox="0 0 512 512"
+		preserveAspectRatio="xMidYMid meet"
+		height={20}
+	>
+		<Path d="M256 48c-39.8 0-72 32.2-72 72s32.2 72 72 72 72-32.2 72-72-32.2-72-72-72zm-128 96c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm256 0c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zM128 320c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm128 0c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm128 0c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48z" />
+	</SVG>
+);
+
 export const dotPlotIcon = (
 	<SVG
 		xmlns="http://www.w3.org/2000/SVG"
@@ -200,6 +211,18 @@ export const treemapIcon = (
 export const sankeyIcon = (
 	<SVG xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
 		<Path d="M308.4 64l235.6 0 0 64-212.4 0-87.1 72.6-8.9 7.4-235.6 0 0-64 212.4 0 87.1-72.6 8.9-7.4zM144 320l-144 0 0-64 544 0 0 64-320 0 48 64 272 0 0 64-304 0-9.6-12.8-86.4-115.2z" />
+	</SVG>
+);
+
+export const waffleIcon = (
+	<SVG xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+		<Path d="M2 2h8v8H2V2zm12 0h8v8h-8V2zM2 14h8v8H2v-8zm12 0h8v8h-8v-8z" />
+	</SVG>
+);
+
+export const heatMapTableIcon = (
+	<SVG xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+		<Path d="M3 3h18v4H3V3zm0 6h6v12H3V9zm8 0h10v4H11V9zm0 6h10v6H11v-6z" />
 	</SVG>
 );
 

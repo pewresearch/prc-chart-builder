@@ -350,6 +350,7 @@ export function DrawingLayer({
 	const refInnerHeight =
 		refLayout.height - refLayout.padding.top - refLayout.padding.bottom;
 
+	// Panel-anchored drawings render inside SmallMultiples via DrawingsLayer.
 	const chartContextDrawings = drawings.filter(
 		(d) => d.positioningContext === 'chart'
 	);

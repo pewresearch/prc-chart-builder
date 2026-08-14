@@ -8,13 +8,20 @@
 namespace PRC\Platform\Chart_Builder;
 
 /**
- * Purges VIP edge cache so updated window.prcChartBuilderTheme inline data
- * is not served from stale HTML cache entries.
+ * Purges VIP edge cache so chart pages with inline window.prcChartBuilderTheme
+ * data are not served from stale HTML cache entries.
+ *
+ * Since PRC-628, the theme payload is scoped to chart bundle handles — chart-less
+ * pages no longer embed it — but any page that rendered a chart still bakes the
+ * inline global into cached HTML and must be invalidated on theme save.
  */
 class Theme_Cache_Invalidator {
 
 	/**
 	 * Purge edge cache after a chart theme save.
+	 *
+	 * A whole-site purge remains necessary until the theme is served from a
+	 * versioned asset instead of inline HTML on chart pages.
 	 *
 	 * @hook prc_chart_builder_theme_saved (documented below; fired by REST save)
 	 */

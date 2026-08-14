@@ -1,5 +1,6 @@
 import { __ } from '@wordpress/i18n';
 import { useEffect, useState } from '@wordpress/element';
+import { Page } from '@wordpress/admin-ui';
 import {
 	TabPanel,
 	Spinner,
@@ -10,14 +11,17 @@ import {
 import { SettingsAccordion } from '@prc/components';
 
 import './style.scss';
-import './store';
-import { fetchTheme } from './api';
+import { fetchTheme } from './store';
 import { CURATED_CONFIG_GROUPS, TEXT_DOMAIN } from './constants';
-import { formatGroupLabel } from './utils';
+import { formatGroupLabel } from './model';
 import { getFieldsForGroup } from './field-registry';
-import PaletteDesigner from './components/palette-designer';
-import ConfigGroupGrid from './components/config-group-grid';
-import GlobalSaveBar from './components/global-save-bar';
+import {
+	PaletteDesigner,
+	ConfigGroupGrid,
+	CreationUiSetting,
+	GlobalSaveBar,
+	ThemeImportExport,
+} from './components';
 
 const ID_PREFIX = 'prc-chart-builder-theme-settings';
 
@@ -84,17 +88,33 @@ export default function ThemeSettingsApp() {
 	}, []);
 
 	return (
-		<div className="prc-settings prc-chart-theme-settings">
+		<Page
+			className="prc-settings prc-chart-theme-settings"
+			title={__('Settings', TEXT_DOMAIN)}
+			subTitle={__(
+				'Configure chart defaults for this site. Base config applies to newly inserted charts; existing charts keep their saved attributes unless they reference a themed palette by name.',
+				TEXT_DOMAIN
+			)}
+			actions={<ThemeImportExport disabled={loading || !!error} />}
+			hasPadding
+			headingLevel={1}
+		>
 			<GlobalSaveBar />
-			<VStack spacing={2} className="prc-settings__header">
-				<h1>{__('Chart Theme', TEXT_DOMAIN)}</h1>
-				<Text className="prc-settings__header-description">
-					{__(
-						'Configure chart defaults for this site. Base config applies to newly inserted charts; existing charts keep their saved attributes unless they reference a themed palette by name.',
-						TEXT_DOMAIN
-					)}
-				</Text>
-			</VStack>
+			{!loading && !error && (
+				<VStack
+					spacing={2}
+					className="prc-chart-theme-settings__feature-previews"
+				>
+					<h2>{__('Feature previews', 'prc-chart-builder')}</h2>
+					<Text className="prc-settings__header-description">
+						{__(
+							'Temporary rollout controls for unfinished chart editor experiences.',
+							'prc-chart-builder'
+						)}
+					</Text>
+					<CreationUiSetting />
+				</VStack>
+			)}
 			{error && (
 				<Notice status="error" isDismissible={false}>
 					<VStack spacing={2}>
@@ -130,6 +150,6 @@ export default function ThemeSettingsApp() {
 					</TabPanel>
 				)
 			)}
-		</div>
+		</Page>
 	);
 }

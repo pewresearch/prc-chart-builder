@@ -25,6 +25,7 @@ export const CURATED_THEME_CONFIG_GROUPS = [
 	'explodedBar',
 	'pie',
 	'nodes',
+	'beeSwarm',
 	'regression',
 	'map',
 	'divergingBar',
@@ -32,6 +33,8 @@ export const CURATED_THEME_CONFIG_GROUPS = [
 	'netValues',
 	'treemap',
 	'sankey',
+	'heatMapTable',
+	'smallMultiples',
 	'annotations',
 ];
 

@@ -30,10 +30,12 @@
  *     a read-only value).
  *   - `description`: editor help text + README Notes column (source of truth).
  *
- * Default *values* are NOT duplicated here — they live in `block.json` and are
- * validated against this schema by `bin/sync-field-registry.mjs` (paths must
- * match both ways; enum defaults must be members; scalar defaults must match
- * the declared kind). The build fails loudly when the two drift.
+ * Default *values* are NOT duplicated here — they live in `block.json` (and the
+ * `chart-theme.json` seed) and are validated against this schema by
+ * `bin/sync-field-registry.mjs` (paths must match both ways; enum defaults must
+ * be members; scalar defaults must match the declared kind). The same sync
+ * emits `includes/settings/chart-theme.schema.json` for IDE typing. The build
+ * fails loudly when any of those drift.
  *
  * MIGRATION
  * ---------
@@ -45,9 +47,9 @@
  *
  * @typedef {Object} SchemaField
  * @property {'boolean' | 'number' | 'string' | 'color' | 'enum' | 'numberPair' | 'font'} type
- * @property {string[]=}                                                         enum        Required when `type === 'enum'`.
- * @property {boolean}                                                           themeable
- * @property {string}                                                            description
+ * @property {string[]=}                                                                  enum        Required when `type === 'enum'`.
+ * @property {boolean}                                                                    themeable
+ * @property {string}                                                                     description
  *
  * @type {Record<string, Record<string, SchemaField>>}
  */
@@ -78,13 +80,15 @@ export const EDITOR_SCHEMA = {
 			type: 'enum',
 			enum: ['vertical', 'horizontal'],
 			themeable: true,
-			description: '`"horizontal"`.',
+			description:
+				"Rarely used. Controls the orientation of the chart. 'vertical' will display the chart vertically, and 'horizontal' will display the chart horizontally.",
 		},
 		overflowX: {
 			type: 'enum',
 			enum: ['responsive', 'scroll', 'preserve-aspect-ratio'],
 			themeable: true,
-			description: "'scroll' \\.",
+			description:
+				"Controls the overflow behavior of the chart. 'responsive' will scale the chart to fit the container, 'scroll' will allow the chart to scroll if it exceeds the container, and 'preserve-aspect-ratio' will preserve the aspect ratio of the chart.",
 		},
 		'padding.bottom': {
 			type: 'number',
@@ -137,9 +141,12 @@ export const EDITOR_SCHEMA = {
 				'treemap',
 				'sankey',
 				'radar',
+				'small-multiples',
+				'waffle',
+				'heat-map-table',
 			],
 			themeable: true,
-			description: "'line' \\.",
+			description: 'The chart type.',
 		},
 		width: {
 			type: 'number',
@@ -284,13 +291,13 @@ export const EDITOR_SCHEMA = {
 			type: 'enum',
 			enum: ['start', 'middle', 'end'],
 			themeable: true,
-			description: "'end'`.",
+			description: 'Axis label text alignment.',
 		},
 		'axisLabel.verticalAnchor': {
 			type: 'enum',
 			enum: ['start', 'middle', 'end'],
 			themeable: true,
-			description: "'end'`.",
+			description: 'Axis label vertical alignment.',
 		},
 		dateFormat: {
 			type: 'enum',
@@ -343,7 +350,8 @@ export const EDITOR_SCHEMA = {
 		domain: {
 			type: 'numberPair',
 			themeable: true,
-			description: 'Explicit axis extent [min, max].',
+			description:
+				'Explicit axis extent [min, max], or null to infer from data.',
 		},
 		domainPadding: {
 			type: 'number',
@@ -384,7 +392,7 @@ export const EDITOR_SCHEMA = {
 			type: 'enum',
 			enum: ['linear', 'time', 'log', 'sqrt'],
 			themeable: true,
-			description: "'log' \\.",
+			description: "The axis's scale type.",
 		},
 		showZero: {
 			type: 'boolean',
@@ -581,7 +589,8 @@ export const EDITOR_SCHEMA = {
 		domain: {
 			type: 'numberPair',
 			themeable: true,
-			description: 'Explicit axis extent [min, max].',
+			description:
+				'Explicit axis extent [min, max], or null to infer from data.',
 		},
 		'grid.stroke': {
 			type: 'color',
@@ -607,6 +616,12 @@ export const EDITOR_SCHEMA = {
 			type: 'string',
 			themeable: true,
 			description: 'Axis title label.',
+		},
+		nice: {
+			type: 'boolean',
+			themeable: true,
+			description:
+				'Round the axis domain to clean tick values (d3 nice). On by default to match how published charts have always rendered; disable to honor editor-set domains exactly.',
 		},
 		scale: {
 			type: 'enum',
@@ -835,6 +850,12 @@ export const EDITOR_SCHEMA = {
 			themeable: true,
 			description: 'Mustache-style template for each tooltip row.',
 		},
+		template: {
+			type: 'string',
+			themeable: false,
+			description:
+				'Rich HTML tooltip body. When non-null, takes precedence over format. Null keeps the legacy mustache format path.',
+		},
 		headerActive: {
 			type: 'boolean',
 			themeable: true,
@@ -845,6 +866,19 @@ export const EDITOR_SCHEMA = {
 			enum: ['categoryValue', 'independentValue'],
 			themeable: true,
 			description: '`"categoryValue"`.',
+		},
+		mode: {
+			type: 'enum',
+			enum: ['point', 'unified'],
+			themeable: true,
+			description:
+				'`point` resolves one data point per hover. `unified` reports every series plotted at the hovered x.',
+		},
+		minDisplayValue: {
+			type: 'number',
+			themeable: false,
+			description:
+				'Values below this read as `<value` rather than rounding to zero. Null (the default) formats every value normally.',
 		},
 		offsetX: {
 			type: 'number',
@@ -1130,6 +1164,18 @@ export const EDITOR_SCHEMA = {
 			description:
 				'Minimum padding between labels when auto-decluttering (px).',
 		},
+		declutterOmitWithin: {
+			type: 'number',
+			themeable: true,
+			description:
+				'Omit labels whose anchors sit within this many pixels of a kept label (0 disables).',
+		},
+		declutterOmitEdgeWithin: {
+			type: 'number',
+			themeable: true,
+			description:
+				'Omit the remaining label in a crowded cluster when its anchor is this close to a plot edge (0 disables).',
+		},
 		fontFamily: {
 			type: 'font',
 			themeable: true,
@@ -1179,6 +1225,12 @@ export const EDITOR_SCHEMA = {
 			themeable: true,
 			description: '`"end"`.',
 		},
+		minDisplayValue: {
+			type: 'number',
+			themeable: false,
+			description:
+				'Values below this read as `<value` rather than rounding to zero. Null (the default) formats every value normally. Unrelated to labelCutoff, which decides whether a label is drawn at all.',
+		},
 		pieLabelRadius: {
 			type: 'number',
 			themeable: true,
@@ -1189,6 +1241,13 @@ export const EDITOR_SCHEMA = {
 			themeable: true,
 			description:
 				'Only label the first and last data point (useful for line charts).',
+		},
+		firstLastLabelLayout: {
+			type: 'enum',
+			enum: ['default', 'outside'],
+			themeable: true,
+			description:
+				'Placement for first/last labels on line-family charts. `outside` puts the first label left of its point and the last label right; labelPositionDX/DY still apply on top.',
 		},
 		textAnchor: {
 			type: 'enum',
@@ -1315,6 +1374,12 @@ export const EDITOR_SCHEMA = {
 			type: 'boolean',
 			themeable: true,
 			description: 'Render data point markers on the line.',
+		},
+		showFirstLastPointsOnly: {
+			type: 'boolean',
+			themeable: true,
+			description:
+				'Only render markers on the first and last plotted point in each series.',
 		},
 		strokeDasharray: {
 			type: 'string',
@@ -1477,6 +1542,11 @@ export const EDITOR_SCHEMA = {
 			description:
 				'Fill color of markers (`"inherit"` uses series color).',
 		},
+		pointFillOpacity: {
+			type: 'number',
+			themeable: true,
+			description: 'Fill opacity of markers (0–1).',
+		},
 		pointSize: {
 			type: 'number',
 			themeable: true,
@@ -1491,6 +1561,54 @@ export const EDITOR_SCHEMA = {
 			type: 'number',
 			themeable: true,
 			description: 'Stroke width around markers (px).',
+		},
+		sizeCategory: {
+			type: 'string',
+			themeable: true,
+			description:
+				'Table column used for proportional marker radius (null = uniform pointSize).',
+		},
+		sizeScale: {
+			type: 'enum',
+			enum: ['sqrt', 'linear', 'log'],
+			themeable: true,
+			description: 'Scale type mapping sizeCategory values to radius.',
+		},
+		minPointSize: {
+			type: 'number',
+			themeable: true,
+			description: 'Minimum marker radius when sizeCategory is set (px).',
+		},
+		maxPointSize: {
+			type: 'number',
+			themeable: true,
+			description: 'Maximum marker radius when sizeCategory is set (px).',
+		},
+	},
+	beeSwarm: {
+		layoutMode: {
+			type: 'enum',
+			enum: ['dodge', 'force'],
+			themeable: true,
+			description:
+				'Beeswarm layout algorithm (dodge = precise x, force = clustered).',
+		},
+		groupBy: {
+			type: 'string',
+			themeable: true,
+			description:
+				'Force layout: column whose values cluster around separate y centers.',
+		},
+		forceStrength: {
+			type: 'number',
+			themeable: true,
+			description: 'Force layout: pull strength for x/y forces (0–1).',
+		},
+		swarmSpread: {
+			type: 'number',
+			themeable: true,
+			description:
+				'Dodge layout: max horizontal drift from anchor x (px). 0 = vertical stacks only.',
 		},
 	},
 	regression: {
@@ -2178,6 +2296,109 @@ export const EDITOR_SCHEMA = {
 			description: "`'binary'`.",
 		},
 	},
+	waffle: {
+		cellShape: {
+			type: 'enum',
+			enum: ['square', 'circle'],
+			themeable: true,
+			description: 'Shape used for each waffle cell.',
+		},
+		cellGap: {
+			type: 'number',
+			themeable: true,
+			description: 'Padding between cells as a fraction of cell size.',
+		},
+		cellRadius: {
+			type: 'number',
+			themeable: true,
+			description: 'Corner radius for square cells (px).',
+		},
+		emptyFill: {
+			type: 'string',
+			themeable: true,
+			description: 'Fill color for empty waffle cells.',
+		},
+		columns: {
+			type: 'number',
+			themeable: true,
+			description: 'Number of cells across (grid width).',
+		},
+		rows: {
+			type: 'number',
+			themeable: true,
+			description: 'Number of cells tall (grid height).',
+		},
+		max: {
+			type: 'number',
+			themeable: false,
+			description:
+				'Domain ceiling: what a full grid represents. Fill = value / max. Null uses sum (whole) or 100 (portion).',
+		},
+		cellSize: {
+			type: 'number',
+			themeable: true,
+			description:
+				'Preferred cell size in px (used by fixed and clamp modes).',
+		},
+		cellSizeMode: {
+			type: 'enum',
+			enum: ['fixed', 'auto', 'clamp'],
+			themeable: true,
+			description:
+				'fixed = exact size; auto = always fit; clamp = preferred size until overflow then scale down.',
+		},
+		displayMode: {
+			type: 'enum',
+			enum: ['whole', 'portion'],
+			themeable: false,
+			description:
+				'Whole uses one grid; portion uses one mini grid per category.',
+		},
+	},
+	heatMapTable: {
+		cellGap: {
+			type: 'number',
+			themeable: true,
+			description: 'Space between cells (px).',
+		},
+		cellRadius: {
+			type: 'number',
+			themeable: true,
+			description: 'Corner radius for each cell (px).',
+		},
+		columnHeaderHeight: {
+			type: 'number',
+			themeable: true,
+			description:
+				'Height reserved for the dependent axis band when it is active (px).',
+		},
+		emptyFill: {
+			type: 'string',
+			themeable: true,
+			description: 'Fill color for empty or missing cells.',
+		},
+		minCellHeight: {
+			type: 'number',
+			themeable: true,
+			description: 'Minimum height for each data cell (px).',
+		},
+		minCellWidth: {
+			type: 'number',
+			themeable: true,
+			description: 'Minimum width for each data cell (px).',
+		},
+		rowLabelWidth: {
+			type: 'number',
+			themeable: true,
+			description:
+				'Optional gap between the independent axis line and the heat grid (px). Labels use chart left padding.',
+		},
+		showValues: {
+			type: 'boolean',
+			themeable: true,
+			description: 'Show numeric values inside each cell.',
+		},
+	},
 	sankey: {
 		linkOpacity: {
 			type: 'number',
@@ -2219,6 +2440,111 @@ export const EDITOR_SCHEMA = {
 			type: 'string',
 			themeable: true,
 			description: 'Data column key for the link flow value.',
+		},
+	},
+	smallMultiples: {
+		panelType: {
+			type: 'enum',
+			enum: ['line', 'column', 'bar', 'pie', 'waffle'],
+			themeable: false,
+			description: 'Chart mark drawn in each panel.',
+		},
+		columns: {
+			type: 'number',
+			themeable: false,
+			description: 'Number of panel columns in the grid (desktop).',
+		},
+		panelHeight: {
+			type: 'number',
+			themeable: true,
+			description:
+				'Locked cell height in px (title + plot). Total SVG height is derived from panelHeight × rowCount.',
+		},
+		minPanelWidth: {
+			type: 'number',
+			themeable: true,
+			description:
+				'Minimum panel cell width in px. When the container is narrower, columns restack until each panel meets this width.',
+		},
+		sharedScale: {
+			type: 'boolean',
+			themeable: false,
+			description: 'Share one y-domain across all panels.',
+		},
+		axisTreatment: {
+			type: 'enum',
+			enum: ['minimal', 'full'],
+			themeable: false,
+			description:
+				'`"minimal"` shows y-axis on the first column and x labels on every panel; `"full"` draws complete axes (incl. independent grid) on every panel.',
+		},
+		emphasisMode: {
+			type: 'enum',
+			enum: ['own-series', 'highlight'],
+			themeable: false,
+			description:
+				'`"own-series"` draws only the panel column; `"highlight"` ghosts sibling series (line panels only in MVP).',
+		},
+		'ghost.stroke': {
+			type: 'color',
+			themeable: true,
+			description: 'Stroke color for ghosted sibling series.',
+		},
+		'ghost.strokeWidth': {
+			type: 'number',
+			themeable: true,
+			description: 'Stroke width for ghosted sibling series (px).',
+		},
+		'ghost.opacity': {
+			type: 'number',
+			themeable: true,
+			description: 'Opacity for ghosted sibling series.',
+		},
+		'panelGap.x': {
+			type: 'number',
+			themeable: true,
+			description: 'Horizontal gap between panels (px).',
+		},
+		'panelGap.y': {
+			type: 'number',
+			themeable: true,
+			description: 'Vertical gap between panels (px).',
+		},
+		'panelTitle.active': {
+			type: 'boolean',
+			themeable: true,
+			description: 'Show the column-name title above each panel.',
+		},
+		'panelTitle.fontSize': {
+			type: 'number',
+			themeable: true,
+			description: 'Panel title font size (px).',
+		},
+		'panelTitle.fontWeight': {
+			type: 'number',
+			themeable: true,
+			description: 'Panel title font weight.',
+		},
+		'panelTitle.fontFamily': {
+			type: 'font',
+			themeable: true,
+			description: 'Panel title font family.',
+		},
+		'panelTitle.fill': {
+			type: 'color',
+			themeable: true,
+			description: 'Panel title text color.',
+		},
+		'panelTitle.padding': {
+			type: 'number',
+			themeable: true,
+			description: 'Space reserved below the panel title (px).',
+		},
+		'panelTitle.textAlign': {
+			type: 'string',
+			themeable: true,
+			description:
+				'Horizontal alignment of the panel title (left|center|right).',
 		},
 	},
 	annotations: {

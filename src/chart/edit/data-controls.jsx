@@ -3,8 +3,6 @@
 /**
  * External Dependencies
  */
-import styled from '@emotion/styled';
-
 /**
  * WordPress Dependencies
  */
@@ -16,7 +14,6 @@ import {
 	TextareaControl,
 	ToggleControl,
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -25,29 +22,17 @@ import {
 	BUBBLE_MAP_CHART_TYPES,
 	GROUP_BREAKS_CHART_TYPES,
 	GROUPABLE_CHART_TYPES,
+	LINE_CHART_TYPES,
 	POINT_CHART_TYPES,
 	SORTABLE_CHART_TYPES,
 	SUPPLEMENTAL_COLUMN_CHART_TYPES,
+	VALUE_SCALE_CHART_TYPES,
+	effectiveChartTypeForControls,
 } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import Sorter from './sorter';
-import { useViewportAttributes } from './use-viewport-attributes';
-
-const PanelDescription = styled.div`
-	grid-column: span 2;
-`;
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-`;
-const StyledLabel = styled.div`
-	font-size: 11px;
-	font-weight: 500;
-	line-height: 1.4;
-	text-transform: uppercase;
-	display: inline-block;
-	margin-bottom: calc(8px) !important;
-	padding: 0px;
-`;
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
 
 function DataControls({ attributes, setAttributes, clientId }) {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
@@ -66,6 +51,12 @@ function DataControls({ attributes, setAttributes, clientId }) {
 	const { availableCategories, independentVariable, chartFamily, chartData } =
 		io;
 	const { type: chartType } = layout;
+	const effectiveType = effectiveChartTypeForControls(attributes);
+	const isSmallMultiples = chartType === 'small-multiples';
+	// Line family + small multiples (any panelType): authors need time/linear
+	// so table parsing + tooltip date formatting stay available for bar/column/pie.
+	const showXScaleControl =
+		LINE_CHART_TYPES.includes(effectiveType) || isSmallMultiples;
 	const categories = dataRender.categories || [];
 	const positiveCategories = divergingBar.positiveCategories || [];
 	const negativeCategories = divergingBar.negativeCategories || [];
@@ -81,7 +72,8 @@ function DataControls({ attributes, setAttributes, clientId }) {
 			(availableCategories || []).map((category) => {
 				return {
 					label: category,
-					disabled:
+					// isHidden — not `disabled` (react-movable blocks drag on disabled).
+					isHidden:
 						categories.length > 0
 							? !categories.includes(category)
 							: false,
@@ -102,7 +94,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 			availableCategories.map((category) => ({
 				label: category,
 				value: category,
-				disabled: !positiveCategories.includes(category),
+				isHidden: !positiveCategories.includes(category),
 			})),
 		[availableCategories, positiveCategories]
 	);
@@ -111,7 +103,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 			availableCategories.map((category) => ({
 				label: category,
 				value: category,
-				disabled: !negativeCategories.includes(category),
+				isHidden: !negativeCategories.includes(category),
 			})),
 		[availableCategories, negativeCategories]
 	);
@@ -120,7 +112,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 			availableCategories.map((category) => ({
 				label: category,
 				value: category,
-				disabled: !secondaryPositiveCategories.includes(category),
+				isHidden: !secondaryPositiveCategories.includes(category),
 			})),
 		[availableCategories, secondaryPositiveCategories]
 	);
@@ -129,7 +121,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 			availableCategories.map((category) => ({
 				label: category,
 				value: category,
-				disabled: !secondaryNegativeCategories.includes(category),
+				isHidden: !secondaryNegativeCategories.includes(category),
 			})),
 		[availableCategories, secondaryNegativeCategories]
 	);
@@ -155,7 +147,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 		() =>
 			availableGroupValues.map((value) => ({
 				label: value,
-				disabled: false,
+				isHidden: false,
 			})),
 		[availableGroupValues]
 	);
@@ -172,7 +164,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 				<PanelDescription>
 					<StyledLabel>1. Data Accessors</StyledLabel>
 				</PanelDescription>
-				{['line', 'area', 'stacked-area'].includes(chartType) && (
+				{showXScaleControl && (
 					<WidePanelItem
 						hasValue={() => true}
 						label={__('X Scale')}
@@ -182,14 +174,19 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						<SelectControl
 							label={__('X Scale')}
 							value={dataRender.xScale}
-							onChange={(value) =>
+							onChange={(value) => {
+								// Keep independentAxis.scale in sync — get-config
+								// copies it onto dataRender.xScale at render time.
 								setAttributes({
 									dataRender: {
 										...dataRender,
 										xScale: value,
 									},
-								})
-							}
+								});
+								updateAttributeForDevice('independentAxis', {
+									scale: value,
+								});
+							}}
 							options={[
 								{ value: 'time', label: 'Time' },
 								{ value: 'linear', label: 'Linear' },
@@ -462,6 +459,117 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						)}
 					</>
 				)}
+				{VALUE_SCALE_CHART_TYPES.includes(chartType) && (
+					<>
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Value Color Scale')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<SelectControl
+								label={__('Value Scale')}
+								value={dataRender.mapScale}
+								onChange={(value) =>
+									setAttributes({
+										dataRender: {
+											...dataRender,
+											mapScale: value,
+										},
+									})
+								}
+								options={[
+									{
+										value: 'threshold',
+										label: 'Threshold',
+									},
+									{
+										value: 'ordinal',
+										label: 'Ordinal',
+									},
+									{
+										value: 'linear',
+										label: 'Linear',
+									},
+								]}
+							/>
+						</WidePanelItem>
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Value Color Scale Domain')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							{dataRender.mapScale === 'ordinal' ? (
+								<>
+									<PanelDescription>
+										Enter the categories in the order you
+										would like them to appear, one per line.
+									</PanelDescription>
+									<TextareaControl
+										label={__('Value Color Scale Domain')}
+										value={(
+											dataRender.mapScaleDomain || []
+										).join('\n')}
+										onChange={(value) => {
+											const mapScaleCategories =
+												value.split('\n');
+											setAttributes({
+												dataRender: {
+													...dataRender,
+													mapScaleDomain:
+														mapScaleCategories,
+												},
+											});
+										}}
+										onBlur={() => {
+											const cleaned = (
+												dataRender.mapScaleDomain || []
+											).filter(
+												(line) => line.trim() !== ''
+											);
+											setAttributes({
+												dataRender: {
+													...dataRender,
+													mapScaleDomain: cleaned,
+												},
+											});
+										}}
+										help={__('One category per line.')}
+										rows={5}
+									/>
+								</>
+							) : (
+								<>
+									<PanelDescription>
+										{dataRender.mapScale === 'threshold'
+											? 'Enter the thresholds for each color.'
+											: 'Enter the min and max values for the scale.'}
+									</PanelDescription>
+									<FormTokenField
+										label={__('Value Color Scale Domain')}
+										value={dataRender.mapScaleDomain || []}
+										onChange={(c) => {
+											c = c
+												.map((v) => parseFloat(v))
+												.filter((v) => !isNaN(v))
+												.sort((a, b) => a - b);
+											setAttributes({
+												dataRender: {
+													...dataRender,
+													mapScaleDomain: c,
+												},
+											});
+										}}
+										help={__(
+											'Separate with commas or the Enter key.'
+										)}
+									/>
+								</>
+							)}
+						</WidePanelItem>
+					</>
+				)}
 				{'diverging-bar' === chartType && (
 					<WidePanelItem
 						hasValue={() => 0 < availableSelectableOptions.length}
@@ -653,26 +761,28 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						)}
 					</WidePanelItem>
 				)}
-				{'map' !== chartFamily && 'diverging-bar' !== chartType && (
-					<WidePanelItem
-						hasValue={() => 0 < availableOptions.length}
-						label={__('Categories')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<PanelDescription>
-							Select the categories you would like chart builder
-							to use to render your data.
-						</PanelDescription>
-						<Sorter
-							options={availableOptions}
-							setAttributes={setAttributes}
-							attribute="categories"
-							parentObject="dataRender"
-							parentObjectValue={dataRender}
-						/>
-					</WidePanelItem>
-				)}
+				{'map' !== chartFamily &&
+					'diverging-bar' !== chartType &&
+					'bee-swarm' !== chartType && (
+						<WidePanelItem
+							hasValue={() => 0 < availableOptions.length}
+							label={__('Categories')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<PanelDescription>
+								Select the categories you would like chart
+								builder to use to render your data.
+							</PanelDescription>
+							<Sorter
+								options={availableOptions}
+								setAttributes={setAttributes}
+								attribute="categories"
+								parentObject="dataRender"
+								parentObjectValue={dataRender}
+							/>
+						</WidePanelItem>
+					)}
 				{POINT_CHART_TYPES.includes(chartType) && (
 					<WidePanelItem
 						hasValue={() => !!dataRender.groupBreaksCategory}
@@ -895,7 +1005,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							)}
 					</>
 				)}
-				{SORTABLE_CHART_TYPES.includes(chartType) && (
+				{SORTABLE_CHART_TYPES.includes(effectiveType) && (
 					<>
 						<PanelDescription>
 							<StyledLabel>4. Data Sorting</StyledLabel>

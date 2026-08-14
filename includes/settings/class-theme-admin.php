@@ -9,12 +9,14 @@
 
 namespace PRC\Platform\Chart_Builder;
 
+use PRC\Platform\Settings_Page_Boot;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
 /**
- * Registers the Chart Theme submenu, enqueues the settings React app, and
+ * Registers the Settings submenu, enqueues the settings React app, and
  * resolves theme.json typography.fontFamilies for the editor + frontend.
  */
 class Theme_Admin {
@@ -40,15 +42,15 @@ class Theme_Admin {
 	}
 
 	/**
-	 * Register Charts > Chart Theme for administrators only.
+	 * Register Charts > Settings for administrators only.
 	 *
 	 * @hook admin_menu
 	 */
 	public function register_admin_page(): void {
 		add_submenu_page(
 			'edit.php?post_type=chart',
-			__( 'Chart Theme', 'prc-chart-builder' ),
-			__( 'Chart Theme', 'prc-chart-builder' ),
+			__( 'Settings', 'prc-chart-builder' ),
+			__( 'Settings', 'prc-chart-builder' ),
 			'manage_options',
 			self::ADMIN_PAGE_SLUG,
 			array( $this, 'render_admin_page' )
@@ -65,11 +67,11 @@ class Theme_Admin {
 			);
 		}
 
-		echo '<div class="wrap"><div id="prc-chart-builder-theme-settings-admin"></div></div>';
+		Settings_Page_Boot::render( 'prc-chart-builder-theme-settings-admin' );
 	}
 
 	/**
-	 * Enqueue the settings bundle on the Chart Theme admin page only.
+	 * Enqueue the settings bundle on the Settings admin page only.
 	 *
 	 * @hook admin_enqueue_scripts
 	 *
@@ -124,6 +126,12 @@ class Theme_Admin {
 				$asset['version']
 			);
 		}
+
+		Settings_Page_Boot::enqueue(
+			$handle,
+			(string) $asset['version'],
+			'prc-chart-builder-theme-settings-admin'
+		);
 	}
 
 	/**

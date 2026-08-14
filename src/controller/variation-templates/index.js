@@ -16,10 +16,15 @@ export { default as mapWorldOrthographicTemplate } from './map-world-orthographi
 export { default as pieTemplate } from './pie';
 export { default as sankeyTemplate } from './sankey';
 export { default as scatterTemplate } from './scatter';
+export { default as beeSwarmTemplate } from './bee-swarm';
+export { default as smallMultiplesTemplate } from './small-multiples';
 export { default as stackedAreaTemplate } from './stacked-area';
 export { default as stackedBarTemplate } from './stacked-bar';
 export { default as stackedColumnTemplate } from './stacked-column';
 export { default as treemapTemplate } from './treemap';
+export { default as waffleTemplate } from './waffle';
+export { default as wafflePortionTemplate } from './waffle-portion';
+export { default as heatMapTableTemplate } from './heat-map-table';
 // export { default as imageTemplate } from './image';
 // legacy variations
 export { default as legacyBarTemplate } from './legacyBar';

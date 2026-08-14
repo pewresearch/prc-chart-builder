@@ -62,10 +62,6 @@ const legacyScatterTemplate = [
 				tag: '',
 			},
 			independentAxis: {
-				domain: {
-					min: 2000,
-					max: 2020,
-				},
 				tickMarks: {
 					active: true,
 				},

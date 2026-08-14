@@ -10,386 +10,19 @@
  */
 
 import { useState, useRef } from '@wordpress/element';
-
-/**
- * Check if a drawing is a line-type (line, arrow, or lollipop).
- *
- * @param {Object} drawing - The drawing object
- * @return {boolean} True if line-type
- */
-function isLineTypeDrawing(drawing) {
-	return ['line', 'arrow', 'lollipop'].includes(drawing?.type);
-}
-
-/**
- * Get bounding box for a drawing.
- *
- * @param {Object} drawing - The drawing object
- * @return {Object} Bounding box with x, y, width, height
- */
-function getDrawingBounds(drawing) {
-	switch (drawing.type) {
-		case 'line':
-		case 'arrow':
-		case 'lollipop': {
-			let minX = Math.min(drawing.x1, drawing.x2);
-			let maxX = Math.max(drawing.x1, drawing.x2);
-			let minY = Math.min(drawing.y1, drawing.y2);
-			let maxY = Math.max(drawing.y1, drawing.y2);
-
-			// Include breakpoints in bounds calculation
-			if (drawing.breakpoints && drawing.breakpoints.length > 0) {
-				for (const bp of drawing.breakpoints) {
-					minX = Math.min(minX, bp.x);
-					maxX = Math.max(maxX, bp.x);
-					minY = Math.min(minY, bp.y);
-					maxY = Math.max(maxY, bp.y);
-				}
-			}
-
-			// Include bend point in bounds calculation
-			if (drawing.bendX !== undefined && drawing.bendY !== undefined) {
-				minX = Math.min(minX, drawing.bendX);
-				maxX = Math.max(maxX, drawing.bendX);
-				minY = Math.min(minY, drawing.bendY);
-				maxY = Math.max(maxY, drawing.bendY);
-			}
-
-			return {
-				x: minX,
-				y: minY,
-				width: maxX - minX || 10,
-				height: maxY - minY || 10,
-			};
-		}
-		case 'circle':
-			return {
-				x: drawing.cx - drawing.r,
-				y: drawing.cy - drawing.r,
-				width: drawing.r * 2,
-				height: drawing.r * 2,
-			};
-		case 'rect':
-			return {
-				x: drawing.x,
-				y: drawing.y,
-				width: drawing.width,
-				height: drawing.height,
-			};
-		case 'path': {
-			const matches = drawing.d.matchAll(
-				/([ML])\s*([\d.-]+)\s+([\d.-]+)/gi
-			);
-			let minX = Infinity;
-			let maxX = -Infinity;
-			let minY = Infinity;
-			let maxY = -Infinity;
-
-			for (const match of matches) {
-				const x = parseFloat(match[2]);
-				const y = parseFloat(match[3]);
-				minX = Math.min(minX, x);
-				maxX = Math.max(maxX, x);
-				minY = Math.min(minY, y);
-				maxY = Math.max(maxY, y);
-			}
-
-			if (minX === Infinity) {
-				return { x: 0, y: 0, width: 20, height: 20 };
-			}
-
-			return {
-				x: minX,
-				y: minY,
-				width: maxX - minX || 10,
-				height: maxY - minY || 10,
-			};
-		}
-		default:
-			return { x: 0, y: 0, width: 20, height: 20 };
-	}
-}
-
-/**
- * Transform a drawing by offset (move entire shape).
- *
- * @param {Object} drawing - The drawing object
- * @param {number} dx      - X offset
- * @param {number} dy      - Y offset
- * @return {Object} Transformed drawing
- */
-function translateDrawing(drawing, dx, dy) {
-	switch (drawing.type) {
-		case 'line':
-		case 'arrow':
-		case 'lollipop': {
-			const updated = {
-				...drawing,
-				x1: drawing.x1 + dx,
-				y1: drawing.y1 + dy,
-				x2: drawing.x2 + dx,
-				y2: drawing.y2 + dy,
-			};
-			// Move bend point if present
-			if (drawing.bendX !== undefined && drawing.bendY !== undefined) {
-				updated.bendX = drawing.bendX + dx;
-				updated.bendY = drawing.bendY + dy;
-			}
-			// Move breakpoints if present
-			if (drawing.breakpoints && drawing.breakpoints.length > 0) {
-				updated.breakpoints = drawing.breakpoints.map((bp) => ({
-					x: bp.x + dx,
-					y: bp.y + dy,
-				}));
-			}
-			return updated;
-		}
-		case 'circle':
-			return {
-				...drawing,
-				cx: drawing.cx + dx,
-				cy: drawing.cy + dy,
-			};
-		case 'rect':
-			return {
-				...drawing,
-				x: drawing.x + dx,
-				y: drawing.y + dy,
-			};
-		case 'path': {
-			const newD = drawing.d.replace(
-				/([ML])\s*([\d.-]+)\s+([\d.-]+)/gi,
-				(match, command, x, y) => {
-					const newX = parseFloat(x) + dx;
-					const newY = parseFloat(y) + dy;
-					return `${command} ${newX} ${newY}`;
-				}
-			);
-			return {
-				...drawing,
-				d: newD,
-			};
-		}
-		default:
-			return drawing;
-	}
-}
-
-/**
- * Move a specific endpoint of a line-type drawing.
- *
- * @param {Object} drawing  - The drawing object
- * @param {string} endpoint - Which endpoint: 'start' or 'end'
- * @param {number} newX     - New X coordinate
- * @param {number} newY     - New Y coordinate
- * @return {Object} Updated drawing
- */
-function moveLineEndpoint(drawing, endpoint, newX, newY) {
-	if (endpoint === 'start') {
-		return {
-			...drawing,
-			x1: newX,
-			y1: newY,
-		};
-	}
-	return {
-		...drawing,
-		x2: newX,
-		y2: newY,
-	};
-}
-
-/**
- * Move the bend control point of a line-type drawing.
- *
- * @param {Object} drawing - The drawing object
- * @param {number} newX    - New X coordinate for bend point
- * @param {number} newY    - New Y coordinate for bend point
- * @return {Object} Updated drawing with bend point
- */
-function moveBend(drawing, newX, newY) {
-	return {
-		...drawing,
-		bendX: newX,
-		bendY: newY,
-		lineMode: 'curved',
-	};
-}
-
-/**
- * Move a specific breakpoint.
- *
- * @param {Object} drawing       - The drawing object
- * @param {number} breakpointIdx - Index of breakpoint to move
- * @param {number} newX          - New X coordinate
- * @param {number} newY          - New Y coordinate
- * @return {Object} Updated drawing
- */
-function moveBreakpoint(drawing, breakpointIdx, newX, newY) {
-	if (!drawing.breakpoints || breakpointIdx >= drawing.breakpoints.length) {
-		return drawing;
-	}
-	const newBreakpoints = [...drawing.breakpoints];
-	newBreakpoints[breakpointIdx] = { x: newX, y: newY };
-	return {
-		...drawing,
-		breakpoints: newBreakpoints,
-	};
-}
-
-/**
- * Add a breakpoint at a specific position.
- *
- * @param {Object} drawing  - The drawing object
- * @param {number} afterIdx - Index after which to insert (-1 for after start)
- * @param {number} x        - X coordinate
- * @param {number} y        - Y coordinate
- * @return {Object} Updated drawing
- */
-function addBreakpoint(drawing, afterIdx, x, y) {
-	const breakpoints = drawing.breakpoints || [];
-	const newBreakpoints = [...breakpoints];
-	newBreakpoints.splice(afterIdx + 1, 0, { x, y });
-	return {
-		...drawing,
-		breakpoints: newBreakpoints,
-		lineMode: 'angled',
-	};
-}
-
-/**
- * Remove a breakpoint.
- *
- * @param {Object} drawing       - The drawing object
- * @param {number} breakpointIdx - Index of breakpoint to remove
- * @return {Object} Updated drawing
- */
-function removeBreakpoint(drawing, breakpointIdx) {
-	if (!drawing.breakpoints || breakpointIdx >= drawing.breakpoints.length) {
-		return drawing;
-	}
-	const newBreakpoints = drawing.breakpoints.filter(
-		(_, i) => i !== breakpointIdx
-	);
-	const updated = {
-		...drawing,
-		breakpoints: newBreakpoints,
-	};
-	// If no breakpoints left, switch back to straight mode
-	if (newBreakpoints.length === 0) {
-		updated.lineMode = 'straight';
-		delete updated.breakpoints;
-	}
-	return updated;
-}
-
-/**
- * Resize a shape by moving a corner handle.
- *
- * @param {Object} drawing - The drawing object
- * @param {string} corner  - Which corner: 'nw', 'ne', 'sw', 'se'
- * @param {number} newX    - New X coordinate of corner
- * @param {number} newY    - New Y coordinate of corner
- * @return {Object} Updated drawing
- */
-function resizeDrawing(drawing, corner, newX, newY) {
-	switch (drawing.type) {
-		case 'circle': {
-			const cx = drawing.cx;
-			const cy = drawing.cy;
-			const dx = newX - cx;
-			const dy = newY - cy;
-			const newRadius = Math.max(5, Math.sqrt(dx * dx + dy * dy));
-			return {
-				...drawing,
-				r: newRadius,
-			};
-		}
-		case 'rect': {
-			let x = drawing.x;
-			let y = drawing.y;
-			let width = drawing.width;
-			let height = drawing.height;
-
-			if (corner === 'nw') {
-				width = drawing.x + drawing.width - newX;
-				height = drawing.y + drawing.height - newY;
-				x = newX;
-				y = newY;
-			} else if (corner === 'ne') {
-				width = newX - drawing.x;
-				height = drawing.y + drawing.height - newY;
-				y = newY;
-			} else if (corner === 'sw') {
-				width = drawing.x + drawing.width - newX;
-				height = newY - drawing.y;
-				x = newX;
-			} else if (corner === 'se') {
-				width = newX - drawing.x;
-				height = newY - drawing.y;
-			}
-
-			width = Math.max(10, width);
-			height = Math.max(10, height);
-
-			return {
-				...drawing,
-				x,
-				y,
-				width,
-				height,
-			};
-		}
-		default:
-			return drawing;
-	}
-}
-
-/**
- * Find which segment of a line was clicked (for adding breakpoints).
- *
- * @param {Object} drawing   - The line-type drawing
- * @param {number} clickX    - Click X in reference coordinates
- * @param {number} clickY    - Click Y in reference coordinates
- * @param {number} threshold - Distance threshold
- * @return {number} Segment index (-1 for start-to-first, 0+ for breakpoint segments)
- */
-function findClickedSegment(drawing, clickX, clickY, threshold = 15) {
-	const points = [
-		{ x: drawing.x1, y: drawing.y1 },
-		...(drawing.breakpoints || []),
-		{ x: drawing.x2, y: drawing.y2 },
-	];
-
-	for (let i = 0; i < points.length - 1; i++) {
-		const p1 = points[i];
-		const p2 = points[i + 1];
-
-		// Distance from point to line segment
-		const dx = p2.x - p1.x;
-		const dy = p2.y - p1.y;
-		const lengthSq = dx * dx + dy * dy;
-
-		if (lengthSq === 0) {
-			continue;
-		}
-
-		let t = ((clickX - p1.x) * dx + (clickY - p1.y) * dy) / lengthSq;
-		t = Math.max(0, Math.min(1, t));
-
-		const closestX = p1.x + t * dx;
-		const closestY = p1.y + t * dy;
-		const distance = Math.sqrt(
-			(clickX - closestX) ** 2 + (clickY - closestY) ** 2
-		);
-
-		if (distance < threshold) {
-			return i - 1; // Return index relative to breakpoints array
-		}
-	}
-
-	return null;
-}
+import { createDrawingCoordTransform } from './utils/drawing-coord-transforms';
+import {
+	addBreakpoint,
+	findClickedSegment,
+	getDrawingBounds,
+	isLineTypeDrawing,
+	moveBend,
+	moveBreakpoint,
+	moveLineEndpoint,
+	removeBreakpoint,
+	resizeDrawing,
+	translateDrawing,
+} from './utils/drawing-manipulation';
 
 /**
  * Line/Arrow/Lollipop handles component.
@@ -773,18 +406,21 @@ export function DrawingSelectionLayer({
 	const [dragState, setDragState] = useState(null);
 	const svgRef = useRef(null);
 
-	if (
-		isDrawingMode ||
-		!drawings ||
-		drawings.length === 0 ||
-		!chartDimensions
-	) {
+	// Panel-anchored drawings are handled in-chart for small multiples.
+	const selectableDrawings = (drawings || []).filter((drawing) => {
+		const context = drawing.positioningContext || 'inner';
+		return context !== 'panel' && context !== 'panel-inner';
+	});
+
+	if (isDrawingMode || selectableDrawings.length === 0 || !chartDimensions) {
 		return null;
 	}
 
 	const { width, height, padding } = chartDimensions;
-	const innerWidth = width - padding.left - padding.right;
-	const innerHeight = height - padding.top - padding.bottom;
+	const effectiveChartWidth = chartWidth ?? width;
+	const effectiveChartHeight = chartHeight ?? height;
+	const innerWidth = effectiveChartWidth - padding.left - padding.right;
+	const innerHeight = effectiveChartHeight - padding.top - padding.bottom;
 
 	const refLayout = layoutDimensions || chartDimensions;
 	const refInnerWidth =
@@ -792,32 +428,39 @@ export function DrawingSelectionLayer({
 	const refInnerHeight =
 		refLayout.height - refLayout.padding.top - refLayout.padding.bottom;
 
+	const coordTransformOptions = {
+		padding,
+		chartWidth: effectiveChartWidth,
+		chartHeight: effectiveChartHeight,
+		layoutDimensions: refLayout,
+	};
+
+	function getCoordTransform(drawing) {
+		return createDrawingCoordTransform(drawing, coordTransformOptions);
+	}
+
 	/**
-	 * Scale coordinates from reference to display.
+	 * Scale coordinates from reference to display (inner chart area).
 	 *
-	 * @param {number} x - X in reference coordinates
-	 * @param {number} y - Y in reference coordinates
+	 * @param {Object} drawing - Drawing whose positioning context defines the scale
+	 * @param {number} x       - X in reference coordinates
+	 * @param {number} y       - Y in reference coordinates
 	 * @return {Object} Display coordinates
 	 */
-	function toDisplayCoords(x, y) {
-		return {
-			x: (x * innerWidth) / refInnerWidth,
-			y: (y * innerHeight) / refInnerHeight,
-		};
+	function toDisplayCoordsForDrawing(drawing, x, y) {
+		return getCoordTransform(drawing).toDisplayCoords(x, y);
 	}
 
 	/**
 	 * Scale coordinates from display to reference.
 	 *
-	 * @param {number} x - X in display coordinates
-	 * @param {number} y - Y in display coordinates
+	 * @param {Object} drawing - Drawing whose positioning context defines the scale
+	 * @param {number} x       - X in display coordinates
+	 * @param {number} y       - Y in display coordinates
 	 * @return {Object} Reference coordinates
 	 */
-	function toRefCoords(x, y) {
-		return {
-			x: (x * refInnerWidth) / innerWidth,
-			y: (y * refInnerHeight) / innerHeight,
-		};
+	function toRefCoordsForDrawing(drawing, x, y) {
+		return getCoordTransform(drawing).toRefCoords(x, y);
 	}
 
 	/**
@@ -827,6 +470,8 @@ export function DrawingSelectionLayer({
 	 * @return {Object} Bounds in display coordinates
 	 */
 	function getDisplayBounds(drawing) {
+		const toDisplayCoords = (x, y) =>
+			toDisplayCoordsForDrawing(drawing, x, y);
 		const refBounds = getDrawingBounds(drawing);
 		const topLeft = toDisplayCoords(refBounds.x, refBounds.y);
 		const bottomRight = toDisplayCoords(
@@ -841,7 +486,7 @@ export function DrawingSelectionLayer({
 		};
 	}
 
-	const selectedDrawing = drawings.find((d) => d.id === selectedId);
+	const selectedDrawing = selectableDrawings.find((d) => d.id === selectedId);
 	const selectedBounds = selectedDrawing
 		? getDisplayBounds(selectedDrawing)
 		: null;
@@ -1018,12 +663,17 @@ export function DrawingSelectionLayer({
 	 * @param {PointerEvent} event - The pointer event
 	 */
 	function handlePointerMove(event) {
-		if (!dragState || !selectedId || !onDrawingsChange) {
+		if (
+			!dragState ||
+			!selectedId ||
+			!selectedDrawing ||
+			!onDrawingsChange
+		) {
 			return;
 		}
 
 		const pos = getPointerPosition(event);
-		const refPos = toRefCoords(pos.x, pos.y);
+		const refPos = toRefCoordsForDrawing(selectedDrawing, pos.x, pos.y);
 
 		const updatedDrawings = drawings.map((d) => {
 			if (d.id !== selectedId) {
@@ -1059,8 +709,12 @@ export function DrawingSelectionLayer({
 			if (dragState.type === 'move') {
 				const displayDx = pos.x - dragState.startPos.x;
 				const displayDy = pos.y - dragState.startPos.y;
-				const refDelta = toRefCoords(displayDx, displayDy);
-				const refOffset = toRefCoords(0, 0);
+				const refDelta = toRefCoordsForDrawing(
+					selectedDrawing,
+					displayDx,
+					displayDy
+				);
+				const refOffset = toRefCoordsForDrawing(selectedDrawing, 0, 0);
 				const dx = refDelta.x - refOffset.x;
 				const dy = refDelta.y - refOffset.y;
 
@@ -1088,8 +742,8 @@ export function DrawingSelectionLayer({
 	return (
 		<svg
 			ref={svgRef}
-			width={chartWidth}
-			height={chartHeight}
+			width={effectiveChartWidth}
+			height={effectiveChartHeight}
 			style={{
 				position: 'absolute',
 				top: 0,
@@ -1105,8 +759,8 @@ export function DrawingSelectionLayer({
 				<rect
 					x={0}
 					y={0}
-					width={chartWidth}
-					height={chartHeight}
+					width={effectiveChartWidth}
+					height={effectiveChartHeight}
 					fill="transparent"
 					style={{ pointerEvents: 'auto' }}
 					onClick={() => setSelectedId(null)}
@@ -1115,7 +769,7 @@ export function DrawingSelectionLayer({
 
 			<g transform={`translate(${padding.left}, ${padding.top})`}>
 				{/* Invisible hit areas for each drawing */}
-				{drawings.map((drawing) => {
+				{selectableDrawings.map((drawing) => {
 					const bounds = getDisplayBounds(drawing);
 					const hitPadding = 8;
 					const isSelected = selectedId === drawing.id;
@@ -1150,8 +804,16 @@ export function DrawingSelectionLayer({
 						{isLineType ? (
 							<LineTypeHandles
 								drawing={selectedDrawing}
-								toDisplayCoords={toDisplayCoords}
-								toRefCoords={toRefCoords}
+								toDisplayCoords={(x, y) =>
+									toDisplayCoordsForDrawing(
+										selectedDrawing,
+										x,
+										y
+									)
+								}
+								toRefCoords={(x, y) =>
+									toRefCoordsForDrawing(selectedDrawing, x, y)
+								}
 								onEndpointDragStart={handleEndpointDragStart}
 								onBendDragStart={handleBendDragStart}
 								onBreakpointDragStart={

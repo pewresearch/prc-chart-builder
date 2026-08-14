@@ -19,7 +19,9 @@ module.exports = {
 		'^.+\\.(js|jsx|ts|tsx)$':
 			require.resolve('@wordpress/scripts/config/babel-transform'),
 	},
+	// Transform ESM d3 / @visx packages pulled in via @prc/charting-utilities.
+	// Match any `d3-*` package (prefix), not only the force family.
 	transformIgnorePatterns: [
-		'/node_modules/(?!(d3-force|d3-dispatch|d3-timer|d3-quadtree)/)',
+		'/node_modules/(?!((@visx|internmap|delaunator|robust-predicates)/|d3-))',
 	],
 };

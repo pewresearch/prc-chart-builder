@@ -7,8 +7,7 @@ import { getServerState } from '@wordpress/interactivity';
  * Internal Dependencies
  */
 import getConfig from './get-config';
-import { mergeCustomLabelData } from './merge-custom-label-data';
-import { mergeCustomTooltipData } from './merge-custom-tooltip-data';
+import { buildPreviewChartData } from './build-preview-chart-data';
 
 /**
  * Resolve the effective viewport for a chart slice.
@@ -55,77 +54,12 @@ export function buildChartInputs(id, liveSlice) {
 	const currentViewport = resolveChartViewport(id, liveSlice);
 	const config = getConfig(attributes, id, null, currentViewport);
 
-	// Merge all custom label data from attributes into data.
-	// Get viewport-aware customizations based on currentViewport.
-	const labels = attributes.labels || {};
-	const viewportLabels =
-		currentViewport !== 'desktop'
-			? attributes[currentViewport]?.labels || {}
-			: {};
-
-	// Build label customizations object with viewport overrides.
-	const labelCustomizations = {
-		customPositions:
-			viewportLabels.customPositions || labels.customPositions || {},
-		customLabels: viewportLabels.customLabels || labels.customLabels || {},
-		customVisibility:
-			viewportLabels.customVisibility || labels.customVisibility || {},
-		customStyles: viewportLabels.customStyles || labels.customStyles || {},
+	return {
+		data: buildPreviewChartData(attributes, {
+			data,
+			viewport: currentViewport,
+		}),
+		config,
+		tableData,
 	};
-
-	// Determine group breaks category for key matching.
-	const activeGroupBreaksCategory =
-		config.dataRender?.groupBreaksActive &&
-		config.dataRender?.groupBreaksCategory
-			? config.dataRender.groupBreaksCategory
-			: null;
-
-	const dataWithLabelCustomizations = mergeCustomLabelData(
-		data,
-		labelCustomizations,
-		activeGroupBreaksCategory
-	);
-
-	// Enrich data with __errorBars from column mappings (dot-plot only).
-	let dataWithCustomizations = dataWithLabelCustomizations;
-	if (
-		config.layout?.type === 'dot-plot' &&
-		config.errorBars?.enabled &&
-		config.errorBars?.categories
-	) {
-		const mappingEntries = Object.entries(config.errorBars.categories);
-		if (mappingEntries.length > 0) {
-			const defaultStyles = config.errorBars.defaultStyles || {};
-			dataWithCustomizations = dataWithLabelCustomizations.map((row) => {
-				const bars = {};
-				for (const [catKey, mapping] of mappingEntries) {
-					if (mapping.lowColumn && mapping.highColumn) {
-						const low = parseFloat(row[mapping.lowColumn]);
-						const high = parseFloat(row[mapping.highColumn]);
-						if (!isNaN(low) && !isNaN(high)) {
-							bars[catKey] = {
-								min: low,
-								max: high,
-								...defaultStyles,
-								...(mapping.styles || {}),
-							};
-						}
-					}
-				}
-				return Object.keys(bars).length > 0
-					? { ...row, __errorBars: bars }
-					: row;
-			});
-		}
-	}
-
-	// Merge customTooltips (top-level block attribute) as the final pass.
-	const customTooltips = attributes.customTooltips || {};
-	const dataWithAllCustomizations = mergeCustomTooltipData(
-		dataWithCustomizations,
-		customTooltips,
-		activeGroupBreaksCategory
-	);
-
-	return { data: dataWithAllCustomizations, config, tableData };
 }

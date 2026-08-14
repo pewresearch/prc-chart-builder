@@ -7,7 +7,7 @@ import {
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { Button, Placeholder as WPComPlaceholder } from '@wordpress/components';
-import { useCallback, useState } from '@wordpress/element';
+import { useCallback, useEffect, useState } from '@wordpress/element';
 import { useDispatch } from '@wordpress/data';
 import { chartArea } from '@wordpress/icons';
 
@@ -15,13 +15,28 @@ import { chartArea } from '@wordpress/icons';
  * Internal Dependencies
  */
 import CreateNewChartModal from '../../includes/admin/src/components/create-new-chart-modal.jsx';
+import { prefetchChartPatternsLibrary } from '../shared/select-chart-step';
 import { applyControllerTemplateContent } from './utils/apply-controller-template';
 import '../../includes/admin/src/style.scss';
 
+/**
+ * Classic Chart Builder Controller placeholder (trunk flow).
+ *
+ * Shows the Choose Chart Type button and opens the shared create-chart modal.
+ * Used when the new chart creation UI rollout flag is disabled.
+ *
+ * @param {Object}   props
+ * @param {string}   props.clientId      Controller block client id.
+ * @param {Function} props.setAttributes Update controller attributes.
+ */
 export default function Placeholder({ clientId, setAttributes }) {
 	const [isCreateOpen, setIsCreateOpen] = useState(false);
 	const { replaceInnerBlocks } = useDispatch(blockEditorStore);
 	const blockProps = useBlockProps();
+
+	useEffect(() => {
+		prefetchChartPatternsLibrary();
+	}, []);
 
 	const handleOpenCreate = useCallback(() => setIsCreateOpen(true), []);
 	const handleCloseCreate = useCallback(() => setIsCreateOpen(false), []);
@@ -51,7 +66,7 @@ export default function Placeholder({ clientId, setAttributes }) {
 		<div {...blockProps}>
 			<WPComPlaceholder
 				instructions={__(
-					'Choose a chart type, pattern, or import path to build your chart.',
+					'Choose a chart type and template to get started.',
 					'prc-chart-builder'
 				)}
 				label={__('Chart Builder Controller', 'prc-chart-builder')}

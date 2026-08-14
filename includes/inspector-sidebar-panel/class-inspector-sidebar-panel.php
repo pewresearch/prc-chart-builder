@@ -46,9 +46,7 @@ class Inspector_Sidebar_Panel {
 			array(
 				'methods'             => 'GET',
 				'callback'            => array( $this, 'get_referencing_posts' ),
-				'permission_callback' => function () {
-					return current_user_can( 'edit_posts' );
-				},
+				'permission_callback' => array( $this, 'can_view_referencing_posts' ),
 				'args'                => array(
 					'id' => array(
 						'required'          => true,
@@ -61,16 +59,18 @@ class Inspector_Sidebar_Panel {
 	}
 
 	/**
-	 * Get referencing posts for a chart.
+	 * Whether the current user may view referencing posts for a chart.
+	 *
+	 * Requires object-level edit capability on the chart CPT, not just global
+	 * edit_posts.
 	 *
 	 * @param \WP_REST_Request $request The request object.
-	 * @return \WP_REST_Response|\WP_Error Response object or error.
+	 * @return true|WP_Error True if allowed, WP_Error otherwise.
 	 */
-	public function get_referencing_posts( $request ) {
-		$chart_id = $request->get_param( 'id' );
+	public function can_view_referencing_posts( $request ) {
+		$chart_id = (int) $request['id'];
+		$chart    = get_post( $chart_id );
 
-		// Verify the chart exists and is of the correct post type.
-		$chart = get_post( $chart_id );
 		if ( ! $chart || Content_Type::$post_type !== $chart->post_type ) {
 			return new WP_Error(
 				'invalid_chart',
@@ -78,6 +78,26 @@ class Inspector_Sidebar_Panel {
 				array( 'status' => 404 )
 			);
 		}
+
+		if ( ! current_user_can( 'edit_post', $chart_id ) ) {
+			return new WP_Error(
+				'rest_forbidden',
+				__( 'Sorry, you are not allowed to view referencing posts for this chart.', 'prc-chart-builder' ),
+				array( 'status' => rest_authorization_required_code() )
+			);
+		}
+
+		return true;
+	}
+
+	/**
+	 * Get referencing posts for a chart.
+	 *
+	 * @param \WP_REST_Request $request The request object.
+	 * @return \WP_REST_Response|\WP_Error Response object or error.
+	 */
+	public function get_referencing_posts( $request ) {
+		$chart_id = $request->get_param( 'id' );
 
 		// Get the post IDs that reference this chart.
 		if ( ! class_exists( __NAMESPACE__ . '\Synced_Chart' ) ) {
@@ -109,13 +129,19 @@ class Inspector_Sidebar_Panel {
 			if ( wp_is_post_autosave( $post_id ) ) {
 				continue;
 			}
+			// Skip posts the current user cannot read.
+			if ( ! current_user_can( 'read_post', $post_id ) ) {
+				continue;
+			}
 
 			$posts_data[] = array(
 				'id'        => $post->ID,
 				'title'     => $post->post_title,
 				'type'      => $post->post_type,
 				'status'    => $post->post_status,
-				'edit_url'  => get_edit_post_link( $post->ID, 'raw' ),
+				'edit_url'  => current_user_can( 'edit_post', $post_id )
+					? get_edit_post_link( $post->ID, 'raw' )
+					: null,
 				'permalink' => get_permalink( $post->ID ),
 				'date'      => $post->post_date,
 				'modified'  => $post->post_modified,

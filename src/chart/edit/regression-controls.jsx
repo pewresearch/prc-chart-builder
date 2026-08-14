@@ -19,8 +19,8 @@ import { PanelColorSettings } from '@wordpress/block-editor';
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-import { useFocusedPanel } from './inspector-focus-context';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
 
 const REGRESSION_TYPE_OPTIONS = [
 	{ label: 'Linear', value: 'linear' },

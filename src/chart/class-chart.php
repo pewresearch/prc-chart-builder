@@ -61,6 +61,8 @@ class Chart {
 			wp_enqueue_script_module( '@prc/charting-library' );
 		}
 
+		Settings::deliver_theme_global();
+
 		$block_id = $block_attributes['id'] ?? null;
 
 		// Handle missing ID for converted charts.
@@ -163,6 +165,12 @@ class Chart {
 			),
 			'class'                       => 'wp-chart-builder-inner',
 			'data-wp-watch--init-render'  => $is_static_chart || $is_freeform_chart ? null : 'callbacks.watchForRender',
+			// Re-seed live store leaves after Interactivity Router navigations.
+			// The router merges server state with override=false, so data/config
+			// would otherwise stay frozen at the first mount (e.g. Religious
+			// Projections country → country). Custom charts remount via the
+			// empty-mount path in renderChart and do not need this watch.
+			'data-wp-watch--sync-navigation' => $is_static_chart || $is_freeform_chart || $is_custom_chart ? null : 'callbacks.syncOnNavigation',
 			'data-wp-on-window--resize'   => $is_custom_chart ? null : 'callbacks.watchForResize',
 		);
 
@@ -207,15 +215,18 @@ class Chart {
 			);
 		}
 
-		// Scaffold chart text elements.
+		// Scaffold chart text elements. Always size + center the wrapper so
+		// layout.width holds whether or not metadata text fields are active.
 		$meta_text_active = $render_attributes['metadata']['active'] ?? false;
+		$max_width        = ( $render_attributes['layout']['width'] ?? 640 ) . 'px';
+		$chart_content    = $is_freeform_chart ? $freeform_content : ( $is_static_chart ? $static_chart : $chart );
+
 		if ( $meta_text_active ) {
-			$max_width = $render_attributes['layout']['width'] . 'px';
-			$top_rule      = $render_attributes['layout']['horizontalRules'] ? wp_sprintf(
+			$top_rule    = $render_attributes['layout']['horizontalRules'] ? wp_sprintf(
 				'<hr class="cb__hr" style="margin: 0 0 10px; max-width:%1$s;" />',
 				$max_width
 			) : '';
-			$bottom_rule   = $render_attributes['layout']['horizontalRules'] ? wp_sprintf(
+			$bottom_rule = $render_attributes['layout']['horizontalRules'] ? wp_sprintf(
 				'<hr class="cb__hr" style="margin: 10px 0 0; max-width:%1$s;" />',
 				$max_width
 			) : '';
@@ -244,10 +255,10 @@ class Chart {
 				$question_wording_html = ob_get_clean();
 			}
 
-				return wp_sprintf(
-					'
+			return wp_sprintf(
+				'
 				<div %1$s>
-					<div class="cb__text-wrapper" style="max-width:%2$s;">
+					<div class="cb__text-wrapper" style="max-width:%2$s;width:100%%;margin-left:auto;margin-right:auto;">
 						%3$s
 						<div class="cb__title" data-meta-field="title">%4$s</div>
 						<div class="cb__subtitle" data-meta-field="subtitle">%5$s</div>
@@ -259,22 +270,26 @@ class Chart {
 						%11$s
 					</div>
 				</div>',
-					wp_kses_post( $block_wrapper_attrs ),
-					esc_attr( $max_width ),
-					$top_rule, // phpcs:ignore
-					wp_kses_post( $render_attributes['metadata']['title'] ?? '' ),
-					wp_kses_post( $render_attributes['metadata']['subtitle'] ?? '' ),
-					$is_freeform_chart ? $freeform_content : ( $is_static_chart ? $static_chart : $chart ), //phpcs:ignore
-					$question_wording_html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean.
-					wp_kses_post( $render_attributes['metadata']['note'] ?? '' ),
-					wp_kses_post( $render_attributes['metadata']['source'] ?? '' ),
-					wp_kses_post( $render_attributes['metadata']['tag'] ?? '' ),
-					$bottom_rule // phpcs:ignore
-				);
-		} else {
-				$chart_content = $is_freeform_chart ? $freeform_content : ( $is_static_chart ? $static_chart : $chart );
-				return wp_sprintf( '<div %1$s>%2$s</div>', wp_kses_post( $block_wrapper_attrs ), $chart_content ); //phpcs:ignore
+				wp_kses_post( $block_wrapper_attrs ),
+				esc_attr( $max_width ),
+				$top_rule, // phpcs:ignore
+				wp_kses_post( $render_attributes['metadata']['title'] ?? '' ),
+				wp_kses_post( $render_attributes['metadata']['subtitle'] ?? '' ),
+				$chart_content, //phpcs:ignore
+				$question_wording_html, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Already escaped in ob_get_clean.
+				wp_kses_post( $render_attributes['metadata']['note'] ?? '' ),
+				wp_kses_post( $render_attributes['metadata']['source'] ?? '' ),
+				wp_kses_post( $render_attributes['metadata']['tag'] ?? '' ),
+				$bottom_rule // phpcs:ignore
+			);
 		}
+
+		return wp_sprintf(
+			'<div %1$s><div class="cb__text-wrapper" style="max-width:%2$s;width:100%%;margin-left:auto;margin-right:auto;">%3$s</div></div>',
+			wp_kses_post( $block_wrapper_attrs ),
+			esc_attr( $max_width ),
+			$chart_content //phpcs:ignore
+		);
 	}
 
 	/**

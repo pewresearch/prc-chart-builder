@@ -2,15 +2,5 @@
 	"name": "@prc/chart-builder-admin",
 	"version": "1.0.0",
 	"private": true,
-	"dependencies": {
-		"@wordpress/dataviews": "^4.19.0",
-		"@wordpress/icons": "^10.23.0"
-	},
-	"devDependencies": {
-		"@wordpress/scripts": "^31.4.0"
-	},
-	"scripts": {
-		"build": "wp-scripts build ./src/index.js --output-path=./build",
-		"start": "wp-scripts start ./src/index.js --output-path=./build"
-	}
+	"description": "Source for chart creation modal/wizard components imported by block editor bundles. List DataViews lives in src/admin-dataview."
 }

@@ -35,49 +35,59 @@ function valueAtPath(root, path) {
 /**
  * @param {string} groupKey
  * @param {Record<string, import('../../src/settings/field-registry/schema.mjs').SchemaField>} schemaGroup
- * @param {unknown} blockDefault The `block.json` `attributes[group].default` value.
+ * @param {unknown} defaults Nested defaults object (block.json group default or theme.config group).
+ * @param {string} [sourceLabel='block.json'] Label used in error messages.
  * @return {{ errors: string[] }}
  */
-export function validateSchemaGroup(groupKey, schemaGroup, blockDefault) {
+export function validateSchemaGroup(
+	groupKey,
+	schemaGroup,
+	defaults,
+	sourceLabel = 'block.json'
+) {
 	/** @type {string[]} */
 	const errors = [];
 
-	if (blockDefault === undefined) {
+	if (defaults === undefined) {
 		errors.push(
-			`Schema documents group \`${groupKey}\` but block.json has no \`${groupKey}\` attribute default.`
+			`Schema documents group \`${groupKey}\` but ${sourceLabel} has no \`${groupKey}\` ${
+				sourceLabel === 'block.json'
+					? 'attribute default'
+					: 'config group'
+			}.`
 		);
 		return { errors };
 	}
 
-	const blockPaths = collectBlockJsonPaths(blockDefault);
+	const defaultPaths = collectBlockJsonPaths(defaults);
 	const schemaPaths = new Set(Object.keys(schemaGroup));
 
 	for (const dotPath of schemaPaths) {
-		if (!blockPaths.has(dotPath)) {
+		if (!defaultPaths.has(dotPath)) {
 			errors.push(
-				`Schema documents \`${groupKey}.${dotPath}\` but block.json default has no matching path.`
+				`Schema documents \`${groupKey}.${dotPath}\` but ${sourceLabel} has no matching path.`
 			);
 		}
 	}
 
-	for (const dotPath of blockPaths) {
+	for (const dotPath of defaultPaths) {
 		if (!schemaPaths.has(dotPath)) {
 			errors.push(
-				`block.json default defines \`${groupKey}.${dotPath}\` but the editor schema has no matching field.`
+				`${sourceLabel} defines \`${groupKey}.${dotPath}\` but the editor schema has no matching field.`
 			);
 		}
 	}
 
 	for (const [dotPath, field] of Object.entries(schemaGroup)) {
-		if (!blockPaths.has(dotPath)) {
+		if (!defaultPaths.has(dotPath)) {
 			continue;
 		}
-		const defaultValue = valueAtPath(blockDefault, dotPath.split('.'));
+		const defaultValue = valueAtPath(defaults, dotPath.split('.'));
 
 		if (field.type === 'enum') {
 			if (!field.enum?.includes(/** @type {string} */ (defaultValue))) {
 				errors.push(
-					`block.json default for \`${groupKey}.${dotPath}\` is ${JSON.stringify(
+					`${sourceLabel} value for \`${groupKey}.${dotPath}\` is ${JSON.stringify(
 						defaultValue
 					)}, which is not in the schema enum [${(field.enum ?? [])
 						.map((value) => `'${value}'`)
@@ -93,30 +103,32 @@ export function validateSchemaGroup(groupKey, schemaGroup, blockDefault) {
 
 		if (field.type === 'number' && typeof defaultValue !== 'number') {
 			errors.push(
-				`block.json default for \`${groupKey}.${dotPath}\` is ${JSON.stringify(
+				`${sourceLabel} value for \`${groupKey}.${dotPath}\` is ${JSON.stringify(
 					defaultValue
 				)}, but the schema declares type 'number'.`
 			);
 		}
 		if (field.type === 'boolean' && typeof defaultValue !== 'boolean') {
 			errors.push(
-				`block.json default for \`${groupKey}.${dotPath}\` is ${JSON.stringify(
+				`${sourceLabel} value for \`${groupKey}.${dotPath}\` is ${JSON.stringify(
 					defaultValue
 				)}, but the schema declares type 'boolean'.`
 			);
 		}
-		if (
-			field.type === 'numberPair' &&
-			(!Array.isArray(defaultValue) ||
-				defaultValue.length !== 2 ||
-				typeof defaultValue[0] !== 'number' ||
-				typeof defaultValue[1] !== 'number')
-		) {
-			errors.push(
-				`block.json default for \`${groupKey}.${dotPath}\` is ${JSON.stringify(
-					defaultValue
-				)}, but the schema declares type 'numberPair' ([number, number]).`
-			);
+		if (field.type === 'numberPair') {
+			const isNull = defaultValue === null;
+			const isPair =
+				Array.isArray(defaultValue) &&
+				defaultValue.length === 2 &&
+				typeof defaultValue[0] === 'number' &&
+				typeof defaultValue[1] === 'number';
+			if (!isNull && !isPair) {
+				errors.push(
+					`${sourceLabel} value for \`${groupKey}.${dotPath}\` is ${JSON.stringify(
+						defaultValue
+					)}, but the schema declares type 'numberPair' ([number, number] | null).`
+				);
+			}
 		}
 	}
 

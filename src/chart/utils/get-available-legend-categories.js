@@ -79,6 +79,26 @@ function getSankeyLegendCategories(chartData = [], sankey = {}) {
 }
 
 /**
+ * Part-to-whole charts (pie, waffle) color by row label (`x`), like the pie color scale.
+ *
+ * @param {Object[]} chartData
+ * @return {string[]}
+ */
+function getPartToWholeLegendCategories(chartData = []) {
+	const seen = new Set();
+	const rowLabels = [];
+	chartData.forEach((row) => {
+		const label = String(row.x ?? '');
+		if (!label || seen.has(label)) {
+			return;
+		}
+		seen.add(label);
+		rowLabels.push(label);
+	});
+	return rowLabels;
+}
+
+/**
  * Derive the set of legend categories for the current chart configuration.
  * Shared by legend-controls.jsx (editor sorter) and get-config.js (render).
  *
@@ -89,6 +109,7 @@ function getSankeyLegendCategories(chartData = [], sankey = {}) {
  * @param {Object} [params.dataRender]
  * @param {Object} [params.divergingBar]
  * @param {Object} [params.sankey]
+ * @param {Object} [params.smallMultiples]
  * @return {string[]} Available legend category labels.
  */
 export function getAvailableLegendCategories({
@@ -98,6 +119,7 @@ export function getAvailableLegendCategories({
 	dataRender = {},
 	divergingBar = {},
 	sankey = {},
+	smallMultiples = {},
 }) {
 	const { availableCategories = [], chartData = [] } = io;
 	const {
@@ -157,6 +179,12 @@ export function getAvailableLegendCategories({
 
 	if (chartType === 'sankey') {
 		return getSankeyLegendCategories(chartData, sankey);
+	}
+
+	// Standalone pie/waffle: legend keys are row labels (independent variable).
+	// Small-multiples pie/waffle panels fall through to series columns below.
+	if (chartType === 'pie' || chartType === 'waffle') {
+		return getPartToWholeLegendCategories(chartData);
 	}
 
 	return defaultCategories;

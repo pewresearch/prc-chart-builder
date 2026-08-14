@@ -29,15 +29,68 @@ class Settings {
 	const OPTION_KEY = 'prc_chart_builder_theme';
 
 	/**
+	 * Classic script handle used when only Script Modules are queued (PRC-628).
+	 *
+	 * wp_add_inline_script() does not support module handles; this empty-src
+	 * footer script prints before Script Modules in wp_print_footer_scripts().
+	 *
+	 * @var string
+	 */
+	public const THEME_INLINE_HANDLE = 'prc-chart-builder-theme-data';
+
+	/**
+	 * Classic chart-builder bundles that read window.prcChartBuilderTheme at import.
+	 *
+	 * @var string[]
+	 */
+	private const CHART_BUNDLE_SCRIPT_HANDLES = array(
+		'prc-custom-charts',
+		'prc-charting-library',
+		'prc-chart-builder-chart-editor-script',
+		'prc-chart-builder-controller-editor-script',
+		'prc-chart-builder-synced-chart-editor-script',
+	);
+
+	/**
+	 * Chart blocks whose editor bundles read window.prcChartBuilderTheme at import.
+	 *
+	 * @var string[]
+	 */
+	private const CHART_EDITOR_BLOCK_NAMES = array(
+		'prc-chart-builder/chart',
+		'prc-chart-builder/controller',
+		'prc-chart-builder/synced-chart',
+	);
+
+	/**
+	 * Whether the theme global has been attached this request.
+	 *
+	 * @var bool
+	 */
+	private static $theme_global_delivered = false;
+
+	/**
+	 * Whether the slice-8 palette repair path has already run this request.
+	 *
+	 * @var bool
+	 */
+	private static $repair_attempted = false;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param mixed $loader Loader object.
 	 */
 	public function __construct( $loader ) {
-		// Print early in document head so the global exists before any chart-builder
-		// bundle evaluates variation templates (which call mergeWithDefaults at import).
-		$loader->add_action( 'wp_head', $this, 'print_theme_global', 1 );
-		$loader->add_action( 'admin_head', $this, 'print_theme_global', 1 );
+		$loader->add_action( 'init', $this, 'register_theme_delivery_script' );
+
+		// Block editor + Chart Library admin: attach the global before the chart
+		// editor bundles, which read it at module import. Attaching to registered
+		// handles only materializes on pages that actually load those bundles.
+		$loader->add_action( 'admin_enqueue_scripts', $this, 'deliver_theme_global_to_editor', 100 );
+
+		// Frontend safety net; Chart::render_block_callback() is the primary path.
+		$loader->add_action( 'wp_print_footer_scripts', $this, 'maybe_deliver_theme_global', 1 );
 
 		// Slice 4: server-side layout default parity with the editor filter.
 		$loader->add_filter(
@@ -47,6 +100,125 @@ class Settings {
 			10,
 			2
 		);
+	}
+
+	/**
+	 * Register the empty-src handle used for module-only delivery.
+	 *
+	 * @hook init
+	 */
+	public function register_theme_delivery_script(): void {
+		wp_register_script(
+			self::THEME_INLINE_HANDLE,
+			'',
+			array(),
+			defined( 'PRC_CHART_BUILDER_VERSION' ) ? PRC_CHART_BUILDER_VERSION : '1.0.0',
+			true
+		);
+	}
+
+	/**
+	 * Attach window.prcChartBuilderTheme when a chart bundle is queued.
+	 *
+	 * @hook wp_print_footer_scripts
+	 */
+	public function maybe_deliver_theme_global(): void {
+		if ( self::$theme_global_delivered || ! self::chart_bundles_are_queued() ) {
+			return;
+		}
+
+		self::deliver_theme_global();
+	}
+
+	/**
+	 * Attach window.prcChartBuilderTheme before chart editor bundles in wp-admin.
+	 *
+	 * The block editor and the Chart Library admin page load the chart, controller,
+	 * and synced-chart editor bundles, each of which reads the global at module
+	 * import. Attaching `before` their registered handles guarantees the global is
+	 * defined first and only prints on pages that actually load those bundles.
+	 *
+	 * @hook admin_enqueue_scripts
+	 */
+	public function deliver_theme_global_to_editor(): void {
+		if ( self::$theme_global_delivered ) {
+			return;
+		}
+
+		$registry = \WP_Block_Type_Registry::get_instance();
+		$handles  = array();
+
+		foreach ( self::CHART_EDITOR_BLOCK_NAMES as $block_name ) {
+			$block_type = $registry->get_registered( $block_name );
+			if ( $block_type instanceof \WP_Block_Type && ! empty( $block_type->editor_script_handles ) ) {
+				$handles = array_merge( $handles, $block_type->editor_script_handles );
+			}
+		}
+
+		$handles = array_values( array_unique( $handles ) );
+		if ( empty( $handles ) ) {
+			return;
+		}
+
+		$inline = self::get_theme_global_inline_script();
+		foreach ( $handles as $handle ) {
+			wp_add_inline_script( $handle, $inline, 'before' );
+		}
+
+		self::$theme_global_delivered = true;
+	}
+
+	/**
+	 * Whether a classic chart-builder script handle is queued this request.
+	 *
+	 * Script Modules are intentionally excluded: WP_Script_Modules has no stable
+	 * public is_enqueued() API across core versions. Frontend module paths call
+	 * deliver_theme_global() explicitly from Chart::render_block_callback().
+	 */
+	public static function chart_bundles_are_queued(): bool {
+		foreach ( self::CHART_BUNDLE_SCRIPT_HANDLES as $handle ) {
+			if ( wp_script_is( $handle, 'enqueued' ) || wp_script_is( $handle, 'to_do' ) ) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	/**
+	 * Attach window.prcChartBuilderTheme before the first queued chart bundle.
+	 *
+	 * Classic bundles get wp_add_inline_script( ..., 'before' ). Script Module
+	 * paths enqueue THEME_INLINE_HANDLE in the footer, which prints before modules.
+	 */
+	public static function deliver_theme_global(): void {
+		if ( self::$theme_global_delivered ) {
+			return;
+		}
+
+		$inline = self::get_theme_global_inline_script();
+
+		foreach ( self::CHART_BUNDLE_SCRIPT_HANDLES as $handle ) {
+			if ( wp_script_is( $handle, 'enqueued' ) || wp_script_is( $handle, 'to_do' ) ) {
+				wp_add_inline_script( $handle, $inline, 'before' );
+				self::$theme_global_delivered = true;
+				return;
+			}
+		}
+
+		wp_enqueue_script( self::THEME_INLINE_HANDLE );
+		wp_add_inline_script( self::THEME_INLINE_HANDLE, $inline, 'before' );
+		self::$theme_global_delivered = true;
+	}
+
+	/**
+	 * Inline JS assignment for window.prcChartBuilderTheme.
+	 */
+	public static function get_theme_global_inline_script(): string {
+		// Cast to object so an empty theme serializes as {} (not []).
+		$json = wp_json_encode( (object) self::get_theme_for_frontend() );
+
+		return 'window.prcChartBuilderTheme = ' . $json . ';';
 	}
 
 	/**
@@ -117,7 +289,7 @@ class Settings {
 	 * Restore palette swatches corrupted by the slice-8 validator bug (colors: []).
 	 *
 	 * When colorNames survived but colors were stripped, merge from the frozen
-	 * legacy theme file and persist so the next request is clean.
+	 * chart-theme.json fallback and persist so the next request is clean.
 	 *
 	 * @param array<string, mixed> $theme Active theme option value.
 	 * @return array<string, mixed>
@@ -128,7 +300,7 @@ class Settings {
 		}
 
 		// Empty / deleted option must stay empty — shipped defaults (pink/purple
-		// general) apply via JS. Do not resurrect legacy palettes on every request.
+		// general) apply via JS. Do not resurrect fallback palettes on every request.
 		if ( array() === $theme ) {
 			return $theme;
 		}
@@ -142,8 +314,14 @@ class Settings {
 			return $theme;
 		}
 
-		$legacy = Theme_Seeder::load_legacy_theme();
-		if ( is_wp_error( $legacy ) || empty( $legacy['palettes']['colors'] ) || ! is_array( $legacy['palettes']['colors'] ) ) {
+		if ( self::$repair_attempted ) {
+			return $theme;
+		}
+
+		self::$repair_attempted = true;
+
+		$fallback = Theme_Seeder::load_theme_file();
+		if ( is_wp_error( $fallback ) || empty( $fallback['palettes']['colors'] ) || ! is_array( $fallback['palettes']['colors'] ) ) {
 			return $theme;
 		}
 
@@ -151,10 +329,10 @@ class Settings {
 			$theme['palettes'] = array();
 		}
 
-		$theme['palettes']['colors'] = $legacy['palettes']['colors'];
+		$theme['palettes']['colors'] = $fallback['palettes']['colors'];
 
-		if ( empty( $theme['palettes']['colorNames'] ) && ! empty( $legacy['palettes']['colorNames'] ) ) {
-			$theme['palettes']['colorNames'] = $legacy['palettes']['colorNames'];
+		if ( empty( $theme['palettes']['colorNames'] ) && ! empty( $fallback['palettes']['colorNames'] ) ) {
+			$theme['palettes']['colorNames'] = $fallback['palettes']['colorNames'];
 		}
 
 		update_option( self::OPTION_KEY, $theme );
@@ -188,33 +366,5 @@ class Settings {
 		$theme['fontFamilies'] = Theme_Admin::get_theme_font_families();
 
 		return $theme;
-	}
-
-	/**
-	 * Print window.prcChartBuilderTheme in the document head.
-	 *
-	 * Uses a head hook (not a false-src script handle) so the global is available
-	 * in every context: frontend, block editor, and Chart Library admin — all of
-	 * which load chart-builder bundles that read the theme at module import time.
-	 *
-	 * @hook wp_head
-	 * @hook admin_head
-	 */
-	public function print_theme_global(): void {
-		static $printed = false;
-
-		if ( $printed ) {
-			return;
-		}
-
-		$printed = true;
-
-		// Cast to object so an empty theme serializes as {} (not []).
-		$json = wp_json_encode( (object) self::get_theme_for_frontend() );
-
-		printf(
-			'<script id="prc-chart-builder-theme-data">window.prcChartBuilderTheme = %s;</script>' . "\n",
-			$json // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- wp_json_encode
-		);
 	}
 }

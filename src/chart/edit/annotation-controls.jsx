@@ -26,7 +26,6 @@ import {
 	CardFooter,
 	TextControl,
 	__experimentalNumberControl as NumberControl,
-	__experimentalHeading as Heading,
 	__experimentalSpacer as Spacer,
 	FontSizePicker,
 	FlexBlock,
@@ -42,8 +41,10 @@ import {
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-import { useFocusedPanel } from './inspector-focus-context';
+import { StyledLabel } from './control-ui';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
+import { getSmallMultiplesPanelKeys } from './popover/utils';
 
 function AnnotationControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
@@ -53,6 +54,15 @@ function AnnotationControls({ attributes, setAttributes }) {
 
 	const annotationsActive = getCurrentValue('annotations', 'active');
 	const items = getCurrentValue('annotations', 'items') || [];
+	const layoutType = getCurrentValue('layout', 'type');
+	const panelKeys =
+		layoutType === 'small-multiples'
+			? getSmallMultiplesPanelKeys({
+					dataRender: getCurrentValue('dataRender'),
+					io: getCurrentValue('io'),
+				})
+			: [];
+	const hasPanelKeys = panelKeys.length > 0;
 
 	const [blockLevelFontFamilies] = useSettings('typography.fontFamilies');
 
@@ -64,10 +74,30 @@ function AnnotationControls({ attributes, setAttributes }) {
 	}, [blockLevelFontFamilies]);
 	const updateAnnotation = (index, key, value) => {
 		const currentItems = getCurrentValue('annotations', 'items') || [];
+		const isPanelContext = (ctx) =>
+			ctx === 'panel' || ctx === 'panel-inner';
 		updateAttributeForDevice('annotations', {
-			items: currentItems.map((annotation, i) =>
-				i === index ? { ...annotation, [key]: value } : annotation
-			),
+			items: currentItems.map((annotation, i) => {
+				if (i !== index) return annotation;
+				if (key === 'positioningContext' && !isPanelContext(value)) {
+					return {
+						...annotation,
+						positioningContext: value,
+						panelKey: '',
+					};
+				}
+				if (key === 'positioningContext' && isPanelContext(value)) {
+					return {
+						...annotation,
+						positioningContext: value,
+						panelKey:
+							annotation.panelKey || String(panelKeys[0] || ''),
+						x: 8,
+						y: 8,
+					};
+				}
+				return { ...annotation, [key]: value };
+			}),
 		});
 	};
 
@@ -138,7 +168,9 @@ function AnnotationControls({ attributes, setAttributes }) {
 								/>
 							</CardHeader>
 							<CardBody>
-								<Heading level={2}>Position</Heading>
+								<StyledLabel>
+									{__('Position', 'prc-chart-builder')}
+								</StyledLabel>
 								<SelectControl
 									label={__('Positioning Context')}
 									value={
@@ -153,6 +185,22 @@ function AnnotationControls({ attributes, setAttributes }) {
 											label: __('Data Area (Inner)'),
 											value: 'inner',
 										},
+										...(hasPanelKeys
+											? [
+													{
+														label: __(
+															'Panel (full cell)'
+														),
+														value: 'panel',
+													},
+													{
+														label: __(
+															'Panel data area'
+														),
+														value: 'panel-inner',
+													},
+												]
+											: []),
 									]}
 									onChange={(value) => {
 										updateAnnotation(
@@ -161,10 +209,39 @@ function AnnotationControls({ attributes, setAttributes }) {
 											value
 										);
 									}}
-									help={__(
-										'Chart: positions relative to the entire chart including axes and padding (eg. use for titles, etc.). Data Area: positions relative to the chart data area (eg. use if annotating a specific data point).'
-									)}
+									help={
+										hasPanelKeys
+											? __(
+													'Chart: full graphic. Inner: data area. Panel: full cell or plot area; travels with the cell on restack.'
+												)
+											: __(
+													'Chart: positions relative to the entire chart including axes and padding (eg. use for titles, etc.). Data Area: positions relative to the chart data area (eg. use if annotating a specific data point).'
+												)
+									}
 								/>
+								{(annotation.positioningContext === 'panel' ||
+									annotation.positioningContext ===
+										'panel-inner') &&
+									hasPanelKeys && (
+										<SelectControl
+											label={__('Panel')}
+											value={
+												annotation.panelKey ||
+												String(panelKeys[0])
+											}
+											options={panelKeys.map((key) => ({
+												label: String(key),
+												value: String(key),
+											}))}
+											onChange={(value) => {
+												updateAnnotation(
+													index,
+													'panelKey',
+													value
+												);
+											}}
+										/>
+									)}
 								<FlexBlock>
 									<FlexItem>
 										<NumberControl
@@ -195,7 +272,9 @@ function AnnotationControls({ attributes, setAttributes }) {
 								</FlexBlock>
 							</CardBody>
 							<CardBody>
-								<Heading level={2}>Text Properties</Heading>
+								<StyledLabel>
+									{__('Text Properties', 'prc-chart-builder')}
+								</StyledLabel>
 								{/* TODO: potentially irrelevant now that we have viewport-aware attributes */}
 								{/* <ToggleControl
 								label={__('Active on Mobile')}
@@ -325,9 +404,12 @@ function AnnotationControls({ attributes, setAttributes }) {
 								/>
 							</CardBody>
 							<CardBody>
-								<Heading level={2}>
-									Alignment & Positioning
-								</Heading>
+								<StyledLabel>
+									{__(
+										'Alignment & Positioning',
+										'prc-chart-builder'
+									)}
+								</StyledLabel>
 								<SelectControl
 									label={__('Text Anchor')}
 									value={annotation.textAnchor}
@@ -406,7 +488,12 @@ function AnnotationControls({ attributes, setAttributes }) {
 								/>
 							</CardBody>
 							<CardBody>
-								<Heading level={2}>Colors & Background</Heading>
+								<StyledLabel>
+									{__(
+										'Colors & Background',
+										'prc-chart-builder'
+									)}
+								</StyledLabel>
 								<PanelColorSettings
 									__experimentalHasMultipleOrigins
 									__experimentalIsRenderedInSidebar
@@ -478,7 +565,9 @@ function AnnotationControls({ attributes, setAttributes }) {
 							</CardBody>
 							{/* TODO: Add link control */}
 							{/* <CardBody>
-							<Heading level={2}>Link</Heading>
+							<StyledLabel>
+								{__('Link', 'prc-chart-builder')}
+							</StyledLabel>
 							<TextControl
 								label={__('Link URL')}
 								value={annotation.link}

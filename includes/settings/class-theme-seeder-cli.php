@@ -22,7 +22,7 @@ if ( class_exists( 'WPCOM_VIP_CLI_Command' ) ) {
 }
 
 /**
- * Seed the legacy chart theme when no active theme is configured.
+ * Seed the fallback chart theme when no active theme is configured.
  */
 function register_theme_seeder_cli_command(): void {
 	\WP_CLI::add_command(
@@ -39,7 +39,7 @@ function register_theme_seeder_cli_command(): void {
 				return;
 			}
 
-			\WP_CLI::success( 'Seeded legacy chart theme from prc-legacy-theme.json.' );
+			\WP_CLI::success( 'Seeded chart theme from chart-theme.json.' );
 		}
 	);
 
@@ -70,13 +70,13 @@ function register_theme_seeder_cli_command(): void {
 
 				if ( 0 === $after_count ) {
 					\WP_CLI::error(
-						'Could not restore the legacy chart theme. Confirm prc-legacy-theme.json exists on this environment.'
+						'Could not restore the chart theme. Confirm chart-theme.json exists on this environment.'
 					);
 				}
 
 				\WP_CLI::success(
 					sprintf(
-						'Seeded legacy chart theme from prc-legacy-theme.json (%d palette catalogs).',
+						'Seeded chart theme from chart-theme.json (%d palette catalogs).',
 						$after_count
 					)
 				);
@@ -89,7 +89,7 @@ function register_theme_seeder_cli_command(): void {
 
 			if ( 0 === $after_count ) {
 				\WP_CLI::error(
-					'Could not repair palette colors. Confirm prc-legacy-theme.json exists on this environment.'
+					'Could not repair palette colors. Confirm chart-theme.json exists on this environment.'
 				);
 			}
 

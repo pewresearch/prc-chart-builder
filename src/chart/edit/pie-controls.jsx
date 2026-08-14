@@ -1,17 +1,11 @@
 // V2
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-
-/**
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
 import {
 	PanelBody,
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
 	__experimentalNumberControl as NumberControl,
 	ToggleControl,
 	SelectControl,
@@ -22,24 +16,13 @@ import { ColorPalette } from '@wordpress/block-editor';
  * Internal dependencies
  */
 import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-import { useFocusedPanel } from './inspector-focus-context';
-
-const PanelDescription = styled.div`
-	grid-column: span 2;
-`;
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-`;
-const StyledLabel = styled.div`
-	font-size: 11px;
-	font-weight: 500;
-	line-height: 1.4;
-	text-transform: uppercase;
-	display: inline-block;
-	margin-bottom: calc(8px) !important;
-	padding: 0px;
-`;
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
+import {
+	PanelDescription,
+	WidePanelItem,
+	StyledLabel,
+} from './control-ui';
 
 function PieControls({ attributes, setAttributes, clientId }) {
 	// Viewport-aware attribute management

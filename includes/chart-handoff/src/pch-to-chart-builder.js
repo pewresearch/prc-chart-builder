@@ -86,6 +86,11 @@ function resolveData(data) {
 			yScale: 'linear',
 			categories,
 		},
+		...(xScaleMap[xType] === 'time' && {
+			independentAxis: {
+				scale: 'time',
+			},
+		}),
 	};
 }
 
@@ -117,11 +122,14 @@ function resolveIndependentAxis(axisConfig = {}) {
 	if (axisConfig.label !== undefined) result.label = axisConfig.label;
 	if (axisConfig.scale !== undefined) result.scale = axisConfig.scale;
 	if (axisConfig.domain != null) result.domain = axisConfig.domain;
-	if (axisConfig.tickFormat != null) result.tickFormat = axisConfig.tickFormat;
-	if (axisConfig.tickUnit !== undefined) result.tickUnit = axisConfig.tickUnit;
+	if (axisConfig.tickFormat != null)
+		result.tickFormat = axisConfig.tickFormat;
+	if (axisConfig.tickUnit !== undefined)
+		result.tickUnit = axisConfig.tickUnit;
 	if (axisConfig.tickUnitPosition !== undefined)
 		result.tickUnitPosition = axisConfig.tickUnitPosition;
-	if (axisConfig.showZero !== undefined) result.showZero = axisConfig.showZero;
+	if (axisConfig.showZero !== undefined)
+		result.showZero = axisConfig.showZero;
 	return result;
 }
 
@@ -138,8 +146,10 @@ function resolveDependentAxis(axisConfig = {}, yType = 'numeric') {
 	if (axisConfig.label !== undefined) result.label = axisConfig.label;
 	if (axisConfig.scale !== undefined) result.scale = axisConfig.scale;
 	if (axisConfig.domain != null) result.domain = axisConfig.domain;
-	if (axisConfig.tickFormat != null) result.tickFormat = axisConfig.tickFormat;
-	if (axisConfig.showZero !== undefined) result.showZero = axisConfig.showZero;
+	if (axisConfig.tickFormat != null)
+		result.tickFormat = axisConfig.tickFormat;
+	if (axisConfig.showZero !== undefined)
+		result.showZero = axisConfig.showZero;
 
 	// Explicit tickUnit from axis config takes precedence; fall back to yType
 	// inference only when not set.
@@ -196,7 +206,8 @@ function resolveTypeSpecificOptions(chartType, config = {}) {
 	if (chartType === 'bar' || chartType === 'stacked-bar') {
 		const opts = config.barOptions ?? {};
 		const barPartial = {};
-		if (opts.barPadding !== undefined) barPartial.barPadding = opts.barPadding;
+		if (opts.barPadding !== undefined)
+			barPartial.barPadding = opts.barPadding;
 		if (opts.barGroupPadding !== undefined)
 			barPartial.barGroupPadding = opts.barGroupPadding;
 		if (opts.stackOffset !== undefined)
@@ -204,7 +215,11 @@ function resolveTypeSpecificOptions(chartType, config = {}) {
 		if (Object.keys(barPartial).length) result.bar = barPartial;
 	}
 
-	if (chartType === 'line' || chartType === 'area' || chartType === 'stacked-area') {
+	if (
+		chartType === 'line' ||
+		chartType === 'area' ||
+		chartType === 'stacked-area'
+	) {
 		const opts = config.lineOptions ?? {};
 		const linePartial = {};
 		if (opts.interpolation !== undefined)
@@ -228,7 +243,10 @@ function resolveTypeSpecificOptions(chartType, config = {}) {
 
 	if (chartType === 'scatter') {
 		const opts = config.scatterOptions ?? {};
-		if (opts.showRegressionLine !== undefined || opts.regressionType !== undefined) {
+		if (
+			opts.showRegressionLine !== undefined ||
+			opts.regressionType !== undefined
+		) {
 			result.regression = {
 				...(opts.showRegressionLine !== undefined && {
 					active: opts.showRegressionLine,
@@ -302,11 +320,16 @@ export function pchToChartBuilder(pch) {
 		io,
 		dataRender,
 
-		...(Object.keys(resolveIndependentAxis(config.independentAxis)).length && {
+		...(Object.keys(resolveIndependentAxis(config.independentAxis))
+			.length && {
 			independentAxis: resolveIndependentAxis(config.independentAxis),
 		}),
-		...(Object.keys(resolveDependentAxis(config.dependentAxis, data.yType)).length && {
-			dependentAxis: resolveDependentAxis(config.dependentAxis, data.yType),
+		...(Object.keys(resolveDependentAxis(config.dependentAxis, data.yType))
+			.length && {
+			dependentAxis: resolveDependentAxis(
+				config.dependentAxis,
+				data.yType
+			),
 		}),
 		...(Object.keys(resolveLegend(config.legend)).length && {
 			legend: resolveLegend(config.legend),

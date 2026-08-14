@@ -9,7 +9,7 @@
  *
  * All handles delegate to `prc-chart-builder/chart` store actions.
  *
- * Full reference: prc-chart-builder/docs/console-helpers.md
+ * Full reference: docs/plugins/prc-chart-builder/console-helpers.md
  */
 
 import { store, getServerState } from '@wordpress/interactivity';

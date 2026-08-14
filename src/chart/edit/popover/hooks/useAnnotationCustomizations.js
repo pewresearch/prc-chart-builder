@@ -35,6 +35,7 @@ export function useAnnotationCustomizations(
 		maxWidth: 200,
 		opacity: 1,
 		positioningContext: 'chart',
+		panelKey: '',
 		textOutline: false,
 	};
 
@@ -70,6 +71,9 @@ export function useAnnotationCustomizations(
 	const [positioningContext, setPositioningContext] = useState(
 		annotation?.positioningContext ?? defaults.positioningContext
 	);
+	const [panelKey, setPanelKey] = useState(
+		annotation?.panelKey ?? defaults.panelKey
+	);
 	const [textOutline, setTextOutline] = useState(
 		annotation?.textOutline ?? defaults.textOutline
 	);
@@ -92,12 +96,13 @@ export function useAnnotationCustomizations(
 			setPositioningContext(
 				annotation.positioningContext ?? defaults.positioningContext
 			);
+			setPanelKey(annotation.panelKey ?? defaults.panelKey);
 			setTextOutline(annotation.textOutline ?? defaults.textOutline);
 		}
 	}, [annotation, annotationId]);
 
 	const handleChange = useCallback(
-		(key, value) => {
+		(key, value, extras = {}) => {
 			const setters = {
 				text: setText,
 				fontSize: setFontSize,
@@ -111,10 +116,32 @@ export function useAnnotationCustomizations(
 				maxWidth: setMaxWidth,
 				opacity: setOpacity,
 				positioningContext: setPositioningContext,
+				panelKey: setPanelKey,
 				textOutline: setTextOutline,
 			};
 			if (setters[key]) setters[key](value);
-			onUpdate({ [key]: value });
+			const isPanelContext = (ctx) =>
+				ctx === 'panel' || ctx === 'panel-inner';
+			if (key === 'positioningContext' && !isPanelContext(value)) {
+				setPanelKey('');
+				onUpdate({ positioningContext: value, panelKey: '' });
+				return;
+			}
+			// Chart/inner coords are not panel-local — reset in one atomic update
+			// (include panelKey via extras so a follow-up setAttributes can't race).
+			if (key === 'positioningContext' && isPanelContext(value)) {
+				if (extras.panelKey !== undefined) {
+					setPanelKey(extras.panelKey);
+				}
+				onUpdate({
+					positioningContext: value,
+					x: 8,
+					y: 8,
+					...extras,
+				});
+				return;
+			}
+			onUpdate({ [key]: value, ...extras });
 		},
 		[onUpdate]
 	);
@@ -132,6 +159,7 @@ export function useAnnotationCustomizations(
 		setMaxWidth(defaults.maxWidth);
 		setOpacity(defaults.opacity);
 		setPositioningContext(defaults.positioningContext);
+		setPanelKey(defaults.panelKey);
 		setTextOutline(defaults.textOutline);
 		onUpdate(defaults);
 	}, [onUpdate]);
@@ -149,6 +177,7 @@ export function useAnnotationCustomizations(
 		maxWidth !== defaults.maxWidth ||
 		opacity !== defaults.opacity ||
 		positioningContext !== defaults.positioningContext ||
+		panelKey !== defaults.panelKey ||
 		textOutline !== defaults.textOutline;
 
 	return {
@@ -164,6 +193,7 @@ export function useAnnotationCustomizations(
 		maxWidth,
 		opacity,
 		positioningContext,
+		panelKey,
 		textOutline,
 		hasCustomizations,
 		handleChange,

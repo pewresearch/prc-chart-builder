@@ -13,8 +13,8 @@ import {
 	defaultNumberPair,
 	formatNumberPairValue,
 	parseNumberPairInput,
-} from '../number-pair-utils';
-import { getFontSelectOptions } from '../theme-fonts';
+} from '../model';
+import { getFontSelectOptions } from '../site-theme';
 
 /**
  * @typedef {import('../field-registry/types').FieldDefinition} FieldDefinition

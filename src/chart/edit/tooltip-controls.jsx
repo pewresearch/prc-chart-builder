@@ -4,11 +4,6 @@
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-
-/**
  * WordPress dependencies
  */
 import { __ } from '@wordpress/i18n';
@@ -21,43 +16,24 @@ import {
 	SelectControl,
 	__experimentalNumberControl as NumberControl,
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
-	RangeControl,
 	ExternalLink,
 } from '@wordpress/components';
 import { PanelColorSettings } from '@wordpress/block-editor';
 /**
  * Internal dependencies
  */
-import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-	display: block;
-`;
-const PanelDescription = styled.div`
-	grid-column: span 2;
-`;
-
-const StyledLabel = styled.div`
-	font-size: 11px;
-	font-weight: 500;
-	line-height: 1.4;
-	text-transform: uppercase;
-	display: inline-block;
-	margin-bottom: calc(8px) !important;
-	padding: 0px;
-`;
-const Help = styled.div`
-	margin-top: calc(8px);
-	font-size: 12px;
-	font-style: normal;
-	color: rgb(117, 117, 117);
-	margin-bottom: 0px;
-`;
+import { formatNum, formatOptionalNum } from '../utils/helpers';
+import { effectiveChartTypeForControls } from '../utils/chart-types';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import {
+	PanelDescription,
+	WidePanelItem,
+	StyledLabel,
+	Help,
+} from './control-ui';
+import TooltipTemplateControl from './tooltip-template-control';
 
 function TooltipControls({ attributes, setAttributes, clientId }) {
 	// Viewport-aware attribute management
@@ -68,10 +44,15 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 
 	// Content attributes - NOT viewport-aware
 	const io = attributes.io || {};
+	const chartData = io.chartData || [];
 	const dataRender = attributes.dataRender || {};
 
 	const style = getCurrentValue('tooltip', 'style') || {};
 	const { maxWidth, maxHeight, minWidth, minHeight, fontSize } = style;
+	const effectiveType = effectiveChartTypeForControls(attributes);
+	const showTooltipMode =
+		effectiveType === 'line' || effectiveType === 'area';
+	const tooltipActive = getCurrentValue('tooltip', 'active');
 	return (
 		<PanelBody title={__('Tooltip')} initialOpen={false}>
 			<ToolsPanel
@@ -98,6 +79,40 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						}
 					/>
 				</WidePanelItem>
+				{showTooltipMode && (
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('Tooltip Mode')}
+						panelId={clientId}
+					>
+						<SelectControl
+							label={__('Tooltip Mode')}
+							value={
+								getCurrentValue('tooltip', 'mode') || 'point'
+							}
+							disabled={!getCurrentValue('tooltip', 'active')}
+							options={[
+								{
+									label: __('Point', 'prc-chart-builder'),
+									value: 'point',
+								},
+								{
+									label: __('Unified', 'prc-chart-builder'),
+									value: 'unified',
+								},
+							]}
+							help={__(
+								'Point shows one series at a time. Unified shows every series at the hovered x value.',
+								'prc-chart-builder'
+							)}
+							onChange={(value) =>
+								updateAttributeForDevice('tooltip', {
+									mode: value,
+								})
+							}
+						/>
+					</WidePanelItem>
+				)}
 				<WidePanelItem
 					hasValue={() => true}
 					label={__('Show Header')}
@@ -264,16 +279,33 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 				</WidePanelItem>
 				<WidePanelItem
 					hasValue={() => true}
+					isShownByDefault
+					label={__('Tooltip Template')}
+					panelId={clientId}
+				>
+					<TooltipTemplateControl
+						value={getCurrentValue('tooltip', 'template')}
+						chartData={chartData}
+						disabled={!tooltipActive}
+						onChange={(template) =>
+							updateAttributeForDevice('tooltip', {
+								template,
+							})
+						}
+					/>
+				</WidePanelItem>
+				<WidePanelItem
+					hasValue={() => true}
+					isShownByDefault
 					label={__('Tooltip Format')}
 					panelId={clientId}
 				>
 					<TextControl
 						label={__('Tooltip Format')}
-						// translators: %1$s: x value, %2$s: y value
 						help={__(
-							"Tooltip formatter is a string that takes up to three variables. The first variable {{column}} corresponds with the category/column header of a data point, the second {{value}}, the numerical value, and the third {{row}} is the row of the value. (eg. '{{column}}: {{value}} people in {{row}}' would return something like '2010: 500 people in France'). Adding `.toLowerCase()` to the end of any of these variables will lowercase the entire string."
+							"Tooltip formatter is a string that takes up to three variables. The first variable {{column}} corresponds with the category/column header of a data point, the second {{value}}, the numerical value, and the third {{row}} is the row of the value. (eg. '{{column}}: {{value}} people in {{row}}' would return something like '2010: 500 people in France'). Adding `.toLowerCase()` to the end of any of these variables will lowercase the entire string. The Tooltip Template above takes precedence when it is not empty."
 						)}
-						disabled={!getCurrentValue('tooltip', 'active')}
+						disabled={!tooltipActive}
 						value={getCurrentValue('tooltip', 'format')}
 						placeholder="{{row}}: {{value}}"
 						onChange={(val) =>
@@ -414,6 +446,36 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 							})
 						}
 					/>
+				</WidePanelItem>
+				<WidePanelItem
+					hasValue={() =>
+						null !==
+						(getCurrentValue('tooltip', 'minDisplayValue') ?? null)
+					}
+					label={__('Minimum Display Value')}
+					panelId={clientId}
+				>
+					<NumberControl
+						label={__('Minimum Display Value')}
+						value={
+							getCurrentValue('tooltip', 'minDisplayValue') ?? ''
+						}
+						disabled={!getCurrentValue('tooltip', 'active')}
+						min={0}
+						step="any"
+						onChange={(value) =>
+							updateAttributeForDevice('tooltip', {
+								minDisplayValue: formatOptionalNum(value),
+							})
+						}
+					/>
+					<PanelDescription>
+						<Help>
+							{__(
+								'Values below this read as "<value" instead of rounding to zero. Eg. with 0.1 and one decimal place, 0.04 reads "<0.1" rather than "0.0". Leave empty to format every value normally.'
+							)}
+						</Help>
+					</PanelDescription>
 				</WidePanelItem>
 
 				<WidePanelItem

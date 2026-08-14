@@ -39,7 +39,7 @@ import { getDate, dateI18n } from '@wordpress/date';
  */
 import { formatNum } from '../utils/helpers';
 import presidentPlotBands from '../utils/president-plot-bands';
-import { useViewportAttributes } from './use-viewport-attributes';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
 
 function PlotBandControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management

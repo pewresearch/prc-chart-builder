@@ -2,7 +2,7 @@
 	"name": "prc/chart-builder",
 	"description": "Chart Builder is a chart building tool for the PRC Platform",
 	"type": "wordpress-plugin",
-	"license": "GPL-2.0-or-later",
+	"license": "MIT",
 	"require": {
 		"php": ">=8.2",
 		"automattic/jetpack-autoloader": "^5.0",

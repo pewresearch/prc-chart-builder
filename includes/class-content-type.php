@@ -32,6 +32,29 @@ class Content_Type {
 	public static $chart_type_taxonomy = 'chart_type';
 
 	/**
+	 * Blocks allowed in the chart CPT editor (Controller shell + freeform inners).
+	 *
+	 * @var string[]
+	 */
+	const CHART_CPT_ALLOWED_BLOCKS = array(
+		'prc-chart-builder/controller',
+		'prc-chart-builder/chart',
+		'prc-block/table',
+		// Required for core "Create pattern" (PatternConvertButton checks
+		// canInsertBlockType( 'core/block' ) before showing the menu item).
+		'core/block',
+		'core/group',
+		'core/paragraph',
+		'core/heading',
+		'core/image',
+		'core/list',
+		'core/list-item',
+		'core/html',
+		'core/spacer',
+		'core/separator',
+	);
+
+	/**
 	 * The constructor.
 	 *
 	 * @param mixed $loader The loader object.
@@ -53,6 +76,8 @@ class Content_Type {
 		$loader->add_filter( 'rest_' . self::$post_type . '_query', $this, 'make_design_slug_rest_searchable', 10, 2 );
 		$loader->add_filter( 'rest_' . self::$post_type . '_query', $this, 'filter_by_chart_type', 10, 2 );
 		$loader->add_action( 'admin_enqueue_scripts', $this, 'dequeue_ai_scripts', 20 );
+		$loader->add_filter( 'allowed_block_types_all', $this, 'restrict_chart_cpt_blocks', 10, 2 );
+		$loader->add_action( 'rest_api_init', $this, 'register_chart_rest_fields' );
 	}
 
 	/**
@@ -61,27 +86,31 @@ class Content_Type {
 	 * @var array
 	 */
 	public static $known_chart_types = array(
-		'area'           => 'Area',
-		'bar'            => 'Bar',
-		'column'         => 'Column',
-		'diverging-bar'  => 'Diverging Bar',
-		'dot-plot'       => 'Dot Plot',
-		'exploded-bar'   => 'Exploded Bar',
-		'freeform'       => 'Freeform',
-		'line'           => 'Line',
-		'map-usa'        => 'USA Map',
-		'map-usa-block'  => 'USA Block Map',
-		'map-usa-county' => 'USA County Map',
-		'map-usa-hex'    => 'USA Hex Map',
-		'map-world'                => 'World Map',
-		'map-world-orthographic'   => 'World Globe Map',
-		'pie'            => 'Pie',
-		'sankey'         => 'Sankey',
-		'scatter'        => 'Scatter Plot',
-		'stacked-area'   => 'Stacked Area',
-		'stacked-bar'    => 'Stacked Bar',
-		'stacked-column' => 'Stacked Column',
-		'treemap'        => 'Treemap',
+		'area'                   => 'Area',
+		'bar'                    => 'Bar',
+		'column'                 => 'Column',
+		'diverging-bar'          => 'Diverging Bar',
+		'dot-plot'               => 'Dot Plot',
+		'exploded-bar'           => 'Exploded Bar',
+		'freeform'               => 'Freeform',
+		'line'                   => 'Line',
+		'map-usa'                => 'USA Map',
+		'map-usa-block'          => 'USA Block Map',
+		'map-usa-county'         => 'USA County Map',
+		'map-usa-hex'            => 'USA Hex Map',
+		'map-world'              => 'World Map',
+		'map-world-orthographic' => 'World Globe Map',
+		'pie'                    => 'Pie',
+		'sankey'                 => 'Sankey',
+		'scatter'                => 'Scatter Plot',
+		'bee-swarm'              => 'Beeswarm',
+		'small-multiples'        => 'Small Multiples',
+		'stacked-area'           => 'Stacked Area',
+		'stacked-bar'            => 'Stacked Bar',
+		'stacked-column'         => 'Stacked Column',
+		'treemap'                => 'Treemap',
+		'waffle'                 => 'Waffle',
+		'heat-map-table'         => 'Heat Map Table',
 	);
 
 	/**
@@ -318,7 +347,7 @@ class Content_Type {
 			'label'               => __( 'Chart', 'prc-chart-builder' ),
 			'description'         => __( 'A store for chart blocks. This post type allows you to save a chart once and update everywhere it is used.', 'prc-chart-builder' ),
 			'labels'              => self::get_labels(),
-			'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'custom-fields', 'revisions', 'prc-datasets' ),
+			'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'custom-fields', 'revisions', 'prc-datasets', 'prc-publish-workflows' ),
 			'taxonomies'          => array( 'category' ),
 			'hierarchical'        => false,
 			'public'              => true,
@@ -335,7 +364,20 @@ class Content_Type {
 			'publicly_queryable'  => true,
 			'rewrite'             => $rewrite,
 			'capability_type'     => 'post',
-			'template'            => array( array( 'prc-chart-builder/controller' ) ),
+			// Seed a Controller; lock move/remove on that block (not CPT
+			// template_lock) so "Create pattern" remains available — core hides
+			// that menu item when the post root cannot insert `core/block`.
+			'template'            => array(
+				array(
+					'prc-chart-builder/controller',
+					array(
+						'lock' => array(
+							'move'   => true,
+							'remove' => true,
+						),
+					),
+				),
+			),
 		);
 
 		register_post_type( self::$post_type, $args );
@@ -349,6 +391,31 @@ class Content_Type {
 	}
 
 	/**
+	 * Restrict the chart CPT inserter to Controller + known chart inners.
+	 *
+	 * @hook allowed_block_types_all
+	 *
+	 * @param bool|string[]            $allowed_block_types Allowed block types.
+	 * @param \WP_Block_Editor_Context $editor_context      Block editor context.
+	 * @return bool|string[]
+	 */
+	public function restrict_chart_cpt_blocks( $allowed_block_types, $editor_context ) {
+		if (
+			! isset( $editor_context->post )
+			|| self::$post_type !== $editor_context->post->post_type
+		) {
+			return $allowed_block_types;
+		}
+
+		/**
+		 * Filter the allowed block list for chart CPT posts.
+		 *
+		 * @param string[] $blocks Default allowed block names.
+		 */
+		return apply_filters( 'prc_chart_builder_chart_cpt_allowed_blocks', self::CHART_CPT_ALLOWED_BLOCKS );
+	}
+
+	/**
 	 * Opt the chart CPT into prc-revisions for future revision (fork/merge) workflow.
 	 *
 	 * Registered after the CPT on init priority 11 so prc-revisions can discover
@@ -358,6 +425,96 @@ class Content_Type {
 	 */
 	public function register_revisions_support() {
 		add_post_type_support( self::$post_type, 'prc-revisions' );
+	}
+
+	/**
+	 * Register REST fields for the chart post type.
+	 *
+	 * @hook rest_api_init
+	 */
+	public function register_chart_rest_fields() {
+		register_rest_field(
+			self::$post_type,
+			'prc_chart_card',
+			array(
+				'get_callback' => array( $this, 'get_prc_chart_card_field' ),
+				'schema'       => array(
+					'description' => __( 'Summary card data for the chart library gallery.', 'prc-chart-builder' ),
+					'type'        => 'object',
+					'context'     => array( 'edit', 'view' ),
+					'readonly'    => true,
+					'properties'  => array(
+						'thumbnailUrl'   => array( 'type' => 'string' ),
+						'squareUrl'      => array( 'type' => 'string' ),
+						'chartType'        => array( 'type' => 'string' ),
+						'chartTypeLabel'   => array( 'type' => 'string' ),
+						'authorName'       => array( 'type' => 'string' ),
+						'designSlug'       => array( 'type' => 'string' ),
+					),
+				),
+			)
+		);
+	}
+
+	/**
+	 * REST field callback: lightweight card payload for the chart library DataView.
+	 *
+	 * @param array $post REST post array.
+	 * @return array
+	 */
+	public function get_prc_chart_card_field( array $post ): array {
+		$post_id = (int) ( $post['id'] ?? 0 );
+		if ( $post_id <= 0 ) {
+			return $this->empty_chart_card();
+		}
+
+		$static_urls = Chart_Static_Images::resolve_static_image_urls( $post_id );
+
+		$chart_type_slug  = '';
+		$chart_type_label = '';
+		$terms              = wp_get_post_terms( $post_id, self::$chart_type_taxonomy, array( 'fields' => 'all' ) );
+		if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+			$chart_type_slug  = (string) $terms[0]->slug;
+			$chart_type_label = (string) $terms[0]->name;
+		}
+
+		if ( '' === $chart_type_label && isset( self::$known_chart_types[ $chart_type_slug ] ) ) {
+			$chart_type_label = self::$known_chart_types[ $chart_type_slug ];
+		}
+
+		$author_name = '';
+		$author_id   = (int) get_post_field( 'post_author', $post_id );
+		if ( $author_id > 0 ) {
+			$user = get_userdata( $author_id );
+			if ( $user ) {
+				$author_name = (string) $user->display_name;
+			}
+		}
+
+		return array(
+			'thumbnailUrl'   => $static_urls['thumbnailUrl'],
+			'squareUrl'      => $static_urls['squareUrl'],
+			'chartType'        => $chart_type_slug,
+			'chartTypeLabel'   => $chart_type_label,
+			'authorName'       => $author_name,
+			'designSlug'       => (string) get_post_meta( $post_id, 'design_slug', true ),
+		);
+	}
+
+	/**
+	 * Empty chart card payload.
+	 *
+	 * @return array
+	 */
+	private function empty_chart_card(): array {
+		return array(
+			'thumbnailUrl'   => '',
+			'squareUrl'      => '',
+			'chartType'        => '',
+			'chartTypeLabel'   => '',
+			'authorName'       => '',
+			'designSlug'       => '',
+		);
 	}
 
 	/**
@@ -468,8 +625,8 @@ class Content_Type {
 	 * @param WP_Query $query The WordPress query object.
 	 */
 	public function make_design_slug_searchable( $query ) {
-		// Only apply to searches for the chart post type.
-		// Allow both admin searches and REST API searches.
+		// Classic admin list and REST /wp/v2/chart searches. Shell DataViews
+		// uses Chart_List::query_args for the same design_slug meta match.
 		$is_admin_search = is_admin() && $query->is_search() && $query->is_main_query();
 		$is_rest_search  = defined( 'REST_REQUEST' ) && REST_REQUEST && $query->is_search();
 
@@ -517,9 +674,14 @@ class Content_Type {
 	 * @return array Modified query arguments.
 	 */
 	public function make_design_slug_rest_searchable( $args, $request ) {
-		// Only apply if there's a search parameter.
-		$search = $request->get_param( 's' );
-		if ( empty( $search ) ) {
+		// WP REST maps ?search= into $args['s']; the request param is `search`, not `s`.
+		$search = '';
+		if ( ! empty( $args['s'] ) ) {
+			$search = (string) $args['s'];
+		} elseif ( $request instanceof \WP_REST_Request ) {
+			$search = (string) $request->get_param( 'search' );
+		}
+		if ( '' === $search ) {
 			return $args;
 		}
 

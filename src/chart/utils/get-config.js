@@ -5,6 +5,7 @@ import { getAvailableLegendCategories } from './get-available-legend-categories'
 import {
 	generateDefaultAltText,
 	getDomain,
+	getDomainBounds,
 	getTicks,
 	stringToArray,
 	stringToArrayOfNums,
@@ -44,10 +45,41 @@ function resolveDiffColumnCustomLabels(customLabels = {}) {
 }
 
 /**
+ * Resolve a node marker color for chart config.
+ * Keep `inherit` as a token for renderers; resolve concrete colors (including
+ * `white` / hex) to light-dark() for AnimatedCircle interpolation.
+ *
+ * @param {string|undefined} color
+ * @return {string}
+ */
+function resolveNodeColor(color) {
+	const token = color || 'inherit';
+	if (token === 'inherit' || token === 'contrast') {
+		return token;
+	}
+	return resolveColor(token);
+}
+
+/**
+ * Resolve a preset font token, preserving "unset" as an empty string.
+ *
+ * `resolveFontFamily` expands empty values to the shipped default stack, which
+ * is wrong for fields where empty means "inherit from a broader setting".
+ *
+ * @param {string|undefined|null} value Stored fontFamily.
+ * @return {string} Concrete stack, or '' when unset.
+ */
+function resolveOptionalFontFamily(value) {
+	return value === undefined || value === null || value === ''
+		? ''
+		: resolveFontFamily(value);
+}
+
+/**
  * Resolve preset font tokens on annotation items for SVG render.
  *
  * @param {Array|undefined} items Annotation items from block attrs.
- * @return {Array|undefined}
+ * @return {Array|undefined} Items with resolved fontFamily tokens.
  */
 function resolveAnnotationItems(items) {
 	if (!Array.isArray(items) || items.length === 0) {
@@ -68,6 +100,29 @@ function resolveAnnotationItems(items) {
 			fontFamily: resolveFontFamily(item.fontFamily),
 		};
 	});
+}
+
+/**
+ * Resolve preset font tokens on per-panel title customizations for SVG render.
+ *
+ * @param {Object|undefined} customTitles customPanelTitles from block attrs.
+ * @return {Object} Panel title entries with resolved fontFamily tokens.
+ */
+function resolvePanelTitleCustomizations(customTitles = {}) {
+	const resolved = {};
+	Object.entries(customTitles).forEach(([key, entry]) => {
+		if (!entry || typeof entry !== 'object') {
+			resolved[key] = entry;
+			return;
+		}
+		resolved[key] = {
+			...entry,
+			...(entry.fontFamily !== undefined && entry.fontFamily !== ''
+				? { fontFamily: resolveFontFamily(entry.fontFamily) }
+				: {}),
+		};
+	});
+	return resolved;
 }
 
 /**
@@ -154,6 +209,7 @@ const getConfig = (
 		drawings,
 		customTickLabels,
 		customLegendLabels,
+		customPanelTitles,
 		diffColumn,
 		netValues,
 		dataRender,
@@ -162,9 +218,13 @@ const getConfig = (
 		tooltip,
 		treemap,
 		sankey,
+		waffle,
+		heatMapTable,
+		smallMultiples,
 		regression,
 		errorBars,
 		animation,
+		beeSwarm,
 	} = mergedAttributes;
 	const {
 		customColors,
@@ -201,14 +261,20 @@ const getConfig = (
 
 	const { scale: iScale, domain: iDomain } = independentAxis;
 	const { scale: dScale, domain: dDomain } = dependentAxis;
+	// dataRender.xScale is what the Data tab writes; keep axis scale in sync so
+	// time-series data infer domain from the data extent instead of [0, 100].
+	const effectiveIScale = dataRender?.xScale ?? iScale ?? 'linear';
+	const effectiveDScale = dataRender?.yScale ?? dScale ?? 'linear';
+	const [iDomainMin, iDomainMax] = getDomainBounds(iDomain);
+	const [dDomainMin, dDomainMax] = getDomainBounds(dDomain);
 
 	// Use stringToArray for time scales to preserve date strings, stringToArrayOfNums for numeric scales
 	const independentAxisTickValues =
-		independentAxis.scale === 'time'
+		effectiveIScale === 'time'
 			? stringToArray(independentAxis.tickValues)
 			: stringToArrayOfNums(independentAxis.tickValues);
 	const dependentAxisTickValues =
-		dScale === 'time'
+		effectiveDScale === 'time'
 			? stringToArray(dependentAxis.tickValues)
 			: stringToArrayOfNums(dependentAxis.tickValues);
 
@@ -240,8 +306,18 @@ const getConfig = (
 		independentAxis: {
 			...baseConfig.independentAxis,
 			...independentAxis,
-			customTickLabels: customTickLabels?.independent ?? {},
-			domain: getDomain(iDomain[0], iDomain[1], chartType, iScale, 'x'),
+			scale: effectiveIScale,
+			customTickLabels:
+				customTickLabels?.independent ??
+				independentAxis.customTickLabels ??
+				{},
+			domain: getDomain(
+				iDomainMin,
+				iDomainMax,
+				chartType,
+				effectiveIScale,
+				'x'
+			),
 			tickValues:
 				0 >= independentAxisTickValues.length
 					? null
@@ -299,8 +375,18 @@ const getConfig = (
 		dependentAxis: {
 			...baseConfig.dependentAxis,
 			...dependentAxis,
-			customTickLabels: customTickLabels?.dependent ?? {},
-			domain: getDomain(dDomain[0], dDomain[1], chartType, dScale, 'y'),
+			scale: effectiveDScale,
+			customTickLabels:
+				customTickLabels?.dependent ??
+				dependentAxis.customTickLabels ??
+				{},
+			domain: getDomain(
+				dDomainMin,
+				dDomainMax,
+				chartType,
+				effectiveDScale,
+				'y'
+			),
 			tickValues:
 				0 >= dependentAxisTickValues.length
 					? null
@@ -486,6 +572,7 @@ const getConfig = (
 					dataRender,
 					divergingBar,
 					sankey,
+					smallMultiples,
 				});
 
 				if (legend.categories && legend.categories.length > 0) {
@@ -568,7 +655,33 @@ const getConfig = (
 		nodes: {
 			...baseConfig.nodes,
 			...nodes,
+			pointFill: resolveNodeColor(
+				nodes?.pointFill ?? baseConfig.nodes?.pointFill
+			),
+			// Legacy templates baked pointStroke: 'white' during a nodes rename
+			// (#1403); Line ignored it until mid-2026 and always used series
+			// color. Treat that dead token as inherit. Literal white = custom hex.
+			pointStroke: resolveNodeColor(
+				(nodes?.pointStroke === 'white'
+					? 'inherit'
+					: nodes?.pointStroke) ?? baseConfig.nodes?.pointStroke
+			),
 			pointCustomSize: null, // function(d) { return d; },
+		},
+		beeSwarm: {
+			...baseConfig.beeSwarm,
+			...beeSwarm,
+			layoutMode:
+				beeSwarm?.layoutMode ??
+				baseConfig.beeSwarm?.layoutMode ??
+				'dodge',
+			swarmSpread:
+				beeSwarm?.swarmSpread ?? baseConfig.beeSwarm?.swarmSpread ?? 24,
+			groupBy: beeSwarm?.groupBy ?? baseConfig.beeSwarm?.groupBy ?? null,
+			forceStrength:
+				beeSwarm?.forceStrength ??
+				baseConfig.beeSwarm?.forceStrength ??
+				0.1,
 		},
 		labels: {
 			...baseConfig.labels,
@@ -647,6 +760,16 @@ const getConfig = (
 					diffColumn.style?.headerFill ??
 						baseConfig.diffColumn?.style?.headerFill
 				),
+				fontFamily: resolveFontFamily(
+					diffColumn.style?.fontFamily ??
+						baseConfig.diffColumn?.style?.fontFamily
+				),
+				// Empty means "no header override" — expanding it to a default
+				// stack would override the cell font on legacy diff columns.
+				headerFontFamily: resolveOptionalFontFamily(
+					diffColumn.style?.headerFontFamily ??
+						baseConfig.diffColumn?.style?.headerFontFamily
+				),
 			},
 		},
 		netValues: {
@@ -658,6 +781,10 @@ const getConfig = (
 				color:
 					netValues?.positive?.color ??
 					baseConfig.netValues?.positive?.color,
+				fontFamily: resolveFontFamily(
+					netValues?.positive?.fontFamily ??
+						baseConfig.netValues?.positive?.fontFamily
+				),
 			},
 			negative: {
 				...baseConfig.netValues.negative,
@@ -665,6 +792,10 @@ const getConfig = (
 				color:
 					netValues?.negative?.color ??
 					baseConfig.netValues?.negative?.color,
+				fontFamily: resolveFontFamily(
+					netValues?.negative?.fontFamily ??
+						baseConfig.netValues?.negative?.fontFamily
+				),
 			},
 		},
 		custom: {
@@ -680,6 +811,52 @@ const getConfig = (
 		sankey: {
 			...baseConfig.sankey,
 			...sankey,
+		},
+		waffle: {
+			...baseConfig.waffle,
+			...waffle,
+		},
+		heatMapTable: {
+			...baseConfig.heatMapTable,
+			...heatMapTable,
+		},
+		smallMultiples: {
+			panelType: 'line',
+			columns: 3,
+			panelHeight: 184,
+			minPanelWidth: 120,
+			sharedScale: true,
+			axisTreatment: 'minimal',
+			emphasisMode: 'own-series',
+			...baseConfig.smallMultiples,
+			...smallMultiples,
+			ghost: {
+				stroke: '#E6E7E8',
+				strokeWidth: 1.5,
+				opacity: 1,
+				...baseConfig.smallMultiples?.ghost,
+				...smallMultiples?.ghost,
+			},
+			panelGap: {
+				x: 24,
+				y: 32,
+				...baseConfig.smallMultiples?.panelGap,
+				...smallMultiples?.panelGap,
+			},
+			panelTitle: {
+				active: true,
+				fontSize: 13,
+				fontWeight: 700,
+				fill: '#2a2a2a',
+				padding: 8,
+				...baseConfig.smallMultiples?.panelTitle,
+				...smallMultiples?.panelTitle,
+				fontFamily: resolveFontFamily(
+					smallMultiples?.panelTitle?.fontFamily ??
+						baseConfig.smallMultiples?.panelTitle?.fontFamily
+				),
+			},
+			customTitles: resolvePanelTitleCustomizations(customPanelTitles),
 		},
 		annotations: {
 			...baseConfig.annotations,

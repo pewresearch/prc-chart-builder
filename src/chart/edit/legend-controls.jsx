@@ -3,11 +3,6 @@
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 /* eslint-disable max-lines-per-function */
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-
-/**
  * WordPress dependencies
  */
 import {
@@ -38,42 +33,32 @@ import {
 	getAvailableLegendCategories,
 	isBubbleMapLegendMode,
 } from '../utils/get-available-legend-categories';
-import { LINE_CHART_TYPES } from '../utils/chart-types';
+import {
+	LINE_CHART_TYPES,
+	effectiveChartTypeForControls,
+} from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import {
 	isLegendCategoryOrderStale,
 	mergeLegendCategoryOrder,
 } from '../utils/merge-legend-category-order';
-import { useFocusedPanel } from './inspector-focus-context';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
 import { FONT_WEIGHT_OPTIONS } from './popover/utils';
 import Sorter from './sorter';
-import { useViewportAttributes } from './use-viewport-attributes';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import {
+	PanelDescription,
+	WidePanelItem,
+	StyledLabel,
+	Help,
+} from './control-ui';
 
-const PanelDescription = styled.div`
-	grid-column: span 2;
-`;
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-`;
-
-const StyledLabel = styled.div`
-	font-size: 11px;
-	font-weight: 500;
-	line-height: 1.4;
-	text-transform: uppercase;
-	display: inline-block;
-	margin-bottom: calc(8px) !important;
-	padding: 0px;
-`;
-const Help = styled.div`
-	margin-top: calc(8px);
-	font-size: 12px;
-	font-style: normal;
-	color: rgb(117, 117, 117);
-	margin-bottom: 0px;
-`;
-
-function LegendControls({ attributes, setAttributes, clientId }) {
+function LegendControls({
+	attributes,
+	setAttributes,
+	clientId,
+	curated = false,
+}) {
 	// Viewport-aware attribute management
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -86,16 +71,18 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 	const io = attributes.io || {};
 	const dataRender = attributes.dataRender || {};
 	const sankey = attributes.sankey || {};
+	const smallMultiples = attributes.smallMultiples || {};
 
 	// Presentation attributes - viewport-aware
 	const layout = getCurrentValue('layout') || {};
 	const divergingBar = attributes.divergingBar || {};
 
 	const { type: chartType } = layout;
+	const effectiveType = effectiveChartTypeForControls(attributes);
 	const { chartFamily } = io;
 	const { mapScale, mapStyle } = dataRender;
 	const isBubbleMode = isBubbleMapLegendMode(chartType, mapStyle);
-	const isLineFamilyChart = LINE_CHART_TYPES.includes(chartType);
+	const isLineFamilyChart = LINE_CHART_TYPES.includes(effectiveType);
 
 	const availableLegendCategories = useMemo(
 		() =>
@@ -106,8 +93,17 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 				dataRender,
 				divergingBar,
 				sankey,
+				smallMultiples,
 			}),
-		[chartType, chartFamily, io, dataRender, divergingBar, sankey]
+		[
+			chartType,
+			chartFamily,
+			io,
+			dataRender,
+			divergingBar,
+			sankey,
+			smallMultiples,
+		]
 	);
 
 	const legendCategories = getCurrentValue('legend', 'categories');
@@ -119,7 +115,7 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 		);
 		return merged.map((c) => ({
 			label: c,
-			disabled: false,
+			isHidden: false,
 		}));
 	}, [legendCategories, availableLegendCategories]);
 
@@ -285,21 +281,23 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 							</PanelDescription>
 						</WidePanelItem>
 					)}
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Title')}
-						panelId={clientId}
-					>
-						<TextControl
-							label={__('Legend Title')}
-							value={getCurrentValue('legend', 'title')}
-							onChange={(value) =>
-								updateAttributeForDevice('legend', {
-									title: value,
-								})
-							}
-						/>
-					</WidePanelItem>
+					{!curated && (
+						<WidePanelItem
+							hasValue={() => true}
+							label={__('Title')}
+							panelId={clientId}
+						>
+							<TextControl
+								label={__('Legend Title')}
+								value={getCurrentValue('legend', 'title')}
+								onChange={(value) =>
+									updateAttributeForDevice('legend', {
+										title: value,
+									})
+								}
+							/>
+						</WidePanelItem>
+					)}
 					{isBubbleMode && (
 						<WidePanelItem
 							hasValue={() => true}
@@ -674,137 +672,193 @@ function LegendControls({ attributes, setAttributes, clientId }) {
 								</PanelDescription>
 							</WidePanelItem>
 						)}
-					<WidePanelItem
-						hasValue={() => getCurrentValue('legend', 'fontSize')}
-						label={__('Font Size')}
-						panelId={clientId}
-					>
-						<ToggleGroupControl
-							__nextHasNoMarginBottom
-							isBlock
-							value={getCurrentValue('legend', 'fontSize')}
-							label={__('Legend Font Size')}
-							onChange={(value) => {
-								updateAttributeForDevice('legend', {
-									fontSize: formatNum(value, 'integer'),
-								});
-							}}
-						>
-							<ToggleGroupControlOption label="10px" value={10} />
-							<ToggleGroupControlOption label="12px" value={12} />
-							<ToggleGroupControlOption label="14px" value={14} />
-							<ToggleGroupControlOption label="16px" value={16} />
-						</ToggleGroupControl>
-						<PanelDescription>
-							<Help>
-								{__(
-									'Select the font size for legend text. Default is 12px.'
-								)}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Font Weight')}
-						panelId={clientId}
-					>
-						<SelectControl
-							label={__('Font Weight')}
-							value={
-								getCurrentValue('legend', 'fontWeight') ||
-								'normal'
-							}
-							options={[...FONT_WEIGHT_OPTIONS]}
-							onChange={(value) =>
-								updateAttributeForDevice('legend', {
-									fontWeight: value,
-								})
-							}
-						/>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Margin')}
-						panelId={clientId}
-					>
-						<SpacingSizesControl
-							label={__('Legend Margin')}
-							values={{
-								top: getCurrentValue('legend', 'margin')?.top
-									? `${getCurrentValue('legend', 'margin').top}px`
-									: '0px',
-								right: getCurrentValue('legend', 'margin')
-									?.right
-									? `${getCurrentValue('legend', 'margin').right}px`
-									: '0px',
-								bottom: getCurrentValue('legend', 'margin')
-									?.bottom
-									? `${getCurrentValue('legend', 'margin').bottom}px`
-									: '0px',
-								left: getCurrentValue('legend', 'margin')?.left
-									? `${getCurrentValue('legend', 'margin').left}px`
-									: '0px',
-							}}
-							onChange={(value) => {
-								// Parse string values like '12px' to numbers like 12
-								const parsedValue = {
-									top: parseInt(value?.top || '0', 10),
-									right: parseInt(value?.right || '0', 10),
-									bottom: parseInt(value?.bottom || '0', 10),
-									left: parseInt(value?.left || '0', 10),
-								};
-								updateAttributeForDevice('legend', {
-									margin: parsedValue,
-								});
-							}}
-							sides={['top', 'right', 'bottom', 'left']}
-							units={[{ label: 'px' }]}
-							allowReset={true}
-						/>
-						<PanelDescription>
-							<Help>
-								{__(
-									'Spacing in pixels between legend items. Default: 0px 5px 0px 0px'
-								)}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Fill and Stroke')}
-						panelId={clientId}
-					>
-						<PanelColorSettings
-							__experimentalHasMultipleOrigins
-							__experimentalIsRenderedInSidebar
-							title={__('Fill and Stroke')}
-							style={{
-								paddingLeft: '0',
-								paddingRight: '0',
-							}}
-							colorSettings={[
-								{
-									value: getCurrentValue(
+					{!curated && (
+						<>
+							<WidePanelItem
+								hasValue={() =>
+									getCurrentValue('legend', 'fontSize')
+								}
+								label={__('Font Size')}
+								panelId={clientId}
+							>
+								<ToggleGroupControl
+									__nextHasNoMarginBottom
+									isBlock
+									value={getCurrentValue(
 										'legend',
-										'borderStroke'
-									),
-									onChange: (value) =>
+										'fontSize'
+									)}
+									label={__('Legend Font Size')}
+									onChange={(value) => {
 										updateAttributeForDevice('legend', {
-											borderStroke: value ?? '',
-										}),
-									label: __('Stroke'),
-								},
-								{
-									value: getCurrentValue('legend', 'fill'),
-									onChange: (value) =>
+											fontSize: formatNum(
+												value,
+												'integer'
+											),
+										});
+									}}
+								>
+									<ToggleGroupControlOption
+										label="10px"
+										value={10}
+									/>
+									<ToggleGroupControlOption
+										label="12px"
+										value={12}
+									/>
+									<ToggleGroupControlOption
+										label="14px"
+										value={14}
+									/>
+									<ToggleGroupControlOption
+										label="16px"
+										value={16}
+									/>
+								</ToggleGroupControl>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Select the font size for legend text. Default is 12px.'
+										)}
+									</Help>
+								</PanelDescription>
+							</WidePanelItem>
+							<WidePanelItem
+								hasValue={() => true}
+								label={__('Font Weight')}
+								panelId={clientId}
+							>
+								<SelectControl
+									label={__('Font Weight')}
+									value={
+										getCurrentValue(
+											'legend',
+											'fontWeight'
+										) || 'normal'
+									}
+									options={[...FONT_WEIGHT_OPTIONS]}
+									onChange={(value) =>
 										updateAttributeForDevice('legend', {
-											fill: value ?? '',
-										}),
-									label: __('Fill'),
-								},
-							]}
-						/>
-					</WidePanelItem>
+											fontWeight: value,
+										})
+									}
+								/>
+							</WidePanelItem>
+							<WidePanelItem
+								hasValue={() => true}
+								label={__('Margin')}
+								panelId={clientId}
+							>
+								<SpacingSizesControl
+									label={__('Legend Margin')}
+									values={{
+										top: getCurrentValue('legend', 'margin')
+											?.top
+											? `${getCurrentValue('legend', 'margin').top}px`
+											: '0px',
+										right: getCurrentValue(
+											'legend',
+											'margin'
+										)?.right
+											? `${getCurrentValue('legend', 'margin').right}px`
+											: '0px',
+										bottom: getCurrentValue(
+											'legend',
+											'margin'
+										)?.bottom
+											? `${getCurrentValue('legend', 'margin').bottom}px`
+											: '0px',
+										left: getCurrentValue(
+											'legend',
+											'margin'
+										)?.left
+											? `${getCurrentValue('legend', 'margin').left}px`
+											: '0px',
+									}}
+									onChange={(value) => {
+										// Parse string values like '12px' to numbers like 12
+										const parsedValue = {
+											top: parseInt(
+												value?.top || '0',
+												10
+											),
+											right: parseInt(
+												value?.right || '0',
+												10
+											),
+											bottom: parseInt(
+												value?.bottom || '0',
+												10
+											),
+											left: parseInt(
+												value?.left || '0',
+												10
+											),
+										};
+										updateAttributeForDevice('legend', {
+											margin: parsedValue,
+										});
+									}}
+									sides={['top', 'right', 'bottom', 'left']}
+									units={[{ label: 'px' }]}
+									allowReset={true}
+								/>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Spacing in pixels between legend items. Default: 0px 5px 0px 0px'
+										)}
+									</Help>
+								</PanelDescription>
+							</WidePanelItem>
+							<WidePanelItem
+								hasValue={() => true}
+								label={__('Fill and Stroke')}
+								panelId={clientId}
+							>
+								<PanelColorSettings
+									__experimentalHasMultipleOrigins
+									__experimentalIsRenderedInSidebar
+									title={__('Fill and Stroke')}
+									style={{
+										paddingLeft: '0',
+										paddingRight: '0',
+									}}
+									colorSettings={[
+										{
+											value: getCurrentValue(
+												'legend',
+												'borderStroke'
+											),
+											onChange: (value) =>
+												updateAttributeForDevice(
+													'legend',
+													{
+														borderStroke:
+															value ?? '',
+													}
+												),
+											label: __('Stroke'),
+										},
+										{
+											value: getCurrentValue(
+												'legend',
+												'fill'
+											),
+											onChange: (value) =>
+												updateAttributeForDevice(
+													'legend',
+													{
+														fill: value ?? '',
+													}
+												),
+											label: __('Fill'),
+										},
+									]}
+								/>
+							</WidePanelItem>
+						</>
+					)}
 					{!isBubbleMode &&
 						'map' === chartFamily &&
 						'threshold' === mapScale && (

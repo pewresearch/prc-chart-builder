@@ -1,6 +1,9 @@
 import generated from './generated.json';
 import { CURATED_CONFIG_GROUPS } from '../constants';
 
+export * from './field-grid-layout';
+export * from './format-shipped-default';
+
 /** @typedef {import('./types').FieldDefinition} FieldDefinition */
 
 /** @type {Record<string, FieldDefinition[]>} */

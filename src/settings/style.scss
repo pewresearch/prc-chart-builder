@@ -7,6 +7,8 @@ $grid-unit-15: 12px;
 $grid-unit-20: 16px;
 
 .prc-chart-theme-settings {
+	box-sizing: border-box;
+
 	&__empty {
 		color: $gray-700;
 		margin: 0;
@@ -84,6 +86,7 @@ $grid-unit-20: 16px;
 
 	&__global-save {
 		position: sticky;
+		// Classic .wrap scrolls under the fixed WP admin bar.
 		top: 32px;
 		z-index: 10;
 		margin-bottom: $grid-unit-20;
@@ -203,6 +206,11 @@ $grid-unit-20: 16px;
 	&__readonly-value {
 		color: $gray-700;
 	}
+}
+
+// Boot mounts settings inside a stage scroller; sticky top is relative to that.
+.boot-layout__stage .prc-chart-theme-settings__global-save {
+	top: 0;
 }
 
 .prc-chart-theme-settings__tabs {

@@ -7,7 +7,9 @@
  * draggable annotations and labels that only work in the editor.
  */
 
-import { findAlignments, generateLabelId } from './alignment-utils';
+import { findAlignments, generateLabelId } from './utils/alignment-utils';
+import { translateDrawing } from './utils/drawing-utils';
+import * as drawingManipulation from './utils/drawing-manipulation';
 import {
 	POSITION_DISABLED_CHART_TYPES,
 	ANNOTATION_POPOVER_CHART_TYPES,
@@ -49,6 +51,9 @@ export function generateLabelKey(x, category, groupValue = null) {
  * @param {Function} params.setAlignments            - Function to update alignment overlay state
  * @param {Function} params.setIsDragging            - Function to update drag state (for disabling tooltips)
  * @param {Function} params.onElementClick           - Callback when a chart element (label/shape) is clicked for customization
+ * @param {Function} params.setSelectedDrawingId     - Optional: select a drawing in the inspector list
+ * @param {string}   params.selectedDrawingId       - Currently selected drawing id (editor overlay)
+ * @param {Function} params.setSmDrawingGeometry    - Optional: receive live SM panel geometry
  * @return {Object} wpEditorFunctions object with annotations, labels, shapes, and legend handlers
  */
 export function createWpEditorFunctions({
@@ -62,6 +67,9 @@ export function createWpEditorFunctions({
 	setAlignments,
 	setIsDragging,
 	onElementClick,
+	setSelectedDrawingId,
+	selectedDrawingId = null,
+	setSmDrawingGeometry,
 }) {
 	const positionDisabled = POSITION_DISABLED_CHART_TYPES.includes(chartType);
 	// null means the feature is enabled for all chart types.
@@ -159,6 +167,72 @@ export function createWpEditorFunctions({
 				// Re-enable block selection
 				if (toggleSelection) {
 					toggleSelection(true);
+				}
+			},
+		},
+		/**
+		 * Drawing drag handlers (annotation pattern). Used by DrawingsLayer when
+		 * rendered in-editor. Small multiples render selection handles in-chart
+		 * via DrawingSelectionHandles; other chart types use DrawingSelectionLayer.
+		 */
+		drawings: {
+			selectedDrawingId,
+			useInChartSelectionHandles: chartType === 'small-multiples',
+			getDrawings: () => attrs?.drawings || [],
+			manipulation: drawingManipulation,
+			onDrawingsChange: (newDrawings) => {
+				setAttributes({ drawings: newDrawings });
+			},
+			onDeleteDrawing: (drawingId) => {
+				setAttributes({
+					drawings: (attrs?.drawings || []).filter(
+						(item) => item.id !== drawingId
+					),
+				});
+				if (setSelectedDrawingId && selectedDrawingId === drawingId) {
+					setSelectedDrawingId(null);
+				}
+			},
+			onDragStart: () => {
+				if (toggleSelection) {
+					toggleSelection(false);
+				}
+				if (setIsDragging) {
+					setIsDragging(true);
+				}
+			},
+			onDrag: () => {},
+			onDragEnd: (drawingId, layoutDx, layoutDy) => {
+				if (setIsDragging) {
+					setIsDragging(false);
+				}
+				const current = attrs?.drawings || [];
+				const dx = Math.round(layoutDx * 10) / 10;
+				const dy = Math.round(layoutDy * 10) / 10;
+				if (dx !== 0 || dy !== 0) {
+					setAttributes({
+						drawings: current.map((drawing) =>
+							drawing.id === drawingId
+								? translateDrawing(drawing, dx, dy)
+								: drawing
+						),
+					});
+				}
+				if (toggleSelection) {
+					toggleSelection(true);
+				}
+			},
+			onSelectionDragEnd: () => {
+				if (setIsDragging) {
+					setIsDragging(false);
+				}
+				if (toggleSelection) {
+					toggleSelection(true);
+				}
+			},
+			onClick: (drawingId) => {
+				if (setSelectedDrawingId) {
+					setSelectedDrawingId(drawingId);
 				}
 			},
 		},
@@ -727,6 +801,67 @@ export function createWpEditorFunctions({
 					},
 				}
 			: undefined,
+		panelTitles: onElementClick
+			? {
+					/**
+					 * Handle click on a small-multiples panel title.
+					 *
+					 * @param {string}      panelKey     - Panel key (column header or group value)
+					 * @param {string}      defaultLabel - Default title text
+					 * @param {HTMLElement} anchorEl     - DOM element to anchor the popover to
+					 */
+					onClick: (panelKey, defaultLabel, anchorEl) => {
+						onElementClick({
+							elementType: 'panelTitle',
+							categoryValue: panelKey,
+							defaultLabel,
+							anchorEl,
+						});
+					},
+
+					getCustomizations: () => {
+						return getCurrentValue('customPanelTitles') || {};
+					},
+
+					onItemDragStart: () => {
+						if (toggleSelection) {
+							toggleSelection(false);
+						}
+						if (setIsDragging) {
+							setIsDragging(true);
+						}
+					},
+
+					onItemDrag: () => {},
+
+					/**
+					 * Persist panel-title drag offsets to customPanelTitles.
+					 *
+					 * @param {string} panelKey - Panel key
+					 * @param {number} finalX   - Offset X in layout px
+					 * @param {number} finalY   - Offset Y in layout px
+					 */
+					onItemDragEnd: (panelKey, finalX, finalY) => {
+						if (setIsDragging) {
+							setIsDragging(false);
+						}
+						const current = attrs?.customPanelTitles || {};
+						setAttributes({
+							customPanelTitles: {
+								...current,
+								[panelKey]: {
+									...(current[panelKey] ?? {}),
+									offsetX: Math.round(finalX),
+									offsetY: Math.round(finalY),
+								},
+							},
+						});
+						if (toggleSelection) {
+							toggleSelection(true);
+						}
+					},
+				}
+			: undefined,
 		errorBars: onElementClick
 			? {
 					/**
@@ -843,5 +978,12 @@ export function createWpEditorFunctions({
 				}
 			},
 		},
+		smallMultiples: setSmDrawingGeometry
+			? {
+					setDrawingGeometry: (geometry) => {
+						setSmDrawingGeometry(geometry);
+					},
+				}
+			: undefined,
 	};
 }

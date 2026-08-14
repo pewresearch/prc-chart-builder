@@ -70,12 +70,12 @@ return array(
 			'colors' => array(
 				'type' => 'array',
 				'default' => array(
-					'#F687B3',
-					'#ED64A6',
-					'#D53F8C',
-					'#B83280',
-					'#9F7AEA',
-					'#805AD5'
+					'#405F76',
+					'#D8E2EA',
+					'#B8C8D4',
+					'#97ADBD',
+					'#7893A7',
+					'#5B798F'
 				)
 			),
 			'plotBands' => array(
@@ -97,10 +97,7 @@ return array(
 					'label' => '',
 					'scale' => 'linear',
 					'dateFormat' => '%Y',
-					'domain' => array(
-						0,
-						100
-					),
+					'domain' => null,
 					'domainPadding' => 20,
 					'showZero' => true,
 					'padding' => 30,
@@ -160,10 +157,8 @@ return array(
 					'active' => true,
 					'label' => '',
 					'scale' => 'linear',
-					'domain' => array(
-						0,
-						100
-					),
+					'domain' => null,
+					'nice' => true,
 					'showZero' => false,
 					'tickMarksActive' => true,
 					'tickCount' => 5,
@@ -220,14 +215,17 @@ return array(
 				'type' => 'object',
 				'default' => array(
 					'active' => false,
+					'mode' => 'point',
 					'headerActive' => true,
 					'headerValue' => 'categoryValue',
 					'format' => '{{row}}: {{value}}',
+					'template' => null,
 					'offsetX' => 10,
 					'offsetY' => 10,
 					'abbreviateValue' => false,
 					'absoluteValue' => false,
 					'toFixedDecimal' => 0,
+					'minDisplayValue' => null,
 					'toLocaleString' => true,
 					'customFormat' => null,
 					'rlsFormat' => false,
@@ -291,12 +289,14 @@ return array(
 				'default' => array(
 					'active' => false,
 					'showFirstLastPointsOnly' => false,
+					'firstLastLabelLayout' => 'default',
 					'color' => 'inherit',
 					'fontWeight' => 200,
 					'fontSize' => 10,
 					'fontFamily' => 'var:preset|font-family|sans-serif',
 					'labelPositionBar' => 'inside',
 					'labelCutoff' => 0,
+					'minDisplayValue' => null,
 					'labelPositionDX' => 0,
 					'labelPositionDY' => 0,
 					'pieLabelRadius' => 60,
@@ -311,6 +311,8 @@ return array(
 					'customLabelFormat' => null,
 					'autoDeclutter' => false,
 					'declutterPadding' => 4,
+					'declutterOmitWithin' => 0,
+					'declutterOmitEdgeWithin' => 0,
 					'declutterLeaderLines' => false,
 					'textOutline' => false,
 					'textOutlineMode' => 'contrast',
@@ -356,6 +358,7 @@ return array(
 					'strokeDasharray' => '',
 					'strokeWidth' => 3,
 					'showPoints' => true,
+					'showFirstLastPointsOnly' => false,
 					'showArea' => false,
 					'areaFillOpacity' => 0.4
 				)
@@ -421,8 +424,22 @@ return array(
 				'default' => array(
 					'pointSize' => 3,
 					'pointFill' => 'inherit',
+					'pointFillOpacity' => 1,
 					'pointStrokeWidth' => 1,
-					'pointStroke' => 'inherit'
+					'pointStroke' => 'inherit',
+					'sizeCategory' => null,
+					'sizeScale' => 'sqrt',
+					'minPointSize' => 4,
+					'maxPointSize' => 24
+				)
+			),
+			'beeSwarm' => array(
+				'type' => 'object',
+				'default' => array(
+					'layoutMode' => 'dodge',
+					'groupBy' => null,
+					'forceStrength' => 0.1,
+					'swarmSpread' => 24
 				)
 			),
 			'regression' => array(
@@ -544,7 +561,7 @@ return array(
 						'category' => '',
 						'color' => 'black',
 						'fontWeight' => 700,
-						'fontSize' => 10,
+						'fontSize' => 12,
 						'fontFamily' => 'var:preset|font-family|sans-serif',
 						'textAnchor' => 'middle',
 						'labelPositionDX' => 0,
@@ -563,7 +580,7 @@ return array(
 						'category' => '',
 						'color' => 'black',
 						'fontWeight' => 700,
-						'fontSize' => 10,
+						'fontSize' => 12,
 						'fontFamily' => 'var:preset|font-family|sans-serif',
 						'textAnchor' => 'middle',
 						'labelPositionDX' => 0,
@@ -610,6 +627,64 @@ return array(
 					'valueKey' => 'value'
 				)
 			),
+			'waffle' => array(
+				'type' => 'object',
+				'default' => array(
+					'cellShape' => 'square',
+					'cellGap' => 0.1,
+					'cellRadius' => 3,
+					'emptyFill' => '#E6E7E8',
+					'columns' => 10,
+					'rows' => 10,
+					'max' => null,
+					'cellSize' => 14,
+					'cellSizeMode' => 'clamp',
+					'displayMode' => 'whole'
+				)
+			),
+			'heatMapTable' => array(
+				'type' => 'object',
+				'default' => array(
+					'cellGap' => 0,
+					'cellRadius' => 0,
+					'showValues' => true,
+					'emptyFill' => '#F5F5F5',
+					'rowLabelWidth' => 0,
+					'columnHeaderHeight' => 48,
+					'minCellWidth' => 40,
+					'minCellHeight' => 28
+				)
+			),
+			'smallMultiples' => array(
+				'type' => 'object',
+				'default' => array(
+					'panelType' => 'line',
+					'columns' => 3,
+					'panelHeight' => 184,
+					'minPanelWidth' => 120,
+					'sharedScale' => true,
+					'axisTreatment' => 'minimal',
+					'emphasisMode' => 'own-series',
+					'ghost' => array(
+						'stroke' => '#E6E7E8',
+						'strokeWidth' => 1.5,
+						'opacity' => 1
+					),
+					'panelGap' => array(
+						'x' => 24,
+						'y' => 32
+					),
+					'panelTitle' => array(
+						'active' => true,
+						'fontSize' => 13,
+						'fontWeight' => 700,
+						'fontFamily' => 'var:preset|font-family|sans-serif',
+						'fill' => '#2a2a2a',
+						'padding' => 8,
+						'textAlign' => 'center'
+					)
+				)
+			),
 			'annotations' => array(
 				'type' => 'object',
 				'default' => array(
@@ -637,6 +712,12 @@ return array(
 				)
 			),
 			'customLegendLabels' => array(
+				'type' => 'object',
+				'default' => array(
+					
+				)
+			),
+			'customPanelTitles' => array(
 				'type' => 'object',
 				'default' => array(
 					

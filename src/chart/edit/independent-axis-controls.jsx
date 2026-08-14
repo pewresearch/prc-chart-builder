@@ -24,9 +24,16 @@ import {
  * Internal dependencies
  */
 import { PanelColorSettings } from '@wordpress/block-editor';
-import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-import { useFocusedPanel } from './inspector-focus-context';
+import { effectiveChartTypeForControls } from '../utils/chart-types';
+import {
+	buildEditedAxisDomain,
+	formatNum,
+	getInferredAxisDomainFromData,
+	isAutoAxisDomainForScale,
+	timeDomainBoundToYear,
+} from '../utils/helpers';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
 
 function IndependentAxisControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
@@ -37,10 +44,55 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('independentAxis');
 
 	const layout = getCurrentValue('layout') || {};
-	const { type: chartType } = layout;
+	const chartType = effectiveChartTypeForControls(attributes) || layout.type;
 	// Content attribute - NOT viewport-aware
 	const dataRender = attributes.dataRender || {};
 	const { xFormat } = dataRender;
+	// The Data tab writes dataRender.xScale; get-config gives it precedence.
+	const independentScale =
+		dataRender.xScale ??
+		getCurrentValue('independentAxis', 'scale') ??
+		'linear';
+	const independentIsTime = 'time' === independentScale;
+	// Legacy numeric time domains render as auto, so show them as unset
+	// (with the inferred data domain as placeholder) instead of as years
+	// the chart ignores.
+	const independentDomainIsAuto = isAutoAxisDomainForScale(
+		getCurrentValue('independentAxis', 'domain'),
+		independentScale
+	);
+	const inferredIndependentDomain = getInferredAxisDomainFromData(
+		attributes,
+		'independent'
+	);
+	// Time domains persist as ISO strings (author intent marker — legacy
+	// numeric pairs stay auto); the controls still show plain years.
+	const domainBoundValue = (index) => {
+		if (independentDomainIsAuto) {
+			return '';
+		}
+		const bound = getCurrentValue('independentAxis', 'domain')?.[index];
+		return (independentIsTime ? timeDomainBoundToYear(bound) : bound) ?? '';
+	};
+	const domainBoundPlaceholder = (index) =>
+		independentDomainIsAuto && inferredIndependentDomain
+			? String(inferredIndependentDomain[index])
+			: undefined;
+	const onDomainBoundChange = (index) => (val) => {
+		if (val === '' || val === undefined) {
+			updateAttributeForDevice('independentAxis', { domain: null });
+			return;
+		}
+		updateAttributeForDevice('independentAxis', {
+			domain: buildEditedAxisDomain({
+				editedIndex: index,
+				editedValue: val,
+				currentDomain: getCurrentValue('independentAxis', 'domain'),
+				inferredDomain: inferredIndependentDomain,
+				scale: independentScale,
+			}),
+		});
+	};
 
 	return (
 		<div ref={panelRef}>
@@ -195,16 +247,19 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 					/>
 				)}
 				<PanelRow>Domain</PanelRow>
+				{'time' === getCurrentValue('independentAxis', 'scale') && (
+					<p className="components-base-control__help">
+						{__(
+							'Default uses the data range. Set min/max years here to extend or crop the axis (e.g. start at 2000 even if data begins later).'
+						)}
+					</p>
+				)}
 				<Flex>
 					<FlexItem>
 						<NumberControl
 							label={__('Minimum')}
-							value={
-								getCurrentValue(
-									'independentAxis',
-									'domain'
-								)?.[0]
-							}
+							value={domainBoundValue(0)}
+							placeholder={domainBoundPlaceholder(0)}
 							disabled={
 								'stacked-bar' === chartType ||
 								'bar' === chartType ||
@@ -212,30 +267,14 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 							}
 							disableUnits
 							disabledUnits
-							onChange={(val) => {
-								const currentDomain =
-									getCurrentValue(
-										'independentAxis',
-										'domain'
-									) || [];
-								updateAttributeForDevice('independentAxis', {
-									domain: [
-										formatNum(val, 'integer'),
-										currentDomain[1] ?? 0,
-									],
-								});
-							}}
+							onChange={onDomainBoundChange(0)}
 						/>
 					</FlexItem>
 					<FlexItem>
 						<NumberControl
 							label={__('Maximum')}
-							value={
-								getCurrentValue(
-									'independentAxis',
-									'domain'
-								)?.[1]
-							}
+							value={domainBoundValue(1)}
+							placeholder={domainBoundPlaceholder(1)}
 							disabled={
 								'stacked-bar' === chartType ||
 								'bar' === chartType ||
@@ -243,19 +282,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 							}
 							disableUnits
 							disabledUnits
-							onChange={(val) => {
-								const currentDomain =
-									getCurrentValue(
-										'independentAxis',
-										'domain'
-									) || [];
-								updateAttributeForDevice('independentAxis', {
-									domain: [
-										currentDomain[0] ?? 0,
-										formatNum(val, 'integer'),
-									],
-								});
-							}}
+							onChange={onDomainBoundChange(1)}
 						/>
 					</FlexItem>
 				</Flex>

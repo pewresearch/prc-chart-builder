@@ -63,12 +63,12 @@
     "colors": {
       "type": "array",
       "default": [
-        "#F687B3",
-        "#ED64A6",
-        "#D53F8C",
-        "#B83280",
-        "#9F7AEA",
-        "#805AD5"
+        "#405F76",
+        "#D8E2EA",
+        "#B8C8D4",
+        "#97ADBD",
+        "#7893A7",
+        "#5B798F"
       ]
     },
     "plotBands": {
@@ -88,10 +88,7 @@
         "label": "",
         "scale": "linear",
         "dateFormat": "%Y",
-        "domain": [
-          0,
-          100
-        ],
+        "domain": null,
         "domainPadding": 20,
         "showZero": true,
         "padding": 30,
@@ -151,10 +148,8 @@
         "active": true,
         "label": "",
         "scale": "linear",
-        "domain": [
-          0,
-          100
-        ],
+        "domain": null,
+        "nice": true,
         "showZero": false,
         "tickMarksActive": true,
         "tickCount": 5,
@@ -211,14 +206,17 @@
       "type": "object",
       "default": {
         "active": false,
+        "mode": "point",
         "headerActive": true,
         "headerValue": "categoryValue",
         "format": "{{row}}: {{value}}",
+        "template": null,
         "offsetX": 10,
         "offsetY": 10,
         "abbreviateValue": false,
         "absoluteValue": false,
         "toFixedDecimal": 0,
+        "minDisplayValue": null,
         "toLocaleString": true,
         "customFormat": null,
         "rlsFormat": false,
@@ -280,12 +278,14 @@
       "default": {
         "active": false,
         "showFirstLastPointsOnly": false,
+        "firstLastLabelLayout": "default",
         "color": "inherit",
         "fontWeight": 200,
         "fontSize": 10,
         "fontFamily": "var:preset|font-family|sans-serif",
         "labelPositionBar": "inside",
         "labelCutoff": 0,
+        "minDisplayValue": null,
         "labelPositionDX": 0,
         "labelPositionDY": 0,
         "pieLabelRadius": 60,
@@ -300,6 +300,8 @@
         "customLabelFormat": null,
         "autoDeclutter": false,
         "declutterPadding": 4,
+        "declutterOmitWithin": 0,
+        "declutterOmitEdgeWithin": 0,
         "declutterLeaderLines": false,
         "textOutline": false,
         "textOutlineMode": "contrast",
@@ -333,6 +335,7 @@
         "strokeDasharray": "",
         "strokeWidth": 3,
         "showPoints": true,
+        "showFirstLastPointsOnly": false,
         "showArea": false,
         "areaFillOpacity": 0.4
       }
@@ -394,8 +397,22 @@
       "default": {
         "pointSize": 3,
         "pointFill": "inherit",
+        "pointFillOpacity": 1,
         "pointStrokeWidth": 1,
-        "pointStroke": "inherit"
+        "pointStroke": "inherit",
+        "sizeCategory": null,
+        "sizeScale": "sqrt",
+        "minPointSize": 4,
+        "maxPointSize": 24
+      }
+    },
+    "beeSwarm": {
+      "type": "object",
+      "default": {
+        "layoutMode": "dodge",
+        "groupBy": null,
+        "forceStrength": 0.1,
+        "swarmSpread": 24
       }
     },
     "regression": {
@@ -501,7 +518,7 @@
           "category": "",
           "color": "black",
           "fontWeight": 700,
-          "fontSize": 10,
+          "fontSize": 12,
           "fontFamily": "var:preset|font-family|sans-serif",
           "textAnchor": "middle",
           "labelPositionDX": 0,
@@ -520,7 +537,7 @@
           "category": "",
           "color": "black",
           "fontWeight": 700,
-          "fontSize": 10,
+          "fontSize": 12,
           "fontFamily": "var:preset|font-family|sans-serif",
           "textAnchor": "middle",
           "labelPositionDX": 0,
@@ -567,6 +584,64 @@
         "valueKey": "value"
       }
     },
+    "waffle": {
+      "type": "object",
+      "default": {
+        "cellShape": "square",
+        "cellGap": 0.1,
+        "cellRadius": 3,
+        "emptyFill": "#E6E7E8",
+        "columns": 10,
+        "rows": 10,
+        "max": null,
+        "cellSize": 14,
+        "cellSizeMode": "clamp",
+        "displayMode": "whole"
+      }
+    },
+    "heatMapTable": {
+      "type": "object",
+      "default": {
+        "cellGap": 0,
+        "cellRadius": 0,
+        "showValues": true,
+        "emptyFill": "#F5F5F5",
+        "rowLabelWidth": 0,
+        "columnHeaderHeight": 48,
+        "minCellWidth": 40,
+        "minCellHeight": 28
+      }
+    },
+    "smallMultiples": {
+      "type": "object",
+      "default": {
+        "panelType": "line",
+        "columns": 3,
+        "panelHeight": 184,
+        "minPanelWidth": 120,
+        "sharedScale": true,
+        "axisTreatment": "minimal",
+        "emphasisMode": "own-series",
+        "ghost": {
+          "stroke": "#E6E7E8",
+          "strokeWidth": 1.5,
+          "opacity": 1
+        },
+        "panelGap": {
+          "x": 24,
+          "y": 32
+        },
+        "panelTitle": {
+          "active": true,
+          "fontSize": 13,
+          "fontWeight": 700,
+          "fontFamily": "var:preset|font-family|sans-serif",
+          "fill": "#2a2a2a",
+          "padding": 8,
+          "textAlign": "center"
+        }
+      }
+    },
     "annotations": {
       "type": "object",
       "default": {
@@ -586,6 +661,10 @@
       }
     },
     "customLegendLabels": {
+      "type": "object",
+      "default": {}
+    },
+    "customPanelTitles": {
       "type": "object",
       "default": {}
     },

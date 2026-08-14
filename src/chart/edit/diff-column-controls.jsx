@@ -1,10 +1,5 @@
 /* eslint-disable max-lines-per-function */
 /**
- * External dependencies
- */
-import styled from '@emotion/styled';
-
-/**
  * WordPress dependencies
  */
 import {
@@ -14,7 +9,6 @@ import {
 	TextControl,
 	ToggleControl,
 	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 /**
@@ -22,15 +16,9 @@ import { __ } from '@wordpress/i18n';
  */
 import { PanelColorSettings } from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-import { useFocusedPanel } from './inspector-focus-context';
-
-// const PanelDescription = styled.div`
-// 	grid-column: span 2;
-// `;
-const WidePanelItem = styled(ToolsPanelItem)`
-	grid-column: span 2;
-`;
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
+import { WidePanelItem } from './control-ui';
 
 function DiffColumnControls({ attributes, setAttributes, clientId }) {
 	// Viewport-aware attribute management

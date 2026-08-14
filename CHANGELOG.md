@@ -2,9 +2,42 @@
 
 All notable changes to the PRC Chart Builder plugin are documented in this file.
 
-For detailed narrative release notes, see [`docs/release-notes/`](docs/release-notes/).
+For detailed narrative release notes, see [`docs/plugins/prc-chart-builder/release-notes/`](../../docs/plugins/prc-chart-builder/release-notes/).
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
+
+## [3.14.0] — August 2026
+
+Narrative notes: [`docs/plugins/prc-chart-builder/release-notes/3_14_0.md`](../../docs/plugins/prc-chart-builder/release-notes/3_14_0.md). Tracking: [PRC-626](https://linear.app/pewresearch/issue/PRC-626/chart-builder-314-tracking).
+
+### Added
+
+- Guided Chart Creation wizard (Pattern → Data → Configure → Preview), gated behind a site-level rollout toggle ([PRC-527](https://linear.app/pewresearch/issue/PRC-527/chart-creation-ui), [PRC-684](https://linear.app/pewresearch/issue/PRC-684/chart-creation-ui-pass-2-ux-review)).
+- Chart Library as the All Charts admin destination, with static PNG thumbnails and list/grid/table layouts.
+- Site-level Chart Theme (`chart-theme.json`) with registry-bound import/export and scoped frontend delivery ([PRC-560](https://linear.app/pewresearch/issue/PRC-560/standardize-prc-legacy-theme-as-chart-themejson), [PRC-628](https://linear.app/pewresearch/issue/PRC-628/chart-theme-delivery-trim-inline-payload-scope-edge-purge-harden)).
+- Small Multiples (BETA), Waffle, Beeswarm, and Heat Map Table chart types ([PRC-637](https://linear.app/pewresearch/issue/PRC-637/small-multiples-but-for-real), [PRC-52](https://linear.app/pewresearch/issue/PRC-52/enhancement-beeswarm-chart-type), [PRC-268](https://linear.app/pewresearch/issue/PRC-268/enhancement-heat-map-table)).
+- Variable scatter / beeswarm node sizing from a numeric column ([PRC-433](https://linear.app/pewresearch/issue/PRC-433/add-variable-dot-sizing-to-scatter-plots)).
+- Multi-palette color swatch picker in Style Chart ([PRC-710](https://linear.app/pewresearch/issue/PRC-710/chart-color-swatch-revamp)).
+- RichText tooltip templates, unified tooltip mode, and `minDisplayValue` floors ([PRC-709](https://linear.app/pewresearch/issue/PRC-709/tooltip-formatting-field-revamp)).
+- Detached-legend paragraph alignment ([PRC-485](https://linear.app/pewresearch/issue/PRC-485/add-paragraph-styling-options-for-detached-legends)).
+- Nice-domain toggle, first/last line-label layout, first/last line nodes, and Power Table map-data validation ([PRC-541](https://linear.app/pewresearch/issue/PRC-541/option-to-toggle-off-nice-rounding-for-domains), [PRC-530](https://linear.app/pewresearch/issue/PRC-530/move-map-requirements-to-power-table-expand-column-name-catchers), [PRC-660](https://linear.app/pewresearch/issue/PRC-660/add-first-and-last-only-nodes-option-for-line-charts)).
+
+### Changed
+
+- Synced-chart usage tracking moves off the frontend render path onto the post-publish pipeline.
+- `dependentAxis.nice` defaults to `true` so existing charts keep v1.12 tick rounding.
+- `@prc/chart-builder` and `@prc/charting-library` declare MIT consistently.
+
+### Fixed
+
+- Mirrored `labelPositionDX` on negative diverging bars ([PRC-437](https://linear.app/pewresearch/issue/PRC-437)).
+- Grouped bar, stacked, diverging, and exploded charts keep even bar thickness when a group has one item ([PRC-640](https://linear.app/pewresearch/issue/PRC-640/bar-height-is-shorter-for-single-item-groups-in-chart-builder)).
+- Bar charts grow from zero when the dependent axis min is below zero, with a solid zero line when the domain crosses it ([PRC-553](https://linear.app/pewresearch/issue/PRC-553/bar-chart-negative-values-render-from-axis-minimum)).
+- Floated synced charts no longer crop on mobile (`max-width: 100%`).
+- Duplicate sibling Chart IDs prompt Regenerate / Keep.
+- Node Fill "White" and net-value font tokens resolve through the shared color/font helpers.
+
+---
 
 ## [3.8.1] - Late April 2026
 

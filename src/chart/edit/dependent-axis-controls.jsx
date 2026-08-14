@@ -24,9 +24,14 @@ import {
  * Internal dependencies
  */
 import { PanelColorSettings } from '@wordpress/block-editor';
-import { formatNum } from '../utils/helpers';
-import { useViewportAttributes } from './use-viewport-attributes';
-import { useFocusedPanel } from './inspector-focus-context';
+import {
+	buildEditedAxisDomain,
+	formatNum,
+	getInferredAxisDomainFromData,
+	isAutoAxisDomain,
+} from '../utils/helpers';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { useFocusedPanel } from './hooks/inspector-focus-context';
 
 function DependentAxisControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
@@ -35,6 +40,39 @@ function DependentAxisControls({ attributes, setAttributes }) {
 		setAttributes
 	);
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('dependentAxis');
+	// An auto (null) domain shows as unset with the inferred data domain as
+	// placeholder; editing one bound carries the other from the inferred
+	// domain so a single edit never produces a reversed pair like [50, 0].
+	const dependentDomainIsAuto = isAutoAxisDomain(
+		getCurrentValue('dependentAxis', 'domain')
+	);
+	const inferredDependentDomain = getInferredAxisDomainFromData(
+		attributes,
+		'dependent'
+	);
+	const domainBoundValue = (index) =>
+		dependentDomainIsAuto
+			? ''
+			: (getCurrentValue('dependentAxis', 'domain')?.[index] ?? '');
+	const domainBoundPlaceholder = (index) =>
+		dependentDomainIsAuto && inferredDependentDomain
+			? String(inferredDependentDomain[index])
+			: undefined;
+	const onDomainBoundChange = (index) => (val) => {
+		if (val === '' || val === undefined) {
+			updateAttributeForDevice('dependentAxis', { domain: null });
+			return;
+		}
+		updateAttributeForDevice('dependentAxis', {
+			domain: buildEditedAxisDomain({
+				editedIndex: index,
+				editedValue: val,
+				currentDomain: getCurrentValue('dependentAxis', 'domain'),
+				inferredDomain: inferredDependentDomain,
+				scale: 'linear',
+			}),
+		});
+	};
 	return (
 		<div ref={panelRef}>
 			<PanelBody
@@ -117,50 +155,40 @@ function DependentAxisControls({ attributes, setAttributes }) {
 					<FlexItem>
 						<NumberControl
 							label={__('Minimum')}
-							value={
-								getCurrentValue('dependentAxis', 'domain')?.[0]
-							}
+							value={domainBoundValue(0)}
+							placeholder={domainBoundPlaceholder(0)}
 							disableUnits
 							disabledUnits
-							onChange={(val) => {
-								const currentDomain =
-									getCurrentValue(
-										'dependentAxis',
-										'domain'
-									) || [];
-								updateAttributeForDevice('dependentAxis', {
-									domain: [
-										formatNum(val, 'integer'),
-										currentDomain[1] ?? 0,
-									],
-								});
-							}}
+							onChange={onDomainBoundChange(0)}
 						/>
 					</FlexItem>
 					<FlexItem>
 						<NumberControl
 							label={__('Maximum')}
-							value={
-								getCurrentValue('dependentAxis', 'domain')?.[1]
-							}
+							value={domainBoundValue(1)}
+							placeholder={domainBoundPlaceholder(1)}
 							disableUnits
 							disabledUnits
-							onChange={(val) => {
-								const currentDomain =
-									getCurrentValue(
-										'dependentAxis',
-										'domain'
-									) || [];
-								updateAttributeForDevice('dependentAxis', {
-									domain: [
-										currentDomain[0] ?? 0,
-										formatNum(val, 'integer'),
-									],
-								});
-							}}
+							onChange={onDomainBoundChange(1)}
 						/>
 					</FlexItem>
 				</Flex>
+				<ToggleControl
+					label={__('Round domain to nice values')}
+					help={
+						(getCurrentValue('dependentAxis', 'nice') ?? true)
+							? 'Domain edges may expand to cleaner tick values.'
+							: 'Uses the exact min/max domain you set.'
+					}
+					// Charts saved before this flag existed have no `nice`
+					// key; render backfills true, so the toggle must too.
+					checked={getCurrentValue('dependentAxis', 'nice') ?? true}
+					onChange={(newValue) =>
+						updateAttributeForDevice('dependentAxis', {
+							nice: newValue,
+						})
+					}
+				/>
 				<PanelRow>Axis Ticks and Tick Labels</PanelRow>
 				<ToggleControl
 					label={__('Show tick marks')}

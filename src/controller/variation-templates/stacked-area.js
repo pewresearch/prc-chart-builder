@@ -71,10 +71,6 @@ const areaTemplate = [
 				tag: '',
 			},
 			independentAxis: {
-				domain: {
-					min: 2000,
-					max: 2020,
-				},
 				tickMarks: {
 					active: true,
 				},
@@ -98,12 +94,14 @@ const areaTemplate = [
 			},
 			line: {
 				strokeWidth: 4,
+				showPoints: true,
 			},
 			nodes: {
 				pointSize: 4,
-				pointFill: 'white',
+				pointFill: 'inherit',
+				pointFillOpacity: 1,
 				pointStrokeWidth: 1,
-				pointStroke: 'white',
+				pointStroke: 'inherit',
 			},
 			legend: {
 				active: true,

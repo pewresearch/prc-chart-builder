@@ -19,6 +19,7 @@ export const CURATED_CONFIG_GROUPS = [
 	'explodedBar',
 	'pie',
 	'nodes',
+	'beeSwarm',
 	'regression',
 	'map',
 	'divergingBar',
@@ -26,5 +27,8 @@ export const CURATED_CONFIG_GROUPS = [
 	'netValues',
 	'treemap',
 	'sankey',
+	'waffle',
+	'heatMapTable',
+	'smallMultiples',
 	'annotations',
 ];
