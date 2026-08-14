@@ -3,7 +3,7 @@
         'name' => 'prc/chart-builder',
         'pretty_version' => 'dev-trunk',
         'version' => 'dev-trunk',
-        'reference' => '5f135ce4a89f7fb3252992a944912cba36f2ba6a',
+        'reference' => 'e7e2cfa330beab610544cfd5467a4f2a73267de1',
         'type' => 'wordpress-plugin',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -148,7 +148,7 @@
         'prc/chart-builder' => array(
             'pretty_version' => 'dev-trunk',
             'version' => 'dev-trunk',
-            'reference' => '5f135ce4a89f7fb3252992a944912cba36f2ba6a',
+            'reference' => 'e7e2cfa330beab610544cfd5467a4f2a73267de1',
             'type' => 'wordpress-plugin',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

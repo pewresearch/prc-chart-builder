@@ -65,6 +65,12 @@ class Chart_List {
 				'pageSlug'  => self::PAGE_SLUG,
 				'menuTitle' => __( 'All Charts', 'prc-chart-builder' ),
 				'pageTitle' => __( 'All Charts', 'prc-chart-builder' ),
+				'duplicate' => array(
+					'includeMeta' => array(
+						'design_slug',
+						'_thumbnail_id',
+					),
+				),
 			)
 		);
 	}

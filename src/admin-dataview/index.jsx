@@ -7,7 +7,6 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal Dependencies
  */
-import getChartActions from './actions';
 import getChartFields, { getDefaultVisibleFields } from './fields';
 import './style.scss';
 
@@ -17,13 +16,6 @@ function isChartList() {
 
 addFilter('prcWpAdminDataview.fields', 'prc-chart-builder/fields', (fields) =>
 	isChartList() ? getChartFields(fields) : fields
-);
-
-addFilter(
-	'prcWpAdminDataview.actions',
-	'prc-chart-builder/actions',
-	(actions, { onRefresh } = {}) =>
-		isChartList() ? getChartActions(actions, { onRefresh }) : actions
 );
 
 addFilter(
