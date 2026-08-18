@@ -978,6 +978,248 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 			)
 		);
 	}
+
+	/**
+	 * Assign research-teams terms from chart design-slug prefixes.
+	 *
+	 * Defaults to dry-run mode. Pass --dry-run=false to write.
+	 * Charts that already have any research-teams term are skipped unless --force
+	 * is passed. Empty design slugs and unmatched prefixes are skipped.
+	 *
+	 * On multisite, pass --url= for the target site
+	 * (https://prc-platform.vipdev.lndo.site/pewresearch-org locally).
+	 *
+	 * ## OPTIONS
+	 *
+	 * [--dry-run=<bool>]
+	 * : Run without making changes. Default: true.
+	 *
+	 * [--batch-size=<number>]
+	 * : Charts per batch. Default: 100. Capped at 100.
+	 *
+	 * [--start-id=<id>]
+	 * : Resume after this post ID (exclusive). Default: 0.
+	 *
+	 * [--force]
+	 * : Replace an existing research-teams assignment when it differs.
+	 *
+	 * ## EXAMPLES
+	 *
+	 *     wp prc chart-builder assign_research_teams
+	 *     wp prc chart-builder assign_research_teams --dry-run=false
+	 *     wp prc chart-builder assign_research_teams --dry-run=false --start-id=12345
+	 *
+	 * @param array $args       Positional arguments.
+	 * @param array $assoc_args Associative arguments.
+	 * @when after_wp_load
+	 */
+	public function assign_research_teams( $args, $assoc_args ) {
+		unset( $args );
+
+		$dry_run    = $this->parse_dry_run( $assoc_args );
+		$batch_size = max( 1, min( (int) ( $assoc_args['batch-size'] ?? 100 ), 100 ) );
+		$start_id   = (int) ( $assoc_args['start-id'] ?? 0 );
+		$force      = isset( $assoc_args['force'] );
+		$taxonomy   = 'research-teams';
+
+		$processed           = 0;
+		$assigned            = 0;
+		$skipped_no_slug     = 0;
+		$skipped_no_match    = 0;
+		$skipped_already_set = 0;
+		$skipped_other_team  = 0;
+
+		\WP_CLI::line( $dry_run ? 'Running in dry-run mode. Pass --dry-run=false to write.' : "We're doing it live!" );
+
+		$this->start_bulk_operation();
+
+		do {
+			$cursor        = $start_id;
+			$cursor_filter = static function ( $where ) use ( $cursor ) {
+				global $wpdb;
+				$where .= $wpdb->prepare( ' AND ' . $wpdb->posts . '.ID > %d', $cursor );
+				return $where;
+			};
+
+			add_filter( 'posts_where', $cursor_filter );
+			$posts = get_posts(
+				array(
+					'post_type'        => Content_Type::$post_type,
+					'post_status'      => array( 'publish', 'draft', 'private', 'pending' ),
+					'posts_per_page'   => $batch_size,
+					'orderby'          => 'ID',
+					'order'            => 'ASC',
+					'no_found_rows'    => true,
+					// Default true would drop the posts_where ID cursor.
+					'suppress_filters' => false,
+				)
+			);
+			remove_filter( 'posts_where', $cursor_filter );
+
+			foreach ( $posts as $post ) {
+				$id       = (int) $post->ID;
+				$start_id = $id;
+				++$processed;
+
+				$slug = (string) get_post_meta( $id, 'design_slug', true );
+				if ( '' === trim( $slug ) ) {
+					++$skipped_no_slug;
+					\WP_CLI::log( sprintf( '  [skip] %d — empty design slug', $id ) );
+					continue;
+				}
+
+				$team = $this->team_slug_for_design_slug( $slug );
+				if ( null === $team ) {
+					++$skipped_no_match;
+					\WP_CLI::log( sprintf( '  [skip] %d — unmatched prefix (%s)', $id, $slug ) );
+					continue;
+				}
+
+				$terms = wp_get_object_terms( $id, $taxonomy, array( 'fields' => 'slugs' ) );
+				if ( is_wp_error( $terms ) ) {
+					\WP_CLI::warning( sprintf( '  [warn] %d — could not read research-teams: %s', $id, $terms->get_error_message() ) );
+					continue;
+				}
+
+				if ( in_array( $team, $terms, true ) ) {
+					++$skipped_already_set;
+					\WP_CLI::log( sprintf( '  [skip] %d — already %s', $id, $team ) );
+					continue;
+				}
+
+				if ( ! empty( $terms ) && ! $force ) {
+					++$skipped_other_team;
+					\WP_CLI::log( sprintf( '  [skip] %d — other team (%s), use --force to replace', $id, implode( ',', $terms ) ) );
+					continue;
+				}
+
+				if ( $dry_run ) {
+					++$assigned;
+					\WP_CLI::log( sprintf( '  [would assign] %d — %s → %s', $id, $slug, $team ) );
+					continue;
+				}
+
+				if ( ! get_term_by( 'slug', $team, $taxonomy ) ) {
+					$label    = 'short-reads' === $team ? 'Short Reads' : $team;
+					$inserted = wp_insert_term( $label, $taxonomy, array( 'slug' => $team ) );
+					if ( is_wp_error( $inserted ) && 'term_exists' !== $inserted->get_error_code() ) {
+						\WP_CLI::warning( sprintf( '  [warn] %d — could not create term %s: %s', $id, $team, $inserted->get_error_message() ) );
+						continue;
+					}
+				}
+
+				$result = wp_set_object_terms( $id, $team, $taxonomy, false );
+				if ( is_wp_error( $result ) ) {
+					\WP_CLI::warning( sprintf( '  [warn] %d — failed to assign %s: %s', $id, $team, $result->get_error_message() ) );
+					continue;
+				}
+
+				++$assigned;
+				\WP_CLI::log( sprintf( '  [assign] %d — %s → %s', $id, $slug, $team ) );
+			}
+
+			\WP_CLI::line( sprintf( 'Batch done. Last ID: %d | Processed so far: %d', $start_id, $processed ) );
+
+			sleep( 2 );
+			$this->vip_inmemory_cleanup();
+
+		} while ( count( $posts ) === $batch_size );
+
+		$this->end_bulk_operation();
+
+		\WP_CLI::line( '' );
+		\WP_CLI::line(
+			sprintf(
+				'Processed: %d | %s: %d | skipped_no_slug: %d | skipped_no_match: %d | skipped_already_set: %d | skipped_other_team: %d',
+				$processed,
+				$dry_run ? 'would-assign' : 'assigned',
+				$assigned,
+				$skipped_no_slug,
+				$skipped_no_match,
+				$skipped_already_set,
+				$skipped_other_team
+			)
+		);
+
+		if ( $dry_run ) {
+			\WP_CLI::success( 'Dry run complete. Pass --dry-run=false to write.' );
+		} else {
+			\WP_CLI::success( 'Research team assignment complete.' );
+		}
+	}
+
+	/**
+	 * Parse --dry-run from $assoc_args safely.
+	 *
+	 * WP-CLI passes flag values as strings. Casting (bool) 'false' === true,
+	 * so we must compare the string value explicitly.
+	 *
+	 * @param array $assoc_args Associative arguments.
+	 * @return bool
+	 */
+	private function parse_dry_run( $assoc_args ) {
+		if ( ! isset( $assoc_args['dry-run'] ) ) {
+			return true;
+		}
+		return 'false' !== $assoc_args['dry-run'];
+	}
+
+	/**
+	 * Design-slug prefixes mapped to research-teams term slugs.
+	 *
+	 * PJ maps to the existing Journalism term (News and Info).
+	 * PL maps to Data Labs. SR and FT map to Short Reads.
+	 *
+	 * @return array<string, string>
+	 */
+	private function design_slug_prefixes(): array {
+		return array(
+			'PP' => 'politics',
+			'PF' => 'religion',
+			'SR' => 'short-reads',
+			'FT' => 'short-reads',
+			'ST' => 'social-trends',
+			'MB' => 'decoded',
+			'RE' => 'race-and-ethnicity',
+			'PG' => 'global',
+			'PM' => 'methods',
+			'PL' => 'data-labs',
+			'PI' => 'internet',
+			'PJ' => 'journalism',
+		);
+	}
+
+	/**
+	 * Resolve a research-teams term slug from a chart design slug.
+	 *
+	 * Longest prefix wins. Matching is case-insensitive.
+	 *
+	 * @param string $design_slug Chart design slug (e.g. PP_26.06.10_typology).
+	 * @return string|null Term slug, or null when the design slug is empty or unmatched.
+	 */
+	private function team_slug_for_design_slug( string $design_slug ): ?string {
+		$design_slug = trim( $design_slug );
+		if ( '' === $design_slug ) {
+			return null;
+		}
+
+		$prefixes = $this->design_slug_prefixes();
+		uksort(
+			$prefixes,
+			static function ( $left, $right ) {
+				return strlen( (string) $right ) <=> strlen( (string) $left );
+			}
+		);
+
+		$haystack = strtolower( $design_slug );
+		foreach ( $prefixes as $prefix => $team_slug ) {
+			if ( str_starts_with( $haystack, strtolower( (string) $prefix ) ) ) {
+				return $team_slug;
+			}
+		}
+
+		return null;
+	}
 }
 
 // Register the WP-CLI commands.

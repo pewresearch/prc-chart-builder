@@ -443,9 +443,17 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						onChange={(value) =>
 							updateAttributeForDevice('tooltip', {
 								toFixedDecimal: formatNum(value, 'integer'),
+								truncateDecimal: false,
 							})
 						}
 					/>
+					<PanelDescription>
+						<Help>
+							{__(
+								'Values render with exactly this many decimal places, so 20 at 3 places reads 20.000. Zero keeps each number as it is.'
+							)}
+						</Help>
+					</PanelDescription>
 				</WidePanelItem>
 				<WidePanelItem
 					hasValue={() =>

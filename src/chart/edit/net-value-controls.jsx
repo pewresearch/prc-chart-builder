@@ -240,22 +240,6 @@ function NetValueSideControls({
 			</WidePanelItem>
 
 			<WidePanelItem
-				hasValue={() => !!sideData.truncateDecimal}
-				label={`${sideLabel} — ${__('Truncate Trailing Decimals')}`}
-				panelId={clientId}
-				isShownByDefault
-			>
-				<ToggleControl
-					label={__('Truncate Trailing Decimals')}
-					checked={sideData.truncateDecimal || false}
-					onChange={(value) => updateSide({ truncateDecimal: value })}
-					help={__(
-						'Removes extraneous trailing decimals (e.g. 1.6000 → 1.6).'
-					)}
-				/>
-			</WidePanelItem>
-
-			<WidePanelItem
 				hasValue={() => !!sideData.toFixedDecimal}
 				label={`${sideLabel} — ${__('Decimal Places')}`}
 				panelId={clientId}
@@ -269,8 +253,12 @@ function NetValueSideControls({
 					onChange={(value) =>
 						updateSide({
 							toFixedDecimal: formatNum(value, 'integer'),
+							truncateDecimal: false,
 						})
 					}
+					help={__(
+						'Values render with exactly this many decimal places, so 20 at 3 places reads 20.000. Zero keeps each number as it is.'
+					)}
 				/>
 			</WidePanelItem>
 

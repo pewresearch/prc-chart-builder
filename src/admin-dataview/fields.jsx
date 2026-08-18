@@ -75,7 +75,14 @@ function ChartPreviewField({ item }) {
 }
 
 export function getDefaultVisibleFields() {
-	return ['chartType', 'designSlug', 'author', 'date', 'status'];
+	return [
+		'chartType',
+		'designSlug',
+		'researchTeams',
+		'author',
+		'date',
+		'status',
+	];
 }
 
 /**

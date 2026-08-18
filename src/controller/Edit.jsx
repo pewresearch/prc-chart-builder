@@ -137,6 +137,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 		showBoth,
 		postType,
 		isPreviewMode,
+		isNestedInFreeform,
 		controllerBlocks,
 	} = useSelect(
 		(select) => {
@@ -144,6 +145,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 				getBlock,
 				getSelectedBlockClientId,
 				getBlockParents,
+				getBlockParentsByBlockName,
 				getBlocksByName,
 			} = select(blockEditorStore);
 			const { getControllerView, getControllerShowBoth } =
@@ -160,6 +162,18 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 				typeof getBlocksByName === 'function'
 					? getBlocksByName('prc-chart-builder/controller')
 					: [];
+			const controllerParentIds =
+				typeof getBlockParentsByBlockName === 'function'
+					? getBlockParentsByBlockName(
+							clientId,
+							'prc-chart-builder/controller',
+							true
+						)
+					: [];
+			const isNestedInFreeform = controllerParentIds.some(
+				(parentId) =>
+					getBlock(parentId)?.attributes?.isFreeform === true
+			);
 			return {
 				layoutType: chartBlock?.attributes?.layout?.type,
 				chartClientId: chartBlock?.clientId,
@@ -179,6 +193,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 				// wizard shell there so pattern cards render the chart canvas.
 				isPreviewMode:
 					!!select(blockEditorStore).getSettings().isPreviewMode,
+				isNestedInFreeform,
 				controllerBlocks: controllerClientIds
 					.map((controllerClientId) => getBlock(controllerClientId))
 					.filter(Boolean),
@@ -216,12 +231,11 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 	const { setControllerView, setControllerShowBoth } =
 		useDispatch(controllerStore);
 
-	// Host the 4-step wizard only when the site-level rollout flag is on, and
-	// only for the live chart CPT canvas — not BlockPreview or article embeds.
 	const hostCptWizard = shouldHostCptWizard({
 		enabled: isNewCreationUiEnabled(window?.prcChartBuilderLibrary),
 		postType,
 		isPreviewMode,
+		isNestedInFreeform,
 	});
 
 	useEffect(() => {

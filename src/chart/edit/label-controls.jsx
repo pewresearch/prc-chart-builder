@@ -620,39 +620,6 @@ function LabelControls({
 							</WidePanelItem>
 							<WidePanelItem
 								hasValue={() =>
-									getCurrentValue('labels', 'truncateDecimal')
-								}
-								label={__('Truncate Trailing Decimals')}
-								panelId={clientId}
-								isShownByDefault
-							>
-								<ToggleControl
-									label={__('Truncate Trailing Decimals')}
-									checked={
-										getCurrentValue(
-											'labels',
-											'truncateDecimal'
-										) || false
-									}
-									disabled={
-										!getCurrentValue('labels', 'active')
-									}
-									onChange={(newValue) =>
-										updateAttributeForDevice('labels', {
-											truncateDecimal: newValue,
-										})
-									}
-								/>
-								<PanelDescription>
-									<Help>
-										{__(
-											'If checked and number has fewer decimal places than the configuration requests, will remove all extraneous decimals from numbers. Eg. 1.6000 -> 1.6.'
-										)}
-									</Help>
-								</PanelDescription>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() =>
 									getCurrentValue('labels', 'toFixedDecimal')
 								}
 								label={__('Decimal Places')}
@@ -676,9 +643,17 @@ function LabelControls({
 												value,
 												'integer'
 											),
+											truncateDecimal: false,
 										})
 									}
 								/>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Values render with exactly this many decimal places, so 20 at 3 places reads 20.000. Zero keeps each number as it is.'
+										)}
+									</Help>
+								</PanelDescription>
 							</WidePanelItem>
 							<WidePanelItem
 								hasValue={() =>

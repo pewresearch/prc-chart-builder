@@ -348,7 +348,7 @@ class Content_Type {
 			'description'         => __( 'A store for chart blocks. This post type allows you to save a chart once and update everywhere it is used.', 'prc-chart-builder' ),
 			'labels'              => self::get_labels(),
 			'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'custom-fields', 'revisions', 'prc-datasets', 'prc-publish-workflows' ),
-			'taxonomies'          => array( 'category' ),
+			'taxonomies'          => array( 'category', 'research-teams' ),
 			'hierarchical'        => false,
 			'public'              => true,
 			'show_ui'             => true,
@@ -625,8 +625,13 @@ class Content_Type {
 	 * @param WP_Query $query The WordPress query object.
 	 */
 	public function make_design_slug_searchable( $query ) {
-		// Classic admin list and REST /wp/v2/chart searches. Shell DataViews
-		// uses Chart_List::query_args for the same design_slug meta match.
+		// Classic admin list and REST /wp/v2/chart searches AND design_slug
+		// and clear `s`. DataViews list search must keep `s` (title) and OR
+		// design_slug in Chart_List::search_or_design_slug.
+		if ( $query instanceof \WP_Query && ! empty( $query->get( 'prc_wp_admin_dataview' ) ) ) {
+			return;
+		}
+
 		$is_admin_search = is_admin() && $query->is_search() && $query->is_main_query();
 		$is_rest_search  = defined( 'REST_REQUEST' ) && REST_REQUEST && $query->is_search();
 

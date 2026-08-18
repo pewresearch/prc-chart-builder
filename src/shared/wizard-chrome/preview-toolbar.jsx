@@ -1,5 +1,6 @@
+/* eslint-disable @wordpress/no-unsafe-wp-apis */
 /**
- * Preview Chart controls — viewport width and color mode for the preview pane only.
+ * Preview Chart controls — viewport width and appearance for the preview pane only.
  * Does not touch WordPress editor device type or global color scheme.
  */
 import {
@@ -11,6 +12,7 @@ import {
 import { desktop, mobile, tablet } from '@wordpress/icons';
 import { __, sprintf } from '@wordpress/i18n';
 
+import { withColorScheme, withVision } from './preview-appearance';
 import {
 	PREVIEW_CARD_PADDING,
 	PREVIEW_VIEWPORT_WIDTHS,
@@ -45,9 +47,9 @@ export const PREVIEW_VIEWPORTS = {
  * @param {number|null} props.customWidth         Hand-picked canvas width, if any.
  * @param {Function}    props.onCustomWidthChange
  * @param {Object|null} props.widthRange          `{ min, max }` slider bounds, or null to hide it.
- * @param {string}      props.colorMode           `'light'` | `'dark'`.
- * @param {Function}    props.onColorModeChange
- * @return {import('react').ReactNode} The preview size and color mode panels.
+ * @param {Object}      props.appearance          PreviewAppearance.
+ * @param {Function}    props.onAppearanceChange
+ * @return {import('react').ReactNode} The preview size, color mode, and color vision panels.
  */
 export default function PreviewToolbar({
 	viewport,
@@ -55,8 +57,8 @@ export default function PreviewToolbar({
 	customWidth,
 	onCustomWidthChange,
 	widthRange,
-	colorMode,
-	onColorModeChange,
+	appearance,
+	onAppearanceChange,
 }) {
 	// The presets can exceed the range when a chart's own width cap is narrower
 	// than the viewport they describe, so the slider tracks the clamped width.
@@ -80,6 +82,7 @@ export default function PreviewToolbar({
 					isBlock
 					onChange={onViewportChange}
 					__nextHasNoMarginBottom
+					__next40pxDefaultSize
 				>
 					{Object.values(PREVIEW_VIEWPORTS).map(
 						({ value, label, icon }) => (
@@ -122,10 +125,13 @@ export default function PreviewToolbar({
 				<ToggleGroupControl
 					label={__('Color mode', 'prc-chart-builder')}
 					hideLabelFromVision
-					value={colorMode}
+					value={appearance.colorScheme}
 					isBlock
-					onChange={onColorModeChange}
+					onChange={(scheme) =>
+						onAppearanceChange(withColorScheme(appearance, scheme))
+					}
 					__nextHasNoMarginBottom
+					__next40pxDefaultSize
 				>
 					<ToggleGroupControlOption
 						label={__('Light', 'prc-chart-builder')}
@@ -134,6 +140,43 @@ export default function PreviewToolbar({
 					<ToggleGroupControlOption
 						label={__('Dark', 'prc-chart-builder')}
 						value="dark"
+					/>
+				</ToggleGroupControl>
+			</PanelBody>
+			<PanelBody
+				title={__('Color vision', 'prc-chart-builder')}
+				initialOpen
+			>
+				<ToggleGroupControl
+					label={__('Color vision', 'prc-chart-builder')}
+					hideLabelFromVision
+					value={
+						appearance.vision.kind === 'typical'
+							? 'typical'
+							: appearance.vision.deficiency
+					}
+					isBlock
+					onChange={(token) =>
+						onAppearanceChange(withVision(appearance, token))
+					}
+					__nextHasNoMarginBottom
+					__next40pxDefaultSize
+				>
+					<ToggleGroupControlOption
+						label={__('Typical', 'prc-chart-builder')}
+						value="typical"
+					/>
+					<ToggleGroupControlOption
+						label={__('Protanopia', 'prc-chart-builder')}
+						value="protanopia"
+					/>
+					<ToggleGroupControlOption
+						label={__('Deuteranopia', 'prc-chart-builder')}
+						value="deuteranopia"
+					/>
+					<ToggleGroupControlOption
+						label={__('Tritanopia', 'prc-chart-builder')}
+						value="tritanopia"
 					/>
 				</ToggleGroupControl>
 			</PanelBody>

@@ -964,7 +964,14 @@ export const EDITOR_SCHEMA = {
 		toFixedDecimal: {
 			type: 'number',
 			themeable: true,
-			description: 'Decimal places for numeric values.',
+			description:
+				'Exact decimal places rendered, so 20 at 3 places reads `20.000`. Zero keeps each number as it is.',
+		},
+		truncateDecimal: {
+			type: 'boolean',
+			themeable: true,
+			description:
+				'Legacy. Charts saved before Decimal Places became authoritative keep their old trailing-zero trimming. Cleared when Decimal Places is edited.',
 		},
 		toLocaleString: {
 			type: 'boolean',
@@ -1271,7 +1278,8 @@ export const EDITOR_SCHEMA = {
 		toFixedDecimal: {
 			type: 'number',
 			themeable: true,
-			description: 'Maximum decimal places shown.',
+			description:
+				'Exact decimal places rendered, so 20 at 3 places reads `20.000`. Zero keeps each number as it is.',
 		},
 		toLocaleString: {
 			type: 'boolean',
@@ -1282,7 +1290,8 @@ export const EDITOR_SCHEMA = {
 		truncateDecimal: {
 			type: 'boolean',
 			themeable: true,
-			description: 'Drop trailing zeros after the decimal point.',
+			description:
+				'Legacy. Charts saved before Decimal Places became authoritative keep their old trailing-zero trimming. Cleared when Decimal Places is edited.',
 		},
 	},
 	shapes: {
@@ -2141,7 +2150,7 @@ export const EDITOR_SCHEMA = {
 			type: 'boolean',
 			themeable: true,
 			description:
-				'Drop trailing zeros after the decimal point on negative net values.',
+				'Legacy trailing-zero trimming on negative net values. Cleared when Decimal Places is edited.',
 		},
 		'positive.abbreviateValue': {
 			type: 'boolean',
@@ -2233,7 +2242,7 @@ export const EDITOR_SCHEMA = {
 			type: 'boolean',
 			themeable: true,
 			description:
-				'Drop trailing zeros after the decimal point on positive net values.',
+				'Legacy trailing-zero trimming on positive net values. Cleared when Decimal Places is edited.',
 		},
 	},
 	treemap: {

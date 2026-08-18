@@ -27,11 +27,19 @@ export function isNewCreationUiEnabled(localizedData) {
  * Whether the controller should host the full chart CPT wizard.
  *
  * @param {Object}  args
- * @param {boolean} args.enabled       Site-level rollout flag.
- * @param {string}  args.postType      Current editor post type.
- * @param {boolean} args.isPreviewMode Whether the editor is in preview mode.
- * @return {boolean} True when the live chart CPT should host the wizard.
+ * @param {boolean} args.enabled             Site-level rollout flag.
+ * @param {string}  args.postType            Current editor post type.
+ * @param {boolean} args.isPreviewMode       Whether the editor is in preview mode.
+ * @param {boolean} args.isNestedInFreeform  Whether a freeform controller ancestor exists.
+ * @return {boolean} True when the live root chart CPT should host the wizard.
  */
-export function shouldHostCptWizard({ enabled, postType, isPreviewMode }) {
-	return enabled && postType === 'chart' && !isPreviewMode;
+export function shouldHostCptWizard({
+	enabled,
+	postType,
+	isPreviewMode,
+	isNestedInFreeform,
+}) {
+	return (
+		enabled && postType === 'chart' && !isPreviewMode && !isNestedInFreeform
+	);
 }

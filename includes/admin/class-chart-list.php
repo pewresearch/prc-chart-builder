@@ -47,6 +47,9 @@ class Chart_List {
 		$loader->add_filter( 'prc_wp_admin_dataview_localize', $this, 'localize_provider', 10, 2 );
 		$loader->add_filter( 'prc_wp_admin_dataview_shape_row', $this, 'shape_row', 10, 3 );
 		$loader->add_filter( 'prc_wp_admin_dataview_query_args', $this, 'query_args', 10, 3 );
+		$loader->add_filter( 'posts_join', $this, 'search_join_design_slug', 10, 2 );
+		$loader->add_filter( 'posts_search', $this, 'search_or_design_slug', 10, 2 );
+		$loader->add_filter( 'posts_distinct', $this, 'search_distinct', 10, 2 );
 	}
 
 	/**
@@ -216,10 +219,11 @@ class Chart_List {
 	}
 
 	/**
-	 * Map chart type filter, design-slug search, and gallery EXISTS fallback.
+	 * Map chart type filter and gallery EXISTS fallback.
 	 *
-	 * Shell search (`search` → `s`) matches design_slug like Content_Type REST
-	 * helpers. Chart-type tax filters stay on this provider.
+	 * Shell search keeps `s` and searches title + `design_slug` on MySQL.
+	 * Skip the gallery EXISTS clause during search: `chart_type` is not in
+	 * current ES documents, so EXISTS matches nothing if EP integrates.
 	 *
 	 * @param array           $query_args Query args.
 	 * @param WP_REST_Request $request    Request.
@@ -235,25 +239,6 @@ class Chart_List {
 			return $query_args;
 		}
 
-		$search = '';
-		if ( ! empty( $query_args['s'] ) ) {
-			$search = (string) $query_args['s'];
-		} else {
-			$search = (string) $request->get_param( 'search' );
-		}
-		if ( '' !== $search ) {
-			$meta_query = isset( $query_args['meta_query'] ) && is_array( $query_args['meta_query'] )
-				? $query_args['meta_query']
-				: array();
-			$meta_query[] = array(
-				'key'     => 'design_slug',
-				'value'   => $search,
-				'compare' => 'LIKE',
-			);
-			$query_args['meta_query'] = $meta_query;
-			$query_args['s']          = '';
-		}
-
 		$tax_query = isset( $query_args['tax_query'] ) && is_array( $query_args['tax_query'] )
 			? $query_args['tax_query']
 			: array();
@@ -264,6 +249,7 @@ class Chart_List {
 				array_map( 'sanitize_title', explode( ',', $chart_type ) )
 			)
 		);
+		$search     = trim( (string) $request->get_param( 'search' ) );
 
 		if ( ! empty( $slugs ) ) {
 			$tax_query[] = array(
@@ -272,7 +258,7 @@ class Chart_List {
 				'terms'    => $slugs,
 				'operator' => 'IN',
 			);
-		} else {
+		} elseif ( '' === $search ) {
 			$has_chart_type_clause = false;
 			foreach ( $tax_query as $clause ) {
 				if ( is_array( $clause ) && isset( $clause['taxonomy'] ) && Content_Type::$chart_type_taxonomy === $clause['taxonomy'] ) {
@@ -293,5 +279,79 @@ class Chart_List {
 		}
 
 		return $query_args;
+	}
+
+	/**
+	 * Join design_slug meta for MySQL search fallback.
+	 *
+	 * @param string   $join  Join SQL.
+	 * @param WP_Query $query Query.
+	 * @return string
+	 */
+	public function search_join_design_slug( $join, $query ) {
+		global $wpdb;
+		if ( ! $this->is_chart_mysql_search( $query ) ) {
+			return $join;
+		}
+		$join .= " LEFT JOIN {$wpdb->postmeta} AS prc_chart_design_slug ON ({$wpdb->posts}.ID = prc_chart_design_slug.post_id AND prc_chart_design_slug.meta_key = 'design_slug') ";
+		return $join;
+	}
+
+	/**
+	 * OR design_slug into MySQL search so ES-down fallback still matches slugs.
+	 *
+	 * @param string   $search Search SQL.
+	 * @param WP_Query $query  Query.
+	 * @return string
+	 */
+	public function search_or_design_slug( $search, $query ) {
+		global $wpdb;
+		if ( ! $this->is_chart_mysql_search( $query ) ) {
+			return $search;
+		}
+		if ( ! is_string( $search ) || '' === $search ) {
+			return $search;
+		}
+
+		$like      = '%' . $wpdb->esc_like( (string) $query->get( 's' ) ) . '%';
+		$or        = $wpdb->prepare( ' OR (prc_chart_design_slug.meta_value LIKE %s) ', $like );
+		$trimmed   = rtrim( $search );
+		$rewritten = preg_replace( '/\)\)$/', $or . '))', $trimmed, 1 );
+		if ( is_string( $rewritten ) && $rewritten !== $trimmed ) {
+			return $rewritten;
+		}
+
+		return $trimmed . $or;
+	}
+
+	/**
+	 * Deduplicate rows after the design_slug join.
+	 *
+	 * @param string   $distinct Distinct SQL.
+	 * @param WP_Query $query    Query.
+	 * @return string
+	 */
+	public function search_distinct( $distinct, $query ) {
+		if ( ! $this->is_chart_mysql_search( $query ) ) {
+			return $distinct;
+		}
+		return 'DISTINCT';
+	}
+
+	/**
+	 * Whether this is a chart list search that will run on MySQL.
+	 *
+	 * @param mixed $query Query.
+	 * @return bool
+	 */
+	private function is_chart_mysql_search( $query ): bool {
+		if ( ! $query instanceof \WP_Query ) {
+			return false;
+		}
+		if ( Content_Type::$post_type !== $query->get( 'post_type' ) ) {
+			return false;
+		}
+		$term = $query->get( 's' );
+		return is_string( $term ) && '' !== $term;
 	}
 }

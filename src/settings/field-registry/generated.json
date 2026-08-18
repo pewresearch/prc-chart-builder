@@ -1482,7 +1482,7 @@
       ],
       "type": "number",
       "themeable": true,
-      "description": "Decimal places for numeric values."
+      "description": "Exact decimal places rendered, so 20 at 3 places reads `20.000`. Zero keeps each number as it is."
     },
     {
       "path": [
@@ -1491,6 +1491,14 @@
       "type": "boolean",
       "themeable": true,
       "description": "Format numbers with locale-aware thousands separators."
+    },
+    {
+      "path": [
+        "truncateDecimal"
+      ],
+      "type": "boolean",
+      "themeable": true,
+      "description": "Legacy. Charts saved before Decimal Places became authoritative keep their old trailing-zero trimming. Cleared when Decimal Places is edited."
     }
   ],
   "legend": [
@@ -1984,7 +1992,7 @@
       ],
       "type": "number",
       "themeable": true,
-      "description": "Maximum decimal places shown."
+      "description": "Exact decimal places rendered, so 20 at 3 places reads `20.000`. Zero keeps each number as it is."
     },
     {
       "path": [
@@ -2000,7 +2008,7 @@
       ],
       "type": "boolean",
       "themeable": true,
-      "description": "Drop trailing zeros after the decimal point."
+      "description": "Legacy. Charts saved before Decimal Places became authoritative keep their old trailing-zero trimming. Cleared when Decimal Places is edited."
     }
   ],
   "shapes": [
@@ -3352,7 +3360,7 @@
       ],
       "type": "boolean",
       "themeable": true,
-      "description": "Drop trailing zeros after the decimal point on negative net values."
+      "description": "Legacy trailing-zero trimming on negative net values. Cleared when Decimal Places is edited."
     },
     {
       "path": [
@@ -3518,7 +3526,7 @@
       ],
       "type": "boolean",
       "themeable": true,
-      "description": "Drop trailing zeros after the decimal point on positive net values."
+      "description": "Legacy trailing-zero trimming on positive net values. Cleared when Decimal Places is edited."
     }
   ],
   "treemap": [

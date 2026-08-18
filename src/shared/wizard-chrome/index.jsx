@@ -65,7 +65,7 @@ export function getWizardStepExplainer(activeStep) {
 		case 4:
 			return {
 				text: __(
-					'Preview how the chart reads at different screen sizes and in light or dark mode. Viewport and color mode only affect the preview panel.',
+					'Preview how the chart reads at different screen sizes, in light or dark mode, and with color vision simulation. Viewport, color mode, and color vision only affect the preview panel.',
 					'prc-chart-builder'
 				),
 			};

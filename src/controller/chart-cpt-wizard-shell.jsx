@@ -3,7 +3,7 @@
  *
  * Configure (3) = curated controls + lean preview, with optional design mode
  * (full canvas + block inspector). Preview (4) = interactive canvas with
- * viewport / color-mode preview chrome; inspector stays closed.
+ * viewport / appearance preview chrome; inspector stays closed.
  */
 import {
 	ChartBuilderTextWrapper,
@@ -54,11 +54,18 @@ import {
 	shouldConfirmTemplateReset,
 	shouldShowBlockInspector,
 } from '../shared/wizard-chrome';
+import ChartViewLink from '../shared/wizard-chrome/chart-view-link';
+import {
+	DEFAULT_PREVIEW_APPEARANCE,
+	previewPaneProps,
+} from '../shared/wizard-chrome/preview-appearance';
 import PreviewToolbar from '../shared/wizard-chrome/preview-toolbar';
 import {
 	getPreviewViewportStyle,
 	getPreviewWidthRange,
 } from '../shared/wizard-chrome/preview-viewports';
+import PreviewVisionFilters from '../shared/wizard-chrome/preview-vision-filters';
+import { WorkflowStatusPaneSlot } from '../shared/wizard-chrome/workflow-status-pane-slot';
 import { WizardChartActionsContext } from '../shared/wizard-chrome/wizard-chart-actions-context';
 import { applyControllerTemplateContent } from './utils/apply-controller-template';
 
@@ -135,7 +142,7 @@ export default function ChartCptWizardShell({
 	const [isDesignMode, setIsDesignMode] = useState(() =>
 		shouldLandOnRefine()
 	);
-	const [previewColorMode, setPreviewColorMode] = useState('light');
+	const [appearance, setAppearance] = useState(DEFAULT_PREVIEW_APPEARANCE);
 	const [previewViewport, setPreviewViewport] = useState('desktop');
 	/** Hand-picked canvas width; `null` follows the selected viewport. */
 	const [previewWidth, setPreviewWidth] = useState(null);
@@ -316,6 +323,8 @@ export default function ChartCptWizardShell({
 			? getPreviewWidthRange(chartWidth)
 			: null;
 	}, [chartAttributes]);
+
+	const paneAppearance = previewPaneProps(appearance);
 
 	const previewData = useMemo(() => {
 		if (!chartAttributes) {
@@ -515,6 +524,7 @@ export default function ChartCptWizardShell({
 
 					{key === 'preview' && (
 						<div className="prc-chart-modal__configure prc-chart-wizard__preview">
+							<PreviewVisionFilters />
 							<div className="prc-chart-modal__configure-controls">
 								<PreviewToolbar
 									viewport={previewViewport}
@@ -522,24 +532,25 @@ export default function ChartCptWizardShell({
 									customWidth={previewWidth}
 									onCustomWidthChange={setPreviewWidth}
 									widthRange={previewWidthRange}
-									colorMode={previewColorMode}
-									onColorModeChange={setPreviewColorMode}
+									appearance={appearance}
+									onAppearanceChange={setAppearance}
 								/>
+								<WorkflowStatusPaneSlot />
+								<ChartViewLink />
 							</div>
 							<div
-								className={`prc-chart-modal__preview-pane editor-styles-wrapper${
-									previewColorMode === 'dark'
-										? ' is-dark-preview'
-										: ''
-								}`}
+								className={`prc-chart-modal__preview-pane editor-styles-wrapper${paneAppearance.className}`}
 								data-preview-viewport={previewViewport}
 								// Sizes the chart card inside the pane, not the
 								// pane itself — see controller/style.scss.
-								style={getPreviewViewportStyle(
-									previewViewport,
-									previewWidth,
-									previewWidthRange?.max
-								)}
+								style={{
+									...getPreviewViewportStyle(
+										previewViewport,
+										previewWidth,
+										previewWidthRange?.max
+									),
+									...paneAppearance.style,
+								}}
 							>
 								{refineContent}
 							</div>

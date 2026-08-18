@@ -534,7 +534,10 @@ $wizard-stack-below: 1100px;
 
 			// White card grows with the chart's layout width; the pane scrolls
 			// when the chart is wider than the column (text + SVG stay aligned).
-			.wp-block-prc-chart-builder-controller {
+			// Direct-child only. Nested controllers in a freeform grid must
+			// keep the cell width so they scale the same way they do on the
+			// published page (same reason view-mode uses `>`).
+			> .wp-block-prc-chart-builder-controller {
 				background-color: var(--wp--preset--color--ui-white);
 				box-sizing: border-box;
 				margin: 20px auto;
@@ -613,7 +616,9 @@ $wizard-stack-below: 1100px;
 			// two settle at the pane width and a chart authored wider than the
 			// pane can never reach full size. Definite widths mean Desktop
 			// shows the chart at its authored width and the pane scrolls.
-			.wp-block-prc-chart-builder-controller {
+			// Direct-child only so nested freeform controllers are not forced
+			// to the outer canvas width.
+			> .wp-block-prc-chart-builder-controller {
 				width: var(--prc-chart-preview-width, max-content);
 				transition: width 0.2s ease;
 			}
@@ -629,10 +634,14 @@ $wizard-stack-below: 1100px;
 				border-color: var(--wp--preset--color--ui-gray-light);
 				color: var(--wp--preset--color--ui-text-color);
 
-				.wp-block-prc-chart-builder-controller {
+				> .wp-block-prc-chart-builder-controller {
 					background-color: var(--wp--preset--color--ui-white);
 				}
 			}
+		}
+
+		.prc-chart-wizard__view-chart {
+			margin-top: 16px;
 		}
 	}
 

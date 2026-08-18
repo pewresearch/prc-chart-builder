@@ -198,11 +198,21 @@ class Chart {
 
 		$static_chart = '';
 		if ( $is_static_chart ) {
-			$static_chart = wp_sprintf(
-				'<div id="%1$s">%2$s</div>',
-				$block_attributes['io']['staticImageId'],
-				wp_kses_post( $block_attributes['io']['staticImageInnerHTML'] )
-			);
+			// Static charts may carry isStaticChart without staticImage* keys
+			// (partial saves, synced/migrated attrs). Guard reads to avoid PHP 8
+			// Undefined array key warnings (Sentry PRC-PLATFORM-PHP-PJ).
+			$static_image_html = $block_attributes['io']['staticImageInnerHTML'] ?? '';
+			if ( $static_image_html ) {
+				$static_image_id = $block_attributes['io']['staticImageId'] ?? '';
+				$static_chart    = wp_sprintf(
+					'<div id="%1$s">%2$s</div>',
+					'' !== $static_image_id ? $static_image_id : $block_id,
+					wp_kses_post( $static_image_html )
+				);
+			} else {
+				// Prefer the featured/PNG/SVG fallback already built above.
+				$static_chart = $chart;
+			}
 		}
 
 		// Freeform charts render their inner blocks (nested charts) instead of a single chart.
