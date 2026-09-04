@@ -1,5 +1,5 @@
 
-> @prc/chart-builder@3.15.0 build
+> @prc/chart-builder@3.14.0 build
 > wp-scripts build --webpack-copy-php --experimental-modules && wp-scripts build-blocks-manifest && wp-scripts build --source-path=includes/inspector-sidebar-panel/src/ --output-path=includes/inspector-sidebar-panel/build/ && npm run build:admin-dataview && node bin/sync-field-registry.mjs --check && wp-scripts build --config webpack.settings.config.js
 
 assets by path [1m[32msynced-chart/[39m[22m 28.7 KiB
@@ -126,7 +126,7 @@ Entrypoints:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/[39m[22m
 
-webpack 5.106.2 compiled with [1m[33m7 warnings[39m[22m in 18252 ms
+webpack 5.106.2 compiled with [1m[33m7 warnings[39m[22m in 32467 ms
 
 assets by path [1m[32mchart/[39m[22m 62.7 KiB
   asset [1m[32mchart/view.js[39m[22m 62.6 KiB [1m[32m[emitted][39m[22m [javascript module] [1m[32m[minimized][39m[22m (name: chart/view)
@@ -140,7 +140,7 @@ orphan modules 235 KiB [1m[33m[orphan][39m[22m 60 modules
 built modules 336 KiB [1m[33m[built][39m[22m
   [1m./src/chart/view.js + 27 modules[39m[22m 220 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1m./src/controller/view.js + 14 modules[39m[22m 115 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 5535 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 14539 ms
 Block metadata PHP file generated at: build/blocks-manifest.php
 assets by path [1m[32m*.css[39m[22m 6.86 KiB
   asset [1m[32mindex-rtl.css[39m[22m 3.43 KiB [1m[33m[compared for emit][39m[22m (name: index)
@@ -153,9 +153,9 @@ runtime modules 663 bytes 3 modules
 built modules 16.6 KiB (javascript) 3.43 KiB (css/mini-extract) [1m[33m[built][39m[22m
   [1m./includes/inspector-sidebar-panel/src/index.js + 13 modules[39m[22m 16.6 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./includes/inspector-sidebar-panel/src/editor.scss[39m[22m 3.43 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 1267 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 1584 ms
 
-> @prc/chart-builder@3.15.0 build:admin-dataview
+> @prc/chart-builder@3.14.0 build:admin-dataview
 > wp-scripts build --config webpack.admin-dataview.config.js
 
 assets by chunk 5.11 KiB (name: index)
@@ -170,7 +170,7 @@ runtime modules 2.51 KiB 3 modules
 built modules 7.24 KiB (javascript) 0 bytes (css/mini-extract) [1m[33m[built][39m[22m
   [1m./src/admin-dataview/index.jsx + 10 modules[39m[22m 7.24 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/admin-dataview/style.scss[39m[22m 0 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 822 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 1700 ms
 Field registry sync OK (28 schema groups: layout, metadata, plotBands, independentAxis, dependentAxis, tooltip, legend, labels, shapes, bar, line, dotPlot, errorBars, explodedBar, pie, nodes, beeSwarm, regression, map, divergingBar, diffColumn, netValues, treemap, waffle, heatMapTable, sankey, smallMultiples, annotations).
 assets by chunk 135 KiB (name: index)
   asset [1m[32mindex.js[39m[22m 135 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: index)
@@ -224,4 +224,4 @@ src/settings/style.scss 139:29  root stylesheet
  @ ./src/settings/app.jsx 6:0-22
  @ ./src/settings/index.js 2:0-37 3:60-76
 
-webpack 5.106.2 compiled with [1m[33m2 warnings[39m[22m in 2666 ms
+webpack 5.106.2 compiled with [1m[33m2 warnings[39m[22m in 4785 ms
