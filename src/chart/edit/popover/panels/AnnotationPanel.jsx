@@ -11,6 +11,7 @@ import { __ } from '@wordpress/i18n';
 import {
 	TextControl,
 	SelectControl,
+	__experimentalHStack as HStack,
 	__experimentalVStack as VStack,
 	__experimentalText as Text,
 	__experimentalNumberControl as NumberControl,
@@ -59,6 +60,8 @@ export function AnnotationPanel({
 		positioningContext,
 		panelKey,
 		textOutline,
+		x,
+		y,
 		hasCustomizations,
 		handleChange,
 		handleReset,
@@ -141,6 +144,23 @@ export function AnnotationPanel({
 					onChange={(value) => handleChange('panelKey', value)}
 				/>
 			)}
+
+			<HStack spacing={2}>
+				<NumberControl
+					label={__('X Position', 'prc-chart-builder')}
+					value={x}
+					onChange={(value) =>
+						handleChange('x', formatNum(value, 'float'))
+					}
+				/>
+				<NumberControl
+					label={__('Y Position', 'prc-chart-builder')}
+					value={y}
+					onChange={(value) =>
+						handleChange('y', formatNum(value, 'float'))
+					}
+				/>
+			</HStack>
 
 			<TextStyleControls
 				showText={false}

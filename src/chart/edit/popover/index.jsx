@@ -25,6 +25,7 @@ import {
 	AnnotationPanel,
 	TickLabelPanel,
 	LegendItemPanel,
+	LegendPanel,
 	PanelTitlePanel,
 	ErrorBarPanel,
 	TooltipPanelSection,
@@ -44,6 +45,7 @@ export const ELEMENT_TYPES = {
 	REGRESSION: 'regression',
 	ANNOTATION: 'annotation',
 	TICK_LABEL: 'tickLabel',
+	LEGEND: 'legend',
 	LEGEND_ITEM: 'legendItem',
 	PANEL_TITLE: 'panelTitle',
 	ERROR_BAR: 'errorBar',
@@ -69,6 +71,8 @@ function getPanelTitle(elementType) {
 			return __('Annotation Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.TICK_LABEL:
 			return __('Tick Label Settings', 'prc-chart-builder');
+		case ELEMENT_TYPES.LEGEND:
+			return __('Legend Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.LEGEND_ITEM:
 			return __('Legend Item Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.PANEL_TITLE:
@@ -108,6 +112,7 @@ function getPanelTitle(elementType) {
  * @param {string}     props.tickValue              - Raw tick value (for tick labels)
  * @param {string}     props.categoryValue          - Category/domain value (for legend items)
  * @param {string}     props.legendVariation       - 'grouped' | 'detached' (for legend items)
+ * @param {boolean}    props.showDirectLayout      - Show Direct layout on the legend-block popover
  * @param {Function}   props.onUpdate              - Callback to update
  * @param {Object}     props.currentTooltipCustomizations - { customTooltips } for TooltipPanelSection
  * @param {Function}   props.onTooltipUpdate       - Callback to update customTooltips
@@ -133,6 +138,7 @@ export function ChartElementPopover({
 	tickValue,
 	categoryValue,
 	legendVariation = 'grouped',
+	showDirectLayout = false,
 	onUpdate,
 	currentTooltipCustomizations = {},
 	onTooltipUpdate,
@@ -236,6 +242,14 @@ export function ChartElementPopover({
 						defaultLabel={defaultLabel}
 						currentCustomizations={currentCustomizations}
 						onUpdate={onUpdate}
+					/>
+				);
+			case ELEMENT_TYPES.LEGEND:
+				return (
+					<LegendPanel
+						legend={currentCustomizations}
+						onUpdate={onUpdate}
+						showDirectLayout={showDirectLayout}
 					/>
 				);
 			case ELEMENT_TYPES.LEGEND_ITEM:

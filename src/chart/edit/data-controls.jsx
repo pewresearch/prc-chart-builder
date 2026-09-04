@@ -18,6 +18,8 @@ import {
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
+import { canonicalRowValue } from '@prc/charting-utilities';
+
 import {
 	BUBBLE_MAP_CHART_TYPES,
 	GROUP_BREAKS_CHART_TYPES,
@@ -33,6 +35,20 @@ import { formatNum } from '../utils/helpers';
 import Sorter from './sorter';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
+
+function uniqueCanonicalColumnValues(data, column) {
+	const unique = new Set();
+	if (!Array.isArray(data)) {
+		return unique;
+	}
+	data.forEach((row) => {
+		const value = canonicalRowValue(row?.[column]);
+		if (value !== '') {
+			unique.add(value);
+		}
+	});
+	return unique;
+}
 
 function DataControls({ attributes, setAttributes, clientId }) {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
@@ -150,6 +166,10 @@ function DataControls({ attributes, setAttributes, clientId }) {
 				isHidden: false,
 			})),
 		[availableGroupValues]
+	);
+	const rowFilterSuggestions = useMemo(
+		() => Array.from(uniqueCanonicalColumnValues(chartData, 'x')),
+		[chartData]
 	);
 	return (
 		<PanelBody title={__('Data')} initialOpen={true}>
@@ -783,6 +803,36 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							/>
 						</WidePanelItem>
 					)}
+				<WidePanelItem
+					hasValue={() =>
+						0 < (dataRender.rowFilter?.exclude || []).length
+					}
+					label={__('Row filter')}
+					isShownByDefault
+					panelId={clientId}
+				>
+					<PanelDescription>
+						{__(
+							'Exclude values from the first table column. Those rows stay in the table and are not plotted.'
+						)}
+					</PanelDescription>
+					<FormTokenField
+						label={__('Exclude rows')}
+						value={dataRender.rowFilter?.exclude || []}
+						suggestions={rowFilterSuggestions}
+						onChange={(exclude) => {
+							setAttributes({
+								dataRender: {
+									...dataRender,
+									rowFilter: {
+										column: 'x',
+										exclude,
+									},
+								},
+							});
+						}}
+					/>
+				</WidePanelItem>
 				{POINT_CHART_TYPES.includes(chartType) && (
 					<WidePanelItem
 						hasValue={() => !!dataRender.groupBreaksCategory}

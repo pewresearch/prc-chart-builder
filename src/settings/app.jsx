@@ -12,7 +12,7 @@ import { SettingsAccordion } from '@prc/components';
 
 import './style.scss';
 import { fetchTheme } from './store';
-import { CURATED_CONFIG_GROUPS, TEXT_DOMAIN } from './constants';
+import { CURATED_CONFIG_GROUPS } from './constants';
 import { formatGroupLabel } from './model';
 import { getFieldsForGroup } from './field-registry';
 import {
@@ -20,6 +20,7 @@ import {
 	ConfigGroupGrid,
 	CreationUiSetting,
 	GlobalSaveBar,
+	ScreenshotSettingsTab,
 	ThemeImportExport,
 } from './components';
 
@@ -41,14 +42,14 @@ function ChartSettingsTab() {
 							getFieldsForGroup(group)
 								? __(
 										'Chart default overrides for this attribute group (new charts only).',
-										TEXT_DOMAIN
+										'prc-chart-builder'
 									)
 								: __(
 										'No fields yet — add this group to the editor schema (schema.mjs) and rebuild settings.',
-										TEXT_DOMAIN
+										'prc-chart-builder'
 									)
 						}
-						textDomain={TEXT_DOMAIN}
+						textDomain={'prc-chart-builder'}
 						contentId={`${ID_PREFIX}-config-${group}`}
 						headingId={`${ID_PREFIX}-config-${group}-heading`}
 						descriptionId={`${ID_PREFIX}-config-${group}-description`}
@@ -64,12 +65,17 @@ function ChartSettingsTab() {
 const TABS = [
 	{
 		name: 'chart',
-		title: __('Chart Settings', TEXT_DOMAIN),
+		title: __('Chart Settings', 'prc-chart-builder'),
 		className: 'prc-chart-theme-settings__tab',
 	},
 	{
 		name: 'color',
-		title: __('Color Settings', TEXT_DOMAIN),
+		title: __('Color Settings', 'prc-chart-builder'),
+		className: 'prc-chart-theme-settings__tab',
+	},
+	{
+		name: 'screenshot',
+		title: __('Screenshot Settings', 'prc-chart-builder'),
 		className: 'prc-chart-theme-settings__tab',
 	},
 ];
@@ -90,10 +96,10 @@ export default function ThemeSettingsApp() {
 	return (
 		<Page
 			className="prc-settings prc-chart-theme-settings"
-			title={__('Settings', TEXT_DOMAIN)}
+			title={__('Settings', 'prc-chart-builder')}
 			subTitle={__(
 				'Configure chart defaults for this site. Base config applies to newly inserted charts; existing charts keep their saved attributes unless they reference a themed palette by name.',
-				TEXT_DOMAIN
+				'prc-chart-builder'
 			)}
 			actions={<ThemeImportExport disabled={loading || !!error} />}
 			hasPadding
@@ -119,12 +125,13 @@ export default function ThemeSettingsApp() {
 				<Notice status="error" isDismissible={false}>
 					<VStack spacing={2}>
 						<span>
-							{__('Error loading settings:', TEXT_DOMAIN)} {error}
+							{__('Error loading settings:', 'prc-chart-builder')}{' '}
+							{error}
 						</span>
 						<span>
 							{__(
 								'Confirm you have permission to manage theme options and try again.',
-								TEXT_DOMAIN
+								'prc-chart-builder'
 							)}
 						</span>
 					</VStack>
@@ -140,13 +147,15 @@ export default function ThemeSettingsApp() {
 						className="prc-chart-theme-settings__tabs"
 						tabs={TABS}
 					>
-						{(tab) =>
-							tab.name === 'color' ? (
-								<PaletteDesigner />
-							) : (
-								<ChartSettingsTab />
-							)
-						}
+						{(tab) => {
+							if (tab.name === 'color') {
+								return <PaletteDesigner />;
+							}
+							if (tab.name === 'screenshot') {
+								return <ScreenshotSettingsTab />;
+							}
+							return <ChartSettingsTab />;
+						}}
 					</TabPanel>
 				)
 			)}

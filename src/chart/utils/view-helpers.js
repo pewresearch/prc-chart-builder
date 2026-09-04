@@ -1,16 +1,4 @@
-/**
- * Small runtime helpers consumed by the chart view module (`src/chart/view.js`).
- *
- * Grouped into one file — chart-slice predicates, viewport resolution, and the
- * viewport-entry render trigger — because each is only used by the frontend
- * view runtime and is too small to warrant a standalone module.
- */
-
 /* eslint-disable jsdoc/check-line-alignment */
-
-/* -------------------------------------------------------------------------- */
-/* Chart-slice predicates                                                     */
-/* -------------------------------------------------------------------------- */
 
 /**
  * Whether a chart store slice is a prc-custom-charts chart (e.g. RLS stacked bar).
@@ -44,10 +32,6 @@ export function mountHasLiveChart(mountEl) {
 	);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Viewport resolution                                                        */
-/* -------------------------------------------------------------------------- */
-
 /**
  * Gutenberg / @wordpress/compose viewport breakpoints.
  *
@@ -62,6 +46,26 @@ export const VIEWPORT_BREAKPOINTS = {
 	mobile: 480,
 	medium: 782,
 };
+
+/**
+ * Class on the /export/ document root. Charts on that page always use the
+ * desktop attribute set so a 640px chart is not treated as tablet.
+ *
+ * @type {string}
+ */
+export const EXPORT_ROOT_CLASS = 'wp-chart-builder-export';
+
+/**
+ * Whether the current document is the chart /export/ screenshot page.
+ *
+ * @return {boolean} True when the document body carries `EXPORT_ROOT_CLASS`.
+ */
+export function isChartExportPage() {
+	if (typeof document === 'undefined') {
+		return false;
+	}
+	return Boolean(document.body?.classList.contains(EXPORT_ROOT_CLASS));
+}
 
 /**
  * Resolve chart viewport from a pixel width using Gutenberg breakpoint semantics.
@@ -91,19 +95,34 @@ export function getViewportFromWidth() {
 	if (typeof window === 'undefined') {
 		return 'desktop';
 	}
+	if (isChartExportPage()) {
+		return 'desktop';
+	}
 	return resolveViewportFromWidth(window.innerWidth);
 }
 
-/* -------------------------------------------------------------------------- */
-/* Viewport-entry render trigger                                              */
-/* -------------------------------------------------------------------------- */
-
 /**
- * Chart ids that already have a viewport IntersectionObserver attached.
- * Guards against watchForRender attaching a second observer on re-runs.
+ * Chart ids whose live slice is on a different viewport than `viewport`.
  *
- * @type {Set<string>}
+ * Window resize is page-wide. `watchForResize` is bound on every chart
+ * element and shares one debounce timer, so the handler must switch every
+ * standard chart — not only the last element whose callback won the timeout.
+ * Custom charts opt out of `data-wp-on-window--resize` and stay skipped.
+ *
+ * @param {Object} charts   `state.charts` map keyed by chart id.
+ * @param {string} viewport Target viewport ('mobile', 'tablet', 'desktop').
+ * @return {string[]} Chart ids that should receive a viewport switch.
  */
+export function chartIdsNeedingViewportSwitch(charts, viewport) {
+	return Object.keys(charts || {}).filter((id) => {
+		const slice = charts[id];
+		if (!slice || isCustomChartSlice(slice)) {
+			return false;
+		}
+		return slice.currentViewport !== viewport;
+	});
+}
+
 const viewportObserverIds = new Set();
 
 /**
@@ -136,7 +155,6 @@ export function attachViewportRenderTrigger(id, onEnter) {
 		return true;
 	}
 
-	// Fallback: observer unavailable or element missing.
 	onEnter();
 	return false;
 }

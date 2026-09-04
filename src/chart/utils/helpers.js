@@ -658,6 +658,10 @@ export const formatCellContentTyped = (
 	xFormat,
 	preserveStringKeys = []
 ) => {
+	if (Array.isArray(preserveStringKeys) && preserveStringKeys.includes(key)) {
+		return content;
+	}
+
 	const meta = columnMeta?.[colIndex];
 	const dataType = meta?.dataType;
 

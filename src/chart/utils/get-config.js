@@ -120,6 +120,9 @@ function resolvePanelTitleCustomizations(customTitles = {}) {
 			...(entry.fontFamily !== undefined && entry.fontFamily !== ''
 				? { fontFamily: resolveFontFamily(entry.fontFamily) }
 				: {}),
+			...(typeof entry.color === 'string' && entry.color
+				? { color: resolveColor(entry.color) }
+				: {}),
 		};
 	});
 	return resolved;
@@ -467,6 +470,16 @@ const getConfig = (
 				baseConfig.dataRender?.deselectedOpacity ??
 				1,
 			highlightedCategories: dataRender.highlightedCategories ?? [],
+			rowFilter: {
+				column:
+					dataRender.rowFilter?.column ??
+					baseConfig.dataRender?.rowFilter?.column ??
+					'x',
+				exclude:
+					dataRender.rowFilter?.exclude ??
+					baseConfig.dataRender?.rowFilter?.exclude ??
+					[],
+			},
 			groupBreaks: {
 				...baseConfig.dataRender?.groupBreaks,
 				...dataRender.groupBreaks,
@@ -847,10 +860,14 @@ const getConfig = (
 				active: true,
 				fontSize: 13,
 				fontWeight: 700,
-				fill: '#2a2a2a',
 				padding: 8,
 				...baseConfig.smallMultiples?.panelTitle,
 				...smallMultiples?.panelTitle,
+				fill: resolveColor(
+					smallMultiples?.panelTitle?.fill ??
+						baseConfig.smallMultiples?.panelTitle?.fill ??
+						'#2a2a2a'
+				),
 				fontFamily: resolveFontFamily(
 					smallMultiples?.panelTitle?.fontFamily ??
 						baseConfig.smallMultiples?.panelTitle?.fontFamily

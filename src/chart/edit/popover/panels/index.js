@@ -11,6 +11,7 @@ export { RegressionLinePanel } from './RegressionLinePanel';
 export { AnnotationPanel } from './AnnotationPanel';
 export { TickLabelPanel } from './TickLabelPanel';
 export { LegendItemPanel } from './LegendItemPanel';
+export { LegendPanel } from './LegendPanel';
 export { PanelTitlePanel } from './PanelTitlePanel';
 export { ErrorBarPanel } from './ErrorBarPanel';
 export { TooltipPanelSection } from './TooltipPanelSection';

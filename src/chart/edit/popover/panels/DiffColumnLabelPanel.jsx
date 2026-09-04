@@ -11,7 +11,7 @@ import {
 } from '@wordpress/components';
 
 import { useDiffColumnLabelCustomizations } from '../hooks';
-import { generateElementKey } from '../utils';
+import { generateElementKey, getDiffColumnPopoverLabel } from '../utils';
 import { TextStyleControls } from './TextStyleControls';
 
 /**
@@ -38,18 +38,23 @@ export function DiffColumnLabelPanel({
 			currentCustomizations,
 			onUpdate
 		);
+	const displayLabel = getDiffColumnPopoverLabel(
+		dataPoint,
+		category,
+		defaultLabel
+	);
 
 	return (
 		<VStack spacing={4}>
 			<Text size="12px" color="#757575">
-				{category}: {defaultLabel}
+				{category}: {displayLabel}
 			</Text>
 
 			<TextStyleControls
 				values={values}
 				onChange={handleChange}
 				textLabel={__('Custom cell text', 'prc-chart-builder')}
-				textPlaceholder={defaultLabel}
+				textPlaceholder={displayLabel}
 				textHelp={__(
 					'Leave empty to use the default value',
 					'prc-chart-builder'

@@ -243,7 +243,6 @@ function EditInner({
 		tableValidationSchema,
 		tableValidationMessage,
 		parentBlockId,
-		refId,
 	} = useSelect(
 		(select) => {
 			const { getBlock, getBlockParentsByBlockName } =
@@ -352,6 +351,7 @@ function EditInner({
 		[ELEMENT_TYPES.SEGMENT]: 'line',
 		[ELEMENT_TYPES.REGRESSION]: 'regression',
 		[ELEMENT_TYPES.ANNOTATION]: 'annotations',
+		[ELEMENT_TYPES.LEGEND]: 'legend',
 		[ELEMENT_TYPES.LEGEND_ITEM]: 'legend',
 		[ELEMENT_TYPES.PANEL_TITLE]: 'smallMultiples',
 		[ELEMENT_TYPES.ERROR_BAR]: 'dotPlot',
@@ -563,6 +563,10 @@ function EditInner({
 		}
 	};
 
+	const handleLegendCustomizationUpdate = (updates) => {
+		updateAttributeForDevice('legend', updates);
+	};
+
 	const handlePanelTitleCustomizationUpdate = (updates) => {
 		if (updates.customPanelTitles !== undefined) {
 			setAttributes({ customPanelTitles: updates.customPanelTitles });
@@ -633,7 +637,7 @@ function EditInner({
 	};
 
 	// Get the appropriate update handler based on element type
-	const getCustomizationUpdateHandler = (elementType, selectedElement) => {
+	const getCustomizationUpdateHandler = (elementType, element) => {
 		if (elementType === ELEMENT_TYPES.SHAPE) {
 			return handleShapeCustomizationUpdate;
 		}
@@ -646,18 +650,18 @@ function EditInner({
 		if (elementType === ELEMENT_TYPES.REGRESSION) {
 			return handleRegressionCustomizationUpdate;
 		}
-		if (
-			elementType === ELEMENT_TYPES.ANNOTATION &&
-			selectedElement?.annotationId != null
-		) {
-			return (updates) =>
-				handleAnnotationCustomizationUpdate(
-					selectedElement.annotationId,
-					updates
-				);
+		if (elementType === ELEMENT_TYPES.ANNOTATION) {
+			const annotationId = element?.annotationId;
+			if (annotationId !== undefined && annotationId !== null) {
+				return (updates) =>
+					handleAnnotationCustomizationUpdate(annotationId, updates);
+			}
 		}
 		if (elementType === ELEMENT_TYPES.TICK_LABEL) {
 			return handleTickLabelCustomizationUpdate;
+		}
+		if (elementType === ELEMENT_TYPES.LEGEND) {
+			return handleLegendCustomizationUpdate;
 		}
 		if (elementType === ELEMENT_TYPES.LEGEND_ITEM) {
 			return handleLegendItemCustomizationUpdate;
@@ -706,6 +710,9 @@ function EditInner({
 					dependent: {},
 				}
 			);
+		}
+		if (elementType === ELEMENT_TYPES.LEGEND) {
+			return getCurrentValue('legend') || {};
 		}
 		if (elementType === ELEMENT_TYPES.LEGEND_ITEM) {
 			return getCurrentValue('customLegendLabels') || {};
@@ -806,38 +813,46 @@ function EditInner({
 
 	const body = useMemo(() => (tableData ? tableData.body : []), [tableData]);
 
-	const memoizedChartData = useMemo(
-		() =>
-			body.map((row) =>
-				row.cells.reduce((acc, cell, index) => {
-					const key = 0 === index ? 'x' : headers[index];
-					return {
-						...acc,
-						[key]: formatCellContentTyped(
-							getCellContent(cell),
-							key,
-							columnMeta,
-							index,
-							mapScale,
-							groupBreaksCategory,
-							dataRender?.xScale,
-							dataRender?.xFormat,
-							preserveStringKeys
-						),
-					};
-				}, {})
-			),
-		[
-			body,
-			headers,
-			columnMeta,
-			mapScale,
-			groupBreaksCategory,
-			dataRender?.xScale,
-			dataRender?.xFormat,
-			preserveStringKeys,
-		]
-	);
+	const diffColumn = getCurrentValue('diffColumn') || {};
+
+	const memoizedChartData = useMemo(() => {
+		const keysToPreserve = [
+			...(Array.isArray(preserveStringKeys) ? preserveStringKeys : []),
+			...(diffColumn.active && diffColumn.category
+				? [diffColumn.category]
+				: []),
+		];
+		return body.map((row) =>
+			row.cells.reduce((acc, cell, index) => {
+				const key = 0 === index ? 'x' : headers[index];
+				return {
+					...acc,
+					[key]: formatCellContentTyped(
+						getCellContent(cell),
+						key,
+						columnMeta,
+						index,
+						mapScale,
+						groupBreaksCategory,
+						dataRender?.xScale,
+						dataRender?.xFormat,
+						keysToPreserve
+					),
+				};
+			}, {})
+		);
+	}, [
+		body,
+		headers,
+		columnMeta,
+		mapScale,
+		groupBreaksCategory,
+		dataRender?.xScale,
+		dataRender?.xFormat,
+		preserveStringKeys,
+		diffColumn.active,
+		diffColumn.category,
+	]);
 
 	// Determine whether the sibling table has meaningful validation configured.
 	// If it does but the table is invalid, we hold the last known-good chart data.
@@ -1100,6 +1115,7 @@ function EditInner({
 							memoizedChartData && (
 								<div
 									style={{ position: 'relative' }}
+									role="presentation"
 									onClick={(event) => {
 										if (!selectedElement) return;
 										// Close the popover when clicking the chart background,
@@ -1141,6 +1157,11 @@ function EditInner({
 													'variation'
 												) || 'grouped'
 											}
+											showDirectLayout={LINE_CHART_TYPES.includes(
+												effectiveChartTypeForControls(
+													attrs
+												)
+											)}
 											dataPoint={
 												selectedElement.dataPoint
 											}
@@ -1178,7 +1199,9 @@ function EditInner({
 											annotation={
 												selectedElement.elementType ===
 													ELEMENT_TYPES.ANNOTATION &&
-												selectedElement.annotationId !=
+												selectedElement.annotationId !==
+													undefined &&
+												selectedElement.annotationId !==
 													null
 													? (() => {
 															const items =

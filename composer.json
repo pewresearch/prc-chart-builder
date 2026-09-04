@@ -21,6 +21,9 @@
 		],
 		"test-ms": [
 			"WP_MULTISITE=1 phpunit --configuration ../../tests/prc-chart-builder/phpunit/phpunit.xml.dist"
+		],
+		"test-vip": [
+			"phpunit --configuration ../../tests/prc-chart-builder/phpunit/phpunit-vip.xml.dist"
 		]
 	},
 	"config": {

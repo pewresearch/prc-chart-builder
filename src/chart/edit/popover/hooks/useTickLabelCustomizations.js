@@ -17,9 +17,9 @@ import { useState, useEffect, useCallback } from '@wordpress/element';
  * @param {string|Object|undefined} entry
  * @return {Object}
  */
-function normalizeEntry( entry ) {
-	if ( ! entry ) return {};
-	if ( typeof entry === 'string' ) return { text: entry };
+function normalizeEntry(entry) {
+	if (!entry) return {};
+	if (typeof entry === 'string') return { text: entry };
 	return entry;
 }
 
@@ -29,9 +29,9 @@ function normalizeEntry( entry ) {
  * @param {Object} obj
  * @return {boolean}
  */
-function hasAnyValue( obj ) {
-	return Object.values( obj ).some(
-		( v ) => v !== undefined && v !== null && v !== ''
+function hasAnyValue(obj) {
+	return Object.values(obj).some(
+		(v) => v !== undefined && v !== null && v !== ''
 	);
 }
 
@@ -52,16 +52,16 @@ export function useTickLabelCustomizations(
 	currentCustomizations,
 	onUpdate
 ) {
-	const axisLabels = currentCustomizations?.[ axisKey ] || {};
-	const rawEntry = axisLabels[ String( tickValue ) ];
-	const savedEntry = normalizeEntry( rawEntry );
+	const axisLabels = currentCustomizations?.[axisKey] || {};
+	const rawEntry = axisLabels[String(tickValue)];
+	const savedEntry = normalizeEntry(rawEntry);
 
-	const [ styles, setStyles ] = useState( savedEntry );
+	const [styles, setStyles] = useState(savedEntry);
 
 	// Sync when the popover reopens on a different tick
-	useEffect( () => {
-		setStyles( normalizeEntry( rawEntry ) );
-	}, [ rawEntry, tickValue ] );
+	useEffect(() => {
+		setStyles(normalizeEntry(rawEntry));
+	}, [rawEntry, tickValue]);
 
 	/**
 	 * Update a single field in the style object.
@@ -70,32 +70,32 @@ export function useTickLabelCustomizations(
 	 * @param {*}      value
 	 */
 	const handleChange = useCallback(
-		( field, value ) => {
-			const next = { ...styles, [ field ]: value };
-			setStyles( next );
+		(field, value) => {
+			const next = { ...styles, [field]: value };
+			setStyles(next);
 
 			const updated = { ...axisLabels };
-			if ( ! hasAnyValue( next ) ) {
-				delete updated[ String( tickValue ) ];
+			if (!hasAnyValue(next)) {
+				delete updated[String(tickValue)];
 			} else {
-				updated[ String( tickValue ) ] = next;
+				updated[String(tickValue)] = next;
 			}
-			onUpdate( { [ axisKey ]: updated } );
+			onUpdate({ [axisKey]: updated });
 		},
-		[ axisKey, axisLabels, tickValue, styles, onUpdate ]
+		[axisKey, axisLabels, tickValue, styles, onUpdate]
 	);
 
 	/**
 	 * Remove all customizations for this tick.
 	 */
-	const handleReset = useCallback( () => {
-		setStyles( {} );
+	const handleReset = useCallback(() => {
+		setStyles({});
 		const updated = { ...axisLabels };
-		delete updated[ String( tickValue ) ];
-		onUpdate( { [ axisKey ]: updated } );
-	}, [ axisKey, axisLabels, tickValue, onUpdate ] );
+		delete updated[String(tickValue)];
+		onUpdate({ [axisKey]: updated });
+	}, [axisKey, axisLabels, tickValue, onUpdate]);
 
-	const hasCustomizations = hasAnyValue( styles );
+	const hasCustomizations = hasAnyValue(styles);
 
 	return {
 		text: styles.text ?? '',

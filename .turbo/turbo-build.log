@@ -1,5 +1,5 @@
 
-> @prc/chart-builder@3.14.0 build
+> @prc/chart-builder@3.15.0 build
 > wp-scripts build --webpack-copy-php --experimental-modules && wp-scripts build-blocks-manifest && wp-scripts build --source-path=includes/inspector-sidebar-panel/src/ --output-path=includes/inspector-sidebar-panel/build/ && npm run build:admin-dataview && node bin/sync-field-registry.mjs --check && wp-scripts build --config webpack.settings.config.js
 
 assets by path [1m[32msynced-chart/[39m[22m 28.7 KiB
@@ -8,24 +8,24 @@ assets by path [1m[32msynced-chart/[39m[22m 28.7 KiB
   asset [1m[32msynced-chart/class-synced-chart.php[39m[22m 15.4 KiB [1m[32m[emitted][39m[22m [from: src/synced-chart/class-synced-chart.php] [1m[32m[copied][39m[22m
   asset [1m[32msynced-chart/block.json[39m[22m 674 bytes [1m[32m[emitted][39m[22m [from: src/synced-chart/block.json] [1m[32m[copied][39m[22m
 assets by path [1m[32mcontroller/[39m[22m 1.16 MiB
-  assets by chunk 695 KiB (name: controller/index) 2 assets
+  assets by chunk 696 KiB (name: controller/index) 2 assets
   assets by path [1m[32mcontroller/*.css[39m[22m 461 KiB 2 assets
-  asset [1m[32mcontroller/class-controller.php[39m[22m 32.8 KiB [1m[32m[emitted][39m[22m [from: src/controller/class-controller.php] [1m[32m[copied][39m[22m
+  asset [1m[32mcontroller/class-controller.php[39m[22m 33.1 KiB [1m[32m[emitted][39m[22m [from: src/controller/class-controller.php] [1m[32m[copied][39m[22m
   asset [1m[32mcontroller/block.json[39m[22m 1.9 KiB [1m[32m[emitted][39m[22m [from: src/controller/block.json] [1m[32m[copied][39m[22m
-assets by path [1m[32mchart/[39m[22m 411 KiB
-  assets by chunk 378 KiB (name: chart/index) 2 assets
-  asset [1m[32mchart/block.json[39m[22m 19.8 KiB [1m[32m[emitted][39m[22m [from: src/chart/block.json] [1m[32m[copied][39m[22m
-  asset [1m[32mchart/class-chart.php[39m[22m 12.8 KiB [1m[32m[emitted][39m[22m [from: src/chart/class-chart.php] [1m[32m[copied][39m[22m
-Entrypoint [1mchart/index[39m[22m [1m[33m[big][39m[22m 378 KiB = [1m[32mchart/index.js[39m[22m 378 KiB [1m[32mchart/index.asset.php[39m[22m 360 bytes
-Entrypoint [1mcontroller/index[39m[22m [1m[33m[big][39m[22m 1.13 MiB = [1m[32mcontroller/style-index.css[39m[22m 230 KiB [1m[32mcontroller/style-index-rtl.css[39m[22m 230 KiB [1m[32mcontroller/index.js[39m[22m 694 KiB [1m[32mcontroller/index.asset.php[39m[22m 506 bytes
+assets by path [1m[32mchart/[39m[22m 418 KiB
+  assets by chunk 385 KiB (name: chart/index) 2 assets
+  asset [1m[32mchart/block.json[39m[22m 19.9 KiB [1m[32m[emitted][39m[22m [from: src/chart/block.json] [1m[32m[copied][39m[22m
+  asset [1m[32mchart/class-chart.php[39m[22m 13.2 KiB [1m[32m[emitted][39m[22m [from: src/chart/class-chart.php] [1m[32m[copied][39m[22m
+Entrypoint [1mchart/index[39m[22m [1m[33m[big][39m[22m 385 KiB = [1m[32mchart/index.js[39m[22m 385 KiB [1m[32mchart/index.asset.php[39m[22m 360 bytes
+Entrypoint [1mcontroller/index[39m[22m [1m[33m[big][39m[22m 1.13 MiB = [1m[32mcontroller/style-index.css[39m[22m 230 KiB [1m[32mcontroller/style-index-rtl.css[39m[22m 230 KiB [1m[32mcontroller/index.js[39m[22m 696 KiB [1m[32mcontroller/index.asset.php[39m[22m 506 bytes
 Entrypoint [1msynced-chart/index[39m[22m [1m[33m[big][39m[22m 473 KiB = 8 assets
-orphan modules 6.12 MiB (javascript) 3.66 KiB (runtime) [1m[33m[orphan][39m[22m 2503 modules
+orphan modules 6.13 MiB (javascript) 3.66 KiB (runtime) [1m[33m[orphan][39m[22m 2504 modules
 runtime modules 8.48 KiB 16 modules
-built modules 2.78 MiB (javascript) 232 KiB (css/mini-extract) [1m[33m[built][39m[22m
-  javascript modules 2.78 MiB
+built modules 2.77 MiB (javascript) 232 KiB (css/mini-extract) [1m[33m[built][39m[22m
+  javascript modules 2.77 MiB
     cacheable modules 13 KiB 6 modules
     modules by path [1m./src/[39m[22m 2.76 MiB
-      [1m./src/chart/index.js + 136 modules[39m[22m 902 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+      [1m./src/chart/index.js + 137 modules[39m[22m 915 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
       + 2 modules
     [1mexternal "React"[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css modules 232 KiB
@@ -34,11 +34,6 @@ built modules 2.78 MiB (javascript) 232 KiB (css/mini-extract) [1m[33m[built]
       css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/synced-chart/style.scss[39m[22m 438 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
     css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./includes/admin/src/style.scss[39m[22m 107 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
     css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/controller/style.scss[39m[22m 123 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-
-[1m[33mWARNING[39m[22m in [1m./src/controller/placeholder.jsx[39m[22m [1m[32m64:12-21[39m[22m
-[1mexport 'chartArea' (imported as 'chartArea') was [1m[31mnot found[39m[22m[1m in '@wordpress/icons' (possible exports: [1m[32mIcon, addCard, addSubmenu, addTemplate, alignCenter, alignJustify, alignLeft, alignNone, alignRight, archive, arrowDown, arrowDownRight, arrowLeft, arrowRight, arrowUp, arrowUpLeft, aspectRatio, atSymbol, audio, background, backup, bell, bellUnread, blockDefault, blockMeta, blockTable, border, box, brush, bug, button, buttons, calendar, cancelCircleFilled, caption, capturePhoto, captureVideo, category, caution, cautionFilled, chartBar, check, chevronDown, chevronDownSmall, chevronLeft, chevronLeftSmall, chevronRight, chevronRightSmall, chevronUp, chevronUpDown, classic, close, closeSmall, cloud, cloudDownload, cloudUpload, code, cog, color, column, columns, comment, commentAuthorAvatar, commentAuthorName, commentContent, commentEditLink, commentReplyLink, connection, copy, copySmall, cornerAll, cornerBottomLeft, cornerBottomRight, cornerTopLeft, cornerTopRight, cover, create, crop, currencyDollar, currencyEuro, currencyPound, customLink, customPostType, dashboard, desktop, details, download, drafts, dragHandle, drawerLeft, drawerRight, edit, envelope, [1m[31merror[39m[22m[1m, external, file, filter, flipHorizontal, flipVertical, footer, formatBold, formatCapitalize, formatIndent, formatIndentRTL, formatItalic, formatListBullets, formatListBulletsRTL, formatListNumbered, formatListNumberedRTL, formatLowercase, formatLtr, formatOutdent, formatOutdentRTL, formatRtl, formatStrikethrough, formatUnderline, formatUppercase, fullscreen, funnel, gallery, gift, globe, grid, group, handle, header, heading, headingLevel1, headingLevel2, headingLevel3, headingLevel4, headingLevel5, headingLevel6, help, helpFilled, home, homeButton, html, image, inbox, info, insertAfter, insertBefore, institution, justifyBottom, justifyCenter, justifyCenterVertical, justifyLeft, justifyRight, justifySpaceBetween, justifySpaceBetweenVertical, justifyStretch, justifyStretchVertical, justifyTop, key, keyboard, keyboardClose, keyboardReturn, language, layout, levelUp, lifesaver, lineDashed, lineDotted, lineSolid, link, linkOff, list, listItem, listView, lock, lockOutline, lockSmall, login, loop, mapMarker, media, mediaAndText, megaphone, menu, mobile, more, moreHorizontal, moreVertical, moveTo, navigation, next, notAllowed, notFound, offline, overlayText, page, pageBreak, pages, paragraph, payment, pencil, pending, people, percent, pin, pinSmall, plugins, plus, plusCircle, plusCircleFilled, positionCenter, positionLeft, positionRight, post, postAuthor, postCategories, postComments, postCommentsCount, postCommentsForm, postContent, postDate, postExcerpt, postFeaturedImage, postList, postTerms, preformatted, previous, published, pullLeft, pullRight, pullquote, queryPagination, queryPaginationNext, queryPaginationNumbers, queryPaginationPrevious, quote, receipt, redo, removeBug, removeSubmenu, replace, reset, resizeCornerNE, reusableBlock, rotateLeft, rotateRight, row, rss, scheduled, search, seen, send, separator, settings, shadow, share, shield, shipping, shortcode, shuffle, sidebar, sidesAll, sidesAxial, sidesBottom, sidesHorizontal, sidesLeft, sidesRight, sidesTop, sidesVertical, siteLogo, square, stack, starEmpty, starFilled, starHalf, store, stretchFullWidth, stretchWide, styles, subscript, superscript, swatch, symbol, symbolFilled, table, tableColumnAfter, tableColumnBefore, tableColumnDelete, tableOfContents, tableRowAfter, tableRowBefore, tableRowDelete, tablet, tag, termDescription, textColor, textHorizontal, textVertical, thumbsDown, thumbsUp, tip, title, tool, trash, trendingDown, trendingUp, typography, undo, ungroup, unlock, unseen, update, upload, verse, video, warning, widget, wordpress[39m[22m[1m)[39m[22m
- @ ./src/controller/Edit.jsx 18:0-40 431:29-40
- @ ./src/controller/index.js 14:0-26 34:2-6
 
 [1m[33mWARNING[39m[22m in [1m./includes/admin/src/style.scss[39m[22m (./includes/admin/src/style.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./includes/admin/src/style.scss)
 [1mModule Warning (from ../../node_modules/sass-loader/dist/cjs.js):
@@ -103,12 +98,12 @@ src/controller/style.scss 36:9  root stylesheet
 [1m[33mWARNING[39m[22m in [1masset size limit: The following asset(s) exceed the recommended size limit (244 KiB).
 This can impact web performance.
 Assets: 
-  chart/index.js (378 KiB)
-  controller/index.js (694 KiB)[39m[22m
+  chart/index.js (385 KiB)
+  controller/index.js (696 KiB)[39m[22m
 
 [1m[33mWARNING[39m[22m in [1mentrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
 Entrypoints:
-  chart/index (378 KiB)
+  chart/index (385 KiB)
       chart/index.js
       chart/index.asset.php
   controller/index (1.13 MiB)
@@ -131,21 +126,21 @@ Entrypoints:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/[39m[22m
 
-webpack 5.106.2 compiled with [1m[33m8 warnings[39m[22m in 23094 ms
+webpack 5.106.2 compiled with [1m[33m7 warnings[39m[22m in 18252 ms
 
-assets by path [1m[32mchart/[39m[22m 62.2 KiB
-  asset [1m[32mchart/view.js[39m[22m 62 KiB [1m[32m[emitted][39m[22m [javascript module] [1m[32m[minimized][39m[22m (name: chart/view)
+assets by path [1m[32mchart/[39m[22m 62.7 KiB
+  asset [1m[32mchart/view.js[39m[22m 62.6 KiB [1m[32m[emitted][39m[22m [javascript module] [1m[32m[minimized][39m[22m (name: chart/view)
   asset [1m[32mchart/view.asset.php[39m[22m 155 bytes [1m[32m[emitted][39m[22m (name: chart/view)
 assets by path [1m[32mcontroller/[39m[22m 39.6 KiB
   asset [1m[32mcontroller/view.js[39m[22m 39.4 KiB [1m[32m[emitted][39m[22m [javascript module] [1m[32m[minimized][39m[22m (name: controller/view)
   asset [1m[32mcontroller/view.asset.php[39m[22m 130 bytes [1m[32m[emitted][39m[22m (name: controller/view)
-Entrypoint [1mchart/view[39m[22m 62.2 KiB = [1m[32mchart/view.js[39m[22m 62 KiB [1m[32mchart/view.asset.php[39m[22m 155 bytes
+Entrypoint [1mchart/view[39m[22m 62.7 KiB = [1m[32mchart/view.js[39m[22m 62.6 KiB [1m[32mchart/view.asset.php[39m[22m 155 bytes
 Entrypoint [1mcontroller/view[39m[22m 39.6 KiB = [1m[32mcontroller/view.js[39m[22m 39.4 KiB [1m[32mcontroller/view.asset.php[39m[22m 130 bytes
-orphan modules 234 KiB [1m[33m[orphan][39m[22m 60 modules
-built modules 335 KiB [1m[33m[built][39m[22m
+orphan modules 235 KiB [1m[33m[orphan][39m[22m 60 modules
+built modules 336 KiB [1m[33m[built][39m[22m
   [1m./src/chart/view.js + 27 modules[39m[22m 220 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1m./src/controller/view.js + 14 modules[39m[22m 115 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 8687 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 5535 ms
 Block metadata PHP file generated at: build/blocks-manifest.php
 assets by path [1m[32m*.css[39m[22m 6.86 KiB
   asset [1m[32mindex-rtl.css[39m[22m 3.43 KiB [1m[33m[compared for emit][39m[22m (name: index)
@@ -158,9 +153,9 @@ runtime modules 663 bytes 3 modules
 built modules 16.6 KiB (javascript) 3.43 KiB (css/mini-extract) [1m[33m[built][39m[22m
   [1m./includes/inspector-sidebar-panel/src/index.js + 13 modules[39m[22m 16.6 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./includes/inspector-sidebar-panel/src/editor.scss[39m[22m 3.43 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 1504 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 1267 ms
 
-> @prc/chart-builder@3.14.0 build:admin-dataview
+> @prc/chart-builder@3.15.0 build:admin-dataview
 > wp-scripts build --config webpack.admin-dataview.config.js
 
 assets by chunk 5.11 KiB (name: index)
@@ -175,22 +170,22 @@ runtime modules 2.51 KiB 3 modules
 built modules 7.24 KiB (javascript) 0 bytes (css/mini-extract) [1m[33m[built][39m[22m
   [1m./src/admin-dataview/index.jsx + 10 modules[39m[22m 7.24 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/admin-dataview/style.scss[39m[22m 0 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 1502 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 822 ms
 Field registry sync OK (28 schema groups: layout, metadata, plotBands, independentAxis, dependentAxis, tooltip, legend, labels, shapes, bar, line, dotPlot, errorBars, explodedBar, pie, nodes, beeSwarm, regression, map, divergingBar, diffColumn, netValues, treemap, waffle, heatMapTable, sankey, smallMultiples, annotations).
-assets by chunk 128 KiB (name: index)
-  asset [1m[32mindex.js[39m[22m 128 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: index)
-  asset [1m[32mindex.asset.php[39m[22m 243 bytes [1m[32m[emitted][39m[22m (name: index)
+assets by chunk 135 KiB (name: index)
+  asset [1m[32mindex.js[39m[22m 135 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: index)
+  asset [1m[32mindex.asset.php[39m[22m 257 bytes [1m[32m[emitted][39m[22m (name: index)
 assets by path [1m[32m./*.css[39m[22m 22.1 KiB
   asset [1m[32m./style-index-rtl.css[39m[22m 11.1 KiB [1m[32m[emitted][39m[22m (name: ./style-index) (id hint: style)
   asset [1m[32m./style-index.css[39m[22m 11.1 KiB [1m[32m[emitted][39m[22m (name: ./style-index) (id hint: style)
-asset [1m[32mchart/block.json[39m[22m 19.8 KiB [1m[32m[emitted][39m[22m [from: src/chart/block.json] [1m[32m[copied][39m[22m
+asset [1m[32mchart/block.json[39m[22m 19.9 KiB [1m[32m[emitted][39m[22m [from: src/chart/block.json] [1m[32m[copied][39m[22m
 asset [1m[32mcontroller/block.json[39m[22m 1.9 KiB [1m[32m[emitted][39m[22m [from: src/controller/block.json] [1m[32m[copied][39m[22m
 asset [1m[32msynced-chart/block.json[39m[22m 674 bytes [1m[32m[emitted][39m[22m [from: src/synced-chart/block.json] [1m[32m[copied][39m[22m
-Entrypoint [1mindex[39m[22m 150 KiB = [1m[32m./style-index.css[39m[22m 11.1 KiB [1m[32m./style-index-rtl.css[39m[22m 11.1 KiB [1m[32mindex.js[39m[22m 128 KiB [1m[32mindex.asset.php[39m[22m 243 bytes
-orphan modules 2.62 MiB (javascript) 937 bytes (runtime) [1m[33m[orphan][39m[22m 1497 modules
+Entrypoint [1mindex[39m[22m 157 KiB = [1m[32m./style-index.css[39m[22m 11.1 KiB [1m[32m./style-index-rtl.css[39m[22m 11.1 KiB [1m[32mindex.js[39m[22m 135 KiB [1m[32mindex.asset.php[39m[22m 257 bytes
+orphan modules 2.64 MiB (javascript) 937 bytes (runtime) [1m[33m[orphan][39m[22m 1499 modules
 runtime modules 3.07 KiB 5 modules
-built modules 225 KiB (javascript) 11.1 KiB (css/mini-extract) [1m[33m[built][39m[22m
-  [1m./src/settings/index.js + 75 modules[39m[22m 225 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+built modules 237 KiB (javascript) 11.1 KiB (css/mini-extract) [1m[33m[built][39m[22m
+  [1m./src/settings/index.js + 78 modules[39m[22m 237 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/settings/style.scss[39m[22m 11.1 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
 
 [1m[33mWARNING[39m[22m in [1m./src/settings/style.scss[39m[22m (./src/settings/style.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./src/settings/style.scss)
@@ -229,4 +224,4 @@ src/settings/style.scss 139:29  root stylesheet
  @ ./src/settings/app.jsx 6:0-22
  @ ./src/settings/index.js 2:0-37 3:60-76
 
-webpack 5.106.2 compiled with [1m[33m2 warnings[39m[22m in 5486 ms
+webpack 5.106.2 compiled with [1m[33m2 warnings[39m[22m in 2666 ms

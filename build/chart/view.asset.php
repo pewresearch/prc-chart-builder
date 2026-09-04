@@ -1,1 +1,1 @@
-<?php return array('dependencies' => array('@prc/charting-library', '@wordpress/interactivity'), 'version' => 'b3138e912835f0fb773f', 'type' => 'module');
+<?php return array('dependencies' => array('@prc/charting-library', '@wordpress/interactivity'), 'version' => 'afaea6a02e3be374c06e', 'type' => 'module');

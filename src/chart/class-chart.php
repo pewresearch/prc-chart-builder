@@ -35,13 +35,19 @@ class Chart {
 			return $content;
 		}
 
-		// Migrate v1 attributes to v2 if needed (server-side migration)
+		// Migrate v1 attributes to v2 if needed (server-side migration).
 		if ( ! isset( $attributes['_version'] ) || 'v2' !== $attributes['_version'] ) {
 			$attributes = \PRC\Platform\Chart_Builder\Block_Migration::migrate_attributes_v1_to_v2( $attributes );
 		}
 
+		$attributes = Chart_Export_Endpoint::apply_requested_dimensions( $attributes );
+
 		// First-paint device detection only — viewport switching is client-side.
-		$device_type = \PRC\BlockUtils\get_current_device();
+		// /export/ is the canonical screenshot surface and always uses desktop
+		// attributes, even when the capture browser is narrower than 782px.
+		$device_type = Chart_Export_Endpoint::is_export_request()
+			? 'desktop'
+			: \PRC\BlockUtils\get_current_device();
 
 		// Prevent double rendering by tracking rendered blocks.
 		static $rendered_blocks = array();
@@ -154,24 +160,24 @@ class Chart {
 		);
 
 		$block_attrs = array(
-			'id'                          => wp_unique_id( 'chart-block-' ),
-			'data-wp-key'                 => $block_id,
-			'data-wp-interactive'         => $target_namespace,
-			'data-prc-chart-id'           => $block_id,
-			'data-wp-context'             => wp_json_encode(
+			'id'                             => wp_unique_id( 'chart-block-' ),
+			'data-wp-key'                    => $block_id,
+			'data-wp-interactive'            => $target_namespace,
+			'data-prc-chart-id'              => $block_id,
+			'data-wp-context'                => wp_json_encode(
 				array(
 					'id' => $block_id,
 				)
 			),
-			'class'                       => 'wp-chart-builder-inner',
-			'data-wp-watch--init-render'  => $is_static_chart || $is_freeform_chart ? null : 'callbacks.watchForRender',
+			'class'                          => 'wp-chart-builder-inner',
+			'data-wp-watch--init-render'     => $is_static_chart || $is_freeform_chart ? null : 'callbacks.watchForRender',
 			// Re-seed live store leaves after Interactivity Router navigations.
 			// The router merges server state with override=false, so data/config
 			// would otherwise stay frozen at the first mount (e.g. Religious
 			// Projections country → country). Custom charts remount via the
 			// empty-mount path in renderChart and do not need this watch.
 			'data-wp-watch--sync-navigation' => $is_static_chart || $is_freeform_chart || $is_custom_chart ? null : 'callbacks.syncOnNavigation',
-			'data-wp-on-window--resize'   => $is_custom_chart ? null : 'callbacks.watchForResize',
+			'data-wp-on-window--resize'      => $is_custom_chart ? null : 'callbacks.watchForResize',
 		);
 
 		$block_wrapper_attrs = get_block_wrapper_attributes( $block_attrs );
@@ -189,7 +195,7 @@ class Chart {
 			$placeholder_style = $fallback_width
 				? sprintf( ' style="width:%dpx;min-height:200px;"', $fallback_width )
 				: ' style="min-height:200px;"';
-			$chart = wp_sprintf(
+			$chart             = wp_sprintf(
 				'<div id="%1$s"><div class="chart-fallback chart-fallback--placeholder"%2$s></div></div>',
 				$block_id,
 				$placeholder_style

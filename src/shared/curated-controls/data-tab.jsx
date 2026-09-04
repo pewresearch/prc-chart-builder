@@ -2,6 +2,7 @@
  * Data tab — accessors, scale, sort, and grouping.
  */
 import {
+	FormTokenField,
 	PanelBody,
 	SelectControl,
 	ToggleControl,
@@ -10,6 +11,8 @@ import {
 } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+
+import { canonicalRowValue } from '@prc/charting-utilities';
 
 import Sorter from '../../chart/edit/sorter';
 import {
@@ -40,6 +43,20 @@ const BREAK_LINE_STYLE_OPTIONS = [
 	{ value: 'dashed', label: __('Dashed', 'prc-chart-builder') },
 	{ value: 'heartbeat', label: __('Heartbeat', 'prc-chart-builder') },
 ];
+
+function uniqueCanonicalColumnValues(data, column) {
+	const unique = new Set();
+	if (!Array.isArray(data)) {
+		return unique;
+	}
+	data.forEach((row) => {
+		const value = canonicalRowValue(row?.[column]);
+		if (value !== '') {
+			unique.add(value);
+		}
+	});
+	return unique;
+}
 
 /**
  * @param {Object}   props
@@ -172,6 +189,10 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 			isHidden: false,
 		}));
 	}, [availableGroupValues, dataRender.groupBreaksCategoryValues]);
+	const rowFilterSuggestions = useMemo(
+		() => Array.from(uniqueCanonicalColumnValues(io.chartData, 'x')),
+		[io.chartData]
+	);
 
 	return (
 		<VStack spacing={2} className="prc-chart-modal__configure-tab-panel">
@@ -200,6 +221,22 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 							/>
 						</>
 					)}
+					<FormTokenField
+						label={__('Exclude rows', 'prc-chart-builder')}
+						value={dataRender.rowFilter?.exclude || []}
+						suggestions={rowFilterSuggestions}
+						onChange={(exclude) =>
+							setPath('dataRender.rowFilter', {
+								column: 'x',
+								exclude,
+							})
+						}
+						help={__(
+							'Exclude values from the first table column. Those rows stay in the table and are not plotted.',
+							'prc-chart-builder'
+						)}
+						__nextHasNoMarginBottom
+					/>
 					{showDivergingAccessors &&
 						availableCategories.length > 0 && (
 							<>

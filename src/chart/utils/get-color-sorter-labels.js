@@ -1,3 +1,4 @@
+import { decodeHtmlEntities } from '@prc/charting-utilities';
 import {
 	effectiveChartTypeForControls,
 	VALUE_SCALE_CHART_TYPES,
@@ -41,7 +42,7 @@ export function getThresholdLegendLabels(domain = [], legend = {}) {
 		labels.push(`${breaks[index]}${inner}${breaks[index + 1]}`);
 	}
 	labels.push(`${labelUpper}${breaks[breaks.length - 1]}`);
-	return labels;
+	return labels.map((label) => decodeHtmlEntities(label));
 }
 
 function getDiscreteLegendLabels(attributes = {}) {

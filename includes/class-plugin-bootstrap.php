@@ -164,9 +164,17 @@ class Plugin_Bootstrap {
 		$this->include( 'class-chart-patterns-endpoint.php' );
 		$this->include( 'inspector-sidebar-panel/class-inspector-sidebar-panel.php' );
 		$this->include( 'class-chart-export-endpoint.php' );
+		$this->include( 'screenshot-providers/class-screenshot-capture-spec.php' );
+		$this->include( 'screenshot-providers/interface-screenshot-provider.php' );
+		$this->include( 'screenshot-providers/class-screenshotone-provider.php' );
+		$this->include( 'screenshot-providers/class-cloudflare-provider.php' );
+		$this->include( 'screenshot-providers/class-firebase-provider.php' );
+		$this->include( 'screenshot-providers/class-endpoint-provider.php' );
+		$this->include( 'screenshot-providers/class-screenshot-provider-registry.php' );
 		if ( file_exists( plugin_dir_path( __DIR__ ) . 'includes/class-screenshot-service.php' ) ) {
 			$this->include( 'class-screenshot-service.php' );
 		}
+		$this->include( 'settings/class-screenshot-settings.php' );
 		if ( file_exists( plugin_dir_path( __DIR__ ) . 'includes/class-png-export.php' ) ) {
 			$this->include( 'class-png-export.php' );
 		}
@@ -183,11 +191,13 @@ class Plugin_Bootstrap {
 	 *
 	 * @since   3.0.0
 	 * @access private
+	 * @throws \Error When screenshot bootstrap fails for a reason other than a missing ScreenshotOne SDK class.
 	 */
 	private function register_modules() {
 		new Settings( $this->get_loader() );
 		new Theme_REST_Controller( $this->get_loader() );
 		new Creation_UI_Settings( $this->get_loader() );
+		new Screenshot_Settings( $this->get_loader() );
 		new Theme_Admin( $this->get_loader() );
 		new Content_Type( $this->get_loader() );
 		new Synced_Chart_Auto_Publish( $this->get_loader() );
@@ -208,8 +218,19 @@ class Plugin_Bootstrap {
 		new Inspector_Sidebar_Panel( $this->get_loader() );
 		new Chart_Export_Endpoint( $this->get_loader() );
 		if ( class_exists( __NAMESPACE__ . '\Screenshot_Service' ) && class_exists( __NAMESPACE__ . '\PNG_Export' ) ) {
-			$screenshot_service = new Screenshot_Service();
-			new PNG_Export( $this->get_loader(), $screenshot_service );
+			try {
+				$screenshot_service = new Screenshot_Service();
+				new PNG_Export( $this->get_loader(), $screenshot_service );
+			} catch ( \Error $e ) {
+				// Production 1.13.7 still constructs ScreenshotOne\Sdk\Client
+				// during Screenshot_Service::__construct(). A missing class
+				// must not fatal WordPress (seen on /wp-admin/upgrade.php/).
+				if ( false === strpos( $e->getMessage(), 'ScreenshotOne\\Sdk\\Client' ) ) {
+					throw $e;
+				}
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log -- optional screenshot capture must not take down the request.
+				error_log( '[PRC Chart Builder] Screenshot service skipped: ' . $e->getMessage() );
+			}
 		}
 
 		// After WP AI plugins_loaded bootstrap (priority 10); Abstract_Feature is not autoloadable before that.
@@ -238,7 +259,7 @@ class Plugin_Bootstrap {
 			'http_request_args',
 			static function ( $args, $url ) {
 				if ( is_string( $url ) && str_contains( $url, 'generativelanguage.googleapis.com' ) ) {
-					$args['timeout'] = 90;
+					$args['timeout'] = 90; // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- Editor-only Gemini call; thinking models routinely exceed 60s.
 				}
 				return $args;
 			},

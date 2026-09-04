@@ -150,19 +150,19 @@ class Controller {
 		/**
 		 * Get controller block attributes.
 		 */
-		$controller_attributes = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes(
+		$controller_attributes     = \PRC\Platform\Chart_Builder\Block_Utils::get_block_attributes(
 			'prc-chart-builder/controller',
 			isset( $attributes ) ? $attributes : array()
 		);
-		$block_id                   = $controller_attributes['id'];
-		$align                      = $controller_attributes['align'];
-		$tabs_active                = $controller_attributes['tabsActive'];
-		$chart_tab_active           = $controller_attributes['chartTabActive'] ?? true;
-		$data_tab_active            = $controller_attributes['dataTabActive'] ?? true;
-		$download_image_tab_active  = $controller_attributes['downloadImageTabActive'] ?? true;
-		$share_active               = $controller_attributes['shareActive'];
-		$is_static_chart            = $controller_attributes['isStatic'];
-		$is_freeform_chart          = $controller_attributes['isFreeform'];
+		$block_id                  = $controller_attributes['id'];
+		$align                     = $controller_attributes['align'];
+		$tabs_active               = $controller_attributes['tabsActive'];
+		$chart_tab_active          = $controller_attributes['chartTabActive'] ?? true;
+		$data_tab_active           = $controller_attributes['dataTabActive'] ?? true;
+		$download_image_tab_active = $controller_attributes['downloadImageTabActive'] ?? true;
+		$share_active              = $controller_attributes['shareActive'];
+		$is_static_chart           = $controller_attributes['isStatic'];
+		$is_freeform_chart         = $controller_attributes['isFreeform'];
 
 		// TODO: This is a way to retrieve the datasets for the chart. Not sure yet if we want to surface this in the chart builder block.
 		// $post_type = get_post_type();
@@ -234,17 +234,20 @@ class Controller {
 		$featured_image_url = null;
 
 		if ( $blocks['chart'] ) {
-			// Migrate v1 attributes to v2 if needed (server-side migration)
+			// Migrate v1 attributes to v2 if needed (server-side migration).
 			$raw_chart_attrs = $blocks['chart']['attrs'] ?? array();
 			if ( ! isset( $raw_chart_attrs['_version'] ) || 'v2' !== $raw_chart_attrs['_version'] ) {
 				$raw_chart_attrs = \PRC\Platform\Chart_Builder\Block_Migration::migrate_attributes_v1_to_v2( $raw_chart_attrs );
 			}
 
-			// IMPORTANT: Update the block's attrs with migrated version so render_block() passes correct attributes
-			// This prevents the chart block from re-running migration and losing controller modifications
+			$raw_chart_attrs = Chart_Export_Endpoint::apply_requested_dimensions( $raw_chart_attrs );
+
+			// IMPORTANT: Update the block's attrs with migrated version so render_block() passes correct
+			// attributes. This prevents the chart block from re-running migration and losing controller
+			// modifications.
 			$blocks['chart']['attrs'] = $raw_chart_attrs;
 
-			// After migration, use nested structure directly (no need for get_block_attributes)
+			// After migration, use nested structure directly (no need for get_block_attributes).
 			$chart_attributes = $raw_chart_attrs;
 
 			// Chart Builder ids live in saved block content, so copying a chart
@@ -275,7 +278,9 @@ class Controller {
 			$chart_block_id          = $chart_attributes['id'] ?? '';
 			$render_chart_attributes = Block_Utils::merge_viewport_attributes(
 				$chart_attributes,
-				\PRC\BlockUtils\get_current_device()
+				Chart_Export_Endpoint::is_export_request()
+					? 'desktop'
+					: \PRC\BlockUtils\get_current_device()
 			);
 			$chart_metadata_context  = wp_json_encode(
 				array(
@@ -286,9 +291,9 @@ class Controller {
 
 			$width = ( $chart_attributes['layout']['width'] ?? 640 ) . 'px';
 
-			// Check if chart is static - either from controller attribute or chart's io.isStaticChart
+			// Check if chart is static - either from controller attribute or chart's io.isStaticChart.
 			$chart_is_static = $is_static_chart || ( $chart_attributes['io']['isStaticChart'] ?? false );
-			// Update $is_static_chart to reflect the actual chart status for use later in the function
+			// Update $is_static_chart to reflect the actual chart status for use later in the function.
 			$is_static_chart = $chart_is_static;
 
 			// Find image block within chart block if it's a static chart.
@@ -310,7 +315,7 @@ class Controller {
 
 			// Process static image if present.
 			if ( $blocks['image'] ) {
-				$static_chart_img                                 = wp_get_attachment_image_src( $blocks['image']['attrs']['id'], 'full' );
+				$static_chart_img                                       = wp_get_attachment_image_src( $blocks['image']['attrs']['id'], 'full' );
 				$blocks['chart']['attrs']['io']['isStaticChart']        = true;
 				$blocks['chart']['attrs']['io']['staticImageId']        = $blocks['image']['attrs']['id'];
 				$blocks['chart']['attrs']['io']['staticImageUrl']       = $static_chart_img[0];
@@ -319,7 +324,7 @@ class Controller {
 				$featured_image_id  = $blocks['image']['attrs']['id'];
 				$featured_image_url = $static_chart_img[0];
 			} elseif ( $chart_is_static && ! empty( $chart_attributes['io']['staticImageId'] ) ) {
-				// Handle case where static chart data is already in attributes (no image block found)
+				// Handle case where static chart data is already in attributes (no image block found).
 				$static_chart_img = wp_get_attachment_image_src( $chart_attributes['io']['staticImageId'], 'full' );
 				if ( $static_chart_img ) {
 					$blocks['chart']['attrs']['io']['isStaticChart']  = true;
@@ -327,13 +332,13 @@ class Controller {
 					$featured_image_id                                = $chart_attributes['io']['staticImageId'];
 					$featured_image_url                               = $static_chart_img[0];
 				}
-		} else {
-			// The featured image is the canonical server-generated PNG.
-			// When synced into another post, refId is the chart CPT post ID —
-			// use it so we read meta from the chart post, not the parent article.
-			$chart_meta_id  = $chart_ref_id ?? $current_post_id;
-			$server_png_id  = (int) get_post_thumbnail_id( $chart_meta_id );
-			$server_png_url = $server_png_id ? (string) wp_get_attachment_url( $server_png_id ) : '';
+			} else {
+				// The featured image is the canonical server-generated PNG.
+				// When synced into another post, refId is the chart CPT post ID —
+				// use it so we read meta from the chart post, not the parent article.
+				$chart_meta_id  = $chart_ref_id ?? $current_post_id;
+				$server_png_id  = (int) get_post_thumbnail_id( $chart_meta_id );
+				$server_png_url = $server_png_id ? (string) wp_get_attachment_url( $server_png_id ) : '';
 				if ( $server_png_id && $server_png_url ) {
 					$featured_image_id  = $server_png_id;
 					$featured_image_url = $server_png_url;
@@ -432,7 +437,7 @@ class Controller {
 		 */
 		$freeform_with_meta = '';
 		if ( $blocks['freeform'] ) {
-			$blocks_to_render = is_array( $blocks['freeform'] ) && isset( $blocks['freeform'][0]['blockName'] ) ? $blocks['freeform'] : array( $blocks['freeform'] );
+			$blocks_to_render  = is_array( $blocks['freeform'] ) && isset( $blocks['freeform'][0]['blockName'] ) ? $blocks['freeform'] : array( $blocks['freeform'] );
 			$rendered_freeform = '';
 			foreach ( $blocks_to_render as $block_to_render ) {
 				$rendered_freeform .= render_block( $block_to_render );
@@ -570,7 +575,7 @@ class Controller {
 		// When the Chart tab is hidden but the Data tab is visible, default to
 		// showing the table so users aren't trapped on a view they cannot return to.
 		$initial_tab = ( ! $chart_tab_active && $data_tab_active ) ? 'table' : 'chart';
-		$state            = wp_interactivity_state(
+		$state       = wp_interactivity_state(
 			$target_namespace,
 			array(
 				$block_id => array(
@@ -605,8 +610,8 @@ class Controller {
 				'id'                                     => $block_id,
 				'data-wp-interactive'                    => $target_namespace,
 				'data-wp-context'                        => wp_json_encode( $context ),
-				// add is freeform chart class if it is a freeform chart
-				'class'                                  => 'wp-chart-builder-wrapper align' . $align . ($is_freeform_chart ? ' wp-block-prc-chart-builder-controller--freeform' : ''),
+				// Add the freeform chart class if it is a freeform chart.
+				'class'                                  => 'wp-chart-builder-wrapper align' . $align . ( $is_freeform_chart ? ' wp-block-prc-chart-builder-controller--freeform' : '' ),
 				'style'                                  => 'max-width:' . $width . ';',
 				'data-wp-init--detect-web-share-support' => 'callbacks.detectWebShareSupport',
 				'data-wp-init--sync-table-height'        => 'callbacks.syncTableHeight',
@@ -626,14 +631,14 @@ class Controller {
 			 * Render the complete chart builder.
 			 */
 			ob_start();
-			?>
+		?>
 		<div <?php echo wp_kses_post( $block_attrs ); ?>>
 			<?php
 			// If the chart is a freeform chart, and the share tabs are active, render the freeform chart in the tabbed interface.
-		if ( $tabs_active && $is_freeform_chart && $blocks['freeform'] && $blocks['table'] ) {
+			if ( $tabs_active && $is_freeform_chart && $blocks['freeform'] && $blocks['table'] ) {
 				$chart_active_class = 'chart' === $initial_tab ? ' active' : '';
 				$table_active_class = 'table' === $initial_tab ? ' active' : '';
-				$table_pane = $data_tab_active
+				$table_pane         = $data_tab_active
 					? wp_sprintf(
 						'<div class="wp-chart-builder-table%s" data-chart-view="table" data-wp-class--active="state.isActive" id="%s-table" style="max-width:%s;">%s</div>',
 						$table_active_class,
@@ -642,42 +647,42 @@ class Controller {
 						$table_with_meta //phpcs:ignore
 					)
 					: '';
-				echo wp_sprintf(
-					'<div class="wp-chart-builder-chart%s" data-chart-view="chart" data-allow-overlay="true" data-wp-class--active="state.isActive">%s%s</div>%s',
-					$chart_active_class,
+					echo wp_sprintf(
+						'<div class="wp-chart-builder-chart%s" data-chart-view="chart" data-allow-overlay="true" data-wp-class--active="state.isActive">%s%s</div>%s',
+						esc_attr( $chart_active_class ),
 					$freeform_with_meta, //phpcs:ignore
 					$share_modal, //phpcs:ignore
 					$table_pane //phpcs:ignore
-				);
-			// If the chart is a freeform chart, and the share tabs are not active, render the freeform chart.
-		} elseif ( $is_freeform_chart && $blocks['freeform'] ) {
-			echo $freeform_with_meta; //phpcs:ignore
-			// If the chart is a regular chart, and the share tabs are active, render the chart in the tabbed interface.
-	} elseif ( $tabs_active && $blocks['chart'] && $blocks['table'] ) {
-		$chart_context = $chart_ref_id ? array( 'refId' => $chart_ref_id ) : array();
-		$chart_active_class = 'chart' === $initial_tab ? ' active' : '';
-		$table_active_class = 'table' === $initial_tab ? ' active' : '';
-		$table_pane    = $data_tab_active
-			? wp_sprintf(
-				'<div class="wp-chart-builder-table%s" data-chart-view="table" data-wp-class--active="state.isActive" id="%s-table" style="max-width:%s;">%s</div>',
-				$table_active_class,
-				esc_attr( $block_id ),
-				esc_attr( $width ),
+					);
+				// If the chart is a freeform chart, and the share tabs are not active, render the freeform chart.
+			} elseif ( $is_freeform_chart && $blocks['freeform'] ) {
+				echo $freeform_with_meta; //phpcs:ignore
+				// If the chart is a regular chart, and the share tabs are active, render the chart in the tabbed interface.
+			} elseif ( $tabs_active && $blocks['chart'] && $blocks['table'] ) {
+				$chart_context      = $chart_ref_id ? array( 'refId' => $chart_ref_id ) : array();
+				$chart_active_class = 'chart' === $initial_tab ? ' active' : '';
+				$table_active_class = 'table' === $initial_tab ? ' active' : '';
+				$table_pane         = $data_tab_active
+					? wp_sprintf(
+						'<div class="wp-chart-builder-table%s" data-chart-view="table" data-wp-class--active="state.isActive" id="%s-table" style="max-width:%s;">%s</div>',
+						$table_active_class,
+						esc_attr( $block_id ),
+						esc_attr( $width ),
 				$table_with_meta //phpcs:ignore
-			)
-			: '';
-		echo wp_sprintf(
-			'<div class="wp-chart-builder-chart%s" data-chart-view="chart" data-allow-overlay="true" data-wp-class--active="state.isActive">%s%s</div>%s',
-			$chart_active_class,
-			( new \WP_Block( $blocks['chart'], $chart_context ) )->render(), //phpcs:ignore
-			$share_modal, //phpcs:ignore
-			$table_pane //phpcs:ignore
-		);
-			// If the chart is a regular chart, and the share tabs are not active, render the chart.
-		} elseif ( $blocks['chart'] ) {
-			$chart_context = $chart_ref_id ? array( 'refId' => $chart_ref_id ) : array();
-			// If the chart has an image, render the image, otherwise render the chart.
-			echo $blocks['image'] ? render_block( $blocks['image'] ) : ( new \WP_Block( $blocks['chart'], $chart_context ) )->render(); //phpcs:ignore
+					)
+					: '';
+				echo wp_sprintf(
+					'<div class="wp-chart-builder-chart%s" data-chart-view="chart" data-allow-overlay="true" data-wp-class--active="state.isActive">%s%s</div>%s',
+					esc_attr( $chart_active_class ),
+					( new \WP_Block( $blocks['chart'], $chart_context ) )->render(), //phpcs:ignore
+					$share_modal, //phpcs:ignore
+					$table_pane //phpcs:ignore
+				);
+					// If the chart is a regular chart, and the share tabs are not active, render the chart.
+			} elseif ( $blocks['chart'] ) {
+				$chart_context = $chart_ref_id ? array( 'refId' => $chart_ref_id ) : array();
+				// If the chart has an image, render the image, otherwise render the chart.
+				echo $blocks['image'] ? render_block( $blocks['image'] ) : ( new \WP_Block( $blocks['chart'], $chart_context ) )->render(); //phpcs:ignore
 				// If there is an error, render an error message.
 			} else {
 				echo wp_sprintf(
@@ -694,44 +699,44 @@ class Controller {
 				);
 			}
 
-		// If the share tabs are active, render the view buttons.
-		if ( $tabs_active ) {
-			echo wp_sprintf( '<div class="wp-chart-builder-view-buttons" style="max-width:%s;">', esc_attr( $width ) );
+			// If the share tabs are active, render the view buttons.
+			if ( $tabs_active ) {
+				echo wp_sprintf( '<div class="wp-chart-builder-view-buttons" style="max-width:%s;">', esc_attr( $width ) );
 
-			// Left group: Chart / Data tab buttons.
-			echo '<div class="wp-chart-builder-view-buttons__tabs">';
-			if ( $chart_tab_active ) {
-				echo wp_sprintf(
-					'<button class="view-button view-button--chart" data-chart-view="chart" data-chart-id="%s" data-wp-on--click="actions.setActiveTab" data-wp-class--active="state.isActive">Chart</button>',
-					esc_attr( $block_id )
-				);
-			}
-			if ( $data_tab_active ) {
-				echo wp_sprintf(
-					'<button class="view-button view-button--table" data-chart-view="table" data-chart-id="%s" data-wp-on--click="actions.setActiveTab" data-wp-class--active="state.isActive">Data</button>',
-					esc_attr( $block_id )
-				);
-			}
-			echo '</div>';
+				// Left group: Chart / Data tab buttons.
+				echo '<div class="wp-chart-builder-view-buttons__tabs">';
+				if ( $chart_tab_active ) {
+					echo wp_sprintf(
+						'<button class="view-button view-button--chart" data-chart-view="chart" data-chart-id="%s" data-wp-on--click="actions.setActiveTab" data-wp-class--active="state.isActive">Chart</button>',
+						esc_attr( $block_id )
+					);
+				}
+				if ( $data_tab_active ) {
+					echo wp_sprintf(
+						'<button class="view-button view-button--table" data-chart-view="table" data-chart-id="%s" data-wp-on--click="actions.setActiveTab" data-wp-class--active="state.isActive">Data</button>',
+						esc_attr( $block_id )
+					);
+				}
+				echo '</div>';
 
-			// Right group: Download image + Share.
-			echo '<div class="wp-chart-builder-view-buttons__actions">';
-			if ( $download_image_tab_active && $featured_image_url ) {
-				echo wp_sprintf(
-					'<button class="view-button view-button--download-image" data-chart-id="%s" data-wp-on--click="actions.downloadImage">Download Image</button>',
-					esc_attr( $block_id )
-				);
-			}
-			if ( $share_active ) {
-				echo wp_sprintf(
-					'<button class="view-button view-button--share" data-chart-view="share" data-chart-id="%s" data-wp-on--click="actions.setActiveTab" data-wp-class--active="state.isActive">Share</button>',
-					esc_attr( $block_id )
-				);
-			}
-			echo '</div>';
+				// Right group: Download image + Share.
+				echo '<div class="wp-chart-builder-view-buttons__actions">';
+				if ( $download_image_tab_active && $featured_image_url ) {
+					echo wp_sprintf(
+						'<button class="view-button view-button--download-image" data-chart-id="%s" data-wp-on--click="actions.downloadImage">Download Image</button>',
+						esc_attr( $block_id )
+					);
+				}
+				if ( $share_active ) {
+					echo wp_sprintf(
+						'<button class="view-button view-button--share" data-chart-view="share" data-chart-id="%s" data-wp-on--click="actions.setActiveTab" data-wp-class--active="state.isActive">Share</button>',
+						esc_attr( $block_id )
+					);
+				}
+				echo '</div>';
 
-			echo '</div>';
-		}
+				echo '</div>';
+			}
 			?>
 		</div>
 		<?php

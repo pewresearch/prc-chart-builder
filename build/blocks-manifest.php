@@ -752,6 +752,12 @@ return array(
 					'highlightedCategories' => array(
 						
 					),
+					'rowFilter' => array(
+						'column' => 'x',
+						'exclude' => array(
+							
+						)
+					),
 					'mapScale' => 'threshold',
 					'mapScaleDomain' => array(
 						10,

@@ -36,7 +36,14 @@ class PNG_Export {
 	const ACTION_GROUP = 'prc-chart-builder';
 
 	/**
-	 * io attribute keys that are outputs of the PNG/SVG export process itself
+	 * Attachment post meta: screenshot provider slug.
+	 *
+	 * @var string
+	 */
+	public const ATTACHMENT_PROVIDER_META_KEY = '_prc_chart_screenshot_provider';
+
+	/**
+	 * IO attribute keys that are outputs of the PNG/SVG export process itself
 	 * and must be excluded from the change-detection hash. These are written
 	 * back to block attributes after export, so including them would cause
 	 * every save after PNG generation to appear as a change.
@@ -91,6 +98,8 @@ class PNG_Export {
 		// request (not just WP-CLI) so the hook is available when AS processes
 		// queued jobs. Mirrors the pattern in prc-pdf-extraction.
 		self::register_action_hook( $this );
+
+		add_filter( 'attachment_fields_to_edit', array( $this, 'add_attachment_fields' ), 10, 2 );
 	}
 
 	/**
@@ -262,7 +271,9 @@ class PNG_Export {
 	 * Throwing an exception causes Action Scheduler to mark the job as failed
 	 * and schedule an automatic retry.
 	 *
-	 * @param int $post_id Chart post ID.
+	 * @param int    $post_id              Chart post ID.
+	 * @param string $base_url             Optional origin rewrite for the export URL.
+	 * @param string $export_url_override  Optional full export URL override.
 	 * @throws \RuntimeException When screenshot or media sideload fails.
 	 */
 	public function generate_png( int $post_id, string $base_url = '', string $export_url_override = '' ): void {
@@ -290,8 +301,9 @@ class PNG_Export {
 			throw new \RuntimeException( 'Chart block not found in post content.' );
 		}
 		$layout       = $chart_block['attrs']['layout'] ?? array();
-		$chart_width  = isset( $layout['width'] ) ? (int) $layout['width'] : Screenshot_Service::DEFAULT_CHART_WIDTH;
-		$chart_height = isset( $layout['height'] ) ? (int) $layout['height'] : Screenshot_Service::DEFAULT_CHART_HEIGHT;
+		$settings     = Screenshot_Settings::get_settings();
+		$chart_width  = isset( $layout['width'] ) ? (int) $layout['width'] : (int) $settings['default_chart_width'];
+		$chart_height = isset( $layout['height'] ) ? (int) $layout['height'] : (int) $settings['default_chart_height'];
 
 		// Compute hash before the screenshot so we can store it on success.
 		$new_hash = $this->compute_attributes_hash( $chart_block['attrs'] ?? array() );
@@ -348,6 +360,8 @@ class PNG_Export {
 		// Tag the attachment as hidden so it is excluded from the media library UI.
 		wp_set_object_terms( $attachment_id, 'hidden', '_media_visibility' );
 
+		$this->store_screenshot_attachment_meta( (int) $attachment_id );
+
 		// Delete the previous server-generated PNG attachment if one exists.
 		$previous_attachment_id = (int) get_post_thumbnail_id( $post_id );
 		if ( $previous_attachment_id && $previous_attachment_id !== $attachment_id ) {
@@ -358,6 +372,50 @@ class PNG_Export {
 
 		// The featured image is the canonical reference to the server-generated PNG.
 		set_post_thumbnail( $post_id, $attachment_id );
+	}
+
+	/**
+	 * Persist the provider slug on a captured PNG attachment.
+	 *
+	 * @param int $attachment_id Sideloaded attachment ID.
+	 */
+	private function store_screenshot_attachment_meta( int $attachment_id ): void {
+		$meta = $this->screenshot_service->get_last_capture_meta();
+		if ( ! is_array( $meta ) || empty( $meta['provider'] ) ) {
+			return;
+		}
+
+		update_post_meta(
+			$attachment_id,
+			self::ATTACHMENT_PROVIDER_META_KEY,
+			sanitize_key( (string) $meta['provider'] )
+		);
+	}
+
+	/**
+	 * Show the screenshot provider on attachments in the media modal.
+	 *
+	 * @param array    $fields Attachment fields.
+	 * @param \WP_Post $post   Attachment post.
+	 * @return array
+	 */
+	public function add_attachment_fields( array $fields, $post ): array {
+		if ( ! $post instanceof \WP_Post ) {
+			return $fields;
+		}
+
+		$provider = get_post_meta( $post->ID, self::ATTACHMENT_PROVIDER_META_KEY, true );
+		if ( ! is_string( $provider ) || '' === $provider ) {
+			return $fields;
+		}
+
+		$fields['prc_chart_screenshot_provider'] = array(
+			'label' => __( 'Screenshot provider', 'prc-chart-builder' ),
+			'input' => 'html',
+			'html'  => '<span>' . esc_html( $provider ) . '</span>',
+		);
+
+		return $fields;
 	}
 
 	/**

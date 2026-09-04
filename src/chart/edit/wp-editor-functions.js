@@ -943,19 +943,31 @@ export function createWpEditorFunctions({
 					}
 				: undefined,
 		legend: {
+			onClick: onElementClick
+				? (anchorEl) => {
+						onElementClick({
+							elementType: 'legend',
+							anchorEl,
+						});
+					}
+				: undefined,
 			onDragStart: () => {
-				// Disable block selection to prevent block dragging
+				// Disable block selection on pointer down so Gutenberg cannot steal the gesture.
 				if (toggleSelection) {
 					toggleSelection(false);
 				}
-				// Disable tooltips during drag
+			},
+			onDragActivate: () => {
+				// Disable tooltips once movement confirms a drag (not a click).
 				if (setIsDragging) {
 					setIsDragging(true);
 				}
-				// Immediately set the legend alignment to none (viewport-aware)
-				updateAttributeForDevice('legend', {
-					alignment: 'none',
-				});
+			},
+			onDragCancel: () => {
+				// Click without movement: restore block selection without persisting position.
+				if (toggleSelection) {
+					toggleSelection(true);
+				}
 			},
 			onDrag: () => {
 				// Could show preview or update UI during drag

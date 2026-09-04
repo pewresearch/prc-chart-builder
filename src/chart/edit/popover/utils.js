@@ -4,7 +4,7 @@
  * Shared utility functions for popover components.
  */
 
-import { generateSegmentKey } from '@prc/charting-utilities';
+import { generateSegmentKey, getRowDisplayText } from '@prc/charting-utilities';
 import { BAR_CHART_TYPES } from '../../utils/chart-types';
 
 export { generateSegmentKey };
@@ -117,6 +117,34 @@ export function formatDisplayValue(value) {
 		return value.toLocaleDateString();
 	}
 	return String(value);
+}
+
+/**
+ * Label shown in the diff-column cell popover subtitle and text placeholder.
+ * Prefers authored cell text kept through flatten so a leading plus is not lost.
+ *
+ * @param {Object} dataPoint    - Flattened row passed from the cell click
+ * @param {string} category     - Diff column category key
+ * @param {string} defaultLabel - Fallback from the click handler
+ * @return {string} Authored or fallback label
+ */
+export function getDiffColumnPopoverLabel(
+	dataPoint,
+	category,
+	defaultLabel = ''
+) {
+	const authored = dataPoint?.__raw?.[category];
+	if (typeof authored === 'string' && authored.length > 0) {
+		return authored;
+	}
+	if (
+		defaultLabel !== undefined &&
+		defaultLabel !== null &&
+		defaultLabel !== ''
+	) {
+		return String(defaultLabel);
+	}
+	return String(getRowDisplayText(dataPoint, category) ?? '');
 }
 
 /**

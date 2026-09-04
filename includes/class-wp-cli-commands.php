@@ -49,7 +49,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 		$force   = isset( $assoc_args['force'] );
 
 		// Initialize the migration class.
-		$loader = new Loader();
+		$loader    = new Loader();
 		$migration = new Block_Migration( $loader );
 
 		if ( $force ) {
@@ -89,7 +89,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 
 		if ( $result ) {
 			$status = $migration->get_migration_status();
-			$stats = $status['stats'] ?? array();
+			$stats  = $status['stats'] ?? array();
 
 			\WP_CLI::success( 'Block migration completed successfully!' );
 			\WP_CLI::log( sprintf( 'Posts migrated: %d', $stats['posts_migrated'] ?? 0 ) );
@@ -129,7 +129,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 		}
 
 		// Initialize the migration class.
-		$loader = new Loader();
+		$loader    = new Loader();
 		$migration = new Block_Migration( $loader );
 
 		\WP_CLI::log( sprintf( 'Migrating post ID %d on blog 20...', $post_id ) );
@@ -166,7 +166,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * @when after_wp_load
 	 */
 	public function test_migration( $args, $assoc_args ) {
-		$loader = new Loader();
+		$loader    = new Loader();
 		$migration = new Block_Migration( $loader );
 
 		// Test content with the exact pattern from the user.
@@ -216,7 +216,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * @when after_wp_load
 	 */
 	public function reset_migration( $args, $assoc_args ) {
-		$loader = new Loader();
+		$loader    = new Loader();
 		$migration = new Block_Migration( $loader );
 
 		\WP_CLI::log( 'Resetting migration status...' );
@@ -243,9 +243,9 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * @when after_wp_load
 	 */
 	public function migration_status( $args, $assoc_args ) {
-		$loader = new Loader();
+		$loader    = new Loader();
 		$migration = new Block_Migration( $loader );
-		$status = $migration->get_migration_status();
+		$status    = $migration->get_migration_status();
 
 		\WP_CLI::log( 'PRC Chart Builder Block Migration Status:' );
 		\WP_CLI::log( sprintf( 'Completed: %s', $status['completed'] ? 'Yes' : 'No' ) );
@@ -330,6 +330,8 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 				break;
 			}
 
+			$batch_size = count( $posts );
+
 			foreach ( $posts as $post ) {
 				$chart_type = Content_Type::extract_chart_type_from_content( $post->post_content );
 
@@ -387,10 +389,10 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 				++$total_processed;
 			}
 
-			$paged++;
+			++$paged;
 
 			// Pause between batches for cache revalidation.
-			if ( count( $posts ) === $posts_per_page ) {
+			if ( $batch_size === $posts_per_page ) {
 				sleep( 3 );
 			}
 
@@ -398,19 +400,21 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 			if ( method_exists( $this, 'vip_inmemory_cleanup' ) ) {
 				$this->vip_inmemory_cleanup();
 			}
-
-		} while ( count( $posts ) === $posts_per_page );
+		} while ( $batch_size === $posts_per_page );
 
 		// Update term counts now that we inserted relationships directly.
 		if ( ! $dry_run && ! empty( $term_map ) ) {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery,WordPress.DB.DirectDatabaseQuery.NoCaching
 			$wpdb->query(
-				"UPDATE {$wpdb->term_taxonomy} tt
-				SET count = (
-					SELECT COUNT(*) FROM {$wpdb->term_relationships} tr
-					WHERE tr.term_taxonomy_id = tt.term_taxonomy_id
+				$wpdb->prepare(
+					"UPDATE {$wpdb->term_taxonomy} tt
+					SET count = (
+						SELECT COUNT(*) FROM {$wpdb->term_relationships} tr
+						WHERE tr.term_taxonomy_id = tt.term_taxonomy_id
+					)
+					WHERE tt.taxonomy = %s",
+					$taxonomy
 				)
-				WHERE tt.taxonomy = '{$taxonomy}'"
 			);
 		}
 
@@ -486,18 +490,18 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 * [--force-regenerate]
 	 * : Re-generate PNGs even for charts that already have a current PNG.
 	 *
- * [--base-url=<url>]
- * : Override the site base URL used to build export URLs. Useful when the
- *   site is not publicly reachable (e.g. local dev via ngrok) or when
- *   targeting a password-protected environment like alpha. HTTP basic auth
- *   credentials can be embedded directly in the URL.
- *
- * [--export-url=<url>]
- * : Bypass permalink construction entirely and pass this exact URL to
- *   ScreenshotOne. Useful for local testing against a specific remote URL
- *   (e.g. an alpha chart export page) without needing the post to exist
- *   on the local environment. Requires --post-id so the resulting PNG has
- *   a local post to attach to.
+	 * [--base-url=<url>]
+	 * : Override the site base URL used to build export URLs. Useful when the
+	 *   site is not publicly reachable (e.g. local dev via ngrok) or when
+	 *   targeting a password-protected environment like alpha. HTTP basic auth
+	 *   credentials can be embedded directly in the URL.
+	 *
+	 * [--export-url=<url>]
+	 * : Bypass permalink construction entirely and pass this exact URL to
+	 *   ScreenshotOne. Useful for local testing against a specific remote URL
+	 *   (e.g. an alpha chart export page) without needing the post to exist
+	 *   on the local environment. Requires --post-id so the resulting PNG has
+	 *   a local post to attach to.
 	 *
 	 * ## EXAMPLES
 	 *
@@ -546,7 +550,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 
 		$service = new Screenshot_Service();
 		if ( ! $dry_run && ! $service->is_configured() ) {
-			\WP_CLI::error( 'ScreenshotOne credentials are not configured. Set PRC_PLATFORM_SCREENSHOTONE_ACCESS_KEY and PRC_PLATFORM_SCREENSHOTONE_SECRET_KEY constants.' );
+			\WP_CLI::error( 'No screenshot provider is configured. Set PRC_PLATFORM_CHART_SCREENSHOT_PROVIDER or configure credentials for an available provider.' );
 			return;
 		}
 
@@ -590,6 +594,8 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 				break;
 			}
 
+			$batch_size = count( $posts );
+
 			foreach ( $posts as $post ) {
 				++$total_processed;
 
@@ -613,33 +619,36 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 					}
 				}
 
-			$permalink        = get_permalink( $post->ID );
-			if ( $base_url ) {
-				$site_url  = untrailingslashit( get_site_url() );
-				$permalink = $base_url . substr( $permalink, strlen( $site_url ) );
-			}
-			$display_export_url = ! empty( $export_url ) ? $export_url : trailingslashit( $permalink ) . 'export/';
+				$permalink = get_permalink( $post->ID );
+				if ( $base_url ) {
+					$site_url  = untrailingslashit( get_site_url() );
+					$permalink = $base_url . substr( $permalink, strlen( $site_url ) );
+				}
+				$display_export_url = ! empty( $export_url ) ? $export_url : trailingslashit( $permalink ) . 'export/';
 
-			$layout = $chart_block['attrs']['layout'] ?? array();
-			$width  = isset( $layout['width'] )  ? (int) $layout['width']  : Screenshot_Service::DEFAULT_CHART_WIDTH;
-			$height = isset( $layout['height'] ) ? (int) $layout['height'] : Screenshot_Service::DEFAULT_CHART_HEIGHT;
+				$layout   = $chart_block['attrs']['layout'] ?? array();
+				$settings = Screenshot_Settings::get_settings();
+				$width    = isset( $layout['width'] ) ? (int) $layout['width'] : (int) $settings['default_chart_width'];
+				$height   = isset( $layout['height'] ) ? (int) $layout['height'] : (int) $settings['default_chart_height'];
 
-			if ( $dry_run ) {
-				\WP_CLI::log( sprintf(
-					'  [would] %d "%s" — %s (%dpx × %dpx)',
-					$post->ID,
-					$post->post_title,
-					$display_export_url,
-					$width,
-					$height
-				) );
-					++$generated;
-					continue;
+				if ( $dry_run ) {
+					\WP_CLI::log(
+						sprintf(
+							'  [would] %d "%s" — %s (%dpx × %dpx)',
+							$post->ID,
+							$post->post_title,
+							$display_export_url,
+							$width,
+							$height
+						)
+					);
+						++$generated;
+						continue;
 				}
 
-			try {
-				$png_export->generate_png( $post->ID, $base_url, $export_url );
-				$png_url = wp_get_attachment_url( get_post_thumbnail_id( $post->ID ) );
+				try {
+					$png_export->generate_png( $post->ID, $base_url, $export_url );
+					$png_url = wp_get_attachment_url( get_post_thumbnail_id( $post->ID ) );
 					\WP_CLI::log( sprintf( '  [done]  %d "%s" — %s', $post->ID, $post->post_title, $png_url ) );
 					++$generated;
 				} catch ( \Exception $e ) {
@@ -648,9 +657,9 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 				}
 			}
 
-			$paged++;
+			++$paged;
 
-			if ( ! $single_id && count( $posts ) === $posts_per_page ) {
+			if ( ! $single_id && $batch_size === $posts_per_page ) {
 				\WP_CLI::log( sprintf( '  ... %d processed so far, pausing 3s ...', $total_processed ) );
 				sleep( 3 );
 			}
@@ -658,18 +667,19 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 			if ( method_exists( $this, 'vip_inmemory_cleanup' ) ) {
 				$this->vip_inmemory_cleanup();
 			}
-
-		} while ( ! $single_id && count( $posts ) === $posts_per_page );
+		} while ( ! $single_id && $batch_size === $posts_per_page );
 
 		\WP_CLI::log( '' );
-		\WP_CLI::log( sprintf(
-			'Processed: %d | %s: %d | Skipped: %d | Failed: %d',
-			$total_processed,
-			$dry_run ? 'Would generate' : 'Generated',
-			$generated,
-			$skipped,
-			$failed
-		) );
+		\WP_CLI::log(
+			sprintf(
+				'Processed: %d | %s: %d | Skipped: %d | Failed: %d',
+				$total_processed,
+				$dry_run ? 'Would generate' : 'Generated',
+				$generated,
+				$skipped,
+				$failed
+			)
+		);
 
 		if ( $dry_run ) {
 			\WP_CLI::log( 'Dry run complete. Pass --force to execute.' );
@@ -1056,6 +1066,8 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 			);
 			remove_filter( 'posts_where', $cursor_filter );
 
+			$fetched_count = count( $posts );
+
 			foreach ( $posts as $post ) {
 				$id       = (int) $post->ID;
 				$start_id = $id;
@@ -1123,7 +1135,7 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 			sleep( 2 );
 			$this->vip_inmemory_cleanup();
 
-		} while ( count( $posts ) === $batch_size );
+		} while ( $fetched_count === $batch_size );
 
 		$this->end_bulk_operation();
 

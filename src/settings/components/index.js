@@ -8,6 +8,7 @@ export { default as CreationUiSetting } from './creation-ui-setting';
 export { default as GlobalSaveBar } from './global-save-bar';
 export { default as PaletteDeleteDialog } from './palette-delete-dialog';
 export { default as PaletteDesigner } from './palette-designer';
+export { default as ScreenshotSettingsTab } from './screenshot-settings-tab';
 export { default as PaletteEditor } from './palette-editor';
 export { default as PaletteList } from './palette-list';
 export { default as ThemeColorPicker } from './theme-color-picker';

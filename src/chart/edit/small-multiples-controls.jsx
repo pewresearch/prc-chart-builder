@@ -16,10 +16,7 @@ import {
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
-import {
-	PanelDescription,
-	WidePanelItem,
-} from './control-ui';
+import { PanelDescription, WidePanelItem } from './control-ui';
 
 function SmallMultiplesControls({ attributes, setAttributes, clientId }) {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
@@ -37,6 +34,8 @@ function SmallMultiplesControls({ attributes, setAttributes, clientId }) {
 	const axisTreatment = smallMultiples.axisTreatment || 'minimal';
 	const emphasisMode = smallMultiples.emphasisMode || 'own-series';
 	const panelTitleActive = smallMultiples.panelTitle?.active ?? true;
+	const panelGapX = smallMultiples.panelGap?.x ?? 24;
+	const panelGapY = smallMultiples.panelGap?.y ?? 32;
 
 	return (
 		<div ref={panelRef}>
@@ -159,6 +158,50 @@ function SmallMultiplesControls({ attributes, setAttributes, clientId }) {
 								updateAttributeForDevice('smallMultiples', {
 									minPanelWidth:
 										formatNum(value, 'integer') || 120,
+								});
+							}}
+						/>
+					</WidePanelItem>
+
+					<WidePanelItem
+						hasValue={() => panelGapX !== 24 || panelGapY !== 32}
+						label={__('Panel Gap')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<NumberControl
+							label={__('Horizontal gap (px)')}
+							help={__(
+								'Space between columns. Raise this when adjacent x-axes collide.'
+							)}
+							withInputField
+							min={0}
+							max={120}
+							step={1}
+							value={panelGapX}
+							onChange={(value) => {
+								updateAttributeForDevice('smallMultiples', {
+									panelGap: {
+										...(smallMultiples.panelGap || {}),
+										x: formatNum(value, 'integer') ?? 24,
+									},
+								});
+							}}
+						/>
+						<NumberControl
+							label={__('Vertical gap (px)')}
+							help={__('Space between rows of panels.')}
+							withInputField
+							min={0}
+							max={120}
+							step={1}
+							value={panelGapY}
+							onChange={(value) => {
+								updateAttributeForDevice('smallMultiples', {
+									panelGap: {
+										...(smallMultiples.panelGap || {}),
+										y: formatNum(value, 'integer') ?? 32,
+									},
 								});
 							}}
 						/>

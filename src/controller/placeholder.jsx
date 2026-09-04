@@ -9,7 +9,7 @@ import {
 import { Button, Placeholder as WPComPlaceholder } from '@wordpress/components';
 import { useCallback, useEffect, useState } from '@wordpress/element';
 import { useDispatch } from '@wordpress/data';
-import { chartArea } from '@wordpress/icons';
+import { chartBar } from '@wordpress/icons';
 
 /**
  * Internal Dependencies
@@ -70,7 +70,7 @@ export default function Placeholder({ clientId, setAttributes }) {
 					'prc-chart-builder'
 				)}
 				label={__('Chart Builder Controller', 'prc-chart-builder')}
-				icon={chartArea}
+				icon={chartBar}
 			>
 				<Button variant="primary" onClick={handleOpenCreate}>
 					{__('Choose Chart Type', 'prc-chart-builder')}

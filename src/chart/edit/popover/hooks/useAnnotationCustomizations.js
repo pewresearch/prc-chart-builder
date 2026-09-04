@@ -77,6 +77,8 @@ export function useAnnotationCustomizations(
 	const [textOutline, setTextOutline] = useState(
 		annotation?.textOutline ?? defaults.textOutline
 	);
+	const [x, setX] = useState(annotation?.x);
+	const [y, setY] = useState(annotation?.y);
 
 	useEffect(() => {
 		if (annotation) {
@@ -98,6 +100,8 @@ export function useAnnotationCustomizations(
 			);
 			setPanelKey(annotation.panelKey ?? defaults.panelKey);
 			setTextOutline(annotation.textOutline ?? defaults.textOutline);
+			setX(annotation.x);
+			setY(annotation.y);
 		}
 	}, [annotation, annotationId]);
 
@@ -118,6 +122,8 @@ export function useAnnotationCustomizations(
 				positioningContext: setPositioningContext,
 				panelKey: setPanelKey,
 				textOutline: setTextOutline,
+				x: setX,
+				y: setY,
 			};
 			if (setters[key]) setters[key](value);
 			const isPanelContext = (ctx) =>
@@ -147,6 +153,7 @@ export function useAnnotationCustomizations(
 	);
 
 	const handleReset = useCallback(() => {
+		// Resetting typography must not jump the annotation to 0,0.
 		setText(defaults.text);
 		setFontSize(defaults.fontSize);
 		setFontWeight(defaults.fontWeight);
@@ -195,6 +202,8 @@ export function useAnnotationCustomizations(
 		positioningContext,
 		panelKey,
 		textOutline,
+		x,
+		y,
 		hasCustomizations,
 		handleChange,
 		handleReset,

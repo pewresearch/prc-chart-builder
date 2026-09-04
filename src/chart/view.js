@@ -1,6 +1,3 @@
-/**
- * WordPress Dependencies
- */
 import {
 	store,
 	getContext,
@@ -9,8 +6,6 @@ import {
 } from '@wordpress/interactivity';
 
 /**
- * PRC Dependencies
- *
  * Top-level static import is the dependency-graph signal that orders the
  * `@prc/charting-library` Script Module BEFORE this view module. Without it,
  * the `wp_enqueue_script_module` call alone is not enough to guarantee
@@ -20,9 +15,6 @@ import {
  */
 import { ChartBuilderRenderer as ScriptModuleRenderer } from '@prc/charting-library';
 
-/**
- * Internal  Dependencies
- */
 import { applyChartPatch } from './utils/apply-deep-patch';
 import {
 	buildChartInputs,
@@ -33,11 +25,10 @@ import {
 	isCustomChartSlice,
 	mountHasLiveChart,
 	getViewportFromWidth,
+	chartIdsNeedingViewportSwitch,
 	attachViewportRenderTrigger,
 } from './utils/view-helpers';
 import debug from '../debug';
-
-// import './styles.scss';
 
 const CHART_NAMESPACE = 'prc-chart-builder/chart';
 
@@ -55,14 +46,6 @@ const CHART_NAMESPACE = 'prc-chart-builder/chart';
  */
 const navSeededIds = new Set();
 
-/**
- * Expose the debug surface on `window.prcChartBuilder`.
- *
- * Shape:
- *   window.prcChartBuilder.debug      — full debug API
- *   window.prcChartBuilder.update     — convenience alias (was window.prcChartUpdate)
- *   window.prcChartBuilder.randomize  — convenience alias (was window.randomize)
- */
 if (typeof window !== 'undefined') {
 	window.prcChartBuilder = {
 		...(window.prcChartBuilder ?? {}),
@@ -113,10 +96,6 @@ const { actions, state } = store(CHART_NAMESPACE, {
 				return;
 			}
 			applyChartPatch(slice, patch);
-			// Deterministically push the controller table + metadata DOM via
-			// `syncControllerSurfaces` (the single runtime writer for those
-			// surfaces). The chart SVG still updates reactively via
-			// `useChartStore` inside the chart's own region.
 			syncControllerSurfaces(chartId, slice);
 		},
 		/**
@@ -162,6 +141,16 @@ const { actions, state } = store(CHART_NAMESPACE, {
 		switchViewport(viewport) {
 			const context = getContext();
 			const { id } = context;
+			actions.applyViewportToChart(id, viewport);
+		},
+		/**
+		 * Re-derive one chart slice for `viewport`. Used by the context-scoped
+		 * `switchViewport` action and by the page-wide resize handler.
+		 *
+		 * @param {string} id       Chart id (matches data-prc-chart-id).
+		 * @param {string} viewport Target viewport ('mobile', 'tablet', 'desktop').
+		 */
+		applyViewportToChart(id, viewport) {
 			const slice = state.charts?.[id];
 			if (!slice || slice.currentViewport === viewport) {
 				return;
@@ -242,9 +231,6 @@ const { actions, state } = store(CHART_NAMESPACE, {
 			slice.config = inputs.config;
 			slice.tableData = inputs.tableData;
 
-			// Push table + metadata before either renderer path. Renderer-
-			// agnostic (Preact module + prc-custom-charts) and covers the
-			// client-side `config.metadata` merge that SSR alone cannot know.
 			syncControllerSurfaces(id, slice);
 
 			if (isCustom) {
@@ -272,8 +258,6 @@ const { actions, state } = store(CHART_NAMESPACE, {
 				return;
 			}
 
-			// `(id, { namespace, chartId })` mounts the wrapper with a live
-			// subscription to state.charts[chartId].
 			ScriptModuleRenderer(id, {
 				namespace: CHART_NAMESPACE,
 				chartId: id,
@@ -371,9 +355,6 @@ const { actions, state } = store(CHART_NAMESPACE, {
 					serverState.charts?.[id]?.attributes?.animation
 						?.triggerOnViewport ?? false;
 
-				// When the viewport-entry trigger is active and the chart
-				// hasn't rendered yet, attach an IntersectionObserver and
-				// defer renderChart() until the element enters the viewport.
 				if (triggerOnViewport && !state.charts?.[id]?.config) {
 					attachViewportRenderTrigger(
 						id,
@@ -390,17 +371,22 @@ const { actions, state } = store(CHART_NAMESPACE, {
 				if (timeoutId) {
 					clearTimeout(timeoutId);
 				}
-				timeoutId = setTimeout(
-					withScope(() => {
-						const newViewport = getViewportFromWidth();
-						const currentViewport = state.currentViewport;
-						if (newViewport !== currentViewport) {
-							actions.switchViewport(newViewport);
-						}
-						timeoutId = null;
-					}),
-					250
-				);
+				// Shared debounce across every chart element. The timeout is
+				// not scoped to the firing element — after it settles, apply
+				// the window breakpoint to every standard chart on the page.
+				// Switching only `getContext().id` left earlier charts (the
+				// religion bubble map sits above the pyramid) on desktop
+				// attributes while later charts picked up mobile/tablet.
+				timeoutId = setTimeout(() => {
+					const newViewport = getViewportFromWidth();
+					chartIdsNeedingViewportSwitch(
+						state.charts,
+						newViewport
+					).forEach((chartId) => {
+						actions.applyViewportToChart(chartId, newViewport);
+					});
+					timeoutId = null;
+				}, 250);
 			};
 		})(),
 	},

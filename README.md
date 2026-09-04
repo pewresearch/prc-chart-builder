@@ -74,7 +74,11 @@ All chart attributes support per-viewport overrides via the `mobile` and `tablet
 
 **Per-element styling:**
 
-Click any bar, label, line segment, pie slice, map region, or axis tick label in the editor canvas to open the element popover. Changes update live and are stored in the `labels.custom`_ and `shapes.custom`_ block attributes using a `{x}::{category}` key.
+Click any bar, label, line segment, pie slice, map region, axis tick label, or legend item in the editor canvas to open the element popover. Changes update live and are stored in per-element attribute maps (`labels.customLabels`, `shapes.customStyles`, `customTickLabels`, `customLegendLabels`, and others) keyed by `{x}::{category}` or category name.
+
+**Row filtering (Data tab):**
+
+Exclude table rows from the plot without deleting CSV data. Set `dataRender.rowFilter.exclude` to first-column values (the inspector always writes `rowFilter.column` as `"x"`). Filtered rows stay in the data table; only the chart omits them.
 
 ---
 
@@ -346,6 +350,8 @@ Maps data columns to chart axes and controls sort order, group breaks, and scale
 | `dataRender.sortKey`                                 | string                 | `"x"`              | Data column to sort rows by before rendering          |
 | `dataRender.sortOrder`                               | `'ascending'`          | `'descending'`     | `'reverse'`                                           |
 | `dataRender.categories`                              | string[]               | `[]`               | Ordered list of Y-variable column keys (series names) |
+| `dataRender.rowFilter.column`                        | string                 | `"x"`              | Column used to match exclude tokens. Inspector always writes `"x"` (first table column). |
+| `dataRender.rowFilter.exclude`                       | string[]               | `[]`               | First-column values omitted from the plot. Those rows stay in the table. |
 | `dataRender.xScale`                                  | `'linear'`             | `'time'`           | `'log'`                                               |
 | `dataRender.yScale`                                  | `'linear'`             | `'time'`           | `'log'`                                               |
 | `dataRender.xFormat`                                 | null                   | `null`             | Reserved for runtime X-value format function          |
@@ -875,13 +881,20 @@ Replace auto-generated axis tick labels with custom text.
 
 ---
 
-### `customLegendLabels` — Custom Legend Label Overrides
+### `customLegendLabels` — Per-legend-item overrides
 
-Replace auto-generated legend item labels with custom text.
+Click a legend item in the editor to open the legend popover. Each category key maps to an object (not just a string label).
 
-| Attribute            | Type   | Default | Notes                                         |
-| -------------------- | ------ | ------- | --------------------------------------------- |
-| `customLegendLabels` | object | `{}`    | Key-value map of category key → display label |
+| Field on `customLegendLabels[category]` | Type | Notes |
+| --- | --- | --- |
+| `text` | string | Display label override |
+| `color` | string (hex) | Swatch / label color |
+| `fontFamily`, `fontSize`, `fontWeight`, `fontStyle` | typography | Same controls as other popover panels |
+| `outlineColor`, `outlineWidth` | string / number | Label outline |
+| `markerStyle`, `markerFill` | enum | Marker shape and fill mode |
+| `offsetX`, `offsetY` | number | Detached legend position (when `legend.variation` is `detached`) |
+
+Grouped legend chrome opens the panel for the whole legend; individual swatches open `LegendItemPanel` for one category. See `src/chart/edit/popover/panels/README.md` for the full popover inventory.
 
 ---
 
