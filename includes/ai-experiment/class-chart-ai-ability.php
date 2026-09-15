@@ -10,7 +10,7 @@
  *   React (POST /prc-chart-builder/v1/ai/generate)
  *     → Chart_AI_Ability::handle_rest_request()
  *     → Chart_AI_Ability::generate_chart()
- *     → wp_ai_client_prompt (claude-haiku-4-5 | claude-sonnet-4-6 | claude-opus-4-7)
+ *     → wp_ai_client_prompt (OpenRouter Claude Haiku / Sonnet / Opus, native fallback)
  *     → JSON { tableData, chartAttributes }
  *     → PHP serializer → block markup string
  *     → { content: string, error: string } → React
@@ -279,7 +279,7 @@ class Chart_AI_Ability {
 	// ── Generation logic ──────────────────────────────────────────────────
 
 	/**
-	 * Allowed Claude model IDs for chart generation.
+	 * Allowed Claude model IDs for chart generation (gallery UI values).
 	 *
 	 * @var array<string>
 	 */
@@ -290,9 +290,37 @@ class Chart_AI_Ability {
 	);
 
 	/**
+	 * OpenRouter slugs matching ALLOWED_MODELS. Native IDs stay as fallback.
+	 *
+	 * @var array<string, string>
+	 */
+	private const OPENROUTER_MODEL_MAP = array(
+		'claude-haiku-4-5'  => 'anthropic/claude-haiku-4.5',
+		'claude-sonnet-4-6' => 'anthropic/claude-sonnet-4.6',
+		'claude-opus-4-7'   => 'anthropic/claude-opus-4.7',
+	);
+
+	/**
+	 * Build a using_model_preference() list for a gallery model choice.
+	 *
+	 * OpenRouter first (the provider registers image input for multimodal
+	 * models). Native Anthropic IDs remain last-resort if OpenRouter is down.
+	 *
+	 * @param string $model Gallery model id from ALLOWED_MODELS.
+	 * @return array<int, array{string, string}|string>
+	 */
+	private static function model_preference_for( string $model ): array {
+		$slug = self::OPENROUTER_MODEL_MAP[ $model ] ?? self::OPENROUTER_MODEL_MAP['claude-sonnet-4-6'];
+		return array(
+			array( 'openrouter', $slug ),
+			$model,
+		);
+	}
+
+	/**
 	 * Generate chart block markup from the provided inputs.
 	 *
-	 * @param array{chartType: string, description: string, image: string, csvData: string, model?: string} $input
+	 * @param array{chartType: string, description: string, image: string, csvData: string, model?: string} $input REST input payload.
 	 * @return array{content: string, error: string}
 	 */
 	public function generate_chart( array $input ): array {
@@ -332,7 +360,7 @@ class Chart_AI_Ability {
 
 		$builder = $builder
 			->using_system_instruction( $system_instructions )
-			->using_model_preference( $model )
+			->using_model_preference( ...self::model_preference_for( $model ) )
 			->as_json_response( $output_schema );
 
 		// Attach image if provided.
@@ -559,8 +587,8 @@ class Chart_AI_Ability {
 	 * between its block comment delimiters — it does NOT use head/body attributes.
 	 * This mirrors the structure produced by the block's save() function.
 	 *
-	 * @param array<int, array{cells: list<array{content: string, tag: string}>}> $head_rows
-	 * @param array<int, array{cells: list<array{content: string, tag: string}>}> $body_rows
+	 * @param array<int, array{cells: list<array{content: string, tag: string}>}> $head_rows Header rows.
+	 * @param array<int, array{cells: list<array{content: string, tag: string}>}> $body_rows Body rows.
 	 * @return string
 	 */
 	private function build_table_html( array $head_rows, array $body_rows ): string {
@@ -604,7 +632,7 @@ class Chart_AI_Ability {
 	private function serialize_block( string $block_name, array $attributes, string $inner_html = '' ): string {
 		$attrs_json = wp_json_encode( $attributes );
 
-		if ( $inner_html === '' ) {
+		if ( '' === $inner_html ) {
 			return sprintf( '<!-- wp:%s %s /-->', $block_name, $attrs_json );
 		}
 
@@ -827,7 +855,7 @@ PROMPT;
 	/**
 	 * Return chart-type-specific prompt guidance.
 	 *
-	 * @param string $chart_type
+	 * @param string $chart_type Chart type slug.
 	 * @return string
 	 */
 	private static function get_type_specific_guidance( string $chart_type ): string {

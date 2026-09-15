@@ -253,8 +253,8 @@ class Chart {
 			$question_wording_html        = '';
 
 			if ( $meta_question_wording_active ) {
-				$plus_icon  = \PRC\Platform\Icons\render( 'regular', 'circle-plus', 1 );
-				$minus_icon = \PRC\Platform\Icons\render( 'regular', 'circle-minus', 1 );
+				$plus_icon  = \PRC\Platform\Icons\render( 'prc', 'circle-plus', 1 );
+				$minus_icon = \PRC\Platform\Icons\render( 'prc', 'circle-minus', 1 );
 
 				ob_start();
 				?>

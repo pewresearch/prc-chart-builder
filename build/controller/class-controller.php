@@ -405,8 +405,8 @@ class Controller {
 			<?php } ?>
 			<?php if ( $meta_question_wording_active ) { ?>
 				<?php
-				$plus_icon  = \PRC\Platform\Icons\render( 'regular', 'circle-plus', 1 );
-				$minus_icon = \PRC\Platform\Icons\render( 'regular', 'circle-minus', 1 );
+				$plus_icon  = \PRC\Platform\Icons\render( 'prc', 'circle-plus', 1 );
+				$minus_icon = \PRC\Platform\Icons\render( 'prc', 'circle-minus', 1 );
 				?>
 				<div class="cb__note cb__note--question-wording-button" role="button" data-wp-on--click="actions.toggleQuestionWordingExpanded">
 					<span data-wp-bind--hidden="state.isQuestionExpanded"><?php echo $plus_icon; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Icons\render returns trusted SVG markup ?></span>
@@ -463,8 +463,8 @@ class Controller {
 
 				$question_wording_html = '';
 				if ( $meta_question_wording_active ) {
-					$plus_icon  = \PRC\Platform\Icons\render( 'regular', 'circle-plus', 1 );
-					$minus_icon = \PRC\Platform\Icons\render( 'regular', 'circle-minus', 1 );
+					$plus_icon  = \PRC\Platform\Icons\render( 'prc', 'circle-plus', 1 );
+					$minus_icon = \PRC\Platform\Icons\render( 'prc', 'circle-minus', 1 );
 
 					ob_start();
 					?>

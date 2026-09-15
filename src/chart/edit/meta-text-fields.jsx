@@ -66,10 +66,7 @@ const Footer = ({ attributes, setAttributes }) => {
 							}
 						}}
 					>
-						<Icon
-							icon={isOpen ? 'circle-minus' : 'circle-plus'}
-							library="light"
-						/>
+						<Icon icon={isOpen ? 'circle-minus' : 'circle-plus'} />
 						<span hidden={isOpen}>
 							Expand to find question wording
 						</span>

@@ -14,10 +14,10 @@ A WordPress plugin for building, managing, and embedding interactive SVG charts 
 
 1. Open **Charts** in wp-admin (the Chart Library is **All Charts** — `wp-admin/edit.php?post_type=chart`)
 2. **Add New Chart** opens a new chart post. When the site-level creation UI is on, the CPT wizard runs Pattern → Data → Configure → Preview. When it is off, the classic type picker still appears.
-3. The chart opens in the block editor as a `prc-chart-builder/controller` block containing a `prc-chart-builder/chart` inner block
-4. Paste or type CSV data into the data table; the chart renders live in the editor
-5. Use the sidebar panels and the **click-to-style element popover** (click any bar, label, line, or map region) for fine-grained customization
-6. Publish — the chart is now available to embed in articles via the `prc-chart-builder/synced-chart` block
+3. The chart opens in the block editor as a `prc-chart-builder/controller` block containing a `prc-chart-builder/chart` inner block.
+4. Paste or type CSV data into the data table; the chart renders live in the editor.
+5. Use the sidebar panels and the **click-to-style element popover** (click any bar, label, line, or map region) for fine-grained customization.
+6. Publish — the chart is now available to embed in articles via the `prc-chart-builder/synced-chart` block.
 
 ### Block structure
 
@@ -47,14 +47,14 @@ See `[docs/release-notes/3_5_0.md](../../docs/plugins/prc-chart-builder/release-
 
 ### Key systems introduced in 3.14.0
 
-| System | What it does |
-| --- | --- |
-| Chart Creation wizard | Pattern → Data → Configure → Preview on the chart CPT (site-level rollout toggle) |
-| Chart Theme | Site-owned `chart-theme.json` defaults and palettes, with scoped frontend delivery |
-| Small Multiples (BETA) | One panel per series or group with shared scales |
-| Waffle / Beeswarm / Heat Map Table | New chart types for grid, distribution, and demographic × category encodings |
-| Color swatch picker | Combine palettes, click swatches, drag to set series order |
-| Tooltip templates | RichText token templates, unified hover, and `minDisplayValue` floors |
+| System                             | What it does                                                                       |
+| ---------------------------------- | ---------------------------------------------------------------------------------- |
+| Chart Creation wizard              | Pattern → Data → Configure → Preview on the chart CPT (site-level rollout toggle)  |
+| Chart Theme                        | Site-owned `chart-theme.json` defaults and palettes, with scoped frontend delivery |
+| Small Multiples (BETA)             | One panel per series or group with shared scales                                   |
+| Waffle / Beeswarm / Heat Map Table | New chart types for grid, distribution, and demographic × category encodings       |
+| Color swatch picker                | Combine palettes, click swatches, drag to set series order                         |
+| Tooltip templates                  | RichText token templates, unified hover, and `minDisplayValue` floors              |
 
 See `[docs/release-notes/3_14_0.md](../../docs/plugins/prc-chart-builder/release-notes/3_14_0.md)` for the full 3.14.0 release notes.
 
@@ -141,7 +141,7 @@ wp prc-chart-builder font-tokens-migrate --dry-run
 wp prc-chart-builder font-tokens-migrate --batch-size=100 --sleep=1
 ```
 
-**Import / export:** On Charts → Chart Theme, use **Download JSON** to export the in-editor draft as `chart-theme.json`, or **Upload JSON** to replace the draft from a file (then Save). Uploads are validated against the editor field registry (unknown keys, bad types/enums, and invalid palette swatches are rejected). The committed `includes/settings/chart-theme.json` is only the empty-site / repair fallback seed — it is not synced from the DB. It is typed via `$schema` pointing at the generated schema on [`pewresearch/prc-chart-builder`](https://github.com/pewresearch/prc-chart-builder) trunk (built from `src/settings/field-registry/schema.mjs` by `npm run sync:field-registry`); CI fails if the seed drifts from the editor schema.
+**Import / export:** On Charts → Chart Theme, use **Download JSON** to export the in-editor draft as `chart-theme.json`, or **Upload JSON** to replace the draft from a file (then Save). Uploads are validated against the editor field registry (unknown keys, bad types/enums, and invalid palette swatches are rejected). The committed `includes/settings/chart-theme.json` is only the empty-site / repair fallback seed — it is not synced from the DB. It is typed via `$schema` pointing at the generated schema on `[pewresearch/prc-chart-builder](https://github.com/pewresearch/prc-chart-builder)` trunk (built from `src/settings/field-registry/schema.mjs` by `npm run sync:field-registry`); CI fails if the seed drifts from the editor schema.
 
 **Distributor:** Chart blocks keep palette slugs in `io.colorValue`; the destination site resolves colors from its own `theme.palettes` — the theme option is not distributed.
 
@@ -149,20 +149,20 @@ wp prc-chart-builder font-tokens-migrate --batch-size=100 --sleep=1
 
 ## Documentation
 
-| Document | Description |
-| -------- | ----------- |
-| [docs landing page](../../docs/plugins/prc-chart-builder/index.md) | Plugin docs hub (editors + maintainers) |
-| [user guide](../../docs/plugins/prc-chart-builder/user-guide.md) | Editorial workflow and chart creation |
-| [architecture](../../docs/plugins/prc-chart-builder/architecture.md) | System architecture, data flow, state management |
-| [REST API](../../docs/plugins/prc-chart-builder/rest-api.md) | Custom `prc-chart-builder/v1` routes |
-| [Abilities](../../docs/plugins/prc-chart-builder/abilities.md) | `prc-chart-builder/generate` AI ability |
-| [viewport attributes](../../docs/plugins/prc-chart-builder/viewport-attributes.md) | Viewport-aware attribute system internals |
-| [viewport usage guide](../../docs/plugins/prc-chart-builder/viewport-usage-guide.md) | Practical guide to responsive chart customization |
-| [viewport breakpoints](../../docs/plugins/prc-chart-builder/viewport-breakpoints.md) | Breakpoint values, detection logic, and fallback behavior |
-| [reactive store](../../docs/plugins/prc-chart-builder/reactive-store.md) | The `prc-chart-builder/chart` interactivity store and its actions |
-| [console helpers](../../docs/plugins/prc-chart-builder/console-helpers.md) | `window.prcChartBuilder.*` devtools handles |
-| [release notes](../../docs/plugins/prc-chart-builder/release-notes/) | Per-version release notes (3.5.0 → 3.14.0) |
-| [element popover README](src/chart/edit/popover/panels/README.md) | Element popover system internals and extension guide |
+| Document                                                                             | Description                                                       |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| [docs landing page](../../docs/plugins/prc-chart-builder/index.md)                   | Plugin docs hub (editors + maintainers)                           |
+| [user guide](../../docs/plugins/prc-chart-builder/user-guide.md)                     | Editorial workflow and chart creation                             |
+| [architecture](../../docs/plugins/prc-chart-builder/architecture.md)                 | System architecture, data flow, state management                  |
+| [REST API](../../docs/plugins/prc-chart-builder/rest-api.md)                         | Custom `prc-chart-builder/v1` routes                              |
+| [Abilities](../../docs/plugins/prc-chart-builder/abilities.md)                       | `prc-chart-builder/generate` AI ability                           |
+| [viewport attributes](../../docs/plugins/prc-chart-builder/viewport-attributes.md)   | Viewport-aware attribute system internals                         |
+| [viewport usage guide](../../docs/plugins/prc-chart-builder/viewport-usage-guide.md) | Practical guide to responsive chart customization                 |
+| [viewport breakpoints](../../docs/plugins/prc-chart-builder/viewport-breakpoints.md) | Breakpoint values, detection logic, and fallback behavior         |
+| [reactive store](../../docs/plugins/prc-chart-builder/reactive-store.md)             | The `prc-chart-builder/chart` interactivity store and its actions |
+| [console helpers](../../docs/plugins/prc-chart-builder/console-helpers.md)           | `window.prcChartBuilder.*` devtools handles                       |
+| [release notes](../../docs/plugins/prc-chart-builder/release-notes/)                 | Per-version release notes (3.5.0 → 3.14.0)                        |
+| [element popover README](src/chart/edit/popover/panels/README.md)                    | Element popover system internals and extension guide              |
 
 ---
 
@@ -343,33 +343,33 @@ Shaded regions overlaid on the chart to highlight ranges.
 
 Maps data columns to chart axes and controls sort order, group breaks, and scale types.
 
-| Attribute                                            | Type                   | Default            | Notes                                                 |
-| ---------------------------------------------------- | ---------------------- | ------------------ | ----------------------------------------------------- |
-| `dataRender.x`                                       | string                 | `"x"`              | Column key used as the independent (X) variable       |
-| `dataRender.y`                                       | string                 | `"y"`              | Column key used as the primary dependent (Y) variable |
-| `dataRender.sortKey`                                 | string                 | `"x"`              | Data column to sort rows by before rendering          |
-| `dataRender.sortOrder`                               | `'ascending'`          | `'descending'`     | `'reverse'`                                           |
-| `dataRender.categories`                              | string[]               | `[]`               | Ordered list of Y-variable column keys (series names) |
+| Attribute                                            | Type                   | Default            | Notes                                                                                    |
+| ---------------------------------------------------- | ---------------------- | ------------------ | ---------------------------------------------------------------------------------------- |
+| `dataRender.x`                                       | string                 | `"x"`              | Column key used as the independent (X) variable                                          |
+| `dataRender.y`                                       | string                 | `"y"`              | Column key used as the primary dependent (Y) variable                                    |
+| `dataRender.sortKey`                                 | string                 | `"x"`              | Data column to sort rows by before rendering                                             |
+| `dataRender.sortOrder`                               | `'ascending'`          | `'descending'`     | `'reverse'`                                                                              |
+| `dataRender.categories`                              | string[]               | `[]`               | Ordered list of Y-variable column keys (series names)                                    |
 | `dataRender.rowFilter.column`                        | string                 | `"x"`              | Column used to match exclude tokens. Inspector always writes `"x"` (first table column). |
-| `dataRender.rowFilter.exclude`                       | string[]               | `[]`               | First-column values omitted from the plot. Those rows stay in the table. |
-| `dataRender.xScale`                                  | `'linear'`             | `'time'`           | `'log'`                                               |
-| `dataRender.yScale`                                  | `'linear'`             | `'time'`           | `'log'`                                               |
-| `dataRender.xFormat`                                 | null                   | `null`             | Reserved for runtime X-value format function          |
-| `dataRender.yFormat`                                 | null                   | `null`             | Reserved for runtime Y-value format function          |
-| `dataRender.numberFormat`                            | string (BCP 47 locale) | `"en-US"`          | Locale used for number formatting                     |
-| `dataRender.isHighlightedColor`                      | string (hex)           | `"#ECDBAC"`        | Background color applied to highlighted data rows     |
-| `dataRender.mapScale`                                | `'ordinal'`            | `'threshold'`      | `'quantile'`                                          |
-| `dataRender.mapScaleDomain`                          | number[]               | `[10,20,30,40,50]` | Breakpoints for the map color scale                   |
-| `dataRender.groupBreaksActive`                       | boolean                | `false`            | Enable visual group breaks between data clusters      |
-| `dataRender.groupBreaksCategory`                     | string                 | `"Continent"`      | Data column used to define group break clusters       |
-| `dataRender.groupBreaksCategoryValues`               | string[]               | `[]`               | Ordered list of group break category values           |
-| `dataRender.groupBreaks.breakStyles.variation`       | `'empty'`              | `'solid'`          | `'dotted'`                                            |
-| `dataRender.groupBreaks.breakStyles.stroke`          | string (hex)           | `"#A4A4A4"`        | color of the break line                               |
-| `dataRender.groupBreaks.breakStyles.strokeWidth`     | number                 | `1.4`              | Width of the break line (px)                          |
-| `dataRender.groupBreaks.breakStyles.height`          | number                 | `30`               | Height of the break row (px)                          |
-| `dataRender.groupBreaks.breakStyles.strokeDasharray` | string                 | `"none"`           | SVG dash pattern for break line                       |
-| `dataRender.groupBreaks.labelStyles.fill`            | string                 | `"black"`          | color of the group break label text                   |
-| `dataRender.groupBreaks.labelStyles.fontStyle`       | `'normal'`             | `'italic'`         | `'bold'`                                              |
+| `dataRender.rowFilter.exclude`                       | string[]               | `[]`               | First-column values omitted from the plot. Those rows stay in the table.                 |
+| `dataRender.xScale`                                  | `'linear'`             | `'time'`           | `'log'`                                                                                  |
+| `dataRender.yScale`                                  | `'linear'`             | `'time'`           | `'log'`                                                                                  |
+| `dataRender.xFormat`                                 | null                   | `null`             | Reserved for runtime X-value format function                                             |
+| `dataRender.yFormat`                                 | null                   | `null`             | Reserved for runtime Y-value format function                                             |
+| `dataRender.numberFormat`                            | string (BCP 47 locale) | `"en-US"`          | Locale used for number formatting                                                        |
+| `dataRender.isHighlightedColor`                      | string (hex)           | `"#ECDBAC"`        | Background color applied to highlighted data rows                                        |
+| `dataRender.mapScale`                                | `'ordinal'`            | `'threshold'`      | `'quantile'`                                                                             |
+| `dataRender.mapScaleDomain`                          | number[]               | `[10,20,30,40,50]` | Breakpoints for the map color scale                                                      |
+| `dataRender.groupBreaksActive`                       | boolean                | `false`            | Enable visual group breaks between data clusters                                         |
+| `dataRender.groupBreaksCategory`                     | string                 | `"Continent"`      | Data column used to define group break clusters                                          |
+| `dataRender.groupBreaksCategoryValues`               | string[]               | `[]`               | Ordered list of group break category values                                              |
+| `dataRender.groupBreaks.breakStyles.variation`       | `'empty'`              | `'solid'`          | `'dotted'`                                                                               |
+| `dataRender.groupBreaks.breakStyles.stroke`          | string (hex)           | `"#A4A4A4"`        | color of the break line                                                                  |
+| `dataRender.groupBreaks.breakStyles.strokeWidth`     | number                 | `1.4`              | Width of the break line (px)                                                             |
+| `dataRender.groupBreaks.breakStyles.height`          | number                 | `30`               | Height of the break row (px)                                                             |
+| `dataRender.groupBreaks.breakStyles.strokeDasharray` | string                 | `"none"`           | SVG dash pattern for break line                                                          |
+| `dataRender.groupBreaks.labelStyles.fill`            | string                 | `"black"`          | color of the group break label text                                                      |
+| `dataRender.groupBreaks.labelStyles.fontStyle`       | `'normal'`             | `'italic'`         | `'bold'`                                                                                 |
 
 ---
 
@@ -885,14 +885,14 @@ Replace auto-generated axis tick labels with custom text.
 
 Click a legend item in the editor to open the legend popover. Each category key maps to an object (not just a string label).
 
-| Field on `customLegendLabels[category]` | Type | Notes |
-| --- | --- | --- |
-| `text` | string | Display label override |
-| `color` | string (hex) | Swatch / label color |
-| `fontFamily`, `fontSize`, `fontWeight`, `fontStyle` | typography | Same controls as other popover panels |
-| `outlineColor`, `outlineWidth` | string / number | Label outline |
-| `markerStyle`, `markerFill` | enum | Marker shape and fill mode |
-| `offsetX`, `offsetY` | number | Detached legend position (when `legend.variation` is `detached`) |
+| Field on `customLegendLabels[category]`             | Type            | Notes                                                            |
+| --------------------------------------------------- | --------------- | ---------------------------------------------------------------- |
+| `text`                                              | string          | Display label override                                           |
+| `color`                                             | string (hex)    | Swatch / label color                                             |
+| `fontFamily`, `fontSize`, `fontWeight`, `fontStyle` | typography      | Same controls as other popover panels                            |
+| `outlineColor`, `outlineWidth`                      | string / number | Label outline                                                    |
+| `markerStyle`, `markerFill`                         | enum            | Marker shape and fill mode                                       |
+| `offsetX`, `offsetY`                                | number          | Detached legend position (when `legend.variation` is `detached`) |
 
 Grouped legend chrome opens the panel for the whole legend; individual swatches open `LegendItemPanel` for one category. See `src/chart/edit/popover/panels/README.md` for the full popover inventory.
 
