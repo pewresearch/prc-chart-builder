@@ -93,7 +93,7 @@ Chart_AI_Ability::generate_chart()
   │  builds user prompt        (build_user_prompt)
   │  optionally attaches image (withFile)
   ▼
-AiClient → Claude (claude-sonnet-4-6 default)
+AiClient → Claude (claude-sonnet-5 default)
   │  returns raw JSON string
   ▼
   JSON parse → { tableData, chartAttributes }
@@ -194,13 +194,13 @@ future block integrations.
 
 **Input schema** (`input_schema`):
 
-| Field         | Type            | Required | Description                                      |
-| ------------- | --------------- | -------- | ------------------------------------------------ |
-| `chartType`   | `string`        | Yes      | Chart type slug (e.g. `bar`, `line`, `pie`)      |
-| `description` | `string`        | No       | Free-text description of the chart               |
-| `image`       | `string`        | No       | Base64-encoded PNG or JPEG                       |
-| `csvData`     | `string`        | No       | Raw CSV text                                     |
-| `model`       | `string` (enum) | No       | Claude model ID; defaults to `claude-sonnet-4-6` |
+| Field         | Type            | Required | Description                                    |
+| ------------- | --------------- | -------- | ---------------------------------------------- |
+| `chartType`   | `string`        | Yes      | Chart type slug (e.g. `bar`, `line`, `pie`)    |
+| `description` | `string`        | No       | Free-text description of the chart             |
+| `image`       | `string`        | No       | Base64-encoded PNG or JPEG                     |
+| `csvData`     | `string`        | No       | Raw CSV text                                   |
+| `model`       | `string` (enum) | No       | Claude model ID; defaults to `claude-sonnet-5` |
 
 **Output schema** (`output_schema`):
 
@@ -248,7 +248,7 @@ as the Abilities API `execute_callback`.
 
 - `chartType` must be non-empty.
 - At least one of `description`, `image`, or `csvData` must be provided.
-- `model` is validated against `ALLOWED_MODELS`; falls back to `claude-sonnet-4-6`.
+- `model` is validated against `ALLOWED_MODELS`; falls back to `claude-sonnet-5`.
 
 **Image handling:** The data-URL prefix (`data:image/png;base64,`) is stripped
 before passing the raw base64 payload to `AiClient::withFile()`. The MIME type
@@ -277,7 +277,7 @@ X-WP-Nonce: <wp_rest nonce>
 	"description": "Monthly active users by region, Q1–Q4 2024",
 	"csvData": "region,Q1,Q2,Q3,Q4\nNorth,120,145,160,175\nSouth,90,95,110,130",
 	"image": "",
-	"model": "claude-sonnet-4-6"
+	"model": "claude-sonnet-5"
 }
 ```
 
@@ -465,16 +465,16 @@ Step 2b of the _Add New Chart_ modal. Mounted only when
 
 ### State
 
-| State               | Initial               | Description                                                       |
-| ------------------- | --------------------- | ----------------------------------------------------------------- |
-| `description`       | `''`                  | User's text description                                           |
-| `imageFile`         | `null`                | Uploaded `File` object                                            |
-| `csvText`           | `''`                  | Pasted or uploaded CSV text                                       |
-| `model`             | `'claude-sonnet-4-6'` | Selected Claude model                                             |
-| `acknowledgedRisks` | `false`               | Risk acknowledgment gate (must be checked to enable Generate)     |
-| `isGenerating`      | `false`               | Loading state during API call                                     |
-| `error`             | `null`                | Error message to display                                          |
-| `generatedContent`  | `null`                | `{ content, csvText }` on success; switches view to preview state |
+| State               | Initial             | Description                                                       |
+| ------------------- | ------------------- | ----------------------------------------------------------------- |
+| `description`       | `''`                | User's text description                                           |
+| `imageFile`         | `null`              | Uploaded `File` object                                            |
+| `csvText`           | `''`                | Pasted or uploaded CSV text                                       |
+| `model`             | `'claude-sonnet-5'` | Selected Claude model                                             |
+| `acknowledgedRisks` | `false`             | Risk acknowledgment gate (must be checked to enable Generate)     |
+| `isGenerating`      | `false`             | Loading state during API call                                     |
+| `error`             | `null`              | Error message to display                                          |
+| `generatedContent`  | `null`              | `{ content, csvText }` on success; switches view to preview state |
 
 ### Key behaviors
 

@@ -55,7 +55,7 @@ import CsvDataInput from './csv-data-input';
  */
 function readFileAsBase64(file) {
 	return new Promise((resolve, reject) => {
-		const reader = new FileReader();
+		const reader = new window.FileReader();
 		reader.onload = () => resolve(reader.result);
 		reader.onerror = reject;
 		reader.readAsDataURL(file);
@@ -66,9 +66,10 @@ function readFileAsBase64(file) {
 
 /**
  * Simple drag-and-drop + click PNG upload zone.
- * @param root0
- * @param root0.imageFile
- * @param root0.onImageChange
+ *
+ * @param {Object}    root0
+ * @param {File|null} root0.imageFile     Selected image file, if any.
+ * @param {Function}  root0.onImageChange Called with the next File or null.
  */
 function ImageDropZone({ imageFile, onImageChange }) {
 	const inputRef = useRef(null);
@@ -142,6 +143,7 @@ function ImageDropZone({ imageFile, onImageChange }) {
 							e.stopPropagation();
 							onImageChange(null);
 						}}
+						__next40pxDefaultSize
 					/>
 				</Flex>
 			) : (
@@ -161,20 +163,14 @@ function ImageDropZone({ imageFile, onImageChange }) {
 
 /**
  * Preview pane shown after a successful AI generation.
- * @param root0
- * @param root0.content
- * @param root0.chartType
- * @param root0.onAccept
- * @param root0.onRegenerate
- * @param root0.isRegenerating
+ *
+ * @param {Object}   root0
+ * @param {string}   root0.content        Generated block markup.
+ * @param {Function} root0.onAccept       Accept the generated chart.
+ * @param {Function} root0.onRegenerate   Request a new generation.
+ * @param {boolean}  root0.isRegenerating Whether regenerate is in progress.
  */
-function AIPreview({
-	content,
-	chartType,
-	onAccept,
-	onRegenerate,
-	isRegenerating,
-}) {
+function AIPreview({ content, onAccept, onRegenerate, isRegenerating }) {
 	const blocks = useMemo(() => {
 		if (!content) {
 			return [];
@@ -204,7 +200,12 @@ function AIPreview({
 
 			<Flex gap={3} style={{ marginTop: '16px' }}>
 				<FlexItem>
-					<Button variant="primary" icon={check} onClick={onAccept}>
+					<Button
+						variant="primary"
+						icon={check}
+						onClick={onAccept}
+						__next40pxDefaultSize
+					>
 						{__('Accept & Continue', 'prc-chart-builder')}
 					</Button>
 				</FlexItem>
@@ -214,6 +215,7 @@ function AIPreview({
 						icon={isRegenerating ? null : rotateRight}
 						onClick={onRegenerate}
 						disabled={isRegenerating}
+						__next40pxDefaultSize
 					>
 						{isRegenerating ? (
 							<Flex gap={2}>
@@ -244,7 +246,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 	const [description, setDescription] = useState('');
 	const [imageFile, setImageFile] = useState(null);
 	const [csvText, setCsvText] = useState('');
-	const [model, setModel] = useState('claude-sonnet-4-6');
+	const [model, setModel] = useState('claude-sonnet-5');
 	const [acknowledgedRisks, setAcknowledgedRisks] = useState(false);
 
 	const [isGenerating, setIsGenerating] = useState(false);
@@ -336,7 +338,6 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 			<div className="prc-ai-create prc-ai-create--preview-state">
 				<AIPreview
 					content={generatedContent.content}
-					chartType={chartType}
 					onAccept={handleAccept}
 					onRegenerate={handleRegenerate}
 					isRegenerating={isGenerating}
@@ -355,6 +356,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 					onClick={() => setGeneratedContent(null)}
 					icon={chevronLeft}
 					style={{ marginTop: '8px' }}
+					__next40pxDefaultSize
 				>
 					{__('Edit inputs', 'prc-chart-builder')}
 				</Button>
@@ -444,6 +446,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 					)}
 					disabled={isGenerating}
 					__nextHasNoMarginBottom
+					__next40pxDefaultSize
 				/>
 			</div>
 
@@ -467,7 +470,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 						)}
 					/>
 					<ToggleGroupControlOption
-						value="claude-sonnet-4-6"
+						value="claude-sonnet-5"
 						label={__('Sonnet (default)', 'prc-chart-builder')}
 						showTooltip
 						aria-label={__(
@@ -476,7 +479,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 						)}
 					/>
 					<ToggleGroupControlOption
-						value="claude-opus-4-7"
+						value="claude-opus-5-1"
 						label={__('Opus (most capable)', 'prc-chart-builder')}
 						showTooltip
 						aria-label={__(
@@ -511,6 +514,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 						icon={isGenerating ? null : magicIcon}
 						onClick={generate}
 						disabled={isGenerating || !canGenerate}
+						__next40pxDefaultSize
 					>
 						{isGenerating ? (
 							<Flex gap={2}>
@@ -528,6 +532,7 @@ export default function AICreateStep({ chartType, onBack, onAccept }) {
 						onClick={onBack}
 						disabled={isGenerating}
 						icon={chevronLeft}
+						__next40pxDefaultSize
 					>
 						{__('Back', 'prc-chart-builder')}
 					</Button>

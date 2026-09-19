@@ -10,7 +10,7 @@
  *   React (POST /prc-chart-builder/v1/ai/generate)
  *     → Chart_AI_Ability::handle_rest_request()
  *     → Chart_AI_Ability::generate_chart()
- *     → wp_ai_client_prompt (OpenRouter Claude Haiku / Sonnet / Opus, native fallback)
+ *     → wp_ai_client_prompt (native Claude Haiku / Sonnet / Opus, OpenRouter fallback)
  *     → JSON { tableData, chartAttributes }
  *     → PHP serializer → block markup string
  *     → { content: string, error: string } → React
@@ -115,8 +115,8 @@ class Chart_AI_Ability {
 						),
 						'model'       => array(
 							'type'        => 'string',
-							'description' => 'Claude model to use: claude-haiku-4-5, claude-sonnet-4-6 (default), or claude-opus-4-7.',
-							'enum'        => array( 'claude-haiku-4-5', 'claude-sonnet-4-6', 'claude-opus-4-7' ),
+							'description' => 'Claude model to use: claude-haiku-4-5, claude-sonnet-5 (default), or claude-opus-5-1.',
+							'enum'        => array( 'claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-5-1' ),
 						),
 					),
 					'required'             => array( 'chartType' ),
@@ -210,11 +210,11 @@ class Chart_AI_Ability {
 						'required'          => false,
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
-						'default'           => 'claude-sonnet-4-6',
+						'default'           => 'claude-sonnet-5',
 						'enum'              => array(
 							'claude-haiku-4-5',
-							'claude-sonnet-4-6',
-							'claude-opus-4-7',
+							'claude-sonnet-5',
+							'claude-opus-5-1',
 						),
 					),
 				),
@@ -234,7 +234,7 @@ class Chart_AI_Ability {
 			'description' => $request->get_param( 'description' ) ?? '',
 			'image'       => $request->get_param( 'image' ) ?? '',
 			'csvData'     => $request->get_param( 'csvData' ) ?? '',
-			'model'       => $request->get_param( 'model' ) ?? 'claude-sonnet-4-6',
+			'model'       => $request->get_param( 'model' ) ?? 'claude-sonnet-5',
 		);
 
 		$result = $this->generate_chart( $input );
@@ -285,8 +285,8 @@ class Chart_AI_Ability {
 	 */
 	private const ALLOWED_MODELS = array(
 		'claude-haiku-4-5',
-		'claude-sonnet-4-6',
-		'claude-opus-4-7',
+		'claude-sonnet-5',
+		'claude-opus-5-1',
 	);
 
 	/**
@@ -295,25 +295,25 @@ class Chart_AI_Ability {
 	 * @var array<string, string>
 	 */
 	private const OPENROUTER_MODEL_MAP = array(
-		'claude-haiku-4-5'  => 'anthropic/claude-haiku-4.5',
-		'claude-sonnet-4-6' => 'anthropic/claude-sonnet-4.6',
-		'claude-opus-4-7'   => 'anthropic/claude-opus-4.7',
+		'claude-haiku-4-5' => 'anthropic/claude-haiku-4.5',
+		'claude-sonnet-5'  => 'anthropic/claude-sonnet-5',
+		'claude-opus-5-1'  => 'anthropic/claude-opus-5.1',
 	);
 
 	/**
 	 * Build a using_model_preference() list for a gallery model choice.
 	 *
-	 * OpenRouter first (the provider registers image input for multimodal
-	 * models). Native Anthropic IDs remain last-resort if OpenRouter is down.
+	 * Native Anthropic first. OpenRouter remains last-resort if native
+	 * Anthropic is unavailable.
 	 *
 	 * @param string $model Gallery model id from ALLOWED_MODELS.
 	 * @return array<int, array{string, string}|string>
 	 */
 	private static function model_preference_for( string $model ): array {
-		$slug = self::OPENROUTER_MODEL_MAP[ $model ] ?? self::OPENROUTER_MODEL_MAP['claude-sonnet-4-6'];
+		$slug = self::OPENROUTER_MODEL_MAP[ $model ] ?? self::OPENROUTER_MODEL_MAP['claude-sonnet-5'];
 		return array(
-			array( 'openrouter', $slug ),
 			$model,
+			array( 'openrouter', $slug ),
 		);
 	}
 
@@ -330,7 +330,7 @@ class Chart_AI_Ability {
 		$csv_data    = $input['csvData'] ?? '';
 		$model       = in_array( $input['model'] ?? '', self::ALLOWED_MODELS, true )
 			? $input['model']
-			: 'claude-sonnet-4-6';
+			: 'claude-sonnet-5';
 
 		if ( empty( $chart_type ) ) {
 			return array(

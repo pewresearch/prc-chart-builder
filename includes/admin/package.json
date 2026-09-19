@@ -1,6 +1,6 @@
 {
 	"name": "@prc/chart-builder-admin",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"private": true,
 	"description": "Source for chart creation modal/wizard components imported by block editor bundles. List DataViews lives in src/admin-dataview."
 }
