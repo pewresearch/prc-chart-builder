@@ -4,12 +4,13 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit8fe378439db42b0787a5243a255ace27
+class ComposerStaticInit4e934bdea82ea0b50b552397b1f6f80d
 {
     public static $files = array (
         '606a39d89246991a373564698c2d8383' => __DIR__ . '/..' . '/symfony/polyfill-php85/bootstrap.php',
         '0e6d7bf4a5811bfa5cf40c5ccd6fae6a' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/bootstrap.php',
         '9d2b9fc6db0f153a0a149fefb182415e' => __DIR__ . '/..' . '/symfony/polyfill-php84/bootstrap.php',
+        '2c2415ec15363ede1bff13a287462ba1' => __DIR__ . '/..' . '/symfony/polyfill-php86/bootstrap.php',
         '23f09fe3194f8c2f70923f90d6702129' => __DIR__ . '/..' . '/illuminate/collections/functions.php',
         '60799491728b879e74601d83e38b2cad' => __DIR__ . '/..' . '/illuminate/collections/helpers.php',
         '2203a247e6fda86070a5e4e07aed533a' => __DIR__ . '/..' . '/symfony/clock/Resources/now.php',
@@ -21,8 +22,10 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         '3c3a02bc9945aa3571024986c07a1e55' => __DIR__ . '/..' . '/rinvex/countries/src/helpers.php',
         '6e3fae29631ef280660b3cdad06f25a8' => __DIR__ . '/..' . '/symfony/deprecation-contracts/function.php',
         '37a3dc5111fe8f707ab4c132ef1dbc62' => __DIR__ . '/..' . '/guzzlehttp/guzzle/src/functions_include.php',
-        '6b97f44a4c79d1c06822c8f6351a0f4e' => __DIR__ . '/..' . '/prc/block-utils/src/functions.php',
-        '392e2cecab2f9ab9c7f11823de64562b' => __DIR__ . '/..' . '/prc/wp-html-processors/src/functions.php',
+        '152652665b20977abdd2f757f4ca19d4' => __DIR__ . '/..' . '/prc/primitives/src/block-utils/functions.php',
+        '646031b73df34ef9b67a1d70c16c67ee' => __DIR__ . '/..' . '/prc/primitives/src/html-processors/functions.php',
+        '9548c27ea0a43fb8113fc559facb2477' => __DIR__ . '/..' . '/prc/primitives/src/url-helper/url-helper.php',
+        'a973b381bd3a06d58223a84663a6e6bf' => __DIR__ . '/..' . '/prc/primitives/src/term-data-store/term-data-store.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -32,6 +35,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         ),
         'S' =>
         array (
+            'Symfony\\Polyfill\\Php86\\' => 23,
             'Symfony\\Polyfill\\Php85\\' => 23,
             'Symfony\\Polyfill\\Php84\\' => 23,
             'Symfony\\Polyfill\\Mbstring\\' => 26,
@@ -51,8 +55,9 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
             'Psr\\Http\\Client\\' => 16,
             'Psr\\Container\\' => 14,
             'Psr\\Clock\\' => 10,
-            'PRC\\Html\\' => 9,
-            'PRC\\BlockUtils\\' => 15,
+            'PRC\\Primitives\\HTML_Processors\\' => 31,
+            'PRC\\Primitives\\DelayedAction\\' => 29,
+            'PRC\\Primitives\\BlockUtils\\' => 26,
         ),
         'I' =>
         array (
@@ -85,6 +90,10 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'voku\\' =>
         array (
             0 => __DIR__ . '/..' . '/voku/portable-ascii/src/voku',
+        ),
+        'Symfony\\Polyfill\\Php86\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/symfony/polyfill-php86',
         ),
         'Symfony\\Polyfill\\Php85\\' =>
         array (
@@ -139,13 +148,17 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         array (
             0 => __DIR__ . '/..' . '/psr/clock/src',
         ),
-        'PRC\\Html\\' =>
+        'PRC\\Primitives\\HTML_Processors\\' =>
         array (
-            0 => __DIR__ . '/..' . '/prc/wp-html-processors/src',
+            0 => __DIR__ . '/..' . '/prc/primitives/src/html-processors',
         ),
-        'PRC\\BlockUtils\\' =>
+        'PRC\\Primitives\\DelayedAction\\' =>
         array (
-            0 => __DIR__ . '/..' . '/prc/block-utils/src',
+            0 => __DIR__ . '/..' . '/prc/primitives/src/delayed-action',
+        ),
+        'PRC\\Primitives\\BlockUtils\\' =>
+        array (
+            0 => __DIR__ . '/..' . '/prc/primitives/src/block-utils',
         ),
         'Illuminate\\Support\\' =>
         array (
@@ -242,6 +255,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Carbon\\Exceptions\\NotLocaleAwareException' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Exceptions/NotLocaleAwareException.php',
         'Carbon\\Exceptions\\OutOfRangeException' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Exceptions/OutOfRangeException.php',
         'Carbon\\Exceptions\\ParseErrorException' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Exceptions/ParseErrorException.php',
+        'Carbon\\Exceptions\\PeriodFilterSafetyException' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Exceptions/PeriodFilterSafetyException.php',
         'Carbon\\Exceptions\\RuntimeException' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Exceptions/RuntimeException.php',
         'Carbon\\Exceptions\\UnitException' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Exceptions/UnitException.php',
         'Carbon\\Exceptions\\UnitNotConfiguredException' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Exceptions/UnitNotConfiguredException.php',
@@ -257,6 +271,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Carbon\\Laravel\\ServiceProvider' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Laravel/ServiceProvider.php',
         'Carbon\\MessageFormatter\\MessageFormatterMapper' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/MessageFormatter/MessageFormatterMapper.php',
         'Carbon\\Month' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Month.php',
+        'Carbon\\OverflowMode' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/OverflowMode.php',
         'Carbon\\PHPStan\\MacroExtension' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/PHPStan/MacroExtension.php',
         'Carbon\\PHPStan\\MacroMethodReflection' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/PHPStan/MacroMethodReflection.php',
         'Carbon\\Traits\\Boundaries' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Traits/Boundaries.php',
@@ -285,6 +300,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Carbon\\Traits\\Test' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Traits/Test.php',
         'Carbon\\Traits\\Timestamp' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Traits/Timestamp.php',
         'Carbon\\Traits\\ToStringFormat' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Traits/ToStringFormat.php',
+        'Carbon\\Traits\\TogglableDetection' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Traits/TogglableDetection.php',
         'Carbon\\Traits\\Units' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Traits/Units.php',
         'Carbon\\Traits\\Week' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Traits/Week.php',
         'Carbon\\Translator' => __DIR__ . '/..' . '/nesbot/carbon/src/Carbon/Translator.php',
@@ -503,6 +519,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Illuminate\\Contracts\\Encryption\\Encrypter' => __DIR__ . '/..' . '/illuminate/contracts/Encryption/Encrypter.php',
         'Illuminate\\Contracts\\Encryption\\StringEncrypter' => __DIR__ . '/..' . '/illuminate/contracts/Encryption/StringEncrypter.php',
         'Illuminate\\Contracts\\Events\\Dispatcher' => __DIR__ . '/..' . '/illuminate/contracts/Events/Dispatcher.php',
+        'Illuminate\\Contracts\\Events\\ShouldBeDiscovered' => __DIR__ . '/..' . '/illuminate/contracts/Events/ShouldBeDiscovered.php',
         'Illuminate\\Contracts\\Events\\ShouldDispatchAfterCommit' => __DIR__ . '/..' . '/illuminate/contracts/Events/ShouldDispatchAfterCommit.php',
         'Illuminate\\Contracts\\Events\\ShouldHandleEventsAfterCommit' => __DIR__ . '/..' . '/illuminate/contracts/Events/ShouldHandleEventsAfterCommit.php',
         'Illuminate\\Contracts\\Filesystem\\Cloud' => __DIR__ . '/..' . '/illuminate/contracts/Filesystem/Cloud.php',
@@ -517,6 +534,8 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Illuminate\\Contracts\\Foundation\\MaintenanceMode' => __DIR__ . '/..' . '/illuminate/contracts/Foundation/MaintenanceMode.php',
         'Illuminate\\Contracts\\Hashing\\Hasher' => __DIR__ . '/..' . '/illuminate/contracts/Hashing/Hasher.php',
         'Illuminate\\Contracts\\Http\\Kernel' => __DIR__ . '/..' . '/illuminate/contracts/Http/Kernel.php',
+        'Illuminate\\Contracts\\Image\\Driver' => __DIR__ . '/..' . '/illuminate/contracts/Image/Driver.php',
+        'Illuminate\\Contracts\\Image\\Transformation' => __DIR__ . '/..' . '/illuminate/contracts/Image/Transformation.php',
         'Illuminate\\Contracts\\JsonSchema\\JsonSchema' => __DIR__ . '/..' . '/illuminate/contracts/JsonSchema/JsonSchema.php',
         'Illuminate\\Contracts\\Log\\ContextLogProcessor' => __DIR__ . '/..' . '/illuminate/contracts/Log/ContextLogProcessor.php',
         'Illuminate\\Contracts\\Mail\\Attachable' => __DIR__ . '/..' . '/illuminate/contracts/Mail/Attachable.php',
@@ -540,6 +559,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Illuminate\\Contracts\\Queue\\Interruptible' => __DIR__ . '/..' . '/illuminate/contracts/Queue/Interruptible.php',
         'Illuminate\\Contracts\\Queue\\Job' => __DIR__ . '/..' . '/illuminate/contracts/Queue/Job.php',
         'Illuminate\\Contracts\\Queue\\Monitor' => __DIR__ . '/..' . '/illuminate/contracts/Queue/Monitor.php',
+        'Illuminate\\Contracts\\Queue\\PreparesForDispatch' => __DIR__ . '/..' . '/illuminate/contracts/Queue/PreparesForDispatch.php',
         'Illuminate\\Contracts\\Queue\\Queue' => __DIR__ . '/..' . '/illuminate/contracts/Queue/Queue.php',
         'Illuminate\\Contracts\\Queue\\QueueableCollection' => __DIR__ . '/..' . '/illuminate/contracts/Queue/QueueableCollection.php',
         'Illuminate\\Contracts\\Queue\\QueueableEntity' => __DIR__ . '/..' . '/illuminate/contracts/Queue/QueueableEntity.php',
@@ -597,6 +617,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Illuminate\\Support\\Collection' => __DIR__ . '/..' . '/illuminate/collections/Collection.php',
         'Illuminate\\Support\\Composer' => __DIR__ . '/..' . '/illuminate/support/Composer.php',
         'Illuminate\\Support\\ConfigurationUrlParser' => __DIR__ . '/..' . '/illuminate/support/ConfigurationUrlParser.php',
+        'Illuminate\\Support\\Contracts\\NodePackageManager' => __DIR__ . '/..' . '/illuminate/support/Contracts/NodePackageManager.php',
         'Illuminate\\Support\\DateFactory' => __DIR__ . '/..' . '/illuminate/support/DateFactory.php',
         'Illuminate\\Support\\DefaultProviders' => __DIR__ . '/..' . '/illuminate/support/DefaultProviders.php',
         'Illuminate\\Support\\Defer\\DeferredCallback' => __DIR__ . '/..' . '/illuminate/support/Defer/DeferredCallback.php',
@@ -612,6 +633,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Illuminate\\Support\\Facades\\Broadcast' => __DIR__ . '/..' . '/illuminate/support/Facades/Broadcast.php',
         'Illuminate\\Support\\Facades\\Bus' => __DIR__ . '/..' . '/illuminate/support/Facades/Bus.php',
         'Illuminate\\Support\\Facades\\Cache' => __DIR__ . '/..' . '/illuminate/support/Facades/Cache.php',
+        'Illuminate\\Support\\Facades\\Cloud' => __DIR__ . '/..' . '/illuminate/support/Facades/Cloud.php',
         'Illuminate\\Support\\Facades\\Concurrency' => __DIR__ . '/..' . '/illuminate/support/Facades/Concurrency.php',
         'Illuminate\\Support\\Facades\\Config' => __DIR__ . '/..' . '/illuminate/support/Facades/Config.php',
         'Illuminate\\Support\\Facades\\Context' => __DIR__ . '/..' . '/illuminate/support/Facades/Context.php',
@@ -626,6 +648,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Illuminate\\Support\\Facades\\Gate' => __DIR__ . '/..' . '/illuminate/support/Facades/Gate.php',
         'Illuminate\\Support\\Facades\\Hash' => __DIR__ . '/..' . '/illuminate/support/Facades/Hash.php',
         'Illuminate\\Support\\Facades\\Http' => __DIR__ . '/..' . '/illuminate/support/Facades/Http.php',
+        'Illuminate\\Support\\Facades\\Image' => __DIR__ . '/..' . '/illuminate/support/Facades/Image.php',
         'Illuminate\\Support\\Facades\\Lang' => __DIR__ . '/..' . '/illuminate/support/Facades/Lang.php',
         'Illuminate\\Support\\Facades\\Log' => __DIR__ . '/..' . '/illuminate/support/Facades/Log.php',
         'Illuminate\\Support\\Facades\\Mail' => __DIR__ . '/..' . '/illuminate/support/Facades/Mail.php',
@@ -665,6 +688,11 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Illuminate\\Support\\MultipleInstanceManager' => __DIR__ . '/..' . '/illuminate/support/MultipleInstanceManager.php',
         'Illuminate\\Support\\MultipleItemsFoundException' => __DIR__ . '/..' . '/illuminate/collections/MultipleItemsFoundException.php',
         'Illuminate\\Support\\NamespacedItemResolver' => __DIR__ . '/..' . '/illuminate/support/NamespacedItemResolver.php',
+        'Illuminate\\Support\\NodePackageManager' => __DIR__ . '/..' . '/illuminate/support/NodePackageManager.php',
+        'Illuminate\\Support\\NodePackageManagers\\Bun' => __DIR__ . '/..' . '/illuminate/support/NodePackageManagers/Bun.php',
+        'Illuminate\\Support\\NodePackageManagers\\Npm' => __DIR__ . '/..' . '/illuminate/support/NodePackageManagers/Npm.php',
+        'Illuminate\\Support\\NodePackageManagers\\Pnpm' => __DIR__ . '/..' . '/illuminate/support/NodePackageManagers/Pnpm.php',
+        'Illuminate\\Support\\NodePackageManagers\\Yarn' => __DIR__ . '/..' . '/illuminate/support/NodePackageManagers/Yarn.php',
         'Illuminate\\Support\\Number' => __DIR__ . '/..' . '/illuminate/support/Number.php',
         'Illuminate\\Support\\Once' => __DIR__ . '/..' . '/illuminate/support/Once.php',
         'Illuminate\\Support\\Onceable' => __DIR__ . '/..' . '/illuminate/support/Onceable.php',
@@ -700,6 +728,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Illuminate\\Support\\Traits\\InteractsWithData' => __DIR__ . '/..' . '/illuminate/support/Traits/InteractsWithData.php',
         'Illuminate\\Support\\Traits\\Localizable' => __DIR__ . '/..' . '/illuminate/support/Traits/Localizable.php',
         'Illuminate\\Support\\Traits\\Macroable' => __DIR__ . '/..' . '/illuminate/macroable/Traits/Macroable.php',
+        'Illuminate\\Support\\Traits\\ParsesSqlServerConfigurationUrls' => __DIR__ . '/..' . '/illuminate/support/Traits/ParsesSqlServerConfigurationUrls.php',
         'Illuminate\\Support\\Traits\\ReadsClassAttributes' => __DIR__ . '/..' . '/illuminate/support/Traits/ReadsClassAttributes.php',
         'Illuminate\\Support\\Traits\\ReflectsClosures' => __DIR__ . '/..' . '/illuminate/reflection/Traits/ReflectsClosures.php',
         'Illuminate\\Support\\Traits\\Tappable' => __DIR__ . '/..' . '/illuminate/support/Traits/Tappable.php',
@@ -709,11 +738,15 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Illuminate\\Support\\ValidatedInput' => __DIR__ . '/..' . '/illuminate/support/ValidatedInput.php',
         'Illuminate\\Support\\ViewErrorBag' => __DIR__ . '/..' . '/illuminate/support/ViewErrorBag.php',
         'NoDiscard' => __DIR__ . '/..' . '/symfony/polyfill-php85/Resources/stubs/NoDiscard.php',
-        'PRC\\BlockUtils\\Lists' => __DIR__ . '/..' . '/prc/block-utils/src/Lists.php',
-        'PRC\\BlockUtils\\Pagination' => __DIR__ . '/..' . '/prc/block-utils/src/Pagination.php',
-        'PRC\\Html\\ElementFinder' => __DIR__ . '/..' . '/prc/wp-html-processors/src/ElementFinder.php',
-        'PRC\\Html\\HeadingProcessor' => __DIR__ . '/..' . '/prc/wp-html-processors/src/HeadingProcessor.php',
-        'PRC\\Html\\TableProcessor' => __DIR__ . '/..' . '/prc/wp-html-processors/src/TableProcessor.php',
+        'PRC\\Primitives\\BlockUtils\\Lists' => __DIR__ . '/..' . '/prc/primitives/src/block-utils/Lists.php',
+        'PRC\\Primitives\\BlockUtils\\Pagination' => __DIR__ . '/..' . '/prc/primitives/src/block-utils/Pagination.php',
+        'PRC\\Primitives\\DelayedAction\\ActionSchedulerGateway' => __DIR__ . '/..' . '/prc/primitives/src/delayed-action/ActionSchedulerGateway.php',
+        'PRC\\Primitives\\DelayedAction\\DelayedAction' => __DIR__ . '/..' . '/prc/primitives/src/delayed-action/DelayedAction.php',
+        'PRC\\Primitives\\DelayedAction\\JobState' => __DIR__ . '/..' . '/prc/primitives/src/delayed-action/JobState.php',
+        'PRC\\Primitives\\DelayedAction\\Scheduler' => __DIR__ . '/..' . '/prc/primitives/src/delayed-action/Scheduler.php',
+        'PRC\\Primitives\\HTML_Processors\\ElementFinder' => __DIR__ . '/..' . '/prc/primitives/src/html-processors/ElementFinder.php',
+        'PRC\\Primitives\\HTML_Processors\\HeadingProcessor' => __DIR__ . '/..' . '/prc/primitives/src/html-processors/HeadingProcessor.php',
+        'PRC\\Primitives\\HTML_Processors\\TableProcessor' => __DIR__ . '/..' . '/prc/primitives/src/html-processors/TableProcessor.php',
         'Pdo\\Dblib' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Pdo/Dblib.php',
         'Pdo\\Firebird' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Pdo/Firebird.php',
         'Pdo\\Mysql' => __DIR__ . '/..' . '/symfony/polyfill-php84/Resources/stubs/Pdo/Mysql.php',
@@ -754,6 +787,7 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'ScreenshotOne\\Sdk\\Client' => __DIR__ . '/..' . '/screenshotone/sdk/src/Client.php',
         'ScreenshotOne\\Sdk\\ResultWithMetadata' => __DIR__ . '/..' . '/screenshotone/sdk/src/ResultWithMetadata.php',
         'ScreenshotOne\\Sdk\\TakeOptions' => __DIR__ . '/..' . '/screenshotone/sdk/src/TakeOptions.php',
+        'SortDirection' => __DIR__ . '/..' . '/symfony/polyfill-php86/Resources/stubs/SortDirection.php',
         'Symfony\\Component\\Clock\\Clock' => __DIR__ . '/..' . '/symfony/clock/Clock.php',
         'Symfony\\Component\\Clock\\ClockAwareTrait' => __DIR__ . '/..' . '/symfony/clock/ClockAwareTrait.php',
         'Symfony\\Component\\Clock\\ClockInterface' => __DIR__ . '/..' . '/symfony/clock/ClockInterface.php',
@@ -866,15 +900,16 @@ class ComposerStaticInit8fe378439db42b0787a5243a255ace27
         'Symfony\\Polyfill\\Mbstring\\Mbstring' => __DIR__ . '/..' . '/symfony/polyfill-mbstring/Mbstring.php',
         'Symfony\\Polyfill\\Php84\\Php84' => __DIR__ . '/..' . '/symfony/polyfill-php84/Php84.php',
         'Symfony\\Polyfill\\Php85\\Php85' => __DIR__ . '/..' . '/symfony/polyfill-php85/Php85.php',
+        'Symfony\\Polyfill\\Php86\\Php86' => __DIR__ . '/..' . '/symfony/polyfill-php86/Php86.php',
         'voku\\helper\\ASCII' => __DIR__ . '/..' . '/voku/portable-ascii/src/voku/helper/ASCII.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->prefixLengthsPsr4 = ComposerStaticInit8fe378439db42b0787a5243a255ace27::$prefixLengthsPsr4;
-            $loader->prefixDirsPsr4 = ComposerStaticInit8fe378439db42b0787a5243a255ace27::$prefixDirsPsr4;
-            $loader->classMap = ComposerStaticInit8fe378439db42b0787a5243a255ace27::$classMap;
+            $loader->prefixLengthsPsr4 = ComposerStaticInit4e934bdea82ea0b50b552397b1f6f80d::$prefixLengthsPsr4;
+            $loader->prefixDirsPsr4 = ComposerStaticInit4e934bdea82ea0b50b552397b1f6f80d::$prefixDirsPsr4;
+            $loader->classMap = ComposerStaticInit4e934bdea82ea0b50b552397b1f6f80d::$classMap;
 
         }, null, ClassLoader::class);
     }

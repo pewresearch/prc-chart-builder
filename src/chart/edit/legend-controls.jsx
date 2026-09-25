@@ -2,6 +2,7 @@
 /* eslint-disable max-lines */
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 /* eslint-disable max-lines-per-function */
+/* eslint-disable @wordpress/components-no-missing-40px-size-prop */
 /**
  * WordPress dependencies
  */
@@ -29,6 +30,7 @@ import {
 	PanelColorSettings,
 	__experimentalSpacingSizesControl as SpacingSizesControl,
 } from '@wordpress/block-editor';
+import { chartTypeSupportsSeriesMask } from '@prc/charting-utilities';
 import {
 	getAvailableLegendCategories,
 	isBubbleMapLegendMode,
@@ -187,6 +189,33 @@ function LegendControls({
 							}
 						/>
 					</ToolsPanelItem>
+					{chartTypeSupportsSeriesMask(chartType) && (
+						<ToolsPanelItem
+							hasValue={() =>
+								getCurrentValue('legend', 'clickToHide') ===
+								true
+							}
+							label={__('Click to hide')}
+							isShownByDefault
+							panelId={clientId}
+						>
+							<ToggleControl
+								label="Click to hide series"
+								checked={
+									getCurrentValue('legend', 'clickToHide') ===
+									true
+								}
+								onChange={(newValue) =>
+									updateAttributeForDevice('legend', {
+										clickToHide: newValue,
+									})
+								}
+								help={__(
+									'On the published chart, click a legend item to hide that series for this page view. Click again to show it. Editor clicks still customize legend items.'
+								)}
+							/>
+						</ToolsPanelItem>
+					)}
 					<WidePanelItem
 						hasValue={() => true}
 						label={__('Positioning')}

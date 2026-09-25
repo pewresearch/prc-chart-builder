@@ -258,6 +258,10 @@ return array(
 				'type' => 'object',
 				'default' => array(
 					'active' => false,
+					'clickToHide' => false,
+					'clickToHideGroups' => array(
+						
+					),
 					'variation' => 'grouped',
 					'orientation' => 'row',
 					'title' => '',

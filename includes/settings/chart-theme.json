@@ -191,6 +191,8 @@
 		},
 		"legend": {
 			"active": false,
+			"clickToHide": false,
+			"clickToHideGroups": [],
 			"variation": "grouped",
 			"orientation": "row",
 			"title": "",

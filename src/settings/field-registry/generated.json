@@ -1542,6 +1542,22 @@
     },
     {
       "path": [
+        "clickToHide"
+      ],
+      "type": "boolean",
+      "themeable": false,
+      "description": "On the published chart, click a legend item to hide that series for the page view. Editor clicks still customize items. Diverging bars and scatter only."
+    },
+    {
+      "path": [
+        "clickToHideGroups"
+      ],
+      "type": "string",
+      "themeable": false,
+      "description": "Legend click expands to hide every key in the same group (array of string arrays). Empty means one legend item toggles one hide key."
+    },
+    {
+      "path": [
         "fill"
       ],
       "type": "color",

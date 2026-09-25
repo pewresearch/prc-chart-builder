@@ -262,14 +262,14 @@ class Markdown_For_Agents_Integration {
 	/**
 	 * Parse an HTML <table> string into a 2-D array of cell strings.
 	 *
-	 * Uses PRC\Html\TableProcessor (extends WP_HTML_Tag_Processor) instead of
+	 * Uses PRC\Primitives\HTML_Processors\TableProcessor (extends WP_HTML_Tag_Processor) instead of
 	 * DOMDocument so we stay within the WordPress HTML API.
 	 *
 	 * @param string $html Raw HTML containing a <table>.
 	 * @return array<int, array<int, string>> Rows × cells, or empty array on failure.
 	 */
 	private function parse_html_table( string $html ): array {
-		$processor = new \PRC\Html\TableProcessor( $html );
+		$processor = new \PRC\Primitives\HTML_Processors\TableProcessor( $html );
 		$data      = $processor->get_data();
 
 		if ( is_wp_error( $data ) || empty( $data['header'] ) ) {

@@ -37,8 +37,8 @@ function isPlainObject(value) {
  * - Keys absent from `target` are assigned directly (fallback safety: a patch
  *   never throws on a missing branch).
  *
- * @param {Object}      target   Object to mutate (signal proxy or plain object).
- * @param {Object}      partial  Patch to apply.
+ * @param {Object}      target    Object to mutate (signal proxy or plain object).
+ * @param {Object}      partial   Patch to apply.
  * @param {string|null} parentKey Parent property name (for merge rules).
  * @return {Object} The mutated `target`.
  */
@@ -76,7 +76,7 @@ export function applyDeepPatch(target, partial, parentKey = null) {
  * (`null` / `undefined`) leave that index unchanged. New indices can be added
  * when the patch is longer than the live array.
  *
- * @param {Object[]} targetItems Live `annotations.items` (mutated in place).
+ * @param {Object[]} targetItems  Live `annotations.items` (mutated in place).
  * @param {Array}    partialItems Patch array (sparse allowed).
  */
 function mergeAnnotationItemsInPlace(targetItems, partialItems) {
@@ -100,6 +100,7 @@ function mergeAnnotationItemsInPlace(targetItems, partialItems) {
  * Field semantics (the data↔config coupling contract):
  * - `data`      → replaced wholesale.
  * - `tableData` → replaced wholesale.
+ * - `hiddenSeries` → replaced wholesale (session series mask).
  * - `config`    → deep-merged via {@link applyDeepPatch} (object-merge,
  *                 array-replace) so unrelated config branches survive a
  *                 partial patch; when no config exists yet it is assigned.
@@ -111,11 +112,12 @@ function mergeAnnotationItemsInPlace(targetItems, partialItems) {
  * different category universe from ever exposing a torn
  * `(data, categories, colors)` triple mid-render.
  *
- * @param {Object} slice             Chart slice to mutate.
- * @param {Object} [patch]           Patch.
- * @param {*}      [patch.data]      Replacement data array.
- * @param {Object} [patch.config]    Partial config (deep-merged).
- * @param {*}      [patch.tableData] Replacement table data.
+ * @param {Object}   slice                Chart slice to mutate.
+ * @param {Object}   [patch]              Patch.
+ * @param {*}        [patch.data]         Replacement data array.
+ * @param {Object}   [patch.config]       Partial config (deep-merged).
+ * @param {*}        [patch.tableData]    Replacement table data.
+ * @param {string[]} [patch.hiddenSeries] Hidden series keys.
  * @return {Object} The mutated `slice`.
  */
 export function applyChartPatch(slice, patch = {}) {
@@ -128,6 +130,9 @@ export function applyChartPatch(slice, patch = {}) {
 	}
 	if (tableData !== undefined) {
 		slice.tableData = tableData;
+	}
+	if (patch.hiddenSeries !== undefined) {
+		slice.hiddenSeries = patch.hiddenSeries;
 	}
 	if (config !== undefined) {
 		if (isPlainObject(slice.config) && isPlainObject(config)) {

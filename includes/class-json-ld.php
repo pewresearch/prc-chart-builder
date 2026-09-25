@@ -299,7 +299,7 @@ class JSON_LD {
 		$table_data  = null;
 		if ( $table_block && ! empty( $table_block['innerHTML'] ) ) {
 			$table_data = Table_Export::filter_hidden_columns(
-				\PRC\Html\parse_table_block_into_array( $table_block['innerHTML'] ),
+				\PRC\Primitives\HTML_Processors\parse_table_block_into_array( $table_block['innerHTML'] ),
 				$table_block['attrs'] ?? array()
 			);
 		}
@@ -397,7 +397,7 @@ class JSON_LD {
 				$table_data = null;
 				if ( $table_block && ! empty( $table_block['innerHTML'] ) ) {
 					$table_data = Table_Export::filter_hidden_columns(
-						\PRC\Html\parse_table_block_into_array( $table_block['innerHTML'] ),
+						\PRC\Primitives\HTML_Processors\parse_table_block_into_array( $table_block['innerHTML'] ),
 						$table_block['attrs'] ?? array()
 					);
 				}

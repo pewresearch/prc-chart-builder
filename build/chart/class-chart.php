@@ -47,7 +47,7 @@ class Chart {
 		// attributes, even when the capture browser is narrower than 782px.
 		$device_type = Chart_Export_Endpoint::is_export_request()
 			? 'desktop'
-			: \PRC\BlockUtils\get_current_device();
+			: \PRC\Primitives\BlockUtils\get_current_device();
 
 		// Prevent double rendering by tracking rendered blocks.
 		static $rendered_blocks = array();

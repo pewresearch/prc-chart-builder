@@ -46,6 +46,36 @@ const CHART_NAMESPACE = 'prc-chart-builder/chart';
  */
 const navSeededIds = new Set();
 
+/**
+ * Toggle hide keys for a legend click, expanding to clickToHideGroups.
+ *
+ * @param {Set<string>} hidden Current hidden keys.
+ * @param {string}      key    Clicked series key.
+ * @param {string[][]}  groups Legend hide groups.
+ * @return {string[]} Next hidden keys.
+ */
+function toggleHiddenWithGroups(hidden, key, groups = []) {
+	let targets = [key];
+	for (const group of groups) {
+		if (Array.isArray(group) && group.includes(key)) {
+			targets = group;
+			break;
+		}
+	}
+	const allHidden = targets.every((member) => hidden.has(member));
+	const next = new Set(hidden);
+	if (allHidden) {
+		for (const member of targets) {
+			next.delete(member);
+		}
+	} else {
+		for (const member of targets) {
+			next.add(member);
+		}
+	}
+	return [...next];
+}
+
 if (typeof window !== 'undefined') {
 	window.prcChartBuilder = {
 		...(window.prcChartBuilder ?? {}),
@@ -81,14 +111,15 @@ const { actions, state } = store(CHART_NAMESPACE, {
 		 * (data, categories, colors) triple.
 		 *
 		 * Field semantics (data↔config coupling contract):
-		 * - data / tableData replace wholesale
+		 * - data / tableData / hiddenSeries replace wholesale
 		 * - config deep-merges (object-merge, array-replace)
 		 *
-		 * @param {string} chartId           Chart id (matches data-prc-chart-id).
-		 * @param {Object} patch             Partial chart state.
-		 * @param {Array}  [patch.data]      Replacement data array.
-		 * @param {Object} [patch.config]    Partial config (deep-merged).
-		 * @param {Object} [patch.tableData] Replacement table data.
+		 * @param {string}   chartId              Chart id (matches data-prc-chart-id).
+		 * @param {Object}   patch                Partial chart state.
+		 * @param {Array}    [patch.data]         Replacement data array.
+		 * @param {Object}   [patch.config]       Partial config (deep-merged).
+		 * @param {Object}   [patch.tableData]    Replacement table data.
+		 * @param {string[]} [patch.hiddenSeries] Hidden series keys (session mask).
 		 */
 		setChart(chartId, patch) {
 			const slice = state.charts?.[chartId];
@@ -132,6 +163,23 @@ const { actions, state } = store(CHART_NAMESPACE, {
 		 */
 		setTableData(chartId, tableData) {
 			actions.setChart(chartId, { tableData });
+		},
+		/**
+		 * Toggle a series (and its clickToHide group) in the session hide set.
+		 *
+		 * @param {string} chartId Chart id (matches data-prc-chart-id).
+		 * @param {string} key     Legend datum / series key.
+		 */
+		toggleHiddenSeries(chartId, key) {
+			const slice = state.charts?.[chartId];
+			if (!slice || typeof key !== 'string' || key === '') {
+				return;
+			}
+			const groups = slice.config?.legend?.clickToHideGroups ?? [];
+			const hidden = new Set(slice.hiddenSeries ?? []);
+			actions.setChart(chartId, {
+				hiddenSeries: toggleHiddenWithGroups(hidden, key, groups),
+			});
 		},
 		/**
 		 * Re-derive chart inputs for a new viewport and update the live slice.
@@ -181,9 +229,6 @@ const { actions, state } = store(CHART_NAMESPACE, {
 				return;
 			}
 
-			const isCustom = isCustomChartSlice(slice);
-			const mountEl = document.getElementById(id);
-
 			// Seed the live store slice and mount the wrapper exactly once
 			// per chart id. After the wrapper subscribes via useChartStore,
 			// subsequent mutations (debug.setData, scrollytelling steps,
@@ -206,6 +251,7 @@ const { actions, state } = store(CHART_NAMESPACE, {
 			// `mountHasLiveChart` stays true for an already-mounted wrapper, so
 			// in-place caller mutations are still never clobbered.
 			if (slice.config) {
+				const mountEl = document.getElementById(id);
 				if (!mountEl || mountHasLiveChart(mountEl)) {
 					return;
 				}
@@ -233,6 +279,7 @@ const { actions, state } = store(CHART_NAMESPACE, {
 
 			syncControllerSurfaces(id, slice);
 
+			const isCustom = isCustomChartSlice(slice);
 			if (isCustom) {
 				const customRenderer =
 					window.prcCustomCharts?.ChartBuilderRenderer;
@@ -329,6 +376,12 @@ const { actions, state } = store(CHART_NAMESPACE, {
 				slice.data = inputs.data;
 				slice.config = inputs.config;
 				slice.tableData = inputs.tableData;
+				// Session mask is route-specific when consumers seed it server-side
+				// (e.g. Religious Projections age-profile overlay keys). The router
+				// merge keeps the prior slice's hiddenSeries because override=false.
+				if (serverSlice.hiddenSeries !== undefined) {
+					slice.hiddenSeries = serverSlice.hiddenSeries;
+				}
 				syncControllerSurfaces(id, slice);
 				return;
 			}
@@ -336,6 +389,9 @@ const { actions, state } = store(CHART_NAMESPACE, {
 			// Router recreated the mount (SSR fallback only). Remount once from
 			// the navigated server payload — do not write data/config onto a
 			// dead tree first (that snaps geometry, then throws the node away).
+			if (serverSlice.hiddenSeries !== undefined) {
+				slice.hiddenSeries = serverSlice.hiddenSeries;
+			}
 			actions.renderChart();
 		},
 		watchForRender: () => {

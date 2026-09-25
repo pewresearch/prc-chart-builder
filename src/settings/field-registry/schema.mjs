@@ -46,10 +46,10 @@
  * backstop filling them in.
  *
  * @typedef {Object} SchemaField
- * @property {'boolean' | 'number' | 'string' | 'color' | 'enum' | 'numberPair' | 'font'} type
+ * @property {'boolean' | 'number' | 'string' | 'color' | 'enum' | 'numberPair' | 'font'} type        Editor control type.
  * @property {string[]=}                                                                  enum        Required when `type === 'enum'`.
- * @property {boolean}                                                                    themeable
- * @property {string}                                                                     description
+ * @property {boolean}                                                                    themeable   Whether the Chart Theme grid lets you edit it.
+ * @property {string}                                                                     description Editor help text and README Notes column.
  *
  * @type {Record<string, Record<string, SchemaField>>}
  */
@@ -985,6 +985,18 @@ export const EDITOR_SCHEMA = {
 			type: 'boolean',
 			themeable: true,
 			description: 'Show/hide the legend.',
+		},
+		clickToHide: {
+			type: 'boolean',
+			themeable: false,
+			description:
+				'On the published chart, click a legend item to hide that series for the page view. Editor clicks still customize items. Diverging bars and scatter only.',
+		},
+		clickToHideGroups: {
+			type: 'string',
+			themeable: false,
+			description:
+				'Legend click expands to hide every key in the same group (array of string arrays). Empty means one legend item toggles one hide key.',
 		},
 		alignment: {
 			type: 'enum',

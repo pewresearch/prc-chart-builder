@@ -140,7 +140,7 @@ class Controller {
 		$publication_date = get_the_date( 'Y-m-d', $current_post_id );
 		$root_url         = get_bloginfo( 'url' );
 		$permalink        = get_permalink( $current_post_id );
-		$is_mobile        = 'mobile' === \PRC\BlockUtils\get_current_device();
+		$is_mobile        = 'mobile' === \PRC\Primitives\BlockUtils\get_current_device();
 
 		// Resolve the canonical chart post URL for the context menu.
 		// When the controller is synced into a report, refId is the chart CPT post ID.
@@ -280,7 +280,7 @@ class Controller {
 				$chart_attributes,
 				Chart_Export_Endpoint::is_export_request()
 					? 'desktop'
-					: \PRC\BlockUtils\get_current_device()
+					: \PRC\Primitives\BlockUtils\get_current_device()
 			);
 			$chart_metadata_context  = wp_json_encode(
 				array(
@@ -365,7 +365,7 @@ class Controller {
 			// rounded values rather than the raw stored precision).
 			$rendered_table = render_block( $blocks['table'] );
 
-			$parsed_table = \PRC\Html\parse_table_block_into_array( $rendered_table );
+			$parsed_table = \PRC\Primitives\HTML_Processors\parse_table_block_into_array( $rendered_table );
 			$table_array  = Table_Export::filter_hidden_columns(
 				is_wp_error( $parsed_table ) ? null : $parsed_table,
 				$blocks['table']['attrs'] ?? array()

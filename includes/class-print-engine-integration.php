@@ -367,7 +367,7 @@ class Print_Engine_Integration {
 	 * @return array<int, array<int, string>> Rows × cells.
 	 */
 	private function parse_html_table( string $html ): array {
-		$processor = new \PRC\Html\TableProcessor( $html );
+		$processor = new \PRC\Primitives\HTML_Processors\TableProcessor( $html );
 		$data      = $processor->get_data();
 
 		if ( is_wp_error( $data ) || empty( $data['header'] ) ) {

@@ -249,6 +249,8 @@
       "type": "object",
       "default": {
         "active": false,
+        "clickToHide": false,
+        "clickToHideGroups": [],
         "variation": "grouped",
         "orientation": "row",
         "title": "",
