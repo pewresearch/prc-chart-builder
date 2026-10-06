@@ -104,6 +104,7 @@ function ChildViewControlsWrapper({ BlockEdit, blockProps }) {
 				showBoth={showBoth}
 				onChangeView={handleChangeView}
 				onChangeShowBoth={handleChangeShowBoth}
+				isBlockSelected={blockProps.isSelected}
 			/>
 			<BlockEdit {...blockProps} />
 		</>

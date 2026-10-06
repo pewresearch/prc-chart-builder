@@ -20,15 +20,21 @@ import {
 	ToolbarButton,
 	ToolbarGroup,
 } from '@wordpress/components';
+import { useCommand } from '@wordpress/commands';
 import { table, chartBar } from '@wordpress/icons';
+
+const SWITCH_TO_DATA_LABEL = __('Switch to data', 'prc-chart-builder');
+const SWITCH_TO_CHART_LABEL = __('Switch to chart', 'prc-chart-builder');
+const VIEW_COMMAND_KEYWORDS = ['chart', 'data', 'table', 'view', 'switch'];
 
 /**
  * @param {Object}         props
- * @param {'chart'|'data'} props.view             Current single-pane view when `showBoth` is false.
- * @param {boolean}        props.showBoth         Whether both panes are visible.
- * @param {Function}       props.onChangeView     Called with the next single-pane view value.
- * @param {Function}       props.onChangeShowBoth Called with the next boolean.
- * @param {boolean}        [props.initialOpen]    Inspector panel default open state (defaults to true).
+ * @param {'chart'|'data'} props.view              Current single-pane view when `showBoth` is false.
+ * @param {boolean}        props.showBoth          Whether both panes are visible.
+ * @param {Function}       props.onChangeView      Called with the next single-pane view value.
+ * @param {Function}       props.onChangeShowBoth  Called with the next boolean.
+ * @param {boolean}        [props.initialOpen]     Inspector panel default open state (defaults to true).
+ * @param {boolean}        [props.isBlockSelected] When true, registers command palette toggle (defaults to false).
  */
 export default function ViewModeControls({
 	view,
@@ -36,11 +42,25 @@ export default function ViewModeControls({
 	onChangeView,
 	onChangeShowBoth,
 	initialOpen = true,
+	isBlockSelected = false,
 }) {
 	const toolbarLabel =
-		view === 'chart' ? __('Switch to data') : __('Switch to chart');
+		view === 'chart' ? SWITCH_TO_DATA_LABEL : SWITCH_TO_CHART_LABEL;
 	const toolbarIcon = view === 'chart' ? table : chartBar;
 	const toggleView = () => onChangeView(view === 'chart' ? 'data' : 'chart');
+
+	useCommand({
+		name: 'prc-chart-builder/toggle-chart-data-view',
+		label: toolbarLabel,
+		icon: toolbarIcon,
+		category: 'action',
+		keywords: VIEW_COMMAND_KEYWORDS,
+		disabled: !isBlockSelected || showBoth,
+		callback: ({ close }) => {
+			toggleView();
+			close();
+		},
+	});
 
 	return (
 		<Fragment>

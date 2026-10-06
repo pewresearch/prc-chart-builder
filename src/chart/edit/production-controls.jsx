@@ -13,13 +13,14 @@ import { InspectorControls } from '@wordpress/block-editor';
 import { useSelect } from '@wordpress/data';
 import { store as editorStore } from '@wordpress/editor';
 import { __, sprintf } from '@wordpress/i18n';
-import { copy, download, image, undo, update } from '@wordpress/icons';
+import { brush, copy, download, undo, update } from '@wordpress/icons';
 import apiFetch from '@wordpress/api-fetch';
 
 /**
  * Internal Dependencies
  */
 import { createSVG } from '../utils/image-exports';
+import useCopyPasteStyles from './hooks/use-copy-paste-styles';
 
 const CHART_POST_TYPE = 'chart';
 
@@ -63,6 +64,11 @@ export default function ProductionControls({
 	const [isRegenerating, setIsRegenerating] = useState(false);
 	const [regenMessage, setRegenMessage] = useState(null);
 	const [svgLoading, setSvgLoading] = useState(false);
+	const [stylesCopied, setStylesCopied] = useState(false);
+	const { hasCopiedStyles, copyStyles, pasteStyles } = useCopyPasteStyles(
+		attributes,
+		setAttributes
+	);
 
 	const { postId, postType } = useSelect((select) => {
 		const { getCurrentPostId, getCurrentPostType } = select(editorStore);
@@ -138,7 +144,7 @@ export default function ProductionControls({
 			},
 		};
 
-		navigator.clipboard
+		window.navigator.clipboard
 			.writeText(JSON.stringify(payload, null, 2))
 			.then(() => {
 				setIsCopied(true);
@@ -154,6 +160,12 @@ export default function ProductionControls({
 					JSON.stringify(payload)
 				);
 			});
+	};
+
+	const handleCopyStyles = () => {
+		copyStyles();
+		setStylesCopied(true);
+		setTimeout(() => setStylesCopied(false), 2500);
 	};
 
 	// -----------------------------------------------------------------------
@@ -186,6 +198,7 @@ export default function ProductionControls({
 				</PanelRow>
 				<PanelRow>
 					<Button
+						__next40pxDefaultSize
 						variant="secondary"
 						icon={undo}
 						onClick={handleResetViewportAttributes}
@@ -202,6 +215,7 @@ export default function ProductionControls({
 									[
 										mobileOverrideCount > 0 &&
 											sprintf(
+												// translators: %d is the number of mobile overrides.
 												__(
 													'%d mobile',
 													'prc-chart-builder'
@@ -210,6 +224,7 @@ export default function ProductionControls({
 											),
 										tabletOverrideCount > 0 &&
 											sprintf(
+												// translators: %d is the number of tablet overrides.
 												__(
 													'%d tablet',
 													'prc-chart-builder'
@@ -240,6 +255,7 @@ export default function ProductionControls({
 						</PanelRow>
 						<PanelRow>
 							<Button
+								__next40pxDefaultSize
 								variant="secondary"
 								icon={update}
 								onClick={handleForceRegeneratePng}
@@ -280,6 +296,7 @@ export default function ProductionControls({
 				</PanelRow>
 				<PanelRow>
 					<Button
+						__next40pxDefaultSize
 						variant="secondary"
 						icon={copy}
 						onClick={handleCopyDataAndConfig}
@@ -287,6 +304,39 @@ export default function ProductionControls({
 						{isCopied
 							? __('Copied!', 'prc-chart-builder')
 							: __('Copy Data & Config', 'prc-chart-builder')}
+					</Button>
+				</PanelRow>
+
+				{/* ── Copy / Paste Chart Styles ──────────────────────── */}
+				<PanelRow>
+					<p style={descriptionStyle}>
+						{__(
+							'Copies this chart’s visual styles (colors, axes, legend, labels, layout) so you can paste them onto another chart. Data is not copied. Copied styles are available in other editor tabs for 24 hours.',
+							'prc-chart-builder'
+						)}
+					</p>
+				</PanelRow>
+				<PanelRow>
+					<Button
+						__next40pxDefaultSize
+						variant="secondary"
+						icon={copy}
+						onClick={handleCopyStyles}
+					>
+						{stylesCopied
+							? __('Styles Copied!', 'prc-chart-builder')
+							: __('Copy Chart Styles', 'prc-chart-builder')}
+					</Button>
+				</PanelRow>
+				<PanelRow>
+					<Button
+						__next40pxDefaultSize
+						variant="secondary"
+						icon={brush}
+						onClick={pasteStyles}
+						disabled={!hasCopiedStyles}
+					>
+						{__('Paste Chart Styles', 'prc-chart-builder')}
 					</Button>
 				</PanelRow>
 
@@ -301,6 +351,7 @@ export default function ProductionControls({
 				</PanelRow>
 				<PanelRow>
 					<Button
+						__next40pxDefaultSize
 						variant="secondary"
 						icon={download}
 						isBusy={svgLoading}
@@ -322,6 +373,7 @@ export default function ProductionControls({
 					<>
 						<PanelRow>
 							<TextControl
+								__next40pxDefaultSize
 								label={__('PNG URL', 'prc-chart-builder')}
 								value={pngUrl}
 								onChange={() => {}}

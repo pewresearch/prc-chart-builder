@@ -58,6 +58,7 @@ function isInsideFreeformGroup(
  * @param {Object}        [args.controllerAttributes] Wizard-hosting controller attributes.
  * @param {BlockRef|null} args.selected               Selection-start block.
  * @param {BlockRef[]}    args.ancestors              Root-first ancestors of the selected block.
+ * @param {boolean}       [args.exposeBlockToolbar]   When true (Advanced Settings / design mode), keep toolbars visible.
  * @return {boolean} True when the selected block belongs to the wizard.
  */
 export function shouldHideBlockToolbar({
@@ -65,7 +66,11 @@ export function shouldHideBlockToolbar({
 	controllerAttributes,
 	selected,
 	ancestors = [],
+	exposeBlockToolbar = false,
 }) {
+	if (exposeBlockToolbar) {
+		return false;
+	}
 	if (!controllerClientId || !selected) {
 		return false;
 	}

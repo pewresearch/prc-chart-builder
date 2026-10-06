@@ -68,10 +68,46 @@ function generateChartId() {
 	return `${hex(8)}-${hex(4)}-${hex(4)}-${hex(4)}-${hex(12)}`;
 }
 
-export default function Edit({ attributes, setAttributes, clientId, context }) {
+/** Map chartType to layout.type (see VARIATION_TO_LAYOUT_TYPE in variations.js). */
+const CHART_TYPE_TO_LAYOUT_TYPE = {
+	bar: 'bar',
+	column: 'bar',
+	'stacked-bar': 'stacked-bar',
+	'stacked-column': 'stacked-bar', // Uses stacked-bar layout with vertical orientation
+	line: 'line',
+	area: 'area',
+	'stacked-area': 'stacked-area',
+	'dot-plot': 'dot-plot',
+	scatter: 'scatter',
+	'bee-swarm': 'bee-swarm',
+	pie: 'pie',
+	'small-multiples': 'small-multiples',
+	treemap: 'treemap',
+	sankey: 'sankey',
+	waffle: 'waffle',
+	'waffle-portion': 'small-multiples',
+	'heat-map-table': 'heat-map-table',
+	'diverging-bar': 'diverging-bar',
+	'exploded-bar': 'exploded-bar',
+	'map-usa': 'map-usa',
+	'map-usa-counties': 'map-usa-counties',
+	'map-usa-cbsa': 'map-usa-cbsa',
+	'map-usa-block': 'map-usa-block',
+	'map-usa-hex': 'map-usa-hex',
+	'map-world': 'map-world',
+	'map-world-orthographic': 'map-world-orthographic',
+	freeform: 'freeform',
+};
+
+export default function Edit({
+	attributes,
+	setAttributes,
+	clientId,
+	context,
+	isSelected,
+}) {
 	const {
 		id,
-		tabsActive,
 		chartTabActive,
 		dataTabActive,
 		downloadImageTabActive,
@@ -170,7 +206,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 							true
 						)
 					: [];
-			const isNestedInFreeform = controllerParentIds.some(
+			const nestedInFreeformController = controllerParentIds.some(
 				(parentId) =>
 					getBlock(parentId)?.attributes?.isFreeform === true
 			);
@@ -193,7 +229,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 				// wizard shell there so pattern cards render the chart canvas.
 				isPreviewMode:
 					!!select(blockEditorStore).getSettings().isPreviewMode,
-				isNestedInFreeform,
+				isNestedInFreeform: nestedInFreeformController,
 				controllerBlocks: controllerClientIds
 					.map((controllerClientId) => getBlock(controllerClientId))
 					.filter(Boolean),
@@ -328,37 +364,6 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 	const regenerateDuplicateId = () => {
 		applyControllerId(generateChartId());
 		setIsDuplicateIdDialogOpen(false);
-	};
-
-	// Map chartType to layout.type (matching VARIATION_TO_LAYOUT_TYPE from variations.js)
-	const CHART_TYPE_TO_LAYOUT_TYPE = {
-		bar: 'bar',
-		column: 'bar',
-		'stacked-bar': 'stacked-bar',
-		'stacked-column': 'stacked-bar', // Uses stacked-bar layout with vertical orientation
-		line: 'line',
-		area: 'area',
-		'stacked-area': 'stacked-area',
-		'dot-plot': 'dot-plot',
-		scatter: 'scatter',
-		'bee-swarm': 'bee-swarm',
-		pie: 'pie',
-		'small-multiples': 'small-multiples',
-		treemap: 'treemap',
-		sankey: 'sankey',
-		waffle: 'waffle',
-		'waffle-portion': 'small-multiples',
-		'heat-map-table': 'heat-map-table',
-		'diverging-bar': 'diverging-bar',
-		'exploded-bar': 'exploded-bar',
-		'map-usa': 'map-usa',
-		'map-usa-counties': 'map-usa-counties',
-		'map-usa-cbsa': 'map-usa-cbsa',
-		'map-usa-block': 'map-usa-block',
-		'map-usa-hex': 'map-usa-hex',
-		'map-world': 'map-world',
-		'map-world-orthographic': 'map-world-orthographic',
-		freeform: 'freeform',
 	};
 
 	// Get getBlock selector for use in effect
@@ -530,6 +535,7 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 					showBoth={showBoth}
 					onChangeView={(next) => setControllerView(id, next)}
 					onChangeShowBoth={(next) => setControllerShowBoth(id, next)}
+					isBlockSelected={isSelected}
 				/>
 			)}
 			<figure
@@ -640,10 +646,12 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 						'Only letters, numbers, hyphens and underscores are allowed.'
 					)}
 					__nextHasNoMarginBottom
+					__next40pxDefaultSize
 				/>
 				<Button
 					variant="secondary"
 					onClick={() => applyControllerId(generateChartId())}
+					__next40pxDefaultSize
 				>
 					{__('Regenerate ID')}
 				</Button>
@@ -669,10 +677,18 @@ export default function Edit({ attributes, setAttributes, clientId, context }) {
 					marginTop: '16px',
 				}}
 			>
-				<Button variant="tertiary" onClick={dismissDuplicateIdDialog}>
+				<Button
+					variant="tertiary"
+					onClick={dismissDuplicateIdDialog}
+					__next40pxDefaultSize
+				>
 					{__('Keep ID')}
 				</Button>
-				<Button variant="primary" onClick={regenerateDuplicateId}>
+				<Button
+					variant="primary"
+					onClick={regenerateDuplicateId}
+					__next40pxDefaultSize
+				>
 					{__('Regenerate ID')}
 				</Button>
 			</div>

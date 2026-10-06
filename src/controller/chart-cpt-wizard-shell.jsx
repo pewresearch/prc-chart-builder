@@ -133,8 +133,6 @@ export default function ChartCptWizardShell({
 	onEnterDesignMode,
 	onEnterPreviewStep,
 }) {
-	useHideBlockToolbar(clientId);
-
 	const [activeStep, setActiveStep] = useState(() => {
 		consumeChartFlowCreate();
 		if (shouldLandOnRefine()) {
@@ -145,6 +143,12 @@ export default function ChartCptWizardShell({
 	const [isDesignMode, setIsDesignMode] = useState(() =>
 		shouldLandOnRefine()
 	);
+
+	// Advanced Settings (design mode on Style Chart) restores block toolbars
+	// so copy/paste styles, chart/data switch, and core block controls work.
+	const exposeBlockToolbar = activeStep === 3 && isDesignMode;
+	useHideBlockToolbar(clientId, exposeBlockToolbar);
+
 	const [appearance, setAppearance] = useState(DEFAULT_PREVIEW_APPEARANCE);
 	const [previewViewport, setPreviewViewport] = useState('desktop');
 	/** Hand-picked canvas width; `null` follows the selected viewport. */

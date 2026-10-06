@@ -62,6 +62,8 @@ import {
 	effectiveChartTypeForControls,
 } from '../utils/chart-types';
 
+const EMPTY_OBJECT = Object.freeze({});
+
 const getCellContent = (cell) => {
 	return (
 		cell.content?.originalContent ||
@@ -152,8 +154,8 @@ function EditInner({
 	// Enrich chart data with __errorBars from column mappings (dot-plot only)
 	const isDotPlot = attrs?.layout?.type === 'dot-plot';
 	const errorBarsAttr = getCurrentValue('errorBars') || {};
-	const errorBarsCategories = errorBarsAttr.categories || {};
-	const errorBarsDefaultStyles = errorBarsAttr.defaultStyles || {};
+	const errorBarsCategories = errorBarsAttr.categories || EMPTY_OBJECT;
+	const errorBarsDefaultStyles = errorBarsAttr.defaultStyles || EMPTY_OBJECT;
 	const chartDataWithCustomizations = useMemo(() => {
 		const source = chartDataWithLabelCustomizations || chartData;
 		if (!isDotPlot || !errorBarsAttr.enabled || !source) return source;
@@ -192,7 +194,7 @@ function EditInner({
 
 	// Merge customTooltips (top-level block attribute) as a final pass so it
 	// sees rows with any upstream label/errorBar customizations already applied.
-	const customTooltips = attrs.customTooltips || {};
+	const customTooltips = attrs.customTooltips || EMPTY_OBJECT;
 	const chartDataWithAllCustomizations = useMemo(
 		() =>
 			mergeCustomTooltipData(
@@ -759,6 +761,7 @@ function EditInner({
 				selectedDrawingId,
 				setSmDrawingGeometry,
 			}),
+		// eslint-disable-next-line react-hooks/exhaustive-deps -- handleElementClick is recreated every render; see exclusions below.
 		[
 			attrs,
 			chartType,
@@ -1071,6 +1074,7 @@ function EditInner({
 			<CopyPasteStylesHandler
 				attributes={attrs}
 				setAttributes={setAttributes}
+				isSelected={isSelected}
 			/>
 			{hasValidation && !tableIsValid && (
 				<Notice status="warning" isDismissible={true}>
