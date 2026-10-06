@@ -115,8 +115,8 @@ class Chart_AI_Ability {
 						),
 						'model'       => array(
 							'type'        => 'string',
-							'description' => 'Claude model to use: claude-haiku-4-5, claude-sonnet-5 (default), or claude-opus-5-1.',
-							'enum'        => array( 'claude-haiku-4-5', 'claude-sonnet-5', 'claude-opus-5-1' ),
+							'description' => 'Claude model to use: claude-haiku-4-5, claude-sonnet-5-5 (default), or claude-opus-5-5.',
+							'enum'        => array( 'claude-haiku-4-5', 'claude-sonnet-5-5', 'claude-opus-5-5' ),
 						),
 					),
 					'required'             => array( 'chartType' ),
@@ -210,11 +210,11 @@ class Chart_AI_Ability {
 						'required'          => false,
 						'type'              => 'string',
 						'sanitize_callback' => 'sanitize_text_field',
-						'default'           => 'claude-sonnet-5',
+						'default'           => 'claude-sonnet-5-5',
 						'enum'              => array(
 							'claude-haiku-4-5',
-							'claude-sonnet-5',
-							'claude-opus-5-1',
+							'claude-sonnet-5-5',
+							'claude-opus-5-5',
 						),
 					),
 				),
@@ -234,7 +234,7 @@ class Chart_AI_Ability {
 			'description' => $request->get_param( 'description' ) ?? '',
 			'image'       => $request->get_param( 'image' ) ?? '',
 			'csvData'     => $request->get_param( 'csvData' ) ?? '',
-			'model'       => $request->get_param( 'model' ) ?? 'claude-sonnet-5',
+			'model'       => $request->get_param( 'model' ) ?? 'claude-sonnet-5-5',
 		);
 
 		$result = $this->generate_chart( $input );
@@ -285,8 +285,8 @@ class Chart_AI_Ability {
 	 */
 	private const ALLOWED_MODELS = array(
 		'claude-haiku-4-5',
-		'claude-sonnet-5',
-		'claude-opus-5-1',
+		'claude-sonnet-5-5',
+		'claude-opus-5-5',
 	);
 
 	/**
@@ -295,9 +295,9 @@ class Chart_AI_Ability {
 	 * @var array<string, string>
 	 */
 	private const OPENROUTER_MODEL_MAP = array(
-		'claude-haiku-4-5' => 'anthropic/claude-haiku-4.5',
-		'claude-sonnet-5'  => 'anthropic/claude-sonnet-5',
-		'claude-opus-5-1'  => 'anthropic/claude-opus-5.1',
+		'claude-haiku-4-5'  => 'anthropic/claude-haiku-4.5',
+		'claude-sonnet-5-5' => 'anthropic/claude-sonnet-5.5',
+		'claude-opus-5-5'   => 'anthropic/claude-opus-5.5',
 	);
 
 	/**
@@ -310,7 +310,7 @@ class Chart_AI_Ability {
 	 * @return array<int, array{string, string}|string>
 	 */
 	private static function model_preference_for( string $model ): array {
-		$slug = self::OPENROUTER_MODEL_MAP[ $model ] ?? self::OPENROUTER_MODEL_MAP['claude-sonnet-5'];
+		$slug = self::OPENROUTER_MODEL_MAP[ $model ] ?? self::OPENROUTER_MODEL_MAP['claude-sonnet-5-5'];
 		return array(
 			$model,
 			array( 'openrouter', $slug ),
@@ -330,7 +330,7 @@ class Chart_AI_Ability {
 		$csv_data    = $input['csvData'] ?? '';
 		$model       = in_array( $input['model'] ?? '', self::ALLOWED_MODELS, true )
 			? $input['model']
-			: 'claude-sonnet-5';
+			: 'claude-sonnet-5-5';
 
 		if ( empty( $chart_type ) ) {
 			return array(

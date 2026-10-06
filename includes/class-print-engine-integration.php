@@ -55,7 +55,7 @@ class Print_Engine_Integration {
 		// Print-engine web view styles — layout for the ?pdf=true page.
 		Block_Print_Registry::register_style(
 			'prc-chart-builder/controller',
-			'.print-engine-chart { margin: 1em 0; }
+			'.print-engine-chart { margin: 1.5em 0 1em; }
 			.print-engine-chart figcaption { font-weight: bold; margin-bottom: 0.5em; }
 			.print-engine-chart .print-engine-chart__subtitle { font-style: italic; font-weight: normal; }
 			.print-engine-chart img { display: block; max-width: 100%; height: auto; }
@@ -63,8 +63,9 @@ class Print_Engine_Integration {
 			.print-engine-chart th, .print-engine-chart td { border: 1px solid #000; padding: 0.25em 0.5em; text-align: left; }
 			.print-engine-chart .print-engine-chart__note,
 			.print-engine-chart .print-engine-chart__source { font-size: 0.9em; margin-top: 0.5em; color: #333; }
-			.print-engine-chart.alignleft { float: left; max-width: 50%; margin: 0 1em 1em 0; }
-			.print-engine-chart.alignright { float: right; max-width: 50%; margin: 0 0 1em 1em; }
+			.print-engine-chart.alignleft { float: left; max-width: 50%; margin-right: 1em; margin-bottom: 1em; margin-left: 0; }
+			.print-engine-chart.alignright { float: right; max-width: 50%; margin-left: 1em; margin-bottom: 1em; margin-right: 0; }
+			.print-engine-chart--lead { margin-top: 0; }
 			.print-engine-chart.aligncenter { display: block; width: fit-content; max-width: 100%; margin-left: auto; margin-right: auto; }'
 		);
 
@@ -123,7 +124,8 @@ class Print_Engine_Integration {
 		if ( $thumbnail_id ) {
 			$png_url = wp_get_attachment_url( $thumbnail_id );
 			if ( $png_url ) {
-				$title = get_the_title( $chart_post ) ?: 'Chart';
+				$title = get_the_title( $chart_post );
+				$title = ! empty( $title ) ? $title : 'Chart';
 				return $this->chart_image_figure( $png_url, wp_strip_all_tags( $title ), '', '', '', $align, $width );
 			}
 		}
@@ -217,7 +219,7 @@ class Print_Engine_Integration {
 
 		$png_url = $this->resolve_chart_png_url( $attrs );
 		if ( '' !== $png_url ) {
-			return $this->chart_image_figure( $png_url, wp_strip_all_tags( $title ?: 'Chart' ), $subtitle, $note, $source, $align, $width );
+			return $this->chart_image_figure( $png_url, wp_strip_all_tags( ! empty( $title ) ? $title : 'Chart' ), $subtitle, $note, $source, $align, $width );
 		}
 
 		$caption = '';

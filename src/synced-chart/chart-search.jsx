@@ -3,10 +3,11 @@
  */
 import { WPEntitySearch } from '@prc/components';
 
-export default function ChartSearch({ setAttributes }) {
+export default function ChartSearch({ setAttributes, entityId, onSelect }) {
 	return (
 		<WPEntitySearch
 			placeholder="Search for charts"
+			entityId={entityId}
 			entityType="postType"
 			entitySubType="chart"
 			entityStatus={['publish', 'draft', 'future']}
@@ -16,6 +17,7 @@ export default function ChartSearch({ setAttributes }) {
 					return;
 				}
 				setAttributes({ ref });
+				onSelect?.(ref);
 			}}
 			perPage={10}
 			showType={false}

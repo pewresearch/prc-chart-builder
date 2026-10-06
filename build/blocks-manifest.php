@@ -1009,6 +1009,7 @@ return array(
 		),
 		'viewScriptModule' => 'file:./view.js',
 		'editorScript' => 'file:./index.js',
+		'editorStyle' => 'file:./index.css',
 		'style' => 'file:./style-index.css'
 	),
 	'synced-chart' => array(

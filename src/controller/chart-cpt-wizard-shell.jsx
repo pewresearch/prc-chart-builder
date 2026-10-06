@@ -68,6 +68,7 @@ import PreviewVisionFilters from '../shared/wizard-chrome/preview-vision-filters
 import { WorkflowStatusPaneSlot } from '../shared/wizard-chrome/workflow-status-pane-slot';
 import { WizardChartActionsContext } from '../shared/wizard-chrome/wizard-chart-actions-context';
 import { applyControllerTemplateContent } from './utils/apply-controller-template';
+import useHideBlockToolbar from './use-hide-block-toolbar';
 
 /**
  * Resolve a chart type slug to a library term (`{ slug, label }`).
@@ -132,6 +133,8 @@ export default function ChartCptWizardShell({
 	onEnterDesignMode,
 	onEnterPreviewStep,
 }) {
+	useHideBlockToolbar(clientId);
+
 	const [activeStep, setActiveStep] = useState(() => {
 		consumeChartFlowCreate();
 		if (shouldLandOnRefine()) {
@@ -489,6 +492,7 @@ export default function ChartCptWizardShell({
 									/>
 									<div className="prc-chart-wizard__design-mode-entry">
 										<Button
+											__next40pxDefaultSize
 											variant="secondary"
 											onClick={enterDesignMode}
 										>
@@ -509,6 +513,7 @@ export default function ChartCptWizardShell({
 						<div className="prc-chart-cpt-wizard__design-mode">
 							<div className="prc-chart-wizard__design-mode-header">
 								<Button
+									__next40pxDefaultSize
 									variant="secondary"
 									onClick={exitDesignMode}
 								>

@@ -65,6 +65,7 @@ export default function SyncedChartEdit(props) {
 				emptyLabel: __('Empty Chart', 'prc-chart-builder'),
 			}}
 			Controls={Controls}
+			controlsProps={{ setAttributes: props.setAttributes }}
 			Placeholder={Placeholder}
 		/>
 	);

@@ -631,6 +631,8 @@ class PCH_Import_Endpoint {
 	private function build_table_html( array $head_rows, array $body_rows ): string {
 		$classes = 'wp-block-prc-block-table is-scroll-on-pc is-scroll-on-mobile chart-builder-data-table has-sans-serif-font-family has-small-font-size';
 
+		$column_count = $this->get_saved_column_count( $head_rows, $body_rows );
+
 		$thead = '';
 		foreach ( $head_rows as $row ) {
 			$cells = '';
@@ -644,16 +646,44 @@ class PCH_Import_Endpoint {
 
 		$tbody = '';
 		foreach ( $body_rows as $row ) {
-			$cells = '';
+			$cells      = '';
+			$cell_index = 0;
+			$v_col      = 0;
 			foreach ( $row['cells'] ?? array() as $cell ) {
 				$tag     = in_array( $cell['tag'] ?? 'td', array( 'th', 'td' ), true ) ? $cell['tag'] : 'td';
 				$content = esc_html( $cell['content'] ?? '' );
-				$cells  .= "<{$tag}>{$content}</{$tag}>";
+				// Body/foot cells carry their virtual column index - save.tsx uses this
+				// for client-side column sorting (view.js). Head cells don't get it.
+				$cells .= "<{$tag} data-prc-v-col=\"{$v_col}\">{$content}</{$tag}>";
+				++$v_col;
+				++$cell_index;
 			}
 			$tbody .= "<tr>{$cells}</tr>";
 		}
 
-		return "\n<figure class=\"{$classes}\"><table class=\"has-fixed-layout is-sticky-first-column\"><thead>{$thead}</thead><tbody>{$tbody}</tbody></table></figure>\n";
+		$colgroup = '';
+		if ( $column_count > 0 ) {
+			$colgroup = '<colgroup>' . str_repeat( '<col/>', $column_count ) . '</colgroup>';
+		}
+
+		return "\n<figure class=\"{$classes}\"><table class=\"has-fixed-layout is-sticky-first-column\">{$colgroup}<thead>{$thead}</thead><tbody>{$tbody}</tbody></table></figure>\n";
+	}
+
+	/**
+	 * Number of virtual columns, from the widest head/body row. Mirrors
+	 * getSavedColumnCount() in prc-block-tables' save.tsx - needed to know
+	 * how many <col/> elements the <colgroup> should contain.
+	 *
+	 * @param array $head_rows
+	 * @param array $body_rows
+	 * @return int
+	 */
+	private function get_saved_column_count( array $head_rows, array $body_rows ): int {
+		$max = 0;
+		foreach ( array_merge( $head_rows, $body_rows ) as $row ) {
+			$max = max( $max, count( $row['cells'] ?? array() ) );
+		}
+		return $max;
 	}
 
 	/**

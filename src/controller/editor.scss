@@ -1,0 +1,8 @@
+// Chart CPT wizard: hide the block toolbar in both the floating (hover)
+// and Top toolbar modes. The body class comes from useHideBlockToolbar().
+body.prc-chart-builder-hide-block-toolbar {
+	.block-editor-block-list__block-popover,
+	.block-editor-block-contextual-toolbar {
+		display: none !important;
+	}
+}

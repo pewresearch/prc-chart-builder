@@ -68,7 +68,14 @@ class Screenshot_Service {
 	 *
 	 * @var Screenshot_Provider|null
 	 */
-	private ?Screenshot_Provider $provider;
+	private ?Screenshot_Provider $provider = null;
+
+	/**
+	 * Whether {@see self::get_provider()} has run (including explicit constructor injection).
+	 *
+	 * @var bool
+	 */
+	private bool $provider_resolved = false;
 
 	/**
 	 * Provider slug from the most recent successful capture.
@@ -83,7 +90,27 @@ class Screenshot_Service {
 	 * @param Screenshot_Provider|null $provider Optional provider override for tests.
 	 */
 	public function __construct( ?Screenshot_Provider $provider = null ) {
-		$this->provider = $provider ?? Screenshot_Provider_Registry::resolve();
+		if ( null !== $provider ) {
+			$this->provider          = $provider;
+			$this->provider_resolved = true;
+		}
+	}
+
+	/**
+	 * Resolve the screenshot provider on first use so plugin load order does not matter.
+	 *
+	 * Chart Builder may bootstrap before prc-firebase defines its classes; publish
+	 * hooks and Action Scheduler jobs run later when all plugins are loaded.
+	 *
+	 * @return Screenshot_Provider|null
+	 */
+	private function get_provider(): ?Screenshot_Provider {
+		if ( ! $this->provider_resolved ) {
+			$this->provider          = Screenshot_Provider_Registry::resolve();
+			$this->provider_resolved = true;
+		}
+
+		return $this->provider;
 	}
 
 	/**
@@ -92,7 +119,9 @@ class Screenshot_Service {
 	 * @return bool
 	 */
 	public function is_configured(): bool {
-		return null !== $this->provider && $this->provider->is_configured();
+		$provider = $this->get_provider();
+
+		return null !== $provider && $provider->is_configured();
 	}
 
 	/**
@@ -159,20 +188,21 @@ class Screenshot_Service {
 	private function capture( string $export_url, Screenshot_Capture_Spec $spec ) {
 		$this->last_capture_meta = null;
 
-		if ( ! $this->is_configured() ) {
+		$provider = $this->get_provider();
+		if ( null === $provider || ! $provider->is_configured() ) {
 			return new \WP_Error(
 				'screenshot_service_not_configured',
 				__( 'No screenshot provider is configured. Set PRC_PLATFORM_CHART_SCREENSHOT_PROVIDER or configure credentials for an available provider.', 'prc-chart-builder' )
 			);
 		}
 
-		$result = $this->provider->capture( $export_url, $spec );
+		$result = $provider->capture( $export_url, $spec );
 		if ( is_wp_error( $result ) ) {
 			return $result;
 		}
 
 		$this->last_capture_meta = array(
-			'provider' => $this->provider->get_slug(),
+			'provider' => $provider->get_slug(),
 		);
 
 		return $result;

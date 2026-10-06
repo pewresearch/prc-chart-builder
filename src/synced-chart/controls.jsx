@@ -3,8 +3,14 @@
  */
 import { __ } from '@wordpress/i18n';
 import { useMemo, useCallback, useState } from '@wordpress/element';
-import { Notice, ToolbarGroup, ToolbarButton } from '@wordpress/components';
-import { ungroup } from '@wordpress/icons';
+import {
+	Button,
+	Notice,
+	PanelRow,
+	ToolbarGroup,
+	ToolbarButton,
+} from '@wordpress/components';
+import { replace, ungroup } from '@wordpress/icons';
 import { parse, serialize } from '@wordpress/blocks';
 import { useDispatch } from '@wordpress/data';
 import { store as noticesStore } from '@wordpress/notices';
@@ -20,9 +26,11 @@ import {
 	hasNestedSyncedCharts,
 	replaceSyncedCharts,
 } from './flatten';
+import ReplaceChartModal from './replace-chart-modal';
 
 export default function Controls({
 	attributes,
+	setAttributes,
 	entityTitle = '',
 	permalink = '',
 	effectiveRef,
@@ -38,6 +46,8 @@ export default function Controls({
 		useDispatch(noticesStore);
 
 	const [isFlattening, setIsFlattening] = useState(false);
+	const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
+	const replaceLabel = __('Replace chart', 'prc-chart-builder');
 
 	const hasNestedSyncedChartBlocks = useMemo(
 		() => hasNestedSyncedCharts(blocks),
@@ -112,21 +122,37 @@ export default function Controls({
 		return url.toString();
 	}, [displayRef]);
 
-	const extraToolbarItems =
-		canFlatten && handleFlatten ? (
+	const extraToolbarItems = (
+		<>
 			<ToolbarGroup>
 				<ToolbarButton
-					icon={ungroup}
-					label={__('Flatten Incorrect Nesting', 'prc-chart-builder')}
-					onClick={handleFlatten}
-					isBusy={isFlattening}
-					disabled={isFlattening}
+					aria-expanded={isReplaceModalOpen}
+					aria-haspopup="dialog"
+					label={replaceLabel}
+					icon={replace}
+					onClick={() => setIsReplaceModalOpen(true)}
 					showTooltip
-				>
-					{__('Flatten Incorrect Nesting', 'prc-chart-builder')}
-				</ToolbarButton>
+				/>
 			</ToolbarGroup>
-		) : null;
+			{canFlatten && (
+				<ToolbarGroup>
+					<ToolbarButton
+						icon={ungroup}
+						label={__(
+							'Flatten Incorrect Nesting',
+							'prc-chart-builder'
+						)}
+						onClick={handleFlatten}
+						isBusy={isFlattening}
+						disabled={isFlattening}
+						showTooltip
+					>
+						{__('Flatten Incorrect Nesting', 'prc-chart-builder')}
+					</ToolbarButton>
+				</ToolbarGroup>
+			)}
+		</>
+	);
 
 	const extraInspectorContent = isForkActive ? (
 		<Notice status="warning" isDismissible={false}>
@@ -138,19 +164,43 @@ export default function Controls({
 	) : null;
 
 	return (
-		<SyncedEntityIsolationControls
-			attributes={attributes}
-			panelTitle={__('Synced Chart', 'prc-chart-builder')}
-			entityTitle={entityTitle}
-			entityTitleLabel={__('Chart Title', 'prc-chart-builder')}
-			editLink={editLink}
-			previewLink={permalink}
-			labels={{
-				edit: __('Edit chart in isolation', 'prc-chart-builder'),
-				preview: __('Preview chart in isolation', 'prc-chart-builder'),
-			}}
-			extraToolbarItems={extraToolbarItems}
-			extraInspectorContent={extraInspectorContent}
-		/>
+		<>
+			<SyncedEntityIsolationControls
+				attributes={attributes}
+				panelTitle={__('Synced Chart', 'prc-chart-builder')}
+				entityTitle={entityTitle}
+				entityTitleLabel={__('Chart Title', 'prc-chart-builder')}
+				editLink={editLink}
+				previewLink={permalink}
+				labels={{
+					edit: __('Edit chart in isolation', 'prc-chart-builder'),
+					preview: __(
+						'Preview chart in isolation',
+						'prc-chart-builder'
+					),
+				}}
+				extraToolbarItems={extraToolbarItems}
+				extraInspectorContent={extraInspectorContent}
+				extraInspectorActions={
+					<PanelRow>
+						<Button
+							__next40pxDefaultSize
+							variant="secondary"
+							aria-haspopup="dialog"
+							onClick={() => setIsReplaceModalOpen(true)}
+						>
+							{replaceLabel}
+						</Button>
+					</PanelRow>
+				}
+			/>
+			{isReplaceModalOpen && (
+				<ReplaceChartModal
+					chartRef={ref}
+					setAttributes={setAttributes}
+					onClose={() => setIsReplaceModalOpen(false)}
+				/>
+			)}
+		</>
 	);
 }
