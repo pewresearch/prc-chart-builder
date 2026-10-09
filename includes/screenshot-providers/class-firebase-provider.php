@@ -110,6 +110,7 @@ class Firebase_Provider implements Screenshot_Provider {
 			'waitMs'            => $spec->delay_seconds * 1000,
 			'viewportWidth'     => min( $spec->viewport_width, Screenshot_Capture_Spec::MAX_VIEWPORT_PX ),
 			'viewportHeight'    => min( $spec->viewport_height, Screenshot_Capture_Spec::MAX_VIEWPORT_PX ),
+			'captureElement'    => true,
 			'deviceScaleFactor' => $spec->device_scale_factor,
 		);
 	}

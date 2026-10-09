@@ -100,7 +100,7 @@ class Screenshot_Settings {
 	 *
 	 * @var int
 	 */
-	private const MAX_SIDE_PADDING = 200;
+	public const MAX_SIDE_PADDING = 200;
 
 	/**
 	 * Maximum device scale factor editors may persist.
@@ -278,7 +278,7 @@ class Screenshot_Settings {
 		}
 
 		$selector = isset( $settings['selector'] ) ? sanitize_text_field( (string) $settings['selector'] ) : '';
-		if ( '' === $selector ) {
+		if ( '' === $selector || Screenshot_Capture_Spec::LEGACY_SELECTOR === $selector ) {
 			$selector = $defaults['selector'];
 		}
 

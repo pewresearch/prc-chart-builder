@@ -153,7 +153,7 @@ class Screenshot_Service {
 		int $chart_width = self::DEFAULT_CHART_WIDTH,
 		int $chart_height = self::DEFAULT_CHART_HEIGHT
 	) {
-		return $this->capture(
+		return $this->take_spec(
 			$export_url,
 			Screenshot_Capture_Spec::from_layout( $chart_width, $chart_height )
 		);
@@ -169,8 +169,9 @@ class Screenshot_Service {
 	public function take_spec( string $export_url, Screenshot_Capture_Spec $spec ) {
 		$export_url = add_query_arg(
 			array(
-				'screenshot_width'  => $spec->get_layout_width(),
-				'screenshot_height' => $spec->get_layout_height(),
+				'screenshot_width'   => $spec->get_layout_width(),
+				'screenshot_height'  => $spec->get_layout_height(),
+				'screenshot_padding' => $spec->viewport_side_padding,
 			),
 			$export_url
 		);

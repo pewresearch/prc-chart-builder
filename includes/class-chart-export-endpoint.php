@@ -40,6 +40,13 @@ class Chart_Export_Endpoint {
 	public const BODY_CLASS = 'wp-chart-builder-export';
 
 	/**
+	 * Padded wrapper that screenshot providers capture on /export/.
+	 *
+	 * @var string
+	 */
+	public const FRAME_CLASS = 'wp-chart-builder-export__frame';
+
+	/**
 	 * The loader.
 	 *
 	 * @var Loader
@@ -67,13 +74,30 @@ class Chart_Export_Endpoint {
 	 * @return array
 	 */
 	public static function apply_requested_dimensions( array $attributes ): array {
-		if ( ! self::is_export_request() ) {
+		$dimensions = self::get_requested_dimensions();
+		if ( null === $dimensions ) {
 			return $attributes;
+		}
+
+		$attributes['layout']['width']  = $dimensions['width'];
+		$attributes['layout']['height'] = $dimensions['height'];
+
+		return $attributes;
+	}
+
+	/**
+	 * Validated `screenshot_width` / `screenshot_height` on an export request.
+	 *
+	 * @return array{width: int, height: int}|null Null when absent or invalid.
+	 */
+	private static function get_requested_dimensions(): ?array {
+		if ( ! self::is_export_request() ) {
+			return null;
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public display-only export dimensions.
 		if ( ! isset( $_GET['screenshot_width'], $_GET['screenshot_height'] ) ) {
-			return $attributes;
+			return null;
 		}
 
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated as digits below.
@@ -81,26 +105,84 @@ class Chart_Export_Endpoint {
 		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated as digits below.
 		$height_param = wp_unslash( $_GET['screenshot_height'] );
 		if ( ! is_string( $width_param ) || ! is_string( $height_param ) ) {
-			return $attributes;
+			return null;
 		}
 
 		$width_value  = sanitize_text_field( $width_param );
 		$height_value = sanitize_text_field( $height_param );
 
 		if ( ! ctype_digit( $width_value ) || ! ctype_digit( $height_value ) ) {
-			return $attributes;
+			return null;
 		}
 
 		$width  = (int) $width_value;
 		$height = (int) $height_value;
 		if ( 0 === $width || 0 === $height ) {
-			return $attributes;
+			return null;
 		}
 
-		$attributes['layout']['width']  = min( $width, self::MAX_SCREENSHOT_DIMENSION );
-		$attributes['layout']['height'] = min( $height, self::MAX_SCREENSHOT_DIMENSION );
+		return array(
+			'width'  => min( $width, self::MAX_SCREENSHOT_DIMENSION ),
+			'height' => min( $height, self::MAX_SCREENSHOT_DIMENSION ),
+		);
+	}
 
-		return $attributes;
+	/**
+	 * Chart width the export frame is sized around.
+	 *
+	 * @param string $post_content Chart post content.
+	 * @return int Requested reflow width, else saved layout width, else the site default.
+	 */
+	public static function get_frame_chart_width( string $post_content ): int {
+		$dimensions = self::get_requested_dimensions();
+		if ( null !== $dimensions ) {
+			return $dimensions['width'];
+		}
+
+		$chart_block = PNG_Export::get_chart_block( $post_content );
+		if ( isset( $chart_block['attrs']['layout']['width'] ) ) {
+			return (int) $chart_block['attrs']['layout']['width'];
+		}
+
+		return (int) Screenshot_Settings::get_settings()['default_chart_width'];
+	}
+
+	/**
+	 * Wrap export content in the padded capture frame.
+	 *
+	 * @param string $content     Rendered chart content.
+	 * @param int    $chart_width Chart layout width in px.
+	 * @param int    $padding     Padding on every side in px.
+	 * @return string
+	 */
+	public static function get_frame_markup( string $content, int $chart_width, int $padding ): string {
+		return sprintf(
+			'<div class="%1$s" style="max-width:%2$dpx;padding:%3$dpx;">%4$s</div>',
+			esc_attr( self::FRAME_CLASS ),
+			$chart_width + ( $padding * 2 ),
+			$padding,
+			$content
+		);
+	}
+
+	/**
+	 * Padding (px) around the chart inside the export frame.
+	 *
+	 * Reads `screenshot_padding`; falls back to the site screenshot setting.
+	 *
+	 * @return int
+	 */
+	public static function get_requested_padding(): int {
+		// phpcs:ignore WordPress.Security.NonceVerification.Recommended,WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- Validated as digits below.
+		$param = isset( $_GET['screenshot_padding'] ) ? wp_unslash( $_GET['screenshot_padding'] ) : null;
+		if ( is_string( $param ) ) {
+			$value = sanitize_text_field( $param );
+			if ( ctype_digit( $value ) ) {
+				return min( (int) $value, Screenshot_Settings::MAX_SIDE_PADDING );
+			}
+		}
+
+		return (int) Screenshot_Settings::get_settings()['viewport_side_padding'];
 	}
 
 	/**
@@ -145,7 +227,11 @@ class Chart_Export_Endpoint {
 
 		// Render block content through the standard WordPress content pipeline
 		// so all block hooks, filters, and asset enqueueing fires normally.
-		$content = apply_filters( 'the_content', $post->post_content );
+		$content = self::get_frame_markup(
+			apply_filters( 'the_content', $post->post_content ),
+			self::get_frame_chart_width( $post->post_content ),
+			self::get_requested_padding()
+		);
 
 		// Output the minimal HTML shell and exit before any theme template loads.
 		// wp_head() and wp_footer() are called so all enqueued scripts/styles
@@ -161,6 +247,10 @@ class Chart_Export_Endpoint {
 			<style>
 				*, *::before, *::after { box-sizing: border-box; }
 				html, body { margin: 0; padding: 0; background: #ffffff; }
+				html { margin-top: 0 !important; }
+				#wpadminbar { display: none !important; }
+				.<?php echo esc_html( self::FRAME_CLASS ); ?> { margin: 0 auto; background: #ffffff; }
+				.<?php echo esc_html( self::BODY_CLASS ); ?> .wp-chart-builder-view-buttons { display: none !important; }
 			</style>
 		</head>
 		<body class="<?php echo esc_attr( self::BODY_CLASS ); ?>">

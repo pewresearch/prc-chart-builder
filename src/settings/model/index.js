@@ -9,3 +9,4 @@ export * from './number-pair-utils';
 export * from './shipped-defaults';
 export * from './theme-replace';
 export * from './theme-model';
+export * from './screenshot-settings-draft';

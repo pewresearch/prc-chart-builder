@@ -15,11 +15,18 @@ use PRC\Platform\Chart_Builder\Screenshot_Settings;
 final class Screenshot_Capture_Spec {
 
 	/**
-	 * CSS selector targeting the chart wrapper element.
+	 * CSS selector targeting the padded /export/ frame.
 	 *
 	 * @var string
 	 */
-	public const DEFAULT_SELECTOR = '.wp-chart-builder-chart';
+	public const DEFAULT_SELECTOR = '.wp-chart-builder-export__frame';
+
+	/**
+	 * Previous default selector. Only exists when the controller renders tabs.
+	 *
+	 * @var string
+	 */
+	public const LEGACY_SELECTOR = '.wp-chart-builder-chart';
 
 	/**
 	 * Delay in seconds before capture.

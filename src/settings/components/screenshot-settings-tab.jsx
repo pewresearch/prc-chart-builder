@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { useDebounce } from '@wordpress/compose';
 import {
+	Button,
 	Notice,
 	SelectControl,
 	Spinner,
 	TextControl,
+	__experimentalHStack as HStack,
 	__experimentalText as Text,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
@@ -15,8 +16,12 @@ import {
 	fetchScreenshotSettings,
 	saveScreenshotSettings,
 } from '../store/screenshot-settings-api';
+import { isScreenshotDraftDirty, normalizeScreenshotDraft } from '../model';
 
 const ID_PREFIX = 'prc-chart-builder-screenshot-settings';
+
+/** Preserves draft across TabPanel unmounts (only the active tab is mounted). */
+let tabSession = null;
 
 const NUMBER_FIELDS = [
 	{
@@ -43,7 +48,7 @@ const NUMBER_FIELDS = [
 		id: 'viewport_side_padding',
 		label: __('Viewport side padding (px)', 'prc-chart-builder'),
 		help: __(
-			'Pixels added to each side of the chart layout so social whitespace is included.',
+			'Whitespace drawn around the chart on the export page, in pixels per side.',
 			'prc-chart-builder'
 		),
 		min: 0,
@@ -84,6 +89,16 @@ export default function ScreenshotSettingsTab() {
 	useEffect(() => {
 		let cancelled = false;
 
+		if (tabSession) {
+			setPayload(tabSession.payload);
+			setDraft(tabSession.draft);
+			setLoading(false);
+			setError(null);
+			return () => {
+				cancelled = true;
+			};
+		}
+
 		fetchScreenshotSettings()
 			.then((response) => {
 				if (cancelled) {
@@ -117,14 +132,23 @@ export default function ScreenshotSettingsTab() {
 		};
 	}, []);
 
-	const persist = useCallback((nextSettings) => {
+	useEffect(() => {
+		if (payload && draft) {
+			tabSession = { payload, draft };
+		}
+	}, [payload, draft]);
+
+	const save = useCallback(() => {
+		const nextSettings = normalizeScreenshotDraft(draft, payload.defaults);
 		setSaving(true);
 		setError(null);
 
 		return saveScreenshotSettings(nextSettings)
 			.then((response) => {
+				const nextDraft = response?.settings ?? nextSettings;
 				setPayload(response);
-				setDraft(response?.settings ?? nextSettings);
+				setDraft(nextDraft);
+				tabSession = { payload: response, draft: nextDraft };
 			})
 			.catch((saveError) => {
 				setError(
@@ -137,37 +161,18 @@ export default function ScreenshotSettingsTab() {
 				);
 			})
 			.finally(() => setSaving(false));
+	}, [draft, payload]);
+
+	const updateField = useCallback((key, value) => {
+		setDraft((current) =>
+			current ? { ...current, [key]: value } : current
+		);
 	}, []);
 
-	const persistDebounced = useDebounce(persist, 800);
-
-	// Flush pending capture-default saves before useDebounce cancels on unmount
-	// (TabPanel only mounts the active tab).
-	useEffect(() => {
-		return () => {
-			persistDebounced.flush();
-		};
-	}, [persistDebounced]);
-
-	const updateField = useCallback(
-		(key, value, immediate = false) => {
-			if (!draft) {
-				return;
-			}
-
-			const next = { ...draft, [key]: value };
-			setDraft(next);
-
-			if (immediate) {
-				// Drop any queued full-draft save so it cannot overwrite this POST.
-				persistDebounced.cancel();
-				persist(next);
-			} else {
-				persistDebounced(next);
-			}
-		},
-		[draft, persist, persistDebounced]
-	);
+	const discard = useCallback(() => {
+		setDraft(payload?.settings ?? null);
+		setError(null);
+	}, [payload]);
 
 	const providerOptions = useMemo(() => {
 		const providers = payload?.providers ?? [];
@@ -219,6 +224,11 @@ export default function ScreenshotSettingsTab() {
 	const credentialSlug = payload.provider_locked
 		? payload.locked_provider
 		: draft.provider || payload.resolved_provider || '';
+	const isDirty = isScreenshotDraftDirty(
+		draft,
+		payload.settings,
+		payload.defaults
+	);
 
 	return (
 		<VStack spacing={4} className="prc-chart-theme-settings__screenshot">
@@ -226,6 +236,39 @@ export default function ScreenshotSettingsTab() {
 				<Notice status="error" isDismissible={false}>
 					{error}
 				</Notice>
+			) : null}
+			{isDirty ? (
+				<div className="prc-chart-theme-settings__global-save">
+					<HStack justify="space-between" alignment="center">
+						<span>
+							{__(
+								'You have unsaved screenshot settings.',
+								'prc-chart-builder'
+							)}
+						</span>
+						<HStack spacing={2} expanded={false}>
+							<Button
+								__next40pxDefaultSize
+								variant="tertiary"
+								onClick={discard}
+								disabled={saving}
+							>
+								{__('Discard', 'prc-chart-builder')}
+							</Button>
+							<Button
+								__next40pxDefaultSize
+								variant="primary"
+								onClick={save}
+								isBusy={saving}
+								disabled={saving}
+							>
+								{saving
+									? __('Saving…', 'prc-chart-builder')
+									: __('Save changes', 'prc-chart-builder')}
+							</Button>
+						</HStack>
+					</HStack>
+				</div>
 			) : null}
 			<ul className="prc-settings__list">
 				<li className="prc-settings__list-item">
@@ -294,7 +337,7 @@ export default function ScreenshotSettingsTab() {
 								options={providerOptions}
 								disabled={payload.provider_locked || saving}
 								onChange={(value) =>
-									updateField('provider', value, true)
+									updateField('provider', value)
 								}
 							/>
 							<Text variant="muted">
@@ -328,7 +371,7 @@ export default function ScreenshotSettingsTab() {
 						slug="screenshot-defaults"
 						title={__('Capture defaults', 'prc-chart-builder')}
 						description={__(
-							'These values replace the hardcoded defaults in the screenshot service. New captures use them immediately.',
+							'These values replace the hardcoded defaults in the screenshot service. New captures use them after you save.',
 							'prc-chart-builder'
 						)}
 						textDomain="prc-chart-builder"
@@ -367,12 +410,7 @@ export default function ScreenshotSettingsTab() {
 									value={String(draft[field.id] ?? '')}
 									disabled={saving}
 									onChange={(value) =>
-										updateField(
-											field.id,
-											value === ''
-												? payload.defaults[field.id]
-												: Number(value)
-										)
+										updateField(field.id, value)
 									}
 								/>
 							))}

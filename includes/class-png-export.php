@@ -124,7 +124,7 @@ class PNG_Export {
 	 * @param string $post_content Raw post content.
 	 * @return array|null Block array or null if not found.
 	 */
-	private function get_chart_block( string $post_content ): ?array {
+	public static function get_chart_block( string $post_content ): ?array {
 		$blocks = parse_blocks( $post_content );
 
 		foreach ( $blocks as $block ) {
@@ -240,7 +240,7 @@ class PNG_Export {
 
 		$post_id = (int) $ref_post->ID;
 
-		$chart_block = $this->get_chart_block( $ref_post->post_content );
+		$chart_block = self::get_chart_block( $ref_post->post_content );
 		if ( null === $chart_block ) {
 			return;
 		}
@@ -296,7 +296,7 @@ class PNG_Export {
 		}
 
 		// Extract chart dimensions from block attributes.
-		$chart_block = $this->get_chart_block( $post->post_content );
+		$chart_block = self::get_chart_block( $post->post_content );
 		if ( null === $chart_block ) {
 			throw new \RuntimeException( 'Chart block not found in post content.' );
 		}
