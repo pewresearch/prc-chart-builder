@@ -13,7 +13,6 @@ import {
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
 
 /**
  * Internal dependencies
@@ -21,6 +20,7 @@ import { PanelColorSettings } from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 const REGRESSION_TYPE_OPTIONS = [
 	{ label: 'Linear', value: 'linear' },
@@ -34,6 +34,110 @@ const REGRESSION_TYPE_OPTIONS = [
 
 const { computeRegressionStats } =
 	window.prcCustomCharts || window.prcChartingLibrary || {};
+
+const STAT_STYLE = { fontSize: 11, color: '#757575' };
+
+function hasRSquared(stats) {
+	return stats?.rSquared !== null && stats?.rSquared !== undefined;
+}
+
+function FitStatistics({ regressionType, perGroupBreak, regressionStats }) {
+	if ('loess' === regressionType) {
+		return (
+			<p
+				style={{
+					...STAT_STYLE,
+					margin: '0 0 8px',
+					fontStyle: 'italic',
+				}}
+			>
+				{__(
+					'No equation or R² — LOESS is a local smoothing algorithm with no closed-form expression.'
+				)}
+			</p>
+		);
+	}
+
+	if (
+		perGroupBreak &&
+		typeof regressionStats === 'object' &&
+		regressionStats !== null
+	) {
+		return Object.entries(regressionStats).map(([groupVal, stats]) => (
+			<div key={groupVal} style={{ marginBottom: 8 }}>
+				<p
+					style={{
+						fontSize: 11,
+						fontWeight: 600,
+						color: '#444',
+						margin: '0 0 2px',
+					}}
+				>
+					{groupVal}
+				</p>
+				{stats?.equation && (
+					<p
+						style={{
+							...STAT_STYLE,
+							margin: '0 0 2px',
+							fontFamily: 'monospace',
+						}}
+					>
+						{stats.equation}
+					</p>
+				)}
+				{hasRSquared(stats) ? (
+					<p style={{ ...STAT_STYLE, margin: 0 }}>
+						{`R² = ${Number(stats.rSquared).toFixed(4)}`}
+					</p>
+				) : (
+					<p
+						style={{
+							...STAT_STYLE,
+							margin: 0,
+							fontStyle: 'italic',
+						}}
+					>
+						{__('Insufficient data.')}
+					</p>
+				)}
+			</div>
+		));
+	}
+
+	if (hasRSquared(regressionStats)) {
+		return (
+			<>
+				{regressionStats?.equation && (
+					<p
+						style={{
+							...STAT_STYLE,
+							margin: '0 0 4px',
+							fontFamily: 'monospace',
+						}}
+					>
+						{regressionStats.equation}
+					</p>
+				)}
+				<p style={{ ...STAT_STYLE, margin: '0 0 8px' }}>
+					{`R² = ${Number(regressionStats.rSquared).toFixed(4)}`}
+				</p>
+			</>
+		);
+	}
+
+	return (
+		<p
+			style={{
+				...STAT_STYLE,
+				margin: '0 0 8px',
+				fontStyle: 'italic',
+			}}
+		>
+			{__('Insufficient data to compute.')}
+		</p>
+	);
+}
 
 function RegressionControls({ attributes, setAttributes, clientId }) {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
@@ -56,8 +160,10 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 		'dataRender',
 		'groupBreaksCategory'
 	);
-	const storedGroupBreaksCategoryValues =
-		getCurrentValue('dataRender', 'groupBreaksCategoryValues') || [];
+	const storedGroupBreaksCategoryValues = getCurrentValue(
+		'dataRender',
+		'groupBreaksCategoryValues'
+	);
 	const xKey = getCurrentValue('dataRender', 'x') || 'x';
 	const chartData = getCurrentValue('io', 'chartData');
 
@@ -72,7 +178,7 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 	// Use stored values when available, otherwise derive live from chartData
 	// (matches how data-controls.jsx computes availableGroupValues).
 	const groupBreaksCategoryValues = useMemo(() => {
-		if (storedGroupBreaksCategoryValues.length)
+		if (storedGroupBreaksCategoryValues?.length)
 			return storedGroupBreaksCategoryValues;
 		if (!groupBreaksActive || !groupBreaksCategory || !chartData?.length)
 			return [];
@@ -215,118 +321,11 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 								panelId={clientId}
 								style={{ gridColumn: 'span 2' }}
 							>
-								{'loess' === regressionType ? (
-									<p
-										style={{
-											fontSize: 11,
-											color: '#757575',
-											margin: '0 0 8px',
-											fontStyle: 'italic',
-										}}
-									>
-										{__(
-											'No equation or R² — LOESS is a local smoothing algorithm with no closed-form expression.'
-										)}
-									</p>
-								) : perGroupBreak &&
-								  typeof regressionStats === 'object' &&
-								  regressionStats !== null ? (
-									Object.entries(regressionStats).map(
-										([groupVal, stats]) => (
-											<div
-												key={groupVal}
-												style={{ marginBottom: 8 }}
-											>
-												<p
-													style={{
-														fontSize: 11,
-														fontWeight: 600,
-														color: '#444',
-														margin: '0 0 2px',
-													}}
-												>
-													{groupVal}
-												</p>
-												{stats?.equation && (
-													<p
-														style={{
-															fontSize: 11,
-															color: '#757575',
-															margin: '0 0 2px',
-															fontFamily:
-																'monospace',
-														}}
-													>
-														{stats.equation}
-													</p>
-												)}
-												{stats?.rSquared != null ? (
-													<p
-														style={{
-															fontSize: 11,
-															color: '#757575',
-															margin: 0,
-														}}
-													>
-														{`R² = ${Number(
-															stats.rSquared
-														).toFixed(4)}`}
-													</p>
-												) : (
-													<p
-														style={{
-															fontSize: 11,
-															color: '#757575',
-															margin: 0,
-															fontStyle: 'italic',
-														}}
-													>
-														{__(
-															'Insufficient data.'
-														)}
-													</p>
-												)}
-											</div>
-										)
-									)
-								) : regressionStats?.rSquared != null ? (
-									<>
-										{regressionStats?.equation && (
-											<p
-												style={{
-													fontSize: 11,
-													color: '#757575',
-													margin: '0 0 4px',
-													fontFamily: 'monospace',
-												}}
-											>
-												{regressionStats.equation}
-											</p>
-										)}
-										<p
-											style={{
-												fontSize: 11,
-												color: '#757575',
-												margin: '0 0 8px',
-											}}
-										>
-											{`R² = ${Number(
-												regressionStats.rSquared
-											).toFixed(4)}`}
-										</p>
-									</>
-								) : (
-									<p
-										style={{
-											fontSize: 11,
-											color: '#757575',
-											margin: '0 0 8px',
-											fontStyle: 'italic',
-										}}
-									>
-										{__('Insufficient data to compute.')}
-									</p>
-								)}
+								<FitStatistics
+									regressionType={regressionType}
+									perGroupBreak={perGroupBreak}
+									regressionStats={regressionStats}
+								/>
 							</ToolsPanelItem>
 						</>
 					)}
@@ -338,6 +337,7 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 						style={{ gridColumn: 'span 2' }}
 					>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Regression Type')}
 							options={REGRESSION_TYPE_OPTIONS}
 							value={getCurrentValue('regression', 'type')}
@@ -356,7 +356,7 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 						style={{ gridColumn: 'span 2' }}
 					>
-						<PanelColorSettings
+						<ChartPanelColorSettings
 							__experimentalHasMultipleOrigins
 							__experimentalIsRenderedInSidebar
 							title={__('Line Color')}
@@ -403,6 +403,7 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 						style={{ gridColumn: 'span 2' }}
 					>
 						<TextControl
+							__next40pxDefaultSize
 							label={__('Stroke Dash Array')}
 							help={__(
 								'Alternating dash and gap lengths, e.g. "4,2" or "5,3,2". Leave empty for a solid line.'

@@ -15,24 +15,24 @@ import {
 	Button,
 	RangeControl,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
 
 import { useShapeCustomizations } from '../hooks';
 import { generateElementKey } from '../utils';
 import { TooltipPanelSection } from './TooltipPanelSection';
+import ChartPanelColorSettings from '../../chart-panel-color-settings';
 
 /**
  * ShapePanel Component
  *
  * @param {Object}      props
- * @param {Object}      props.dataPoint             - The data point object
- * @param {string}      props.category              - The category key
- * @param {string}      props.defaultColor          - The default fill color
- * @param {string|null} props.groupValue            - The group value (when groupBreaksActive), or null
- * @param {Object}      props.currentCustomizations - Current customizations
- * @param {Function}    props.onUpdate              - Callback to update
+ * @param {Object}      props.dataPoint                    - The data point object
+ * @param {string}      props.category                     - The category key
+ * @param {string}      props.defaultColor                 - The default fill color
+ * @param {string|null} props.groupValue                   - The group value (when groupBreaksActive), or null
+ * @param {Object}      props.currentCustomizations        - Current customizations
+ * @param {Function}    props.onUpdate                     - Callback to update
  * @param {Object}      props.currentTooltipCustomizations - { customTooltips }
- * @param {Function}    props.onTooltipUpdate       - Callback to update customTooltips
+ * @param {Function}    props.onTooltipUpdate              - Callback to update customTooltips
  */
 export function ShapePanel({
 	dataPoint,
@@ -70,7 +70,7 @@ export function ShapePanel({
 				{category}: {displayX}
 			</Text>
 
-			<PanelColorSettings
+			<ChartPanelColorSettings
 				__experimentalHasMultipleOrigins
 				__experimentalIsRenderedInSidebar
 				title={__('Fill Color', 'prc-chart-builder')}
@@ -83,7 +83,7 @@ export function ShapePanel({
 				]}
 			/>
 
-			<PanelColorSettings
+			<ChartPanelColorSettings
 				__experimentalHasMultipleOrigins
 				__experimentalIsRenderedInSidebar
 				title={__('Stroke Color', 'prc-chart-builder')}
@@ -98,6 +98,7 @@ export function ShapePanel({
 			/>
 
 			<RangeControl
+				__next40pxDefaultSize
 				label={__('Opacity', 'prc-chart-builder')}
 				value={opacity}
 				onChange={(val) => handleStyleChange('opacity', val)}
@@ -129,6 +130,7 @@ export function ShapePanel({
 
 			{hasCustomizations && (
 				<Button
+					__next40pxDefaultSize
 					variant="secondary"
 					isDestructive
 					onClick={handleReset}

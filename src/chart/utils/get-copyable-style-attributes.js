@@ -7,6 +7,12 @@
  */
 
 /**
+ * Internal Dependencies
+ */
+import { getSeriesColorKeys } from './get-series-color-keys';
+import getSmallMultiplesPanels from './get-small-multiples-panels';
+
+/**
  * Keys within independentAxis/dependentAxis that are style-related
  */
 const AXIS_STYLE_KEYS = [
@@ -146,8 +152,8 @@ const NET_VALUES_ITEM_STYLE_KEYS = [
 
 /**
  * Extract only specified keys from an object
- * @param obj
- * @param keys
+ * @param {Object}   obj
+ * @param {string[]} keys
  */
 const pickKeys = (obj, keys) => {
 	if (!obj || typeof obj !== 'object') return undefined;
@@ -164,7 +170,7 @@ const pickKeys = (obj, keys) => {
 
 /**
  * Deep clone an object (simple JSON-based clone)
- * @param obj
+ * @param {*} obj
  */
 const deepClone = (obj) => {
 	if (obj === undefined || obj === null) return obj;
@@ -175,11 +181,10 @@ const deepClone = (obj) => {
  * Extract copyable style attributes from a chart's attributes.
  * This is used for both the main attributes and viewport overrides (mobile/tablet).
  *
- * @param {Object}  attributes         - The chart block attributes
- * @param {boolean} isViewportOverride - Whether this is for mobile/tablet viewport
+ * @param {Object} attributes - The chart block attributes
  * @return {Object} - Style-only attributes suitable for copying
  */
-const extractStyleAttributes = (attributes, isViewportOverride = false) => {
+const extractStyleAttributes = (attributes) => {
 	const {
 		layout,
 		metadata,
@@ -200,7 +205,6 @@ const extractStyleAttributes = (attributes, isViewportOverride = false) => {
 		divergingBar,
 		io,
 		colors,
-		dataRender,
 	} = attributes;
 
 	const result = {};
@@ -310,25 +314,15 @@ const extractStyleAttributes = (attributes, isViewportOverride = false) => {
 
 	// IO - only color-related settings
 	if (io) {
-		const ioStyles = pickKeys(io, ['colorValue', 'customColors']);
+		const ioStyles = pickKeys(io, [
+			'colorValue',
+			'colorPaletteSources',
+			'customColors',
+		]);
 		if (ioStyles) {
 			result.io = ioStyles;
 		}
 	}
-
-	// dataRender - highlight color settings only (not highlightedCategories)
-	if (dataRender) {
-		const dataRenderStyles = pickKeys(dataRender, [
-			'isHighlightedColor',
-			'highlightColor',
-			'deselectedColor',
-			'deselectedOpacity',
-		]);
-		if (dataRenderStyles) {
-			result.dataRender = dataRenderStyles;
-		}
-	}
-
 	return result;
 };
 
@@ -340,16 +334,29 @@ const extractStyleAttributes = (attributes, isViewportOverride = false) => {
  */
 const getCopyableStyleAttributes = (attributes) => {
 	// Extract main styles
-	const styles = extractStyleAttributes(attributes, false);
+	const styles = extractStyleAttributes(attributes);
+
+	// Series rows only exist for series the author edited, so paste needs
+	// the full source series list to decide whether the charts match.
+	if (attributes.seriesStyles) {
+		styles.seriesStyles = deepClone(attributes.seriesStyles);
+	}
+	styles.copiedSeriesKeys = getSeriesColorKeys(attributes);
+	if (attributes.smallMultiples?.panelStyles) {
+		styles.panelStyles = deepClone(attributes.smallMultiples.panelStyles);
+		styles.copiedPanelKeys = getSmallMultiplesPanels(attributes).map(
+			(panel) => panel.key
+		);
+	}
 
 	// Extract mobile viewport overrides if they exist
 	if (attributes.mobile && Object.keys(attributes.mobile).length > 0) {
-		styles.mobile = extractStyleAttributes(attributes.mobile, true);
+		styles.mobile = extractStyleAttributes(attributes.mobile);
 	}
 
 	// Extract tablet viewport overrides if they exist
 	if (attributes.tablet && Object.keys(attributes.tablet).length > 0) {
-		styles.tablet = extractStyleAttributes(attributes.tablet, true);
+		styles.tablet = extractStyleAttributes(attributes.tablet);
 	}
 
 	return styles;

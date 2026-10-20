@@ -15,10 +15,14 @@ import {
 	Button,
 	RangeControl,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
 
 import { useSegmentCustomizations } from '../hooks';
-import { generateSegmentKey, formatDisplayValue, STROKE_DASHARRAY_OPTIONS } from '../utils';
+import {
+	generateSegmentKey,
+	formatDisplayValue,
+	STROKE_DASHARRAY_OPTIONS,
+} from '../utils';
+import ChartPanelColorSettings from '../../chart-panel-color-settings';
 
 /**
  * LineSegmentPanel Component
@@ -61,14 +65,15 @@ export function LineSegmentPanel({
 				{category}: {startDisplay} → {endDisplay}
 			</Text>
 
-			<PanelColorSettings
+			<ChartPanelColorSettings
 				__experimentalHasMultipleOrigins
 				__experimentalIsRenderedInSidebar
 				title={__('Stroke Color', 'prc-chart-builder')}
 				colorSettings={[
 					{
 						value: stroke || defaultColor,
-						onChange: (val) => handleStyleChange('stroke', val ?? ''),
+						onChange: (val) =>
+							handleStyleChange('stroke', val ?? ''),
 						label: __('Stroke', 'prc-chart-builder'),
 					},
 				]}
@@ -85,6 +90,7 @@ export function LineSegmentPanel({
 			/>
 
 			<RangeControl
+				__next40pxDefaultSize
 				label={__('Opacity', 'prc-chart-builder')}
 				value={opacity}
 				onChange={(val) => handleStyleChange('opacity', val)}
@@ -94,6 +100,7 @@ export function LineSegmentPanel({
 			/>
 
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Line Style', 'prc-chart-builder')}
 				value={strokeDasharray}
 				options={STROKE_DASHARRAY_OPTIONS}
@@ -106,6 +113,7 @@ export function LineSegmentPanel({
 
 			{hasCustomizations && (
 				<Button
+					__next40pxDefaultSize
 					variant="secondary"
 					isDestructive
 					onClick={handleReset}

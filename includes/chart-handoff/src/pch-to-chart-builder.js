@@ -21,7 +21,7 @@ const SUPPORTED_SCHEMA = 'prc-chart-handoff/v1';
  *
  * @param {string} chartType   - PCH chartType value
  * @param {string} orientation - PCH orientation value ('horizontal'|'vertical')
- * @returns {{ type: string, orientation: string }}
+ * @return {{ type: string, orientation: string }} CB layout type and orientation.
  */
 function resolveLayoutType(chartType, orientation = 'horizontal') {
 	let type = chartType;
@@ -36,8 +36,8 @@ function resolveLayoutType(chartType, orientation = 'horizontal') {
 /**
  * Map PCH data section to CB io + dataRender attributes.
  *
- * @param {object} data - PCH data object
- * @returns {{ io: object, dataRender: object }}
+ * @param {Object} data - PCH data object
+ * @return {{ io: Object, dataRender: Object }} CB io and dataRender attributes.
  */
 function resolveData(data) {
 	const { values, xColumn, yColumn, categoryColumn, xType } = data;
@@ -97,8 +97,8 @@ function resolveData(data) {
 /**
  * Map PCH metadata to CB metadata attributes.
  *
- * @param {object} metadata - PCH metadata object
- * @returns {object} CB metadata partial
+ * @param {Object} metadata - PCH metadata object
+ * @return {Object} CB metadata partial
  */
 function resolveMetadata(metadata) {
 	return {
@@ -114,15 +114,16 @@ function resolveMetadata(metadata) {
  * Map PCH config.independentAxis to CB independentAxis partial.
  * Only sets fields present in PCH; CB defaults fill the rest.
  *
- * @param {object} axisConfig - PCH config.independentAxis (may be undefined)
- * @returns {object} CB independentAxis partial
+ * @param {Object} axisConfig - PCH config.independentAxis (may be undefined)
+ * @return {Object} CB independentAxis partial
  */
 function resolveIndependentAxis(axisConfig = {}) {
 	const result = {};
 	if (axisConfig.label !== undefined) result.label = axisConfig.label;
 	if (axisConfig.scale !== undefined) result.scale = axisConfig.scale;
-	if (axisConfig.domain != null) result.domain = axisConfig.domain;
-	if (axisConfig.tickFormat != null)
+	if (axisConfig.domain !== undefined && axisConfig.domain !== null)
+		result.domain = axisConfig.domain;
+	if (axisConfig.tickFormat !== undefined && axisConfig.tickFormat !== null)
 		result.tickFormat = axisConfig.tickFormat;
 	if (axisConfig.tickUnit !== undefined)
 		result.tickUnit = axisConfig.tickUnit;
@@ -137,16 +138,17 @@ function resolveIndependentAxis(axisConfig = {}) {
  * Map PCH config.dependentAxis to CB dependentAxis partial.
  * Also handles the case where yType='percentage' implies tickUnit='%'.
  *
- * @param {object} axisConfig  - PCH config.dependentAxis (may be undefined)
- * @param {string} yType       - PCH data.yType
- * @returns {object} CB dependentAxis partial
+ * @param {Object} axisConfig - PCH config.dependentAxis (may be undefined)
+ * @param {string} yType      - PCH data.yType
+ * @return {Object} CB dependentAxis partial
  */
 function resolveDependentAxis(axisConfig = {}, yType = 'numeric') {
 	const result = {};
 	if (axisConfig.label !== undefined) result.label = axisConfig.label;
 	if (axisConfig.scale !== undefined) result.scale = axisConfig.scale;
-	if (axisConfig.domain != null) result.domain = axisConfig.domain;
-	if (axisConfig.tickFormat != null)
+	if (axisConfig.domain !== undefined && axisConfig.domain !== null)
+		result.domain = axisConfig.domain;
+	if (axisConfig.tickFormat !== undefined && axisConfig.tickFormat !== null)
 		result.tickFormat = axisConfig.tickFormat;
 	if (axisConfig.showZero !== undefined)
 		result.showZero = axisConfig.showZero;
@@ -168,8 +170,8 @@ function resolveDependentAxis(axisConfig = {}, yType = 'numeric') {
 /**
  * Map PCH config.legend to CB legend partial.
  *
- * @param {object} legendConfig - PCH config.legend (may be undefined)
- * @returns {object} CB legend partial
+ * @param {Object} legendConfig - PCH config.legend (may be undefined)
+ * @return {Object} CB legend partial
  */
 function resolveLegend(legendConfig = {}) {
 	const result = {};
@@ -182,8 +184,8 @@ function resolveLegend(legendConfig = {}) {
 /**
  * Map PCH config.labels to CB labels partial.
  *
- * @param {object} labelsConfig - PCH config.labels (may be undefined)
- * @returns {object} CB labels partial
+ * @param {Object} labelsConfig - PCH config.labels (may be undefined)
+ * @return {Object} CB labels partial
  */
 function resolveLabels(labelsConfig = {}) {
 	const result = {};
@@ -197,8 +199,8 @@ function resolveLabels(labelsConfig = {}) {
  * Map PCH chart-type-specific config sections to CB type-specific attributes.
  *
  * @param {string} chartType - PCH chartType
- * @param {object} config    - PCH config object (may be undefined)
- * @returns {object} Partial CB attributes for the relevant type-specific group
+ * @param {Object} config    - PCH config object (may be undefined)
+ * @return {Object} Partial CB attributes for the relevant type-specific group
  */
 function resolveTypeSpecificOptions(chartType, config = {}) {
 	const result = {};
@@ -278,8 +280,8 @@ function resolveTypeSpecificOptions(chartType, config = {}) {
  * PCH can express. Merge it with the block's default attributes to get a
  * complete, renderable attribute set.
  *
- * @param {object} pch - A parsed, validated PCH JSON object
- * @returns {object} Partial CB v2 block attributes
+ * @param {Object} pch - A parsed, validated PCH JSON object
+ * @return {Object} Partial CB v2 block attributes
  * @throws {Error} If the schema version is not supported
  */
 export function pchToChartBuilder(pch) {
@@ -315,9 +317,10 @@ export function pchToChartBuilder(pch) {
 
 		metadata: resolveMetadata(metadata),
 
-		...(config.colors?.length && { colors: config.colors }),
-
-		io,
+		io: {
+			...io,
+			...(config.colors?.length && { customColors: config.colors }),
+		},
 		dataRender,
 
 		...(Object.keys(resolveIndependentAxis(config.independentAxis))

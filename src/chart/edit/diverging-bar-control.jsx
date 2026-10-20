@@ -3,7 +3,6 @@
 /**
  * WordPress dependencies
  */
-import { PanelColorSettings } from '@wordpress/block-editor';
 import {
 	Button,
 	__experimentalNumberControl as NumberControl,
@@ -19,6 +18,7 @@ import { __ } from '@wordpress/i18n';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 function DivergingBarControls({ attributes, setAttributes, clientId }) {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
@@ -168,6 +168,7 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 							panelId={clientId}
 						>
 							<RangeControl
+								__next40pxDefaultSize
 								label={__('Percent of Inner Width')}
 								help={__(
 									'This calculates the percentage of the total chart area that the main bars (positive and negative) will occupy. This is useful for adjusting the width of the bars to ensure they fit within the chart area without overlapping.'
@@ -258,7 +259,7 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 					isShownByDefault
 					panelId={`${clientId}-secondary`}
 				>
-					<PanelColorSettings
+					<ChartPanelColorSettings
 						__experimentalHasMultipleOrigins
 						__experimentalIsRenderedInSidebar
 						title={__('Secondary Colors')}
@@ -310,6 +311,7 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 					panelId={`${clientId}-secondary`}
 				>
 					<RangeControl
+						__next40pxDefaultSize
 						label={__('Opacity')}
 						value={secondary.opacity ?? 0.4}
 						disabled={!secondaryActive}
@@ -360,7 +362,7 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 								title={cat}
 								initialOpen={false}
 							>
-								<PanelColorSettings
+								<ChartPanelColorSettings
 									__experimentalHasMultipleOrigins
 									__experimentalIsRenderedInSidebar
 									title={__('Colors')}
@@ -406,6 +408,7 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 									}
 								/>
 								<RangeControl
+									__next40pxDefaultSize
 									label={__('Opacity')}
 									value={
 										catStyle.opacity ??
@@ -424,6 +427,7 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 								/>
 								{hasOverride && (
 									<Button
+										__next40pxDefaultSize
 										variant="secondary"
 										isDestructive
 										onClick={() => resetCategoryStyle(cat)}

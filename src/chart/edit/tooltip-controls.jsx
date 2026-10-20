@@ -20,7 +20,6 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	ExternalLink,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
 /**
  * Internal dependencies
  */
@@ -34,6 +33,7 @@ import {
 	Help,
 } from './control-ui';
 import TooltipTemplateControl from './tooltip-template-control';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 function TooltipControls({ attributes, setAttributes, clientId }) {
 	// Viewport-aware attribute management
@@ -86,6 +86,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Tooltip Mode')}
 							value={
 								getCurrentValue('tooltip', 'mode') || 'point'
@@ -135,6 +136,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					panelId={clientId}
 				>
 					<SelectControl
+						__next40pxDefaultSize
 						label={__('Header Value')}
 						value={getCurrentValue('tooltip', 'headerValue')}
 						disabled={!getCurrentValue('tooltip', 'headerActive')}
@@ -301,6 +303,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 					panelId={clientId}
 				>
 					<TextControl
+						__next40pxDefaultSize
 						label={__('Tooltip Format')}
 						help={__(
 							"Tooltip formatter is a string that takes up to three variables. The first variable {{column}} corresponds with the category/column header of a data point, the second {{value}}, the numerical value, and the third {{row}} is the row of the value. (eg. '{{column}}: {{value}} people in {{row}}' would return something like '2010: 500 people in France'). Adding `.toLowerCase()` to the end of any of these variables will lowercase the entire string. The Tooltip Template above takes precedence when it is not empty."
@@ -324,6 +327,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Time scale format')}
 							value={getCurrentValue('tooltip', 'dateFormat')}
 							options={[
@@ -600,7 +604,7 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 								'If selected, the stroke(outline) of the data point will be emphasized when hovering over it.'
 							)}
 						/>
-						<PanelColorSettings
+						<ChartPanelColorSettings
 							__experimentalHasMultipleOrigins
 							__experimentalIsRenderedInSidebar
 							title={__('Emphasize Stroke Color')}

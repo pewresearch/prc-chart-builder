@@ -154,6 +154,7 @@ class Plugin_Bootstrap {
 		$this->include( 'class-email-newsletter-integration.php' );
 		$this->include( 'class-attachments-report-integration.php' );
 		$this->include( 'class-chart-static-images.php' );
+		$this->include( 'class-charts-rest-field.php' );
 		$this->include( 'class-apple-news-integration.php' );
 		$this->include( 'class-json-ld.php' );
 		$this->include( 'class-print-engine-integration.php' );
@@ -200,6 +201,7 @@ class Plugin_Bootstrap {
 		new Screenshot_Settings( $this->get_loader() );
 		new Theme_Admin( $this->get_loader() );
 		new Content_Type( $this->get_loader() );
+		new Charts_Rest_Field( $this->get_loader() );
 		new Synced_Chart_Auto_Publish( $this->get_loader() );
 		new SEO( $this->get_loader() );
 		new Block_Migration( $this->get_loader() );

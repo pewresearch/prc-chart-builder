@@ -135,8 +135,8 @@ const heatMapTableTemplate = [
 				width: 720,
 				height: 560,
 				padding: {
-					top: 20,
-					left: 20,
+					top: 70,
+					left: 70,
 					bottom: 20,
 					right: 20,
 				},
@@ -152,14 +152,26 @@ const heatMapTableTemplate = [
 			},
 			independentAxis: {
 				active: true,
+				ticks: { size: 0 },
+				tickLabels: {
+					verticalAnchor: 'middle',
+					textAnchor: 'end',
+					dx: -5,
+				},
 			},
 			dependentAxis: {
 				active: true,
+				tickMarksActive: false,
+				tickLabels: {
+					verticalAnchor: 'end',
+					textAnchor: 'middle',
+					dy: -5,
+				},
 			},
 			tooltip: {
 				active: true,
 				headerValue: 'independentValue',
-				format: '{{row}} · {{column}}: {{value}}%',
+				format: '{{column}}: {{value}}%',
 			},
 			legend: {
 				active: true,
@@ -199,10 +211,7 @@ const heatMapTableTemplate = [
 			heatMapTable: {
 				cellGap: 0,
 				cellRadius: 0,
-				showValues: true,
 				emptyFill: '#F5F5F5',
-				rowLabelWidth: 0,
-				columnHeaderHeight: 48,
 				minCellWidth: 40,
 				minCellHeight: 28,
 			},

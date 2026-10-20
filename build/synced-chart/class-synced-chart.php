@@ -50,6 +50,8 @@ class Synced_Chart {
 		$loader->add_action( 'prc_platform_on_publish', $this, 'sync_usage_from_pipeline', 10, 2 );
 		$loader->add_action( 'prc_platform_on_update', $this, 'sync_usage_from_pipeline', 10, 2 );
 		$loader->add_action( 'prc_platform_on_untrash', $this, 'sync_usage_from_pipeline', 10, 2 );
+		// Report-package chapters published from their parent skip the sync tier and only get this async event.
+		$loader->add_action( 'prc_platform_async_on_publish', $this, 'sync_usage_from_pipeline', 10, 2 );
 		$loader->add_action( 'prc_platform_on_unpublish', $this, 'clear_usage_from_pipeline', 10, 2 );
 		$loader->add_action( 'prc_platform_on_trash', $this, 'clear_usage_from_pipeline', 10, 2 );
 	}
@@ -126,6 +128,7 @@ class Synced_Chart {
 	 * @hook prc_platform_on_publish 10
 	 * @hook prc_platform_on_update  10
 	 * @hook prc_platform_on_untrash 10
+	 * @hook prc_platform_async_on_publish 10
 	 *
 	 * @param object $post       Extended WP_Post-like object from the pipeline.
 	 * @param bool   $has_blocks Whether the post contains block markup.

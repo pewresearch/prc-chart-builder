@@ -36,6 +36,8 @@ export function InspectorFocusProvider({
 	defaultPanelsOpen = false,
 }) {
 	const [focusedPanels, setFocusedPanels] = useState([]);
+	const [selectedAnnotationIndex, setSelectedAnnotationIndex] =
+		useState(null);
 
 	const focusPanels = useCallback((panelIds) => {
 		setFocusedPanels(Array.isArray(panelIds) ? panelIds : [panelIds]);
@@ -50,6 +52,8 @@ export function InspectorFocusProvider({
 				focusPanels,
 				clearFocus,
 				defaultPanelsOpen,
+				selectedAnnotationIndex,
+				setSelectedAnnotationIndex,
 			}}
 		>
 			{children}
@@ -60,7 +64,7 @@ export function InspectorFocusProvider({
 /**
  * Returns the raw focus context value.
  *
- * @return {{ focusedPanels: string[], focusPanels: Function, clearFocus: Function, defaultPanelsOpen?: boolean }|null} Focus context, or null outside the provider.
+ * @return {{ focusedPanels: string[], focusPanels: Function, clearFocus: Function, defaultPanelsOpen?: boolean, selectedAnnotationIndex: number|null, setSelectedAnnotationIndex: Function }|null} Focus context, or null outside the provider.
  */
 export function useInspectorFocus() {
 	return useContext(InspectorFocusContext);

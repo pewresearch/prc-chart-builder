@@ -24,12 +24,7 @@
 						},
 						"items": {
 							"description": "Array of annotation objects.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						}
 					}
 				},
@@ -51,12 +46,7 @@
 						},
 						"stackOffset": {
 							"type": "string",
-							"enum": [
-								"none",
-								"expand",
-								"wiggle",
-								"silhouette"
-							],
+							"enum": ["none", "expand", "wiggle", "silhouette"],
 							"description": "`'wiggle'`."
 						}
 					}
@@ -75,10 +65,7 @@
 						},
 						"layoutMode": {
 							"type": "string",
-							"enum": [
-								"dodge",
-								"force"
-							],
+							"enum": ["dodge", "force"],
 							"description": "Beeswarm layout algorithm (dodge = precise x, force = clustered)."
 						},
 						"swarmSpread": {
@@ -155,20 +142,12 @@
 								},
 								"textAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "'end'`."
 								},
 								"verticalAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "'end'`."
 								}
 							}
@@ -221,12 +200,7 @@
 						},
 						"scale": {
 							"type": "string",
-							"enum": [
-								"linear",
-								"time",
-								"log",
-								"sqrt"
-							],
+							"enum": ["linear", "time", "log", "sqrt"],
 							"description": "'log' \\."
 						},
 						"showZero": {
@@ -243,12 +217,7 @@
 						},
 						"tickFormat": {
 							"description": "Reserved for runtime format function.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"tickLabels": {
 							"type": "object",
@@ -288,20 +257,12 @@
 								},
 								"textAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "'end'`."
 								},
 								"verticalAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "'end'`."
 								}
 							}
@@ -338,20 +299,12 @@
 						},
 						"tickUnitPosition": {
 							"type": "string",
-							"enum": [
-								"start",
-								"end"
-							],
+							"enum": ["start", "end"],
 							"description": "`\"end\"`."
 						},
 						"tickValues": {
 							"description": "Explicit tick values array; managed per-chart, not a theme default.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						}
 					}
 				},
@@ -373,12 +326,7 @@
 						},
 						"customLabels": {
 							"description": "Per-cell overrides keyed by `x::category` or `x::category::group`.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"dx": {
 							"type": "number",
@@ -412,18 +360,12 @@
 								},
 								"fontStyle": {
 									"type": "string",
-									"enum": [
-										"normal",
-										"italic"
-									],
+									"enum": ["normal", "italic"],
 									"description": "Font style of cell text."
 								},
 								"fontWeight": {
 									"type": "string",
-									"enum": [
-										"normal",
-										"bold"
-									],
+									"enum": ["normal", "bold"],
 									"description": "Font weight of cell text."
 								},
 								"headerFill": {
@@ -440,18 +382,12 @@
 								},
 								"headerFontStyle": {
 									"type": "string",
-									"enum": [
-										"normal",
-										"italic"
-									],
+									"enum": ["normal", "italic"],
 									"description": "Header font style (separate from cell text)."
 								},
 								"headerFontWeight": {
 									"type": "string",
-									"enum": [
-										"normal",
-										"bold"
-									],
+									"enum": ["normal", "bold"],
 									"description": "Header font weight (separate from cell text)."
 								},
 								"headerTextOutline": {
@@ -496,12 +432,7 @@
 					"properties": {
 						"negativeCategories": {
 							"description": "Column keys plotted on the negative side.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"netNegativeCategory": {
 							"type": "string",
@@ -543,12 +474,7 @@
 						},
 						"positiveCategories": {
 							"description": "Column keys plotted on the positive side.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"secondary": {
 							"type": "object",
@@ -647,21 +573,11 @@
 					"properties": {
 						"categories": {
 							"description": "Per-category error bar style overrides (managed per-chart, not a theme default).",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"customStyles": {
 							"description": "Per-datum error bar style overrides (managed per-chart, not a theme default).",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"defaultStyles": {
 							"type": "object",
@@ -713,10 +629,6 @@
 							"type": "number",
 							"description": "Corner radius for each cell (px)."
 						},
-						"columnHeaderHeight": {
-							"type": "number",
-							"description": "Height reserved for the dependent axis band when it is active (px)."
-						},
 						"emptyFill": {
 							"type": "string",
 							"description": "Fill color for empty or missing cells."
@@ -728,14 +640,6 @@
 						"minCellWidth": {
 							"type": "number",
 							"description": "Minimum width for each data cell (px)."
-						},
-						"rowLabelWidth": {
-							"type": "number",
-							"description": "Optional gap between the independent axis line and the heat grid (px). Labels use chart left padding."
-						},
-						"showValues": {
-							"type": "boolean",
-							"description": "Show numeric values inside each cell."
 						}
 					}
 				},
@@ -807,20 +711,12 @@
 								},
 								"textAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "Axis label text alignment."
 								},
 								"verticalAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "Axis label vertical alignment."
 								}
 							}
@@ -923,12 +819,7 @@
 						},
 						"scale": {
 							"type": "string",
-							"enum": [
-								"linear",
-								"time",
-								"log",
-								"sqrt"
-							],
+							"enum": ["linear", "time", "log", "sqrt"],
 							"description": "The axis's scale type."
 						},
 						"showZero": {
@@ -941,12 +832,7 @@
 						},
 						"tickFormat": {
 							"description": "Reserved for runtime format function.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"tickLabels": {
 							"type": "object",
@@ -986,20 +872,12 @@
 								},
 								"textAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "'end'`."
 								},
 								"verticalAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "'end'`."
 								}
 							}
@@ -1036,20 +914,12 @@
 						},
 						"tickUnitPosition": {
 							"type": "string",
-							"enum": [
-								"start",
-								"end"
-							],
+							"enum": ["start", "end"],
 							"description": "`\"end\"`."
 						},
 						"tickValues": {
 							"description": "Explicit tick values array; managed per-chart, not a theme default.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						}
 					}
 				},
@@ -1075,58 +945,28 @@
 						},
 						"color": {
 							"type": "string",
-							"enum": [
-								"contrast",
-								"inherit",
-								"black",
-								"white"
-							],
+							"enum": ["contrast", "inherit", "black", "white"],
 							"description": "Label color token (`contrast` picks bar-aware fill; `inherit` uses series color)."
 						},
 						"customLabelFormat": {
 							"description": "Reserved for runtime custom format function.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"customLabels": {
 							"description": "Per-datum label text overrides keyed by data row index.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"customPositions": {
 							"description": "Per-datum position overrides keyed by data row index.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"customStyles": {
 							"description": "Per-datum inline style overrides keyed by data row index.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"customVisibility": {
 							"description": "Per-datum visibility overrides keyed by data row index.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"declutterLeaderLines": {
 							"type": "boolean",
@@ -1146,10 +986,7 @@
 						},
 						"firstLastLabelLayout": {
 							"type": "string",
-							"enum": [
-								"default",
-								"outside"
-							],
+							"enum": ["default", "outside"],
 							"description": "Placement for first/last labels on line-family charts. `outside` puts the first label left of its point and the last label right; labelPositionDX/DY still apply on top."
 						},
 						"fontFamily": {
@@ -1170,11 +1007,7 @@
 						},
 						"labelPositionBar": {
 							"type": "string",
-							"enum": [
-								"inside",
-								"center",
-								"outside"
-							],
+							"enum": ["inside", "center", "outside"],
 							"description": "`'center'`."
 						},
 						"labelPositionDX": {
@@ -1191,10 +1024,7 @@
 						},
 						"labelUnitPosition": {
 							"type": "string",
-							"enum": [
-								"start",
-								"end"
-							],
+							"enum": ["start", "end"],
 							"description": "`\"end\"`."
 						},
 						"minDisplayValue": {
@@ -1211,11 +1041,7 @@
 						},
 						"textAnchor": {
 							"type": "string",
-							"enum": [
-								"start",
-								"middle",
-								"end"
-							],
+							"enum": ["start", "middle", "end"],
 							"description": "`'end'`."
 						},
 						"textOutline": {
@@ -1224,10 +1050,7 @@
 						},
 						"textOutlineMode": {
 							"type": "string",
-							"enum": [
-								"background",
-								"contrast"
-							],
+							"enum": ["background", "contrast"],
 							"description": "Outline halo color strategy when textOutline is enabled (`background` = chart moat; `contrast` = opposite of label fill)."
 						},
 						"toFixedDecimal": {
@@ -1262,19 +1085,11 @@
 						},
 						"name": {
 							"description": "Internal block name identifier; not user-editable.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"orientation": {
 							"type": "string",
-							"enum": [
-								"vertical",
-								"horizontal"
-							],
+							"enum": ["vertical", "horizontal"],
 							"description": "Rarely used. Controls the orientation of the chart. 'vertical' will display the chart vertically, and 'horizontal' will display the chart horizontally."
 						},
 						"overflowX": {
@@ -1374,12 +1189,7 @@
 						},
 						"categories": {
 							"description": "Override legend item order; uses `dataRender.categories` by default.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"clickToHide": {
 							"type": "boolean",
@@ -1387,12 +1197,7 @@
 						},
 						"clickToHideGroups": {
 							"description": "Legend click expands to hide every key in the same group (array of string arrays). Empty means one legend item toggles one hide key.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"fill": {
 							"type": "string",
@@ -1408,12 +1213,7 @@
 						},
 						"fontWeight": {
 							"type": "string",
-							"enum": [
-								"normal",
-								"bold",
-								"600",
-								"700"
-							],
+							"enum": ["normal", "bold", "600", "700"],
 							"description": "`\"normal\"`."
 						},
 						"labelDelimiter": {
@@ -1452,21 +1252,12 @@
 						},
 						"markerFill": {
 							"type": "string",
-							"enum": [
-								"solid",
-								"outline"
-							],
+							"enum": ["solid", "outline"],
 							"description": "`\"solid\"`."
 						},
 						"markerStyle": {
 							"type": "string",
-							"enum": [
-								"rect",
-								"circle",
-								"line",
-								"none",
-								"label"
-							],
+							"enum": ["rect", "circle", "line", "none", "label"],
 							"description": "'line' \\."
 						},
 						"offsetX": {
@@ -1493,11 +1284,7 @@
 						},
 						"variation": {
 							"type": "string",
-							"enum": [
-								"grouped",
-								"detached",
-								"direct"
-							],
+							"enum": ["grouped", "detached", "direct"],
 							"description": "'direct'`."
 						}
 					}
@@ -1585,12 +1372,7 @@
 						},
 						"ignoredLabels": {
 							"description": "Additional state/country codes whose labels are suppressed.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"ignoreSmallStateLabels": {
 							"type": "boolean",
@@ -1712,12 +1494,7 @@
 						},
 						"alt": {
 							"description": "Accessible alt-text for static image exports.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"note": {
 							"type": "string",
@@ -1771,10 +1548,7 @@
 								},
 								"color": {
 									"type": "string",
-									"enum": [
-										"black",
-										"white"
-									],
+									"enum": ["black", "white"],
 									"description": "Color of the negative net value label."
 								},
 								"fontFamily": {
@@ -1803,10 +1577,7 @@
 								},
 								"labelUnitPosition": {
 									"type": "string",
-									"enum": [
-										"start",
-										"end"
-									],
+									"enum": ["start", "end"],
 									"description": "Whether labelUnit appears before or after negative net values."
 								},
 								"margin": {
@@ -1815,11 +1586,7 @@
 								},
 								"textAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "SVG text-anchor for the negative net value label."
 								},
 								"toFixedDecimal": {
@@ -1858,10 +1625,7 @@
 								},
 								"color": {
 									"type": "string",
-									"enum": [
-										"black",
-										"white"
-									],
+									"enum": ["black", "white"],
 									"description": "Color of the positive net value label."
 								},
 								"fontFamily": {
@@ -1890,10 +1654,7 @@
 								},
 								"labelUnitPosition": {
 									"type": "string",
-									"enum": [
-										"start",
-										"end"
-									],
+									"enum": ["start", "end"],
 									"description": "Whether labelUnit appears before or after positive net values."
 								},
 								"margin": {
@@ -1902,11 +1663,7 @@
 								},
 								"textAnchor": {
 									"type": "string",
-									"enum": [
-										"start",
-										"middle",
-										"end"
-									],
+									"enum": ["start", "middle", "end"],
 									"description": "SVG text-anchor for the positive net value label."
 								},
 								"toFixedDecimal": {
@@ -1939,10 +1696,7 @@
 						},
 						"pointFill": {
 							"type": "string",
-							"enum": [
-								"inherit",
-								"white"
-							],
+							"enum": ["inherit", "white"],
 							"description": "Fill color of markers (`\"inherit\"` uses series color)."
 						},
 						"pointFillOpacity": {
@@ -1967,11 +1721,7 @@
 						},
 						"sizeScale": {
 							"type": "string",
-							"enum": [
-								"sqrt",
-								"linear",
-								"log"
-							],
+							"enum": ["sqrt", "linear", "log"],
 							"description": "Scale type mapping sizeCategory values to radius."
 						}
 					}
@@ -1994,12 +1744,7 @@
 								},
 								"strokeDasharray": {
 									"type": "string",
-									"enum": [
-										"none",
-										"4,4",
-										"2,2",
-										"8,4"
-									],
+									"enum": ["none", "4,4", "2,2", "8,4"],
 									"description": "Dash pattern for group arc lines."
 								},
 								"strokeWidth": {
@@ -2064,19 +1809,11 @@
 						},
 						"bands": {
 							"description": "Array of band objects ({ from, to, color, … }); managed per-chart, not a theme default.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"dimension": {
 							"type": "string",
-							"enum": [
-								"x",
-								"y"
-							],
+							"enum": ["x", "y"],
 							"description": "`\"x\"`."
 						}
 					}
@@ -2091,12 +1828,7 @@
 						},
 						"groupBreakStyles": {
 							"description": "Per-group style overrides for regression lines.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"perGroupBreak": {
 							"type": "boolean",
@@ -2139,12 +1871,7 @@
 						},
 						"nodeAlign": {
 							"type": "string",
-							"enum": [
-								"justify",
-								"left",
-								"right",
-								"center"
-							],
+							"enum": ["justify", "left", "right", "center"],
 							"description": "`'right'`."
 						},
 						"nodePadding": {
@@ -2179,12 +1906,7 @@
 					"properties": {
 						"customStyles": {
 							"description": "Per-series/category style overrides (keyed object; managed per-chart, not a theme default).",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"segmentsActive": {
 							"type": "boolean",
@@ -2192,12 +1914,7 @@
 						},
 						"segmentStyles": {
 							"description": "Per-segment style overrides for stacked charts (keyed object; managed per-chart, not a theme default).",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						}
 					}
 				},
@@ -2207,11 +1924,13 @@
 					"properties": {
 						"axisTreatment": {
 							"type": "string",
-							"enum": [
-								"minimal",
-								"full"
-							],
+							"enum": ["minimal", "full"],
 							"description": "`\"minimal\"` shows y-axis on the first column and x labels on every panel; `\"full\"` draws complete axes (incl. independent grid) on every panel."
+						},
+						"colorMode": {
+							"type": "string",
+							"enum": ["shared", "panel"],
+							"description": "`\"shared\"` paints every panel from the series rows; `\"panel\"` lets each panel override them through `panelStyles`."
 						},
 						"columns": {
 							"type": "number",
@@ -2219,10 +1938,7 @@
 						},
 						"emphasisMode": {
 							"type": "string",
-							"enum": [
-								"own-series",
-								"highlight"
-							],
+							"enum": ["own-series", "highlight"],
 							"description": "`\"own-series\"` draws only the panel column; `\"highlight\"` ghosts sibling series (line panels only in MVP)."
 						},
 						"ghost": {
@@ -2265,6 +1981,10 @@
 							"type": "number",
 							"description": "Locked cell height in px (title + plot). Total SVG height is derived from panelHeight × rowCount."
 						},
+						"panelStyles": {
+							"description": "Panel rows keyed by panel key, then series key. Each row is a series style. Read only in `\"panel\"` mode.",
+							"type": ["string", "null", "array", "object"]
+						},
 						"panelTitle": {
 							"type": "object",
 							"additionalProperties": false,
@@ -2301,13 +2021,7 @@
 						},
 						"panelType": {
 							"type": "string",
-							"enum": [
-								"line",
-								"column",
-								"bar",
-								"pie",
-								"waffle"
-							],
+							"enum": ["line", "column", "bar", "pie", "waffle"],
 							"description": "Chart mark drawn in each panel."
 						},
 						"sharedScale": {
@@ -2334,22 +2048,12 @@
 						},
 						"caretPosition": {
 							"type": "string",
-							"enum": [
-								"top",
-								"bottom",
-								"left",
-								"right"
-							],
+							"enum": ["top", "bottom", "left", "right"],
 							"description": "`'left'`."
 						},
 						"customFormat": {
 							"description": "Reserved for runtime custom format function.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"dateFormat": {
 							"type": "string",
@@ -2427,10 +2131,7 @@
 						},
 						"headerValue": {
 							"type": "string",
-							"enum": [
-								"categoryValue",
-								"independentValue"
-							],
+							"enum": ["categoryValue", "independentValue"],
 							"description": "`\"categoryValue\"`."
 						},
 						"minDisplayValue": {
@@ -2439,10 +2140,7 @@
 						},
 						"mode": {
 							"type": "string",
-							"enum": [
-								"point",
-								"unified"
-							],
+							"enum": ["point", "unified"],
 							"description": "`point` resolves one data point per hover. `unified` reports every series plotted at the hovered x."
 						},
 						"offsetX": {
@@ -2517,12 +2215,7 @@
 						},
 						"template": {
 							"description": "Rich HTML tooltip body. When non-null, takes precedence over format. Null keeps the legacy mustache format path.",
-							"type": [
-								"string",
-								"null",
-								"array",
-								"object"
-							]
+							"type": ["string", "null", "array", "object"]
 						},
 						"toFixedDecimal": {
 							"type": "number",
@@ -2618,10 +2311,7 @@
 						},
 						"cellShape": {
 							"type": "string",
-							"enum": [
-								"square",
-								"circle"
-							],
+							"enum": ["square", "circle"],
 							"description": "Shape used for each waffle cell."
 						},
 						"cellSize": {
@@ -2630,11 +2320,7 @@
 						},
 						"cellSizeMode": {
 							"type": "string",
-							"enum": [
-								"fixed",
-								"auto",
-								"clamp"
-							],
+							"enum": ["fixed", "auto", "clamp"],
 							"description": "fixed = exact size; auto = always fit; clamp = preferred size until overflow then scale down."
 						},
 						"columns": {
@@ -2643,10 +2329,7 @@
 						},
 						"displayMode": {
 							"type": "string",
-							"enum": [
-								"whole",
-								"portion"
-							],
+							"enum": ["whole", "portion"],
 							"description": "Whole uses one grid; portion uses one mini grid per category."
 						},
 						"emptyFill": {
@@ -2686,10 +2369,7 @@
 					"items": {
 						"type": "object",
 						"additionalProperties": false,
-						"required": [
-							"label",
-							"value"
-						],
+						"required": ["label", "value"],
 						"properties": {
 							"label": {
 								"type": "string"

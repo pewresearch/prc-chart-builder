@@ -2387,12 +2387,6 @@ export const EDITOR_SCHEMA = {
 			themeable: true,
 			description: 'Corner radius for each cell (px).',
 		},
-		columnHeaderHeight: {
-			type: 'number',
-			themeable: true,
-			description:
-				'Height reserved for the dependent axis band when it is active (px).',
-		},
 		emptyFill: {
 			type: 'string',
 			themeable: true,
@@ -2407,17 +2401,6 @@ export const EDITOR_SCHEMA = {
 			type: 'number',
 			themeable: true,
 			description: 'Minimum width for each data cell (px).',
-		},
-		rowLabelWidth: {
-			type: 'number',
-			themeable: true,
-			description:
-				'Optional gap between the independent axis line and the heat grid (px). Labels use chart left padding.',
-		},
-		showValues: {
-			type: 'boolean',
-			themeable: true,
-			description: 'Show numeric values inside each cell.',
 		},
 	},
 	sankey: {
@@ -2505,6 +2488,19 @@ export const EDITOR_SCHEMA = {
 			themeable: false,
 			description:
 				'`"own-series"` draws only the panel column; `"highlight"` ghosts sibling series (line panels only in MVP).',
+		},
+		colorMode: {
+			type: 'enum',
+			enum: ['shared', 'panel'],
+			themeable: false,
+			description:
+				'`"shared"` paints every panel from the series rows; `"panel"` lets each panel override them through `panelStyles`.',
+		},
+		panelStyles: {
+			type: 'string',
+			themeable: false,
+			description:
+				'Panel rows keyed by panel key, then series key. Each row is a series style. Read only in `"panel"` mode.',
 		},
 		'ghost.stroke': {
 			type: 'color',

@@ -170,9 +170,13 @@ export const FONT_STYLE_OPTIONS = [
  */
 export const PATTERN_OPTIONS = [
 	{ label: 'Solid', value: 'solid' },
+	{ label: 'Vertical lines', value: 'lines' },
+	{ label: 'Horizontal lines', value: 'lines-horizontal' },
 	{ label: 'Striped', value: 'striped' },
-	{ label: 'Dotted', value: 'dotted' },
 	{ label: 'Crosshatch', value: 'crosshatch' },
+	{ label: 'Dotted', value: 'dotted' },
+	{ label: 'Circles', value: 'circles' },
+	{ label: 'Waves', value: 'waves' },
 ];
 
 /**

@@ -6,13 +6,13 @@ import {
 	Button,
 	Flex,
 	FlexItem,
+	__experimentalNumberControl as NumberControl,
 	PanelBody,
 	RangeControl,
 	SelectControl,
 	TextControl,
 	ToggleControl,
 	Tooltip,
-	__experimentalNumberControl as NumberControl,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { useState } from '@wordpress/element';
@@ -206,7 +206,7 @@ export default function AppearanceTab({
 					<VStack spacing={1}>
 						<div className="prc-chart-modal__control-label-with-tip">
 							<span className="components-base-control__label">
-								{__('Chart width', 'prc-chart-builder')}
+								{__('Chart Width', 'prc-chart-builder')}
 							</span>
 							<Tooltip
 								delay={300}
@@ -233,8 +233,9 @@ export default function AppearanceTab({
 							</Tooltip>
 						</div>
 						<SelectControl
+							__next40pxDefaultSize
 							hideLabelFromVision
-							label={__('Chart width', 'prc-chart-builder')}
+							label={__('Chart Width', 'prc-chart-builder')}
 							value={widthPreset}
 							options={WIDTH_PRESETS}
 							onChange={(value) => {
@@ -250,6 +251,7 @@ export default function AppearanceTab({
 					</VStack>
 					{isCustomWidth && (
 						<RangeControl
+							__next40pxDefaultSize
 							label={__('Width', 'prc-chart-builder')}
 							withInputField
 							min={0}
@@ -262,6 +264,7 @@ export default function AppearanceTab({
 						/>
 					)}
 					<RangeControl
+						__next40pxDefaultSize
 						label={__('Height', 'prc-chart-builder')}
 						withInputField
 						min={0}
@@ -270,9 +273,19 @@ export default function AppearanceTab({
 						onChange={(value) =>
 							setPath('layout.height', toInt(value))
 						}
+						disabled={chartType === 'small-multiples'}
+						help={
+							chartType === 'small-multiples'
+								? __(
+										'Small multiples set height per panel. Use Panel Height in Small Multiples settings.',
+										'prc-chart-builder'
+									)
+								: undefined
+						}
 						__nextHasNoMarginBottom
 					/>
 					<BoxControl
+						__next40pxDefaultSize
 						label={__('Padding', 'prc-chart-builder')}
 						values={{
 							top: `${toInt(padding.top)}px`,
@@ -457,6 +470,7 @@ export default function AppearanceTab({
 									'prc-chart-builder'
 								)}
 								__nextHasNoMarginBottom
+								__next40pxDefaultSize
 							/>
 							<ToggleControl
 								label={__(
@@ -623,6 +637,7 @@ export default function AppearanceTab({
 									'prc-chart-builder'
 								)}
 								__nextHasNoMarginBottom
+								__next40pxDefaultSize
 							/>
 							<ToggleControl
 								label={__(

@@ -97,6 +97,7 @@ class Content_Type {
 		'map-usa'                => 'USA Map',
 		'map-usa-block'          => 'USA Block Map',
 		'map-usa-county'         => 'USA County Map',
+		'map-usa-cbsa'           => 'USA CBSA Map',
 		'map-usa-hex'            => 'USA Hex Map',
 		'map-world'              => 'World Map',
 		'map-world-orthographic' => 'World Globe Map',
@@ -652,7 +653,10 @@ class Content_Type {
 		}
 
 		// Add meta query to search design_slug field.
-		$meta_query = $query->get( 'meta_query' ) ?: array();
+		$meta_query = $query->get( 'meta_query' );
+		if ( empty( $meta_query ) ) {
+			$meta_query = array();
+		}
 
 		// Add design slug to the search.
 		$meta_query[] = array(

@@ -23,7 +23,6 @@ import {
 /**
  * Internal dependencies
  */
-import { PanelColorSettings } from '@wordpress/block-editor';
 import {
 	buildEditedAxisDomain,
 	formatNum,
@@ -32,6 +31,8 @@ import {
 } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
+import ChartPanelColorSettings from './chart-panel-color-settings';
+import { RichTextField } from './popover/panels/RichTextField';
 
 function DependentAxisControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
@@ -99,7 +100,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 						})
 					}
 				/>
-				<TextControl
+				<RichTextField
 					label={__('Label')}
 					value={getCurrentValue('dependentAxis', 'label')}
 					onChange={(val) =>
@@ -235,6 +236,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 					}
 				/>
 				<TextControl
+					__next40pxDefaultSize
 					label={__('Specific Ticks')}
 					value={getCurrentValue('dependentAxis', 'tickValues')}
 					onChange={(val) =>
@@ -309,6 +311,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 					}
 				/>
 				<TextControl
+					__next40pxDefaultSize
 					label={__('Tick Units')}
 					value={getCurrentValue('dependentAxis', 'tickUnit')}
 					onChange={(val) =>
@@ -318,6 +321,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 					}
 				/>
 				<SelectControl
+					__next40pxDefaultSize
 					label={__('Tick Unit Position')}
 					value={getCurrentValue('dependentAxis', 'tickUnitPosition')}
 					options={[
@@ -498,7 +502,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 					<ToggleGroupControlOption label="Middle" value="middle" />
 					<ToggleGroupControlOption label="End" value="end" />
 				</ToggleGroupControl>
-				<PanelColorSettings
+				<ChartPanelColorSettings
 					__experimentalHasMultipleOrigins
 					__experimentalIsRenderedInSidebar
 					title={__('Axis Styles')}
@@ -580,6 +584,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 					}}
 				/>
 				<TextControl
+					__next40pxDefaultSize
 					label={__('Grid Stroke Dasharray')}
 					value={
 						getCurrentValue('dependentAxis', 'grid')

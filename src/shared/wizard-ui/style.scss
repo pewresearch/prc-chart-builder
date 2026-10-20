@@ -456,7 +456,9 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 		grid-area: preview;
 		display: flex;
 		align-items: flex-start;
-		justify-content: center;
+		// `safe` falls back to start when the chart is wider than the pane;
+		// plain `center` pushes its left edge out of scroll reach.
+		justify-content: safe center;
 		min-width: 0;
 		min-height: 400px;
 		position: relative;

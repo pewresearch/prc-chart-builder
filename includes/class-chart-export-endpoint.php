@@ -68,14 +68,15 @@ class Chart_Export_Endpoint {
 	 * Apply requested screenshot dimensions to chart layout attributes.
 	 *
 	 * Both dimensions are required. Invalid or incomplete requests retain the
-	 * saved chart layout.
+	 * saved chart layout. Only the exported post's root chart is resized:
+	 * panels nested in a freeform chart keep their saved layout.
 	 *
 	 * @param array $attributes Chart block attributes.
 	 * @return array
 	 */
 	public static function apply_requested_dimensions( array $attributes ): array {
 		$dimensions = self::get_requested_dimensions();
-		if ( null === $dimensions ) {
+		if ( null === $dimensions || ! self::is_root_chart( $attributes ) ) {
 			return $attributes;
 		}
 
@@ -83,6 +84,27 @@ class Chart_Export_Endpoint {
 		$attributes['layout']['height'] = $dimensions['height'];
 
 		return $attributes;
+	}
+
+	/**
+	 * Whether chart attributes belong to the chart that sizes the export frame.
+	 *
+	 * Requested dimensions describe the whole frame. Freeform charts nest one
+	 * controller + chart per panel, and those panels must keep their own size.
+	 * When the root chart cannot be resolved, every chart is treated as root.
+	 *
+	 * @param array $attributes Chart block attributes.
+	 * @return bool
+	 */
+	private static function is_root_chart( array $attributes ): bool {
+		$post = get_queried_object();
+		if ( ! $post instanceof \WP_Post ) {
+			return true;
+		}
+
+		$root_chart = PNG_Export::get_chart_block( $post->post_content );
+		$root_id    = $root_chart['attrs']['id'] ?? '';
+		return '' === $root_id || ( $attributes['id'] ?? '' ) === $root_id;
 	}
 
 	/**

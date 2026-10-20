@@ -16,10 +16,10 @@ import {
 	RangeControl,
 	TextControl,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
 
 import { useErrorBarCustomizations } from '../hooks/useErrorBarCustomizations';
 import { generateElementKey } from '../utils';
+import ChartPanelColorSettings from '../../chart-panel-color-settings';
 
 /**
  * ErrorBarPanel Component
@@ -63,7 +63,7 @@ export function ErrorBarPanel({
 				{category}: {displayX}
 			</Text>
 
-			<PanelColorSettings
+			<ChartPanelColorSettings
 				__experimentalHasMultipleOrigins
 				__experimentalIsRenderedInSidebar
 				title={__('Stroke Color', 'prc-chart-builder')}
@@ -88,6 +88,7 @@ export function ErrorBarPanel({
 			/>
 
 			<RangeControl
+				__next40pxDefaultSize
 				label={__('Stroke Opacity', 'prc-chart-builder')}
 				value={strokeOpacity}
 				onChange={(val) => handleStyleChange('strokeOpacity', val)}
@@ -97,6 +98,7 @@ export function ErrorBarPanel({
 			/>
 
 			<TextControl
+				__next40pxDefaultSize
 				label={__('Stroke Dash Array', 'prc-chart-builder')}
 				value={strokeDasharray}
 				onChange={(val) => handleStyleChange('strokeDasharray', val)}
@@ -105,6 +107,7 @@ export function ErrorBarPanel({
 
 			{hasCustomizations && (
 				<Button
+					__next40pxDefaultSize
 					variant="secondary"
 					isDestructive
 					onClick={handleReset}

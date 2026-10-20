@@ -53,6 +53,7 @@ export function DiffColumnLabelPanel({
 			<TextStyleControls
 				values={values}
 				onChange={handleChange}
+				richText={false}
 				textLabel={__('Custom cell text', 'prc-chart-builder')}
 				textPlaceholder={displayLabel}
 				textHelp={__(

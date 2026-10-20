@@ -16,9 +16,9 @@ import {
 	RangeControl,
 	SelectControl,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
 import { getSmallMultiplesPanelKeys } from './popover/utils';
 import { repositionDrawingToContext } from './utils/panel-anchor';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 // Stroke dash array presets
 const DASH_PRESETS = [
@@ -55,6 +55,14 @@ const LINE_MODE_OPTIONS = [
 	{ label: __('Curved', 'prc-chart-builder'), value: 'curved' },
 	{ label: __('Angled', 'prc-chart-builder'), value: 'angled' },
 ];
+
+const LINE_MODE_HELP = {
+	curved: __('Drag the green handle to adjust curve', 'prc-chart-builder'),
+	angled: __(
+		'Double-click line to add points, double-click points to remove',
+		'prc-chart-builder'
+	),
+};
 
 /**
  * Get a human-readable label for a drawing type.
@@ -216,6 +224,7 @@ function DrawingListItem({ drawing, isSelected, onDelete, onSelect }) {
 					</span>
 				</div>
 				<Button
+					__next40pxDefaultSize
 					variant="secondary"
 					isDestructive
 					isSmall
@@ -234,10 +243,10 @@ function DrawingListItem({ drawing, isSelected, onDelete, onSelect }) {
 /**
  * Style controls for a selected drawing.
  *
- * @param {Object}   props            - Component props
- * @param {Object}   props.drawing    - The selected drawing
- * @param {Function} props.onUpdate   - Callback to update drawing properties
- * @param {string[]} props.panelKeys  - Small-multiples panel keys (optional)
+ * @param {Object}      props                   - Component props
+ * @param {Object}      props.drawing           - The selected drawing
+ * @param {Function}    props.onUpdate          - Callback to update drawing properties
+ * @param {string[]}    props.panelKeys         - Small-multiples panel keys (optional)
  * @param {Object|null} props.smDrawingGeometry - Live SM panel geometry
  */
 function SelectedDrawingStyles({
@@ -377,6 +386,7 @@ function SelectedDrawingStyles({
 			{hasPanelKeys && (
 				<>
 					<SelectControl
+						__next40pxDefaultSize
 						label={__('Positioning Context', 'prc-chart-builder')}
 						value={drawing.positioningContext || 'inner'}
 						options={[
@@ -417,6 +427,7 @@ function SelectedDrawingStyles({
 					/>
 					{isPanelContext(drawing.positioningContext) && (
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Panel', 'prc-chart-builder')}
 							value={drawing.panelKey || String(panelKeys[0])}
 							options={panelKeys.map((key) => ({
@@ -431,27 +442,17 @@ function SelectedDrawingStyles({
 
 			{isLine && (
 				<SelectControl
+					__next40pxDefaultSize
 					label={__('Line Mode', 'prc-chart-builder')}
 					value={currentLineMode}
 					options={LINE_MODE_OPTIONS}
 					onChange={handleLineModeChange}
-					help={
-						currentLineMode === 'curved'
-							? __(
-									'Drag the green handle to adjust curve',
-									'prc-chart-builder'
-								)
-							: currentLineMode === 'angled'
-								? __(
-										'Double-click line to add points, double-click points to remove',
-										'prc-chart-builder'
-									)
-								: null
-					}
+					help={LINE_MODE_HELP[currentLineMode] ?? null}
 				/>
 			)}
 
 			<RangeControl
+				__next40pxDefaultSize
 				label={__('Stroke Width', 'prc-chart-builder')}
 				value={drawing.strokeWidth || 1}
 				onChange={(value) => onUpdate({ strokeWidth: value })}
@@ -460,6 +461,7 @@ function SelectedDrawingStyles({
 			/>
 
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Stroke Style', 'prc-chart-builder')}
 				value={drawing.strokeDasharray || ''}
 				options={DASH_PRESETS}
@@ -467,6 +469,7 @@ function SelectedDrawingStyles({
 			/>
 
 			<RangeControl
+				__next40pxDefaultSize
 				label={__('Opacity', 'prc-chart-builder')}
 				value={opacityValue}
 				onChange={(value) => onUpdate({ opacity: value })}
@@ -477,6 +480,7 @@ function SelectedDrawingStyles({
 
 			{isLollipop && (
 				<RangeControl
+					__next40pxDefaultSize
 					label={__('Dot Size', 'prc-chart-builder')}
 					value={drawing.dotRadius || 4}
 					onChange={(value) => onUpdate({ dotRadius: value })}
@@ -485,7 +489,7 @@ function SelectedDrawingStyles({
 				/>
 			)}
 
-			<PanelColorSettings
+			<ChartPanelColorSettings
 				__experimentalHasMultipleOrigins
 				__experimentalIsRenderedInSidebar
 				title={__('Stroke Color', 'prc-chart-builder')}
@@ -501,7 +505,7 @@ function SelectedDrawingStyles({
 
 			{isShape && (
 				<>
-					<PanelColorSettings
+					<ChartPanelColorSettings
 						__experimentalHasMultipleOrigins
 						__experimentalIsRenderedInSidebar
 						title={__('Fill Color', 'prc-chart-builder')}
@@ -516,6 +520,7 @@ function SelectedDrawingStyles({
 						]}
 					/>
 					<RangeControl
+						__next40pxDefaultSize
 						label={__('Fill Opacity', 'prc-chart-builder')}
 						value={fillOpacityValue}
 						onChange={(value) => onUpdate({ fillOpacity: value })}
@@ -532,20 +537,20 @@ function SelectedDrawingStyles({
 /**
  * Drawing Controls Component.
  *
- * @param {Object}   props                         - Component props
- * @param {Object}   props.attributes              - Block attributes
- * @param {Function} props.setAttributes           - Set attributes function
- * @param {Function} props.onDrawingModeChange     - Toggle drawing mode
- * @param {string}   props.drawingTool             - Current drawing tool
- * @param {Function} props.onToolChange            - Change tool callback
- * @param {boolean}  props.isDrawingMode           - Whether drawing mode is active
- * @param {string}   props.strokeColor             - Default stroke color
- * @param {number}   props.strokeWidth             - Default stroke width
- * @param {Function} props.onStrokeColorChange     - Change default stroke color
- * @param {Function} props.onStrokeWidthChange     - Change default stroke width
- * @param {string}   props.selectedDrawingId       - Currently selected drawing ID
- * @param {Function} props.onSelectedDrawingChange - Change selected drawing
- * @param {Object|null} props.smDrawingGeometry    - Live SM panel geometry
+ * @param {Object}      props                         - Component props
+ * @param {Object}      props.attributes              - Block attributes
+ * @param {Function}    props.setAttributes           - Set attributes function
+ * @param {Function}    props.onDrawingModeChange     - Toggle drawing mode
+ * @param {string}      props.drawingTool             - Current drawing tool
+ * @param {Function}    props.onToolChange            - Change tool callback
+ * @param {boolean}     props.isDrawingMode           - Whether drawing mode is active
+ * @param {string}      props.strokeColor             - Default stroke color
+ * @param {number}      props.strokeWidth             - Default stroke width
+ * @param {Function}    props.onStrokeColorChange     - Change default stroke color
+ * @param {Function}    props.onStrokeWidthChange     - Change default stroke width
+ * @param {string}      props.selectedDrawingId       - Currently selected drawing ID
+ * @param {Function}    props.onSelectedDrawingChange - Change selected drawing
+ * @param {Object|null} props.smDrawingGeometry       - Live SM panel geometry
  */
 export default function DrawingControls({
 	attributes,
@@ -638,6 +643,7 @@ export default function DrawingControls({
 			</PanelRow>
 			<PanelRow>
 				<Button
+					__next40pxDefaultSize
 					variant={isDrawingMode ? 'primary' : 'secondary'}
 					onClick={handleToggleDrawingMode}
 				>
@@ -662,13 +668,14 @@ export default function DrawingControls({
 						</p>
 					</PanelRow>
 					<RangeControl
+						__next40pxDefaultSize
 						label={__('Stroke Width', 'prc-chart-builder')}
 						value={strokeWidth}
 						onChange={onStrokeWidthChange}
 						min={1}
 						max={10}
 					/>
-					<PanelColorSettings
+					<ChartPanelColorSettings
 						__experimentalHasMultipleOrigins
 						__experimentalIsRenderedInSidebar
 						title={__('Stroke Color', 'prc-chart-builder')}
@@ -678,6 +685,7 @@ export default function DrawingControls({
 								value: strokeColor,
 								onChange: onStrokeColorChange,
 								label: __('Stroke Color', 'prc-chart-builder'),
+								clearable: false,
 							},
 						]}
 					/>
@@ -727,6 +735,7 @@ export default function DrawingControls({
 					))}
 					<PanelRow>
 						<Button
+							__next40pxDefaultSize
 							variant="secondary"
 							isDestructive
 							onClick={handleClearDrawings}

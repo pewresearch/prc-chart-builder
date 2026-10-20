@@ -607,23 +607,23 @@ class Controller {
 
 		$block_attrs = get_block_wrapper_attributes(
 			array(
-				'id'                                     => $block_id,
-				'data-wp-interactive'                    => $target_namespace,
-				'data-wp-context'                        => wp_json_encode( $context ),
+				'id'                                      => $block_id,
+				'data-wp-interactive'                     => $target_namespace,
+				'data-wp-context'                         => wp_json_encode( $context ),
 				// Add the freeform chart class if it is a freeform chart.
-				'class'                                  => 'wp-chart-builder-wrapper align' . $align . ( $is_freeform_chart ? ' wp-block-prc-chart-builder-controller--freeform' : '' ),
-				'style'                                  => 'max-width:' . $width . ';',
-				'data-wp-init--detect-web-share-support' => 'callbacks.detectWebShareSupport',
-				'data-wp-init--sync-table-height'        => 'callbacks.syncTableHeight',
-				'data-wp-init--watch-chart'              => 'callbacks.watchChart',
-				'data-wp-init--reset-tab-on-navigation'  => 'callbacks.resetTabOnNavigation',
-				// 'data-wp-init--log-migration-attributes' => 'callbacks.logMigrationAttributes',
-				'data-png-url'                           => esc_url( $featured_image_url ?? '' ),
-				'data-has-csv'                           => ( $table_array && ( $chart_attributes['io']['allowDataDownload'] ?? true ) ) ? 'true' : 'false',
-				'data-allow-data-download'               => ( $chart_attributes['io']['allowDataDownload'] ?? true ) ? 'true' : 'false',
-				'data-post-url'                          => esc_url( $permalink ),
-				'data-chart-url'                         => esc_url( $chart_post_url ),
-				'data-chart-title'                       => esc_attr( $chart_attributes['metadata']['title'] ?? '' ),
+				'class'                                   => 'wp-chart-builder-wrapper align' . $align . ( $is_freeform_chart ? ' wp-block-prc-chart-builder-controller--freeform' : '' ),
+				'style'                                   => 'max-width:' . $width . ';',
+				'data-wp-init---detect-web-share-support' => 'callbacks.detectWebShareSupport',
+				'data-wp-init---sync-table-height'        => 'callbacks.syncTableHeight',
+				'data-wp-init---watch-chart'              => 'callbacks.watchChart',
+				'data-wp-init---reset-tab-on-navigation'  => 'callbacks.resetTabOnNavigation',
+				// 'data-wp-init---log-migration-attributes' => 'callbacks.logMigrationAttributes',
+				'data-png-url'                            => esc_url( $featured_image_url ?? '' ),
+				'data-has-csv'                            => ( $table_array && ( $chart_attributes['io']['allowDataDownload'] ?? true ) ) ? 'true' : 'false',
+				'data-allow-data-download'                => ( $chart_attributes['io']['allowDataDownload'] ?? true ) ? 'true' : 'false',
+				'data-post-url'                           => esc_url( $permalink ),
+				'data-chart-url'                          => esc_url( $chart_post_url ),
+				'data-chart-title'                        => esc_attr( $chart_attributes['metadata']['title'] ?? '' ),
 			)
 		);
 

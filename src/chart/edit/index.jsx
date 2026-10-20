@@ -23,7 +23,7 @@ import {
 	ChartBuilderTextWrapper,
 } from '@prc/charting-library';
 // eslint-disable-next-line
-import { memo, useEffect, useMemo, useState, useRef } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 
 /**
  * Internal Dependencies
@@ -61,6 +61,27 @@ import {
 	MAP_CHART_TYPES,
 	effectiveChartTypeForControls,
 } from '../utils/chart-types';
+import {
+	createAnnotationActions,
+	createAnnotationClipboard,
+	shouldHandleAnnotationClipboardKeydown,
+} from './annotation-clipboard';
+import { stripAncestorDraggable } from './utils/strip-ancestor-draggable';
+
+// Static map for non-shape element types → inspector panel ID
+const ELEMENT_TYPE_TO_PANEL = {
+	[ELEMENT_TYPES.LABEL]: 'labels',
+	[ELEMENT_TYPES.NET_VALUE_LABEL]: 'netValues',
+	[ELEMENT_TYPES.SEGMENT]: 'line',
+	[ELEMENT_TYPES.REGRESSION]: 'regression',
+	[ELEMENT_TYPES.ANNOTATION]: 'annotations',
+	[ELEMENT_TYPES.LEGEND]: 'legend',
+	[ELEMENT_TYPES.LEGEND_ITEM]: 'legend',
+	[ELEMENT_TYPES.PANEL_TITLE]: 'smallMultiples',
+	[ELEMENT_TYPES.ERROR_BAR]: 'dotPlot',
+	[ELEMENT_TYPES.DIFF_COLUMN_HEADER]: 'diffColumn',
+	[ELEMENT_TYPES.DIFF_COLUMN_LABEL]: 'diffColumn',
+};
 
 const EMPTY_OBJECT = Object.freeze({});
 
@@ -97,7 +118,7 @@ function EditInner({
 	isSelected,
 	context,
 }) {
-	const { focusPanels } = useInspectorFocus();
+	const { focusPanels, setSelectedAnnotationIndex } = useInspectorFocus();
 	const wizardChartActions = useWizardChartActions();
 	const { id, io, metadata, dataRender, drawings = [] } = attrs;
 
@@ -153,14 +174,18 @@ function EditInner({
 
 	// Enrich chart data with __errorBars from column mappings (dot-plot only)
 	const isDotPlot = attrs?.layout?.type === 'dot-plot';
-	const errorBarsAttr = getCurrentValue('errorBars') || {};
-	const errorBarsCategories = errorBarsAttr.categories || EMPTY_OBJECT;
-	const errorBarsDefaultStyles = errorBarsAttr.defaultStyles || EMPTY_OBJECT;
+	// getCurrentValue merges viewport overrides into a fresh object on every
+	// call, so hold one identity per attribute change for the memo below.
+	const errorBarsAttr = useMemo(
+		() => getCurrentValue('errorBars') || {},
+		[getCurrentValue]
+	);
 	const chartDataWithCustomizations = useMemo(() => {
 		const source = chartDataWithLabelCustomizations || chartData;
 		if (!isDotPlot || !errorBarsAttr.enabled || !source) return source;
 
-		const mappingEntries = Object.entries(errorBarsCategories);
+		const errorBarsDefaultStyles = errorBarsAttr.defaultStyles || {};
+		const mappingEntries = Object.entries(errorBarsAttr.categories || {});
 		if (mappingEntries.length === 0) return source;
 
 		return source.map((row) => {
@@ -183,18 +208,14 @@ function EditInner({
 				? { ...row, __errorBars: bars }
 				: row;
 		});
-	}, [
-		chartDataWithLabelCustomizations,
-		chartData,
-		isDotPlot,
-		errorBarsAttr.enabled,
-		errorBarsCategories,
-		errorBarsDefaultStyles,
-	]);
+	}, [chartDataWithLabelCustomizations, chartData, isDotPlot, errorBarsAttr]);
 
 	// Merge customTooltips (top-level block attribute) as a final pass so it
 	// sees rows with any upstream label/errorBar customizations already applied.
-	const customTooltips = attrs.customTooltips || EMPTY_OBJECT;
+	const customTooltips = useMemo(
+		() => attrs.customTooltips || EMPTY_OBJECT,
+		[attrs.customTooltips]
+	);
 	const chartDataWithAllCustomizations = useMemo(
 		() =>
 			mergeCustomTooltipData(
@@ -207,6 +228,42 @@ function EditInner({
 
 	// State for chart element customization popover (labels, shapes, etc.)
 	const [selectedElement, setSelectedElement] = useState(null);
+
+	const annotationClipboardRef = useRef(createAnnotationClipboard());
+	const getAnnotationItemsRef = useRef();
+	const setAnnotationItemsRef = useRef();
+	const setSelectedElementRef = useRef(setSelectedElement);
+	const setSelectedAnnotationIndexRef = useRef(setSelectedAnnotationIndex);
+
+	getAnnotationItemsRef.current = () =>
+		getCurrentValue('annotations', 'items') || [];
+	setAnnotationItemsRef.current = (items) =>
+		updateAttributeForDevice('annotations', { items });
+	setSelectedElementRef.current = setSelectedElement;
+	setSelectedAnnotationIndexRef.current = setSelectedAnnotationIndex;
+
+	const annotationActions = useMemo(
+		() =>
+			createAnnotationActions({
+				getItems: () => getAnnotationItemsRef.current(),
+				setItems: (items) => setAnnotationItemsRef.current(items),
+				clipboard: annotationClipboardRef.current,
+				onFocusClone: (focus) => {
+					if (!focus) {
+						return;
+					}
+					setSelectedAnnotationIndexRef.current?.(
+						focus.expandedDrawerIndex
+					);
+					setSelectedElementRef.current((current) => ({
+						...(current || {}),
+						elementType: ELEMENT_TYPES.ANNOTATION,
+						annotationId: focus.selectedAnnotationId,
+					}));
+				},
+			}),
+		[]
+	);
 
 	// Track if we've already initialized the chart ID to prevent loops
 	// in nested entity contexts (synced chart in tabs)
@@ -331,74 +388,29 @@ function EditInner({
 
 	// Resolve which inspector panel(s) to open when a SHAPE element is clicked,
 	// based on the current chart type.
-	const resolveShapePanels = (type) => {
-		const effective =
-			type === 'small-multiples'
-				? effectiveChartTypeForControls(attrs)
-				: type;
-		if (BAR_CHART_TYPES.includes(effective)) return ['bar', 'colors'];
-		if (LINE_CHART_TYPES.includes(effective)) return ['line', 'colors'];
-		if (NODE_CHART_TYPES.includes(effective)) return ['nodes', 'colors'];
-		if (effective === 'pie') return ['pie', 'colors'];
-		if (type === 'treemap') return ['treemap', 'colors'];
-		if (type === 'sankey') return ['sankey', 'colors'];
-		if (MAP_CHART_TYPES.includes(type)) return ['map', 'colors'];
-		return ['colors'];
-	};
-
-	// Static map for non-shape element types → panel ID
-	const ELEMENT_TYPE_TO_PANEL = {
-		[ELEMENT_TYPES.LABEL]: 'labels',
-		[ELEMENT_TYPES.NET_VALUE_LABEL]: 'netValues',
-		[ELEMENT_TYPES.SEGMENT]: 'line',
-		[ELEMENT_TYPES.REGRESSION]: 'regression',
-		[ELEMENT_TYPES.ANNOTATION]: 'annotations',
-		[ELEMENT_TYPES.LEGEND]: 'legend',
-		[ELEMENT_TYPES.LEGEND_ITEM]: 'legend',
-		[ELEMENT_TYPES.PANEL_TITLE]: 'smallMultiples',
-		[ELEMENT_TYPES.ERROR_BAR]: 'dotPlot',
-		[ELEMENT_TYPES.DIFF_COLUMN_HEADER]: 'diffColumn',
-		[ELEMENT_TYPES.DIFF_COLUMN_LABEL]: 'diffColumn',
-	};
+	const resolveShapePanels = useCallback(
+		(type) => {
+			const effective =
+				type === 'small-multiples'
+					? effectiveChartTypeForControls(attrs)
+					: type;
+			if (BAR_CHART_TYPES.includes(effective)) return ['bar', 'colors'];
+			if (LINE_CHART_TYPES.includes(effective)) return ['line', 'colors'];
+			if (NODE_CHART_TYPES.includes(effective))
+				return ['nodes', 'colors'];
+			if (effective === 'pie') return ['pie', 'colors'];
+			if (type === 'treemap') return ['treemap', 'colors'];
+			if (type === 'sankey') return ['sankey', 'colors'];
+			if (MAP_CHART_TYPES.includes(type)) return ['map', 'colors'];
+			return ['colors'];
+		},
+		[attrs]
+	);
 
 	// Handle element click for customization popover (labels, shapes, segments, annotations, tick labels, etc.)
 	// Also focuses the matching inspector sidebar panel(s).
-	const handleElementClick = ({
-		elementType,
-		dataPoint,
-		startPoint,
-		endPoint,
-		category,
-		defaultLabel,
-		defaultColor,
-		anchorEl,
-		groupValue = null,
-		annotationId = null,
-		axisKey = null,
-		tickValue = null,
-		categoryValue = null,
-	}) => {
-		// Determine which panel(s) to focus based on element type and chart type
-		let panelIds;
-		if (elementType === ELEMENT_TYPES.SHAPE) {
-			panelIds = resolveShapePanels(attrs?.layout?.type || 'bar');
-		} else if (elementType === ELEMENT_TYPES.LINE) {
-			// Line/area clicks only focus the inspector — no popover
-			panelIds = ['line', 'colors'];
-			if (panelIds.length) {
-				focusPanels(panelIds);
-			}
-			return;
-		} else if (elementType === ELEMENT_TYPES.TICK_LABEL) {
-			panelIds = [
-				axisKey === 'dependent' ? 'dependentAxis' : 'independentAxis',
-			];
-		} else {
-			const panelId = ELEMENT_TYPE_TO_PANEL[elementType];
-			panelIds = panelId ? [panelId] : [];
-		}
-
-		setSelectedElement({
+	const handleElementClick = useCallback(
+		({
 			elementType,
 			dataPoint,
 			startPoint,
@@ -407,22 +419,101 @@ function EditInner({
 			defaultLabel,
 			defaultColor,
 			anchorEl,
-			groupValue,
-			annotationId,
-			axisKey,
-			tickValue,
-			categoryValue,
-		});
+			groupValue = null,
+			annotationId = null,
+			axisKey = null,
+			tickValue = null,
+			panelKey = null,
+			categoryValue = null,
+		}) => {
+			// Determine which panel(s) to focus based on element type and chart type
+			let panelIds;
+			if (elementType === ELEMENT_TYPES.SHAPE) {
+				panelIds = resolveShapePanels(attrs?.layout?.type || 'bar');
+			} else if (elementType === ELEMENT_TYPES.LINE) {
+				// Line/area clicks only focus the inspector — no popover
+				panelIds = ['line', 'colors'];
+				if (panelIds.length) {
+					focusPanels(panelIds);
+				}
+				return;
+			} else if (elementType === ELEMENT_TYPES.TICK_LABEL) {
+				panelIds = [
+					axisKey === 'dependent'
+						? 'dependentAxis'
+						: 'independentAxis',
+				];
+			} else {
+				const panelId = ELEMENT_TYPE_TO_PANEL[elementType];
+				panelIds = panelId ? [panelId] : [];
+			}
 
-		if (panelIds.length) {
-			focusPanels(panelIds);
-		}
-	};
+			setSelectedElement({
+				elementType,
+				dataPoint,
+				startPoint,
+				endPoint,
+				category,
+				defaultLabel,
+				defaultColor,
+				anchorEl,
+				groupValue,
+				annotationId,
+				axisKey,
+				tickValue,
+				panelKey,
+				categoryValue,
+			});
+
+			if (panelIds.length) {
+				focusPanels(panelIds);
+			}
+		},
+		[attrs?.layout?.type, resolveShapePanels, focusPanels]
+	);
 
 	// Handle popover close
 	const handlePopoverClose = () => {
 		setSelectedElement(null);
 	};
+
+	useEffect(() => {
+		if (
+			selectedElement?.elementType === ELEMENT_TYPES.ANNOTATION &&
+			selectedElement.annotationId !== undefined &&
+			selectedElement.annotationId !== null
+		) {
+			setSelectedAnnotationIndex?.(
+				parseInt(selectedElement.annotationId, 10)
+			);
+			return;
+		}
+		setSelectedAnnotationIndex?.(null);
+	}, [selectedElement, setSelectedAnnotationIndex]);
+
+	useEffect(() => {
+		const onKeyDown = (event) => {
+			const isAnnotationSelected =
+				selectedElement?.elementType === ELEMENT_TYPES.ANNOTATION;
+			if (
+				!shouldHandleAnnotationClipboardKeydown(event, {
+					isAnnotationSelected,
+				})
+			) {
+				return;
+			}
+			event.preventDefault();
+			event.stopPropagation();
+			const index = parseInt(selectedElement.annotationId, 10);
+			if (event.key.toLowerCase() === 'c') {
+				annotationActions.copySelected(index);
+				return;
+			}
+			annotationActions.paste();
+		};
+		document.addEventListener('keydown', onKeyDown, true);
+		return () => document.removeEventListener('keydown', onKeyDown, true);
+	}, [selectedElement, annotationActions]);
 
 	// Handle label customization updates from popover
 	const handleLabelCustomizationUpdate = (updates) => {
@@ -771,7 +862,8 @@ function EditInner({
 			setAttributes,
 			toggleSelection,
 			selectedDrawingId,
-		] // setAlignments, setIsDragging, handleElementClick, setSelectedDrawingId intentionally excluded
+			handleElementClick,
+		] // setAlignments, setIsDragging, setSelectedDrawingId intentionally excluded
 	);
 
 	const config = useMemo(() => {
@@ -928,8 +1020,63 @@ function EditInner({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [headers, memoizedChartData, shouldSync, setAttributes]);
 
+	const blockRootRef = useRef(null);
+
+	useEffect(() => {
+		const root = blockRootRef.current;
+		if (!root) {
+			return undefined;
+		}
+		let restore = null;
+		let pointerDownInside = false;
+		const lockAncestors = (fromNode) => {
+			restore?.();
+			restore = stripAncestorDraggable(fromNode);
+		};
+		const onPointerDownCapture = (event) => {
+			pointerDownInside = root.contains(event.target);
+			if (pointerDownInside) {
+				lockAncestors(event.target);
+			}
+		};
+		// Gutenberg's Firefox hook restores `draggable` on document bubble.
+		// Re-strip after that so native block drag cannot start.
+		const onPointerDownBubble = () => {
+			if (pointerDownInside) {
+				lockAncestors(root);
+			}
+		};
+		const onPointerUp = () => {
+			pointerDownInside = false;
+			restore?.();
+			restore = null;
+		};
+		const onDragStart = (event) => {
+			if (!pointerDownInside) {
+				return;
+			}
+			event.preventDefault();
+			event.stopPropagation();
+		};
+		root.addEventListener('pointerdown', onPointerDownCapture, true);
+		document.addEventListener('pointerdown', onPointerDownBubble);
+		document.addEventListener('pointerup', onPointerUp, true);
+		document.addEventListener('pointercancel', onPointerUp, true);
+		document.addEventListener('dragstart', onDragStart, true);
+		return () => {
+			root.removeEventListener('pointerdown', onPointerDownCapture, true);
+			document.removeEventListener('pointerdown', onPointerDownBubble);
+			document.removeEventListener('pointerup', onPointerUp, true);
+			document.removeEventListener('pointercancel', onPointerUp, true);
+			document.removeEventListener('dragstart', onDragStart, true);
+			onPointerUp();
+		};
+	}, []);
+
 	const blockProps = useBlockProps({
 		className: 'active',
+		ref: blockRootRef,
+		draggable: false,
 	});
 
 	const innerBlocksProps = useInnerBlocksProps();
@@ -1196,6 +1343,9 @@ function EditInner({
 												selectedElement.tickValue ??
 												null
 											}
+											panelKey={
+												selectedElement.panelKey ?? null
+											}
 											categoryValue={
 												selectedElement.categoryValue ??
 												null
@@ -1243,6 +1393,18 @@ function EditInner({
 													? () =>
 															handleAnnotationDelete(
 																selectedElement.annotationId
+															)
+													: undefined
+											}
+											onDuplicate={
+												selectedElement.elementType ===
+												ELEMENT_TYPES.ANNOTATION
+													? () =>
+															annotationActions.duplicate(
+																parseInt(
+																	selectedElement.annotationId,
+																	10
+																)
 															)
 													: undefined
 											}

@@ -121,7 +121,7 @@
 						"type": "string",
 						"pattern": "^#[0-9a-fA-F]{3,8}$"
 					},
-					"description": "Resolved hex color palette, in series order. Maps to CB colors[]. For pewplots exports, these are the resolved hex values from pew_cols() / palette_pew()."
+					"description": "Resolved hex color palette, in series order. Maps to CB io.customColors. For pewplots exports, these are the resolved hex values from pew_cols() / palette_pew()."
 				},
 				"width": {
 					"type": "number",
@@ -303,7 +303,12 @@
 					"properties": {
 						"interpolation": {
 							"type": "string",
-							"enum": ["curveLinear", "curveStep", "curveBasis", "curveMonotoneX"],
+							"enum": [
+								"curveLinear",
+								"curveStep",
+								"curveBasis",
+								"curveMonotoneX"
+							],
 							"default": "curveLinear",
 							"description": "Line interpolation mode. Maps to CB line.interpolation."
 						},
@@ -352,7 +357,14 @@
 						},
 						"regressionType": {
 							"type": "string",
-							"enum": ["linear", "quadratic", "polynomial", "power", "exponential", "logarithmic"],
+							"enum": [
+								"linear",
+								"quadratic",
+								"polynomial",
+								"power",
+								"exponential",
+								"logarithmic"
+							],
 							"default": "linear",
 							"description": "Regression line type. Maps to CB regression.type. Corresponds to pewplots pew_scatter() fit_line (always 'lm' = linear)."
 						}
@@ -413,7 +425,13 @@
 				},
 				"paletteScale": {
 					"type": ["string", "null"],
-					"enum": ["auto", "manual", "gradient", "split gradient", null],
+					"enum": [
+						"auto",
+						"manual",
+						"gradient",
+						"split gradient",
+						null
+					],
 					"default": null,
 					"description": "The palette_pew() scale mode. Null when exported from CB."
 				}
@@ -459,10 +477,22 @@
 			"orientation": "horizontal",
 			"data": {
 				"values": [
-					{ "country": "Germany", "share": 40, "opinion": "Favorable" },
-					{ "country": "Spain",   "share": 50, "opinion": "Favorable" },
-					{ "country": "Germany", "share": 20, "opinion": "Unfavorable" },
-					{ "country": "Spain",   "share": 30, "opinion": "Unfavorable" }
+					{
+						"country": "Germany",
+						"share": 40,
+						"opinion": "Favorable"
+					},
+					{ "country": "Spain", "share": 50, "opinion": "Favorable" },
+					{
+						"country": "Germany",
+						"share": 20,
+						"opinion": "Unfavorable"
+					},
+					{
+						"country": "Spain",
+						"share": 30,
+						"opinion": "Unfavorable"
+					}
 				],
 				"xColumn": "country",
 				"yColumn": "share",

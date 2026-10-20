@@ -59,6 +59,7 @@ function SmallMultiplesControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Panel Type')}
 							help={__(
 								'Chart mark drawn in each panel. Line supports highlight/ghost; column and bar use bar settings; pie uses a shared legend.'
@@ -103,40 +104,30 @@ function SmallMultiplesControls({ attributes, setAttributes, clientId }) {
 						/>
 					</WidePanelItem>
 
-					{panelType !== 'bar' &&
-						panelType !== 'pie' &&
-						panelType !== 'waffle' && (
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Panel Height')}
-								isShownByDefault
-								panelId={clientId}
-							>
-								<NumberControl
-									label={__('Panel Height (px)')}
-									help={__(
-										'Locked cell height across viewports. Horizontal bars derive height from category count instead.'
-									)}
-									withInputField
-									min={80}
-									max={600}
-									step={1}
-									value={panelHeight}
-									onChange={(value) => {
-										updateAttributeForDevice(
-											'smallMultiples',
-											{
-												panelHeight:
-													formatNum(
-														value,
-														'integer'
-													) || 184,
-											}
-										);
-									}}
-								/>
-							</WidePanelItem>
-						)}
+					<WidePanelItem
+						hasValue={() => true}
+						label={__('Panel Height')}
+						isShownByDefault
+						panelId={clientId}
+					>
+						<NumberControl
+							label={__('Panel Height (px)')}
+							help={__(
+								'Height of each panel, title included. The chart grows by one panel height per row, so restacking on narrow screens keeps panels this tall.'
+							)}
+							withInputField
+							min={80}
+							max={600}
+							step={1}
+							value={panelHeight}
+							onChange={(value) => {
+								updateAttributeForDevice('smallMultiples', {
+									panelHeight:
+										formatNum(value, 'integer') || 184,
+								});
+							}}
+						/>
+					</WidePanelItem>
 
 					<WidePanelItem
 						hasValue={() => true}
@@ -239,6 +230,7 @@ function SmallMultiplesControls({ attributes, setAttributes, clientId }) {
 								panelId={clientId}
 							>
 								<SelectControl
+									__next40pxDefaultSize
 									label={__('Axis Treatment')}
 									value={axisTreatment}
 									options={[
@@ -274,6 +266,7 @@ function SmallMultiplesControls({ attributes, setAttributes, clientId }) {
 							panelId={clientId}
 						>
 							<SelectControl
+								__next40pxDefaultSize
 								label={__('Emphasis Mode')}
 								help={__(
 									'Highlight ghosts sibling series using Colors → Deselected (line panels only).'

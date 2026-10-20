@@ -6,6 +6,7 @@
 
 export { LabelPanel } from './LabelPanel';
 export { ShapePanel } from './ShapePanel';
+export { SeriesPaintPanel } from './SeriesPaintPanel';
 export { LineSegmentPanel } from './LineSegmentPanel';
 export { RegressionLinePanel } from './RegressionLinePanel';
 export { AnnotationPanel } from './AnnotationPanel';

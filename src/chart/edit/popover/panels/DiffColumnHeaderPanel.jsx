@@ -31,6 +31,7 @@ export function DiffColumnHeaderPanel({ diffColumn = {}, onUpdate }) {
 			<TextStyleControls
 				values={values}
 				onChange={handleChange}
+				richText={false}
 				textLabel={__('Header text', 'prc-chart-builder')}
 				showFontWeightDefault
 				showFontStyleDefault

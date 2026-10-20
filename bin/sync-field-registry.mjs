@@ -19,6 +19,7 @@
  *   node bin/sync-field-registry.mjs          # write generated.json + README + theme schema
  *   node bin/sync-field-registry.mjs --check  # fail if outputs are stale or schema drifts
  */
+/* eslint-disable no-console -- CLI script reports through stdout/stderr. */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -54,9 +55,9 @@ const checkMode = process.argv.includes('--check');
 const schemaGroups = schemaGroupKeys(schema);
 
 /**
- * @param {string} heading
+ * @param {string}   heading
  * @param {string[]} messages
- * @param {string} hint
+ * @param {string}   hint
  */
 function fail(heading, messages, hint) {
 	console.error(`${heading}\n`);
@@ -116,10 +117,18 @@ for (const groupKey of CURATED_CONFIG_GROUPS) {
 		? buildGroupFromSchema(schema[groupKey])
 		: [];
 }
-const nextRegistry = `${JSON.stringify(orderedRegistry, null, 2)}\n`;
+// lint-staged runs Prettier on staged JSON, so both outputs use its format or
+// the first commit that stages them leaves --check failing.
+const nextRegistry = await formatJson(
+	JSON.stringify(orderedRegistry, null, 2),
+	outputPath
+);
 
 // 4. chart-theme.schema.json for IDE typing.
-const nextThemeSchema = renderChartThemeSchemaFile(schema);
+const nextThemeSchema = await formatJson(
+	renderChartThemeSchemaFile(schema),
+	themeSchemaPath
+);
 
 // 5. Ensure the seed points at the generated schema without reformatting arrays.
 const nextThemeJson = ensureThemeSchemaPointer(themeRaw);
@@ -186,8 +195,20 @@ console.log(
 );
 
 /**
+ * @param {string} source JSON text.
+ * @param {string} path   Output path, for Prettier config resolution.
+ * @return {Promise<string>} Prettier-formatted JSON.
+ */
+async function formatJson(source, path) {
+	return prettier.format(source, {
+		...(await prettier.resolveConfig(path)),
+		parser: 'json',
+	});
+}
+
+/**
  * @param {string} path
- * @return {string|null}
+ * @return {string|null} File contents, or null when the file is missing.
  */
 function safeRead(path) {
 	try {
@@ -202,7 +223,7 @@ function safeRead(path) {
  * re-serializing the rest of the file (avoids reformatting compact arrays).
  *
  * @param {string} raw
- * @return {string}
+ * @return {string} chart-theme.json text with the `$schema` line first.
  */
 function ensureThemeSchemaPointer(raw) {
 	const trimmed = raw.endsWith('\n') ? raw : `${raw}\n`;

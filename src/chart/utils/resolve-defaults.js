@@ -64,7 +64,7 @@ export function getStaticBaseConfig() {
 /**
  * Active chart theme payload emitted by PHP (empty until Phase 1).
  *
- * @return {{ config?: Object, palettes?: Object, typography?: Object }}
+ * @return {{ config?: Object, palettes?: Object, typography?: Object }} Theme payload, or an empty object.
  */
 export function getRuntimeTheme() {
 	if (typeof window === 'undefined') {
@@ -90,7 +90,7 @@ function paletteSlugToLabel(slug) {
 /**
  * Shipped palettes merged with theme palette overrides.
  *
- * @return {{ colors: Object, colorNames: Array<{ label: string, value: string }> }}
+ * @return {{ colors: Object, colorNames: Array<{ label: string, value: string }> }} Palette map and inspector labels.
  */
 export function getResolvedPalettes() {
 	const { palettes: themePalettes } = getRuntimeTheme();
@@ -150,6 +150,34 @@ export function resolveChartSeriesColors(
 
 	const fallback = resolvedPalettes.general;
 	return Array.isArray(fallback) ? fallback : [];
+}
+
+/**
+ * Compile the render color array from named series fills.
+ *
+ * Slot order still drives the renderers, so a domain key only overwrites the
+ * slot it occupies. Palette entries past the domain stay put for legends and
+ * for categories that appear later.
+ *
+ * @param {Array<string>} domainKeys   Color domain, in slot order.
+ * @param {Object}        seriesStyles Sparse name to CategoryStyle map.
+ * @param {Array<string>} resolved     Palette from resolveChartSeriesColors().
+ * @return {Array<string>} Color hex strings.
+ */
+export function compileSeriesFills(domainKeys, seriesStyles, resolved) {
+	if (!seriesStyles || !Array.isArray(domainKeys)) {
+		return resolved;
+	}
+
+	const compiled = [...resolved];
+	domainKeys.forEach((key, index) => {
+		const fill = seriesStyles[key]?.fill;
+		if (fill) {
+			compiled[index] = fill;
+		}
+	});
+
+	return compiled;
 }
 
 /**

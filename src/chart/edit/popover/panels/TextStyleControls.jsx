@@ -17,12 +17,13 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
 import {
-	PanelColorSettings,
 	useSettings,
 	__experimentalFontFamilyControl as FontFamilyControl,
 } from '@wordpress/block-editor';
 
 import { FONT_WEIGHT_OPTIONS, FONT_STYLE_OPTIONS } from '../utils';
+import ChartPanelColorSettings from '../../chart-panel-color-settings';
+import { RichTextField } from './RichTextField';
 
 const DEFAULT_FONT_SIZE_OPTIONS = ['10', '12', '14', '16', '18', '20'];
 
@@ -32,38 +33,44 @@ const TEXT_OUTLINE_HELP = __(
 );
 
 /**
- * @param {Object}        props
- * @param {Object}        props.values
- * @param {string}        [props.values.text]
- * @param {string}        [props.values.fontWeight]
- * @param {string}        [props.values.fontStyle]
- * @param {string}        [props.values.fontFamily]
- * @param {number|null}   [props.values.fontSize]
- * @param {string}        [props.values.fill]
- * @param {boolean}       [props.values.textOutline]
- * @param {Function}      props.onChange - (field, value) => void
- * @param {boolean}       [props.showText]
- * @param {string}        [props.textLabel]
- * @param {string}        [props.textPlaceholder]
- * @param {string}        [props.textHelp]
- * @param {boolean}       [props.showFontWeightDefault]
- * @param {boolean}       [props.showFontStyleDefault]
- * @param {boolean}       [props.showFontFamily]
- * @param {string[]}      [props.fontSizeOptions]
- * @param {string}        [props.fontSizeHelp]
- * @param {string}        [props.colorField] - values key for color (fill or color)
- * @param {string}        [props.colorPanelTitle]
- * @param {string}        [props.colorLabel]
- * @param {boolean}       [props.showTextOutline]
- * @param {string}        [props.textOutlineHelp]
- * @param {boolean}       [props.hasCustomizations]
- * @param {Function}      [props.onReset]
- * @param {boolean}       [props.resetDestructive]
+ * @typedef {Object} TextStyleValues
+ * @property {string}      [text]        Label text.
+ * @property {string}      [fontWeight]  CSS font weight.
+ * @property {string}      [fontStyle]   CSS font style.
+ * @property {string}      [fontFamily]  CSS font family.
+ * @property {number|null} [fontSize]    Font size in pixels.
+ * @property {string}      [fill]        Text color.
+ * @property {boolean}     [textOutline] Whether the text has a contrasting outline.
+ */
+
+/**
+ * @param {Object}          props
+ * @param {TextStyleValues} [props.values]
+ * @param {Function}        props.onChange                - (field, value) => void
+ * @param {boolean}         [props.showText]
+ * @param {boolean}         [props.richText]              - false keeps a plain text input
+ * @param {string}          [props.textLabel]
+ * @param {string}          [props.textPlaceholder]
+ * @param {string}          [props.textHelp]
+ * @param {boolean}         [props.showFontWeightDefault]
+ * @param {boolean}         [props.showFontStyleDefault]
+ * @param {boolean}         [props.showFontFamily]
+ * @param {string[]}        [props.fontSizeOptions]
+ * @param {string}          [props.fontSizeHelp]
+ * @param {string}          [props.colorField]            - values key for color (fill or color)
+ * @param {string}          [props.colorPanelTitle]
+ * @param {string}          [props.colorLabel]
+ * @param {boolean}         [props.showTextOutline]
+ * @param {string}          [props.textOutlineHelp]
+ * @param {boolean}         [props.hasCustomizations]
+ * @param {Function}        [props.onReset]
+ * @param {boolean}         [props.resetDestructive]
  */
 export function TextStyleControls({
 	values = {},
 	onChange,
 	showText = true,
+	richText = true,
 	textLabel = __('Text', 'prc-chart-builder'),
 	textPlaceholder = '',
 	textHelp,
@@ -110,8 +117,18 @@ export function TextStyleControls({
 
 	return (
 		<VStack spacing={4}>
-			{showText && (
+			{showText && richText && (
+				<RichTextField
+					label={textLabel}
+					value={values.text ?? ''}
+					onChange={(value) => onChange('text', value)}
+					placeholder={textPlaceholder}
+					help={textHelp}
+				/>
+			)}
+			{showText && !richText && (
 				<TextControl
+					__next40pxDefaultSize
 					label={textLabel}
 					value={values.text ?? ''}
 					onChange={(value) => onChange('text', value)}
@@ -121,6 +138,7 @@ export function TextStyleControls({
 			)}
 
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Font Weight', 'prc-chart-builder')}
 				value={values.fontWeight ?? ''}
 				options={fontWeightOptions}
@@ -128,6 +146,7 @@ export function TextStyleControls({
 			/>
 
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Font Style', 'prc-chart-builder')}
 				value={values.fontStyle ?? ''}
 				options={fontStyleOptions}
@@ -151,7 +170,9 @@ export function TextStyleControls({
 					__nextHasNoMarginBottom
 					isBlock
 					value={
-						values.fontSize != null && values.fontSize !== ''
+						values.fontSize !== null &&
+						values.fontSize !== undefined &&
+						values.fontSize !== ''
 							? String(values.fontSize)
 							: ''
 					}
@@ -174,7 +195,7 @@ export function TextStyleControls({
 				)}
 			</VStack>
 
-			<PanelColorSettings
+			<ChartPanelColorSettings
 				__experimentalHasMultipleOrigins
 				__experimentalIsRenderedInSidebar
 				title={colorPanelTitle}
@@ -198,6 +219,7 @@ export function TextStyleControls({
 
 			{hasCustomizations && onReset && (
 				<Button
+					__next40pxDefaultSize
 					variant="secondary"
 					isDestructive={resetDestructive}
 					onClick={onReset}

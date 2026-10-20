@@ -875,7 +875,7 @@ PROMPT;
 			'sankey'         => 'Sankey/flow diagram. Columns MUST be: source, target, value (all strings). No axes. sankey.nodeAlign="justify".',
 			'treemap'        => 'Treemap. Columns: label, value. treemap.tile="squarify".',
 			'exploded-bar'   => 'Exploded bar chart for 100% comparison. Multiple value columns.',
-			'heat-map-table' => 'Heat map table matrix. First column = row label (demographic/group). Remaining columns = numeric values 0–100 for each platform/category; list those column names in dataRender.categories. Use dataRender.mapScale="linear", dataRender.mapScaleDomain=[0,100], io.colorValue="blue-spectrum", labels.color="contrast". No axes. heatMapTable.showValues=true by default.',
+			'heat-map-table' => 'Heat map table matrix. First column = row label (demographic/group). Remaining columns = numeric values 0–100 for each platform/category; list those column names in dataRender.categories. Use dataRender.mapScale="linear", dataRender.mapScaleDomain=[0,100], io.colorValue="blue-spectrum", labels.active=true, labels.color="contrast". No axes.',
 			'freeform'       => 'General-purpose chart. Use bar layout as a sensible default.',
 		);
 

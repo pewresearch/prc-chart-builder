@@ -9,13 +9,8 @@
 
 import { __ } from '@wordpress/i18n';
 import { useEffect, useRef, useCallback } from '@wordpress/element';
-import {
-	Popover,
-	Button,
-	__experimentalHStack as HStack,
-	__experimentalText as Text,
-} from '@wordpress/components';
-import { closeSmall } from '@wordpress/icons';
+import { Popover, Button } from '@wordpress/components';
+import { closeSmall, copy } from '@wordpress/icons';
 
 import {
 	LabelPanel,
@@ -28,7 +23,6 @@ import {
 	LegendPanel,
 	PanelTitlePanel,
 	ErrorBarPanel,
-	TooltipPanelSection,
 	DiffColumnHeaderPanel,
 	DiffColumnLabelPanel,
 } from './panels';
@@ -94,31 +88,33 @@ function getPanelTitle(elementType) {
  *
  * Main popover container that renders the appropriate panel based on element type.
  *
- * @param {Object}   props
- * @param {Object}   props.anchorRef             - Ref to the element to anchor to
- * @param {string}   props.elementType           - Type of element ('label', 'shape', or 'segment')
- * @param {string}   props.chartType             - The chart layout type (e.g., 'bar', 'treemap', 'pie')
- * @param {Object}      props.dataPoint             - The data point object (for labels/shapes)
- * @param {Object}      props.startPoint            - The start point of segment (for segments)
- * @param {Object}      props.endPoint              - The end point of segment (for segments)
- * @param {string}      props.category              - The category key
- * @param {string}      props.defaultLabel          - The default label value (for labels)
- * @param {string}      props.defaultColor          - The default color (for shapes/segments)
- * @param {string|null} props.groupValue            - The group value (when groupBreaksActive), or null
- * @param {Object}      props.currentCustomizations - Current customizations
- * @param {string}     props.annotationId          - Annotation index (for annotations)
- * @param {Object}     props.annotation            - Annotation object (for annotations)
- * @param {string}     props.axisKey               - 'independent' or 'dependent' (for tick labels)
- * @param {string}     props.tickValue              - Raw tick value (for tick labels)
- * @param {string}     props.categoryValue          - Category/domain value (for legend items)
- * @param {string}     props.legendVariation       - 'grouped' | 'detached' (for legend items)
- * @param {boolean}    props.showDirectLayout      - Show Direct layout on the legend-block popover
- * @param {Function}   props.onUpdate              - Callback to update
- * @param {Object}     props.currentTooltipCustomizations - { customTooltips } for TooltipPanelSection
- * @param {Function}   props.onTooltipUpdate       - Callback to update customTooltips
- * @param {Function}   props.onDelete              - Callback to delete (for annotations)
- * @param {Function}   props.onClose               - Callback when closing
- * @param {string[]}   props.panelKeys             - Small-multiples panel keys (for annotations)
+ * @param {Object}      props
+ * @param {Object}      props.anchorRef                    - Ref to the element to anchor to
+ * @param {string}      props.elementType                  - Type of element ('label', 'shape', or 'segment')
+ * @param {string}      props.chartType                    - The chart layout type (e.g., 'bar', 'treemap', 'pie')
+ * @param {Object}      props.dataPoint                    - The data point object (for labels/shapes)
+ * @param {Object}      props.startPoint                   - The start point of segment (for segments)
+ * @param {Object}      props.endPoint                     - The end point of segment (for segments)
+ * @param {string}      props.category                     - The category key
+ * @param {string}      props.defaultLabel                 - The default label value (for labels)
+ * @param {string}      props.defaultColor                 - The default color (for shapes/segments)
+ * @param {string|null} props.groupValue                   - The group value (when groupBreaksActive), or null
+ * @param {Object}      props.currentCustomizations        - Current customizations
+ * @param {string}      props.annotationId                 - Annotation index (for annotations)
+ * @param {Object}      props.annotation                   - Annotation object (for annotations)
+ * @param {string}      props.axisKey                      - 'independent' or 'dependent' (for tick labels)
+ * @param {string}      props.tickValue                    - Raw tick value (for tick labels)
+ * @param {string|null} props.panelKey                     - Small-multiples panel the tick belongs to
+ * @param {string}      props.categoryValue                - Category/domain value (for legend items)
+ * @param {string}      props.legendVariation              - 'grouped' | 'detached' (for legend items)
+ * @param {boolean}     props.showDirectLayout             - Show Direct layout on the legend-block popover
+ * @param {Function}    props.onUpdate                     - Callback to update
+ * @param {Object}      props.currentTooltipCustomizations - { customTooltips } for TooltipPanelSection
+ * @param {Function}    props.onTooltipUpdate              - Callback to update customTooltips
+ * @param {Function}    props.onDelete                     - Callback to delete (for annotations)
+ * @param {Function}    props.onDuplicate                  - Callback to duplicate (for annotations)
+ * @param {Function}    props.onClose                      - Callback when closing
+ * @param {string[]}    props.panelKeys                    - Small-multiples panel keys (for annotations)
  */
 export function ChartElementPopover({
 	anchorRef,
@@ -136,6 +132,7 @@ export function ChartElementPopover({
 	annotation,
 	axisKey,
 	tickValue,
+	panelKey = null,
 	categoryValue,
 	legendVariation = 'grouped',
 	showDirectLayout = false,
@@ -143,6 +140,7 @@ export function ChartElementPopover({
 	currentTooltipCustomizations = {},
 	onTooltipUpdate,
 	onDelete,
+	onDuplicate,
 	onClose,
 	panelKeys = [],
 }) {
@@ -239,6 +237,7 @@ export function ChartElementPopover({
 					<TickLabelPanel
 						axisKey={axisKey}
 						tickValue={tickValue}
+						panelKey={panelKey}
 						defaultLabel={defaultLabel}
 						currentCustomizations={currentCustomizations}
 						onUpdate={onUpdate}
@@ -337,19 +336,60 @@ export function ChartElementPopover({
 					minWidth: '300px',
 					maxHeight: '400px',
 					overflowY: 'auto',
+					boxSizing: 'border-box',
 				}}
 			>
-				<HStack alignment="edge" style={{ marginBottom: '12px' }}>
-					<Text weight="600" size="13px">
+				<div
+					style={{
+						display: 'grid',
+						gridTemplateColumns: 'minmax(0, 1fr) auto',
+						columnGap: '12px',
+						alignItems: 'center',
+						marginBottom: '12px',
+					}}
+				>
+					<span
+						style={{
+							fontSize: '13px',
+							fontWeight: 600,
+							lineHeight: 1.4,
+							minWidth: 0,
+							overflow: 'hidden',
+							textOverflow: 'ellipsis',
+							whiteSpace: 'nowrap',
+						}}
+					>
 						{getPanelTitle(elementType)}
-					</Text>
-					<Button
-						icon={closeSmall}
-						label={__('Close', 'prc-chart-builder')}
-						isSmall
-						onClick={onClose}
-					/>
-				</HStack>
+					</span>
+					<div
+						style={{
+							display: 'inline-flex',
+							alignItems: 'center',
+							gap: '15px',
+							flexShrink: 0,
+							justifySelf: 'end',
+						}}
+					>
+						{elementType === ELEMENT_TYPES.ANNOTATION &&
+							onDuplicate && (
+								<Button
+									icon={copy}
+									label={__(
+										'Duplicate annotation',
+										'prc-chart-builder'
+									)}
+									size="small"
+									onClick={onDuplicate}
+								/>
+							)}
+						<Button
+							icon={closeSmall}
+							label={__('Close', 'prc-chart-builder')}
+							size="small"
+							onClick={onClose}
+						/>
+					</div>
+				</div>
 
 				{renderPanel()}
 			</div>

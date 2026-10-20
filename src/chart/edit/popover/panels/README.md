@@ -20,50 +20,57 @@ onUpdate() → block attributes via updateAttributeForDevice
 Chart re-renders
 ```
 
-| Layer | Location | Role |
-| ----- | -------- | ---- |
-| Container | `../index.jsx` | Popover chrome, `ELEMENT_TYPES`, routing |
-| Panels | This folder | Element-specific UI |
-| Hooks | `../hooks/` | Read/write block attrs for most panels |
-| Shared UI | `TextStyleControls.jsx`, `TooltipPanelSection.jsx` | Reused typography / tooltip sections |
-| Utilities | `../utils.js` | Keys, constants, feature rollout gates |
+| Layer     | Location                                           | Role                                     |
+| --------- | -------------------------------------------------- | ---------------------------------------- |
+| Container | `../index.jsx`                                     | Popover chrome, `ELEMENT_TYPES`, routing |
+| Panels    | This folder                                        | Element-specific UI                      |
+| Hooks     | `../hooks/`                                        | Read/write block attrs for most panels   |
+| Shared UI | `TextStyleControls.jsx`, `TooltipPanelSection.jsx` | Reused typography / tooltip sections     |
+| Utilities | `../utils.js`                                      | Keys, constants, feature rollout gates   |
 
 ## Panel inventory
 
-| Panel | `ELEMENT_TYPES` | Hook | Primary block attribute(s) |
-| ----- | ---------------- | ---- | -------------------------- |
-| `LabelPanel` | `label`, `netValueLabel` | `useLabelCustomizations` | `labels.customLabels`, `customVisibility`, `customStyles`, `customPositions` |
-| `ShapePanel` | `shape` | `useShapeCustomizations` | `shapes.customStyles` |
-| `LineSegmentPanel` | `segment` | `useSegmentCustomizations` | `shapes.segmentStyles` |
-| `RegressionLinePanel` | `regression` | *(inline in panel)* | `regression.groupBreakStyles[category]` |
-| `AnnotationPanel` | `annotation` | `useAnnotationCustomizations` | `annotations[i]` (full annotation object) |
-| `TickLabelPanel` | `tickLabel` | `useTickLabelCustomizations` | `customTickLabels[independent\|dependent][tickValue]` |
-| `LegendItemPanel` | `legendItem` | `useLegendItemCustomizations` | `legend.customLegendLabels[categoryValue]` |
-| `ErrorBarPanel` | `errorBar` | `useErrorBarCustomizations` | `dotPlot.customStyles[elementKey]` |
-| `DiffColumnHeaderPanel` | `diffColumnHeader` | `useDiffColumnHeaderCustomizations` | `diffColumn.columnHeader`, `diffColumn.style.*` |
-| `DiffColumnLabelPanel` | `diffColumnLabel` | `useDiffColumnLabelCustomizations` | `diffColumn.customLabels[rowKey]` |
+| Panel                   | `ELEMENT_TYPES`          | Hook                                | Primary block attribute(s)                                                   |
+| ----------------------- | ------------------------ | ----------------------------------- | ---------------------------------------------------------------------------- |
+| `LabelPanel`            | `label`, `netValueLabel` | `useLabelCustomizations`            | `labels.customLabels`, `customVisibility`, `customStyles`, `customPositions` |
+| `ShapePanel`            | `shape`                  | `useShapeCustomizations`            | `shapes.customStyles`                                                        |
+| `LineSegmentPanel`      | `segment`                | `useSegmentCustomizations`          | `shapes.segmentStyles`                                                       |
+| `RegressionLinePanel`   | `regression`             | _(inline in panel)_                 | `regression.groupBreakStyles[category]`                                      |
+| `AnnotationPanel`       | `annotation`             | `useAnnotationCustomizations`       | `annotations[i]` (full annotation object)                                    |
+| `TickLabelPanel`        | `tickLabel`              | `useTickLabelCustomizations`        | `customTickLabels[independent\|dependent][tickValue(::panelKey)]`            |
+| `LegendItemPanel`       | `legendItem`             | `useLegendItemCustomizations`       | `legend.customLegendLabels[categoryValue]`                                   |
+| `ErrorBarPanel`         | `errorBar`               | `useErrorBarCustomizations`         | `dotPlot.customStyles[elementKey]`                                           |
+| `DiffColumnHeaderPanel` | `diffColumnHeader`       | `useDiffColumnHeaderCustomizations` | `diffColumn.columnHeader`, `diffColumn.style.*`                              |
+| `DiffColumnLabelPanel`  | `diffColumnLabel`        | `useDiffColumnLabelCustomizations`  | `diffColumn.customLabels[rowKey]`                                            |
 
 ### Shared components (not routed by `elementType`)
 
-| Component | Used by | Role |
-| --------- | ------- | ---- |
-| `TextStyleControls` | Label, Tick, Legend, Annotation (compact), Diff column panels | Shared text, typography, color, outline controls |
-| `TooltipPanelSection` | `LabelPanel`, `ShapePanel` | Per-point tooltip body/header overrides |
+| Component             | Used by                                                       | Role                                             |
+| --------------------- | ------------------------------------------------------------- | ------------------------------------------------ |
+| `TextStyleControls`   | Label, Tick, Legend, Annotation (compact), Diff column panels | Shared text, typography, color, outline controls |
+| `RichTextField`       | `TextStyleControls`, annotation, legend title, axis titles    | Single-line rich text input for label text       |
+| `TooltipPanelSection` | `LabelPanel`, `ShapePanel`                                    | Per-point tooltip body/header overrides          |
+
+Label text from `RichTextField` is stored as RichText HTML (bold, italic,
+underline, strikethrough, text color, link). The charting library reads it with
+`parseRichText` from `@prc/charting-utilities` and draws styled `<tspan>`s (SVG)
+or `<span>`s (legend). Diff column panels pass `richText={false}` and keep a
+plain text input.
 
 ## Hooks
 
-| Hook | Storage shape | Notes |
-| ---- | ------------- | ----- |
-| `useLabelCustomizations` | Split across `labels.*` maps | Text, visibility, position, style per key |
-| `useShapeCustomizations` | `shapes.customStyles[key]` | Fill, stroke, opacity, strokeWidth |
-| `useSegmentCustomizations` | `shapes.segmentStyles[key]` | Stroke, width, opacity, dash |
-| `useTickLabelCustomizations` | `customTickLabels[axis][tick]` object | Legacy string entries normalized to `{ text }` |
-| `useAnnotationCustomizations` | Partial updates on annotation object | Full + compact variants |
-| `useLegendItemCustomizations` | `legend.customLegendLabels[key]` object | Text, color, typography, marker, detached offsets |
-| `useErrorBarCustomizations` | `dotPlot.customStyles[key]` | Stroke styling for whiskers |
-| `useTooltipCustomizations` | `customTooltips[key]` | `{ body, header }`; used by `TooltipPanelSection` |
+| Hook                                | Storage shape                             | Notes                                                    |
+| ----------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
+| `useLabelCustomizations`            | Split across `labels.*` maps              | Text, visibility, position, style per key                |
+| `useShapeCustomizations`            | `shapes.customStyles[key]`                | Fill, stroke, opacity, strokeWidth                       |
+| `useSegmentCustomizations`          | `shapes.segmentStyles[key]`               | Stroke, width, opacity, dash                             |
+| `useTickLabelCustomizations`        | `customTickLabels[axis][tick]` object     | Legacy string entries normalized to `{ text }`           |
+| `useAnnotationCustomizations`       | Partial updates on annotation object      | Full + compact variants                                  |
+| `useLegendItemCustomizations`       | `legend.customLegendLabels[key]` object   | Text, color, typography, marker, detached offsets        |
+| `useErrorBarCustomizations`         | `dotPlot.customStyles[key]`               | Stroke styling for whiskers                              |
+| `useTooltipCustomizations`          | `customTooltips[key]`                     | `{ body, header }`; used by `TooltipPanelSection`        |
 | `useDiffColumnHeaderCustomizations` | Maps to `diffColumn` + `diffColumn.style` | Adapts column header fields to `TextStyleControls` shape |
-| `useDiffColumnLabelCustomizations` | `diffColumn.customLabels[rowKey]` object | Per-cell text, color, typography, outline |
+| `useDiffColumnLabelCustomizations`  | `diffColumn.customLabels[rowKey]` object  | Per-cell text, color, typography, outline                |
 
 `RegressionLinePanel` keeps state in the component and writes `regression.groupBreakStyles` directly (no dedicated hook).
 
@@ -82,7 +89,7 @@ Date `x` values are normalized to ISO strings so editor and frontend keys match.
 
 **Diff column** uses the same `generateElementKey` for `diffColumn.customLabels`. Pass `groupValue` from the chart component when group breaks are active.
 
-**Tick labels** key by raw `tickValue` under `customTickLabels.independent` or `.dependent` (not `generateElementKey`).
+**Tick labels** key by `generateTickLabelKey(tickValue, panelKey)` under `customTickLabels.independent` or `.dependent` — `{tickValue}` on a single-plot chart, `{tickValue}::{panelKey}` for a tick edited inside a small-multiples panel. `resolveTickLabelEntry` reads them back, layering the panel entry over any chart-wide entry for the same tick.
 
 **Legend items** key by category/domain string in `customLegendLabels`.
 
@@ -130,6 +137,7 @@ Free-floating chart annotations.
 Independent or dependent axis tick labels.
 
 - Custom text + typography via `TextStyleControls`
+- Offset X/Y (px), added to the axis-wide `tickLabels.dx` / `dy`
 - Gated by `TICK_LABEL_POPOVER_CHART_TYPES` in `../utils.js` (`null` = all types)
 
 ### LegendItemPanel
@@ -177,7 +185,10 @@ Single diff column cell.
     "segmentStyles": { "{key}": { "stroke": "#ff0000", "strokeDasharray": "5,5", ... } }
   },
   "customTickLabels": {
-    "independent": { "{tickValue}": { "text": "...", "fill": "...", ... } },
+    "independent": {
+      "{tickValue}": { "text": "...", "fill": "...", "offsetX": 0, "offsetY": 0, ... },
+      "{tickValue}::{panelKey}": { "text": "..." }
+    },
     "dependent": { "{tickValue}": { ... } }
   },
   "legend": {
@@ -206,12 +217,12 @@ Per-element overrides are **not** included in style copy/paste (`get-copyable-st
 
 ## Feature rollout constants (`../utils.js`)
 
-| Constant | Purpose |
-| -------- | ------- |
-| `ANNOTATION_POPOVER_CHART_TYPES` | Annotation click-to-edit (`null` = all) |
-| `TICK_LABEL_POPOVER_CHART_TYPES` | Tick label popover (`null` = all) |
+| Constant                          | Purpose                                                |
+| --------------------------------- | ------------------------------------------------------ |
+| `ANNOTATION_POPOVER_CHART_TYPES`  | Annotation click-to-edit (`null` = all)                |
+| `TICK_LABEL_POPOVER_CHART_TYPES`  | Tick label popover (`null` = all)                      |
 | `DIFF_COLUMN_POPOVER_CHART_TYPES` | Diff column header/cell popover (bar types + dot-plot) |
-| `POSITION_DISABLED_CHART_TYPES` | Hide label drag offsets (treemap) |
+| `POSITION_DISABLED_CHART_TYPES`   | Hide label drag offsets (treemap)                      |
 
 ## Adding a new panel
 

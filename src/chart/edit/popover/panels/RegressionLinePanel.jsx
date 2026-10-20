@@ -20,9 +20,9 @@ import {
 	__experimentalNumberControl as NumberControl,
 	Button,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
 
 import { STROKE_DASHARRAY_OPTIONS } from '../utils';
+import ChartPanelColorSettings from '../../chart-panel-color-settings';
 
 /**
  * RegressionLinePanel Component
@@ -39,14 +39,17 @@ export function RegressionLinePanel({
 	currentCustomizations = {},
 	onUpdate,
 }) {
-	const currentStyles = currentCustomizations.groupBreakStyles?.[ category ] || {};
+	const currentStyles =
+		currentCustomizations.groupBreakStyles?.[category] || {};
 
 	const [stroke, setStroke] = useState(currentStyles.stroke || '');
 	const [strokeWidth, setStrokeWidth] = useState(
 		currentStyles.strokeWidth ?? currentCustomizations.strokeWidth ?? 2
 	);
 	const [strokeDasharray, setStrokeDasharray] = useState(
-		currentStyles.strokeDasharray ?? currentCustomizations.strokeDasharray ?? ''
+		currentStyles.strokeDasharray ??
+			currentCustomizations.strokeDasharray ??
+			''
 	);
 
 	// Sync state when external customizations change (e.g. panel reopens)
@@ -56,9 +59,11 @@ export function RegressionLinePanel({
 			currentStyles.strokeWidth ?? currentCustomizations.strokeWidth ?? 2
 		);
 		setStrokeDasharray(
-			currentStyles.strokeDasharray ?? currentCustomizations.strokeDasharray ?? ''
+			currentStyles.strokeDasharray ??
+				currentCustomizations.strokeDasharray ??
+				''
 		);
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [category]);
 
 	const handleStyleChange = useCallback(
@@ -67,30 +72,30 @@ export function RegressionLinePanel({
 			if (property === 'strokeWidth') setStrokeWidth(value);
 			if (property === 'strokeDasharray') setStrokeDasharray(value);
 
-		const updatedGroupBreakStyles = {
-			...currentCustomizations.groupBreakStyles,
-		};
-		const existing = { ...(updatedGroupBreakStyles[category] || {}) };
+			const updatedGroupBreakStyles = {
+				...currentCustomizations.groupBreakStyles,
+			};
+			const existing = { ...(updatedGroupBreakStyles[category] || {}) };
 
-		// Remove the property if it's being reset to empty/falsy
-		const isEmpty =
-			(property === 'stroke' && (value === '' || value === null)) ||
-			(property === 'strokeWidth' && value === 0) ||
-			(property === 'strokeDasharray' && value === '');
+			// Remove the property if it's being reset to empty/falsy
+			const isEmpty =
+				(property === 'stroke' && (value === '' || value === null)) ||
+				(property === 'strokeWidth' && value === 0) ||
+				(property === 'strokeDasharray' && value === '');
 
-		if (isEmpty) {
-			delete existing[property];
-		} else {
-			existing[property] = value;
-		}
+			if (isEmpty) {
+				delete existing[property];
+			} else {
+				existing[property] = value;
+			}
 
-		if (Object.keys(existing).length === 0) {
-			delete updatedGroupBreakStyles[category];
-		} else {
-			updatedGroupBreakStyles[category] = existing;
-		}
+			if (Object.keys(existing).length === 0) {
+				delete updatedGroupBreakStyles[category];
+			} else {
+				updatedGroupBreakStyles[category] = existing;
+			}
 
-		onUpdate({ groupBreakStyles: updatedGroupBreakStyles });
+			onUpdate({ groupBreakStyles: updatedGroupBreakStyles });
 		},
 		[category, currentCustomizations.groupBreakStyles, onUpdate]
 	);
@@ -108,7 +113,8 @@ export function RegressionLinePanel({
 	}, [category, currentCustomizations, onUpdate]);
 
 	const hasCustomizations =
-		stroke !== '' || strokeDasharray !== (currentCustomizations.strokeDasharray ?? '');
+		stroke !== '' ||
+		strokeDasharray !== (currentCustomizations.strokeDasharray ?? '');
 
 	const label =
 		category === 'combined'
@@ -121,14 +127,15 @@ export function RegressionLinePanel({
 				{label}
 			</Text>
 
-			<PanelColorSettings
+			<ChartPanelColorSettings
 				__experimentalHasMultipleOrigins
 				__experimentalIsRenderedInSidebar
 				title={__('Stroke Color', 'prc-chart-builder')}
 				colorSettings={[
 					{
 						value: stroke || defaultColor,
-						onChange: (val) => handleStyleChange('stroke', val ?? ''),
+						onChange: (val) =>
+							handleStyleChange('stroke', val ?? ''),
 						label: __('Stroke', 'prc-chart-builder'),
 					},
 				]}
@@ -145,15 +152,20 @@ export function RegressionLinePanel({
 			/>
 
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Line Style', 'prc-chart-builder')}
 				value={strokeDasharray}
 				options={STROKE_DASHARRAY_OPTIONS}
 				onChange={(val) => handleStyleChange('strokeDasharray', val)}
-				help={__('Dash pattern for the regression line', 'prc-chart-builder')}
+				help={__(
+					'Dash pattern for the regression line',
+					'prc-chart-builder'
+				)}
 			/>
 
 			{hasCustomizations && (
 				<Button
+					__next40pxDefaultSize
 					variant="secondary"
 					isDestructive
 					onClick={handleReset}

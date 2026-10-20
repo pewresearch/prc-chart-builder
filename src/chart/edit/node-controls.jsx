@@ -4,7 +4,6 @@
  */
 import { __ } from '@wordpress/i18n';
 import { useMemo } from '@wordpress/element';
-import { PanelColorSettings } from '@wordpress/block-editor';
 import {
 	PanelBody,
 	SelectControl,
@@ -18,6 +17,7 @@ import {
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 const NodeControls = ({ attributes, setAttributes, chartType }) => {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
@@ -58,6 +58,7 @@ const NodeControls = ({ attributes, setAttributes, chartType }) => {
 				{supportsVariableSize && (
 					<>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Size by column')}
 							help={__(
 								'Scale each dot’s radius from values in a data column. Leave empty for a fixed node size.'
@@ -127,6 +128,7 @@ const NodeControls = ({ attributes, setAttributes, chartType }) => {
 						)}
 						{hasVariableSize && (
 							<SelectControl
+								__next40pxDefaultSize
 								label={__('Scale type')}
 								help={__(
 									'Area (sqrt) keeps perceived circle area proportional to the value, matching bubble maps.'
@@ -188,6 +190,7 @@ const NodeControls = ({ attributes, setAttributes, chartType }) => {
 					}}
 				/>
 				<SelectControl
+					__next40pxDefaultSize
 					label={__('Node Fill')}
 					options={[
 						{ label: 'Inherit', value: 'inherit' },
@@ -217,6 +220,7 @@ const NodeControls = ({ attributes, setAttributes, chartType }) => {
 					}}
 				/>
 				<SelectControl
+					__next40pxDefaultSize
 					label={__('Node Stroke')}
 					options={[
 						{ label: __('Series color'), value: 'inherit' },
@@ -225,16 +229,17 @@ const NodeControls = ({ attributes, setAttributes, chartType }) => {
 					value={strokePreset}
 					onChange={(value) => {
 						const currentNodes = getCurrentValue('nodes') || {};
+						let nextPointStroke = 'inherit';
+						if (value === 'custom') {
+							nextPointStroke = ['inherit', 'white'].includes(
+								currentNodes.pointStroke
+							)
+								? '#2a2a2a'
+								: currentNodes.pointStroke;
+						}
 						updateAttributeForDevice('nodes', {
 							...currentNodes,
-							pointStroke:
-								value === 'custom'
-									? !['inherit', 'white'].includes(
-											currentNodes.pointStroke
-										)
-										? currentNodes.pointStroke
-										: '#2a2a2a'
-									: 'inherit',
+							pointStroke: nextPointStroke,
 						});
 					}}
 					help={__(
@@ -242,7 +247,7 @@ const NodeControls = ({ attributes, setAttributes, chartType }) => {
 					)}
 				/>
 				{strokePreset === 'custom' && (
-					<PanelColorSettings
+					<ChartPanelColorSettings
 						__experimentalHasMultipleOrigins
 						__experimentalIsRenderedInSidebar
 						title={__('Custom Node Stroke')}

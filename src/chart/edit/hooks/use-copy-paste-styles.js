@@ -1,14 +1,17 @@
 /**
  * WordPress Dependencies
  */
+import { __ } from '@wordpress/i18n';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { useEffect, useCallback } from '@wordpress/element';
+import { store as noticesStore } from '@wordpress/notices';
 
 /**
  * Internal Dependencies
  */
 import store from '../store';
 import getCopyableStyleAttributes from '../../utils/get-copyable-style-attributes';
+import pasteChartStyles from '../../utils/paste-chart-styles';
 
 /**
  * Deep merge two objects, preserving nested properties.
@@ -56,6 +59,7 @@ export const deepMerge = (target, source) => {
  */
 export default function useCopyPasteStyles(attributes, setAttributes) {
 	const { copyChartStyles, refreshFromStorage } = useDispatch(store);
+	const { createInfoNotice } = useDispatch(noticesStore);
 
 	const { hasCopiedStyles, copiedStyles } = useSelect(
 		(select) => ({
@@ -93,8 +97,28 @@ export default function useCopyPasteStyles(attributes, setAttributes) {
 		if (!copiedStyles || Object.keys(copiedStyles).length === 0) {
 			return;
 		}
-		setAttributes(deepMerge(attributes, copiedStyles));
-	}, [copiedStyles, attributes, setAttributes]);
+
+		const {
+			attributes: next,
+			seriesStylesSkipped,
+			panelStylesSkipped,
+		} = pasteChartStyles(attributes, copiedStyles);
+		setAttributes(next);
+
+		const hasRows = (rows) => Object.keys(rows ?? {}).length > 0;
+		if (
+			(seriesStylesSkipped && hasRows(copiedStyles.seriesStyles)) ||
+			(panelStylesSkipped && hasRows(copiedStyles.panelStyles))
+		) {
+			createInfoNotice(
+				__(
+					'Series colors were not pasted because this chart has series or panels the copied chart does not. The palette and other styles were pasted.',
+					'prc-chart-builder'
+				),
+				{ type: 'snackbar' }
+			);
+		}
+	}, [copiedStyles, attributes, setAttributes, createInfoNotice]);
 
 	return { hasCopiedStyles, copyStyles, pasteStyles };
 }

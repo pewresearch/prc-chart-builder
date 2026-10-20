@@ -160,24 +160,24 @@ class Chart {
 		);
 
 		$block_attrs = array(
-			'id'                             => wp_unique_id( 'chart-block-' ),
-			'data-wp-key'                    => $block_id,
-			'data-wp-interactive'            => $target_namespace,
-			'data-prc-chart-id'              => $block_id,
-			'data-wp-context'                => wp_json_encode(
+			'id'                              => wp_unique_id( 'chart-block-' ),
+			'data-wp-key'                     => $block_id,
+			'data-wp-interactive'             => $target_namespace,
+			'data-prc-chart-id'               => $block_id,
+			'data-wp-context'                 => wp_json_encode(
 				array(
 					'id' => $block_id,
 				)
 			),
-			'class'                          => 'wp-chart-builder-inner',
-			'data-wp-watch--init-render'     => $is_static_chart || $is_freeform_chart ? null : 'callbacks.watchForRender',
+			'class'                           => 'wp-chart-builder-inner',
+			'data-wp-watch---init-render'     => $is_static_chart || $is_freeform_chart ? null : 'callbacks.watchForRender',
 			// Re-seed live store leaves after Interactivity Router navigations.
 			// The router merges server state with override=false, so data/config
 			// would otherwise stay frozen at the first mount (e.g. Religious
 			// Projections country → country). Custom charts remount via the
 			// empty-mount path in renderChart and do not need this watch.
-			'data-wp-watch--sync-navigation' => $is_static_chart || $is_freeform_chart || $is_custom_chart ? null : 'callbacks.syncOnNavigation',
-			'data-wp-on-window--resize'      => $is_custom_chart ? null : 'callbacks.watchForResize',
+			'data-wp-watch---sync-navigation' => $is_static_chart || $is_freeform_chart || $is_custom_chart ? null : 'callbacks.syncOnNavigation',
+			'data-wp-on-window--resize'       => $is_custom_chart ? null : 'callbacks.watchForResize',
 		);
 
 		$block_wrapper_attrs = get_block_wrapper_attributes( $block_attrs );

@@ -10,10 +10,10 @@ $facebook: #3b5998;
 $georgia: var(--wp--preset--font-family--georgia);
 $franklin: var(--wp--preset--font-family--sans-serif);
 
-// How tall the wizard's controls column may get before it scrolls internally,
-// so the preview beside it stays on screen no matter how many panels a chart
-// type has.
-$wizard-controls-max-height: 700px;
+// The CPT wizard lives in the Gutenberg canvas iframe, so 100dvh is already
+// below the editor header. Leave room for canvas padding and the block
+// wrapper so the pinned action bar stays on screen.
+$wizard-cpt-shell-inset: 8rem;
 
 // Floor for the preview column, wide enough for a default 640px chart plus the
 // pane's own padding.
@@ -24,11 +24,11 @@ $wizard-preview-min-width: 720px;
 // column — while still leaving the preview more room than an even split does.
 $wizard-preview-controls-width: 400px;
 
-// Below this the controls and preview stop fitting side by side: the preview
-// floor plus the 16px gap leaves too little for the controls column. Because
-// the wizard renders inside the editor canvas iframe, this tracks the canvas
-// width rather than the screen — it also fires when the settings sidebar opens.
-$wizard-stack-below: 1100px;
+// Below this the wizard stacks into one scrolling column. Matches the tablet
+// breakpoint in block-library's core-group styles. Because the wizard renders inside the
+// editor canvas iframe, this tracks the canvas width rather than the screen —
+// it also fires when the settings sidebar opens.
+$wizard-stack-below: 782px;
 
 // Shared Select / Configure / chrome styles (same classes as Chart Library).
 @import "../shared/wizard-ui/style";
@@ -472,12 +472,29 @@ $wizard-stack-below: 1100px;
 }
 
 // Chart CPT wizard host — shared wizard-ui styles apply via .prc-chart-wizard /
-// .prc-chart-modal classes on the shell. Override admin viewport height caps so
-// the editor canvas can grow with the block.
+// .prc-chart-modal classes on the shell. Cap the shell to the canvas viewport
+// and pin the action bar; type rail, templates, data, and style controls
+// scroll in the body between them.
 .prc-chart-cpt-wizard.prc-chart-wizard[data-layout="full"] {
-	max-height: none;
-	min-height: 0;
+	display: flex;
+	flex-direction: column;
 	width: 100%;
+	height: calc(100dvh - $wizard-cpt-shell-inset);
+	max-height: calc(100dvh - $wizard-cpt-shell-inset);
+	min-height: 0;
+	overflow: hidden;
+
+	> .prc-chart-wizard__steps,
+	> .prc-chart-wizard__explainer,
+	> .prc-chart-wizard__data-upload,
+	> .prc-chart-wizard__template-reset-warning,
+	> .prc-chart-wizard__action-bar {
+		flex-shrink: 0;
+	}
+
+	> .prc-chart-wizard__action-bar {
+		margin-top: auto;
+	}
 
 	> .prc-chart-wizard__choose,
 	> .prc-chart-modal__configure,
@@ -490,20 +507,29 @@ $wizard-stack-below: 1100px;
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
+		overflow: hidden;
+	}
+
+	.prc-chart-cpt-wizard__select {
+		display: flex;
+		flex-direction: column;
 	}
 
 	.prc-chart-cpt-wizard__select,
 	.prc-chart-wizard__choose,
 	.prc-chart-modal__configure {
 		flex: 1 1 auto;
-		min-height: 320px;
+		min-height: 0;
+		overflow: hidden;
 	}
 
 	// Set Data + Configure share `.prc-chart-modal__configure` (controls | preview).
 	.prc-chart-modal__configure {
 		display: grid;
+		// The floor gives way to an even split on narrower canvases; the
+		// pane scrolls for charts wider than its column.
 		grid-template-columns: minmax(0, 1fr) minmax(
-				$wizard-preview-min-width,
+				min(#{$wizard-preview-min-width}, 50%),
 				1fr
 			);
 		grid-template-areas: "controls preview";
@@ -516,18 +542,11 @@ $wizard-stack-below: 1100px;
 			grid-area: controls;
 			min-width: 0;
 			min-height: 0;
-
-			// A chart type with many panels would otherwise run far past the
-			// preview, so you'd have to scroll the page away from the chart to
-			// reach the control you're adjusting. Cap the column and scroll it
-			// on its own; the preview keeps its place alongside.
-			max-height: $wizard-controls-max-height;
 			overflow: auto;
 		}
 
 		.prc-chart-modal__preview-pane {
 			grid-area: preview;
-			min-width: $wizard-preview-min-width;
 			min-height: 0;
 			height: 100%;
 			overflow: auto;
@@ -542,7 +561,9 @@ $wizard-stack-below: 1100px;
 				box-sizing: border-box;
 				margin: 20px auto;
 				padding: 16px;
-				width: max-content;
+				// A shrink-to-fit card settles at whatever the chart last
+				// rendered, so the live canvas could shrink but never grow.
+				width: var(--prc-chart-preview-width, max-content);
 				max-width: none;
 
 				figure,
@@ -586,6 +607,7 @@ $wizard-stack-below: 1100px;
 		min-height: 0;
 		min-width: 0;
 		gap: 12px;
+		overflow: auto;
 	}
 
 	.prc-chart-wizard__design-mode-header {
@@ -619,7 +641,6 @@ $wizard-stack-below: 1100px;
 			// Direct-child only so nested freeform controllers are not forced
 			// to the outer canvas width.
 			> .wp-block-prc-chart-builder-controller {
-				width: var(--prc-chart-preview-width, max-content);
 				transition: width 0.2s ease;
 			}
 
@@ -657,6 +678,32 @@ $wizard-stack-below: 1100px;
 
 	// Narrow canvas: stack controls above the preview.
 	@media (max-width: $wizard-stack-below) {
+		// Stacked panes don't fit one viewport, so drop the height cap and let
+		// the editor canvas scroll the whole wizard.
+		height: auto;
+		max-height: none;
+		overflow: visible;
+
+		.prc-chart-wizard__steps {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+
+		.prc-chart-wizard__step:not(:last-child)::after {
+			display: none;
+		}
+
+		.prc-chart-wizard__choose {
+			grid-template-columns: minmax(0, 1fr);
+
+			// Same cap as the compact host: the picker stays its own scroll
+			// box so template previews keep loading lazily as it scrolls.
+			.prc-chart-modal__pattern-picker {
+				flex: none;
+				max-height: $wizard-pattern-picker-max-height;
+			}
+		}
+
 		// Nested to match the specificity of the side-by-side rules above.
 		.prc-chart-modal__configure {
 			grid-template-columns: minmax(0, 1fr);
@@ -664,19 +711,11 @@ $wizard-stack-below: 1100px;
 				"controls"
 				"preview";
 
-			// Stacked, the preview is below rather than beside, so capping the
-			// controls would only add a scrollbar inside the page scroll
-			// without keeping the chart in view.
 			.prc-chart-modal__configure-controls {
-				max-height: none;
 				overflow: visible;
 			}
 
 			.prc-chart-modal__preview-pane {
-				// Drops the width floor that forces the side-by-side layout;
-				// the pane still scrolls sideways for charts wider than the
-				// canvas.
-				min-width: 0;
 				height: auto;
 			}
 		}

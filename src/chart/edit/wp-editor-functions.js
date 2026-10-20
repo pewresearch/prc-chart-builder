@@ -52,8 +52,8 @@ export function generateLabelKey(x, category, groupValue = null) {
  * @param {Function} params.setIsDragging            - Function to update drag state (for disabling tooltips)
  * @param {Function} params.onElementClick           - Callback when a chart element (label/shape) is clicked for customization
  * @param {Function} params.setSelectedDrawingId     - Optional: select a drawing in the inspector list
- * @param {string}   params.selectedDrawingId       - Currently selected drawing id (editor overlay)
- * @param {Function} params.setSmDrawingGeometry    - Optional: receive live SM panel geometry
+ * @param {string}   params.selectedDrawingId        - Currently selected drawing id (editor overlay)
+ * @param {Function} params.setSmDrawingGeometry     - Optional: receive live SM panel geometry
  * @return {Object} wpEditorFunctions object with annotations, labels, shapes, and legend handlers
  */
 export function createWpEditorFunctions({
@@ -502,8 +502,8 @@ export function createWpEditorFunctions({
 			 * `customTooltips` block attribute (not viewport-aware — tooltip
 			 * content is the same across viewports).
 			 *
-			 * @param {Object} updates                 - { customTooltips }
-			 * @param {Object} updates.customTooltips  - Full map of customTooltips
+			 * @param {Object} updates                - { customTooltips }
+			 * @param {Object} updates.customTooltips - Full map of customTooltips
 			 */
 			updateCustomizations: (updates) => {
 				if (updates.customTooltips !== undefined && setAttributes) {
@@ -645,12 +645,14 @@ export function createWpEditorFunctions({
 							axisKey,
 							tickValue,
 							formattedValue,
-							anchorEl
+							anchorEl,
+							panelKey = null
 						) => {
 							onElementClick({
 								elementType: 'tickLabel',
 								axisKey,
 								tickValue,
+								panelKey,
 								defaultLabel:
 									formattedValue ?? String(tickValue),
 								anchorEl,

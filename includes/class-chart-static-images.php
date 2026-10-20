@@ -15,6 +15,32 @@ namespace PRC\Platform\Chart_Builder;
 class Chart_Static_Images {
 
 	/**
+	 * Resolve a PNG download URL for a chart post.
+	 *
+	 * Priority: featured image (server-generated PNG), then io.pngUrl, then the io.pngId attachment.
+	 * SVG is never returned.
+	 *
+	 * @param int $chart_post_id Chart post ID.
+	 * @return string Empty string when no PNG exists.
+	 */
+	public static function resolve_png_url( int $chart_post_id ): string {
+		$thumbnail_id = (int) get_post_thumbnail_id( $chart_post_id );
+		$url          = $thumbnail_id ? (string) wp_get_attachment_url( $thumbnail_id ) : '';
+
+		if ( $url ) {
+			return $url;
+		}
+
+		$io  = self::get_chart_io_attributes( $chart_post_id );
+		$url = (string) ( $io['pngUrl'] ?? '' );
+		if ( ! $url && ! empty( $io['pngId'] ) ) {
+			$url = (string) wp_get_attachment_url( (int) $io['pngId'] );
+		}
+
+		return $url;
+	}
+
+	/**
 	 * Resolve static PNG (or fallback) URLs for a chart post.
 	 *
 	 * Priority: featured image (server-generated PNG) → io.pngUrl → io.svgUrl.
@@ -24,17 +50,11 @@ class Chart_Static_Images {
 	 */
 	public static function resolve_static_image_urls( int $chart_post_id ): array {
 		$thumbnail_id = (int) get_post_thumbnail_id( $chart_post_id );
-		$url          = $thumbnail_id ? (string) wp_get_attachment_url( $thumbnail_id ) : '';
+		$url          = self::resolve_png_url( $chart_post_id );
 
 		if ( ! $url ) {
 			$io  = self::get_chart_io_attributes( $chart_post_id );
-			$url = (string) ( $io['pngUrl'] ?? '' );
-			if ( ! $url && ! empty( $io['pngId'] ) ) {
-				$url = (string) wp_get_attachment_url( (int) $io['pngId'] );
-			}
-			if ( ! $url ) {
-				$url = (string) ( $io['svgUrl'] ?? '' );
-			}
+			$url = (string) ( $io['svgUrl'] ?? '' );
 			if ( ! $url && ! empty( $io['svgId'] ) ) {
 				$url = (string) wp_get_attachment_url( (int) $io['svgId'] );
 			}

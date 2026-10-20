@@ -5,7 +5,6 @@ import {
 	__experimentalNumberControl as NumberControl,
 	PanelBody,
 	SelectControl,
-	ToggleControl,
 	__experimentalToolsPanel as ToolsPanel,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
@@ -25,10 +24,7 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 	const heatMapTable = getCurrentValue('heatMapTable') || {};
 	const cellGap = heatMapTable.cellGap ?? 0;
 	const cellRadius = heatMapTable.cellRadius ?? 0;
-	const showValues = heatMapTable.showValues ?? true;
 	const emptyFill = heatMapTable.emptyFill || '#F5F5F5';
-	const rowLabelWidth = heatMapTable.rowLabelWidth ?? 0;
-	const columnHeaderHeight = heatMapTable.columnHeaderHeight ?? 48;
 	const minCellWidth = heatMapTable.minCellWidth ?? 40;
 	const minCellHeight = heatMapTable.minCellHeight ?? 28;
 
@@ -51,20 +47,6 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 						paddingRight: '0',
 					}}
 				>
-					<WidePanelItem
-						hasValue={() => showValues !== true}
-						label={__('Show Values')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<ToggleControl
-							label={__('Show cell values')}
-							checked={showValues}
-							onChange={(value) => {
-								updateHeatMapTable({ showValues: value });
-							}}
-						/>
-					</WidePanelItem>
 					<WidePanelItem
 						hasValue={() => cellGap !== 0}
 						label={__('Cell Gap')}
@@ -115,6 +97,7 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Empty Cell Color')}
 							value={emptyFill}
 							options={[
@@ -124,54 +107,6 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 							]}
 							onChange={(value) => {
 								updateHeatMapTable({ emptyFill: value });
-							}}
-						/>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => rowLabelWidth !== 0}
-						label={__('Grid Inset')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<NumberControl
-							label={__('Grid inset from y-axis (px)')}
-							help={__(
-								'Optional gap between the independent axis line and the heat grid. Row labels use the chart left padding, like horizontal bar charts.'
-							)}
-							withInputField
-							min={0}
-							max={240}
-							step={4}
-							value={rowLabelWidth}
-							onChange={(value) => {
-								updateHeatMapTable({
-									rowLabelWidth:
-										formatNum(value, 'integer') ?? 0,
-								});
-							}}
-						/>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => columnHeaderHeight !== 48}
-						label={__('Column Header Height')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<NumberControl
-							label={__('Column Header Height (px)')}
-							help={__(
-								'Height reserved for the dependent axis when it is active.'
-							)}
-							withInputField
-							min={24}
-							max={96}
-							step={4}
-							value={columnHeaderHeight}
-							onChange={(value) => {
-								updateHeatMapTable({
-									columnHeaderHeight:
-										formatNum(value, 'integer') ?? 48,
-								});
 							}}
 						/>
 					</WidePanelItem>

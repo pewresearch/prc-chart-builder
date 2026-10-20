@@ -1,0 +1,121 @@
+/**
+ * Chart block editor styles: inspector and popover chrome for the chart block.
+ */
+
+.prc-chart-series-style-list {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+
+	&__empty {
+		margin: 0;
+		font-size: 12px;
+		color: #757575;
+	}
+
+	&__row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+		width: 100%;
+	}
+
+	&__color {
+		flex: 1;
+		min-width: 0;
+	}
+
+	&__toggle {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		flex: 1;
+		min-width: 0;
+		padding: 2px 0;
+		background: none;
+		border: none;
+		border-radius: 2px;
+		cursor: pointer;
+		text-align: left;
+	}
+
+	&__swatch {
+		display: block;
+		flex-shrink: 0;
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+	}
+
+	&__name {
+		font-size: 13px;
+		line-height: 1.4;
+		color: #1e1e1e;
+	}
+
+	&__edit-wrap {
+		margin-left: auto;
+		flex-shrink: 0;
+	}
+
+	&__edit {
+		flex-shrink: 0;
+		padding: 2px 4px;
+		background: none;
+		border: none;
+		border-radius: 2px;
+		cursor: pointer;
+		font-size: 12px;
+		line-height: 1.4;
+		color: #1e1e1e;
+		text-decoration: underline;
+	}
+
+	&__edit-popover .components-popover__content {
+		min-width: 300px;
+	}
+
+	&__panel {
+		min-width: 300px;
+		padding: 12px;
+	}
+
+	// Six 28px swatches plus five 12px gaps, so each 6-color spectrum fits on
+	// one row.
+	&__palette {
+		width: 228px;
+	}
+}
+
+.prc-chart-series-paint {
+	&__color-field {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 8px;
+	}
+
+	&__label {
+		font-size: 12px;
+		color: #1e1e1e;
+	}
+
+	&__color-toggle {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 4px 8px;
+		background: none;
+		border: 1px solid #ddd;
+		border-radius: 2px;
+		cursor: pointer;
+	}
+
+	&__color-value {
+		font-size: 11px;
+		color: #757575;
+		font-family: Menlo, Consolas, monaco, monospace;
+	}
+}

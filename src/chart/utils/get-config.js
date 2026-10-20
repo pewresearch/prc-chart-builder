@@ -1,7 +1,12 @@
 /* eslint-disable @wordpress/no-unused-vars-before-return */
 /* eslint-disable max-lines */
 /* eslint-disable max-lines-per-function */
-import { getAvailableLegendCategories } from './get-available-legend-categories';
+import {
+	getAvailableLegendCategories,
+	getOrdinalValueColumns,
+	getOrdinalValueDomain,
+} from './get-available-legend-categories';
+import { VALUE_SCALE_CHART_TYPES } from './chart-types';
 import {
 	generateDefaultAltText,
 	getDomain,
@@ -10,12 +15,14 @@ import {
 	stringToArray,
 	stringToArrayOfNums,
 } from './helpers';
+import { getSeriesColorSlotKeys } from './get-series-color-keys';
 import { mergeLegendCategoryOrder } from './merge-legend-category-order';
 import { migrateLegacyMobileAttributes } from './migrate-legacy-mobile-attributes';
 import { resolveColor, resolveColorInString } from './resolve-color';
 import { resolveFontFamily } from './resolve-font-family';
 import {
 	applyGlobalTokens,
+	compileSeriesFills,
 	getResolvedPalettes,
 	getStaticBaseConfig,
 	resolveChartSeriesColors,
@@ -50,7 +57,7 @@ function resolveDiffColumnCustomLabels(customLabels = {}) {
  * `white` / hex) to light-dark() for AnimatedCircle interpolation.
  *
  * @param {string|undefined} color
- * @return {string}
+ * @return {string} Token passthrough, or a light-dark() color.
  */
 function resolveNodeColor(color) {
 	const token = color || 'inherit';
@@ -129,6 +136,26 @@ function resolvePanelTitleCustomizations(customTitles = {}) {
 }
 
 /**
+ * Resolve panel row fills the way compiled series fills resolve.
+ *
+ * @param {Object|undefined} panelStyles smallMultiples.panelStyles from block attrs.
+ * @return {Object} Panel rows with resolved fill colors.
+ */
+function resolvePanelStyleFills(panelStyles = {}) {
+	return Object.fromEntries(
+		Object.entries(panelStyles).map(([panelKey, rows]) => [
+			panelKey,
+			Object.fromEntries(
+				Object.entries(rows ?? {}).map(([seriesKey, row]) => [
+					seriesKey,
+					row?.fill ? { ...row, fill: resolveColor(row.fill) } : row,
+				])
+			),
+		])
+	);
+}
+
+/**
  * Deep merge viewport-specific overrides into base attributes
  *
  * @param {Object} baseAttributes - The full block attributes object
@@ -196,6 +223,7 @@ const getConfig = (
 		layout,
 		metadata,
 		io,
+		seriesStyles,
 		plotBands,
 		annotations,
 		bar,
@@ -297,11 +325,16 @@ const getConfig = (
 					? alt
 					: generateDefaultAltText(chartType, title),
 		},
-		colors: resolveChartSeriesColors(
-			customColors,
-			colorValue,
-			resolvedColorPalette
+		colors: compileSeriesFills(
+			getSeriesColorSlotKeys(mergedAttributes),
+			seriesStyles,
+			resolveChartSeriesColors(
+				customColors,
+				colorValue,
+				resolvedColorPalette
+			)
 		).map(resolveColor),
+		seriesStyles: seriesStyles ?? {},
 		plotBands: {
 			...baseConfig.plotBands,
 			...plotBands,
@@ -447,6 +480,21 @@ const getConfig = (
 		dataRender: {
 			...baseConfig.dataRender,
 			...dataRender,
+			mapScaleDomain:
+				(io.chartFamily === 'map' ||
+					VALUE_SCALE_CHART_TYPES.includes(chartType)) &&
+				dataRender?.mapScale === 'ordinal'
+					? getOrdinalValueDomain(
+							io.chartData,
+							getOrdinalValueColumns(
+								chartType,
+								0 < dataRender?.categories?.length
+									? dataRender.categories
+									: availableCategories
+							),
+							dataRender.mapScaleDomain
+						)
+					: dataRender.mapScaleDomain,
 			categories:
 				0 < dataRender?.categories?.length
 					? dataRender.categories
@@ -586,6 +634,7 @@ const getConfig = (
 					divergingBar,
 					sankey,
 					smallMultiples,
+					legend,
 				});
 
 				if (legend.categories && legend.categories.length > 0) {
@@ -636,8 +685,8 @@ const getConfig = (
 			...baseConfig.pie,
 			...pie,
 			// Prefer pie-specific attribute (pie-controls.jsx "Show Slice Stroke"),
-			// fall back to legacy io.elementHasStroke toggle from color-controls.jsx
-			// for backward compatibility with blocks saved before the pie control existed.
+			// fall back to legacy io.elementHasStroke (no longer editable) for blocks
+			// saved before the pie control existed.
 			hasPathStroke: pie?.hasPathStroke ?? elementHasStroke ?? false,
 			pathStrokeColor: resolveColor(pie?.pathStrokeColor ?? 'white'),
 			pathStrokeWidth:
@@ -874,6 +923,7 @@ const getConfig = (
 				),
 			},
 			customTitles: resolvePanelTitleCustomizations(customPanelTitles),
+			panelStyles: resolvePanelStyleFills(smallMultiples?.panelStyles),
 		},
 		annotations: {
 			...baseConfig.annotations,

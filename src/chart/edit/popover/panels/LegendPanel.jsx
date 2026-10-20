@@ -7,7 +7,6 @@
 
 import {
 	SelectControl,
-	TextControl,
 	__experimentalHeading as Heading,
 	__experimentalHStack as HStack,
 	__experimentalNumberControl as NumberControl,
@@ -15,19 +14,20 @@ import {
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
 import { __ } from '@wordpress/i18n';
 
 import { formatNum } from '../../../utils/helpers';
 import { FONT_WEIGHT_OPTIONS } from '../utils';
+import ChartPanelColorSettings from '../../chart-panel-color-settings';
+import { RichTextField } from './RichTextField';
 
 const FONT_SIZE_OPTIONS = ['10', '12', '14', '16'];
 
 /**
  * @param {Object}   props
- * @param {Object}   props.legend            - Current legend attribute
- * @param {Function} props.onUpdate          - Partial legend updates
- * @param {boolean}  props.showDirectLayout  - Show Direct when the chart is a line family
+ * @param {Object}   props.legend           - Current legend attribute
+ * @param {Function} props.onUpdate         - Partial legend updates
+ * @param {boolean}  props.showDirectLayout - Show Direct when the chart is a line family
  */
 export function LegendPanel({
 	legend = {},
@@ -112,6 +112,7 @@ export function LegendPanel({
 				)}
 			</ToggleGroupControl>
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Orientation', 'prc-chart-builder')}
 				value={legend.orientation || 'row'}
 				options={[
@@ -133,6 +134,7 @@ export function LegendPanel({
 			/>
 
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Marker Style', 'prc-chart-builder')}
 				value={markerStyle}
 				options={[
@@ -172,7 +174,7 @@ export function LegendPanel({
 				</ToggleGroupControl>
 			)}
 
-			<TextControl
+			<RichTextField
 				label={__('Legend Title', 'prc-chart-builder')}
 				value={legend.title || ''}
 				onChange={(value) => handleChange('title', value)}
@@ -186,7 +188,10 @@ export function LegendPanel({
 					__nextHasNoMarginBottom
 					isBlock
 					value={
-						legend.fontSize != null ? String(legend.fontSize) : ''
+						legend.fontSize !== null &&
+						legend.fontSize !== undefined
+							? String(legend.fontSize)
+							: ''
 					}
 					onChange={(value) =>
 						handleChange(
@@ -205,13 +210,14 @@ export function LegendPanel({
 				</ToggleGroupControl>
 			</VStack>
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Font Weight', 'prc-chart-builder')}
 				value={legend.fontWeight || 'normal'}
 				options={FONT_WEIGHT_OPTIONS}
 				onChange={(value) => handleChange('fontWeight', value)}
 			/>
 
-			<PanelColorSettings
+			<ChartPanelColorSettings
 				__experimentalHasMultipleOrigins
 				__experimentalIsRenderedInSidebar
 				title={__('Fill and Stroke', 'prc-chart-builder')}

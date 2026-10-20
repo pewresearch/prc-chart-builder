@@ -7,44 +7,38 @@
 
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 
-import { __ } from '@wordpress/i18n';
 import {
-	TextControl,
-	SelectControl,
-	__experimentalHStack as HStack,
-	__experimentalVStack as VStack,
-	__experimentalText as Text,
-	__experimentalNumberControl as NumberControl,
 	Button,
+	__experimentalHStack as HStack,
+	__experimentalNumberControl as NumberControl,
+	SelectControl,
+	__experimentalText as Text,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
+import { __ } from '@wordpress/i18n';
 
-import { useAnnotationCustomizations } from '../hooks';
 import { formatNum } from '../../../utils/helpers';
+import { useAnnotationCustomizations } from '../hooks';
+import { RichTextField } from './RichTextField';
 import { TextStyleControls } from './TextStyleControls';
 
 /**
  * AnnotationPanel Component
  *
  * @param {Object}   props
- * @param {string}   props.annotationId   - The annotation index as string
- * @param {Object}   props.annotation     - The annotation object
- * @param {Function} props.onUpdate       - Callback to update annotation (receives partial updates)
- * @param {Function} props.onDelete       - Callback to delete the annotation
- * @param {string}   props.variant         - 'full' (default) or 'compact' (text styling only)
- * @param {string}   props.subtitle        - Replaces "Annotation #N" when variant is compact
- * @param {Object}   props.defaults        - Custom reset defaults (compact variant)
+ * @param {string}   props.annotationId - The annotation index as string
+ * @param {Object}   props.annotation   - The annotation object
+ * @param {Function} props.onUpdate     - Callback to update annotation (receives partial updates)
+ * @param {Function} props.onDelete     - Callback to delete the annotation
+ * @param {string[]} props.panelKeys    - Small-multiples panel keys (for annotations)
  */
 export function AnnotationPanel({
 	annotationId,
 	annotation,
 	onUpdate,
 	onDelete,
-	variant = 'full',
-	subtitle = '',
-	defaults: customDefaults = null,
 	panelKeys = [],
 }) {
-	const isCompact = variant === 'compact';
 	const {
 		text,
 		fontSize,
@@ -100,7 +94,7 @@ export function AnnotationPanel({
 				{parseInt(annotationId, 10) + 1}
 			</Text>
 
-			<TextControl
+			<RichTextField
 				label={__('Text', 'prc-chart-builder')}
 				value={text}
 				onChange={(value) => handleChange('text', value)}
@@ -111,6 +105,7 @@ export function AnnotationPanel({
 				label={__('Positioning Context', 'prc-chart-builder')}
 				value={positioningContext}
 				options={positioningOptions}
+				__next40pxDefaultSize
 				onChange={(value) => {
 					if (
 						(value === 'panel' || value === 'panel-inner') &&
@@ -137,6 +132,7 @@ export function AnnotationPanel({
 				<SelectControl
 					label={__('Panel', 'prc-chart-builder')}
 					value={panelKey || String(panelKeys[0])}
+					__next40pxDefaultSize
 					options={panelKeys.map((key) => ({
 						label: String(key),
 						value: String(key),
@@ -179,6 +175,7 @@ export function AnnotationPanel({
 			<SelectControl
 				label={__('Text Anchor', 'prc-chart-builder')}
 				value={textAnchor}
+				__next40pxDefaultSize
 				options={[
 					{ label: __('Start', 'prc-chart-builder'), value: 'start' },
 					{
@@ -193,6 +190,7 @@ export function AnnotationPanel({
 			<SelectControl
 				label={__('Vertical Anchor', 'prc-chart-builder')}
 				value={verticalAnchor}
+				__next40pxDefaultSize
 				options={[
 					{ label: __('Start', 'prc-chart-builder'), value: 'start' },
 					{
@@ -241,6 +239,7 @@ export function AnnotationPanel({
 					variant="secondary"
 					onClick={handleReset}
 					style={{ marginTop: '8px' }}
+					__next40pxDefaultSize
 				>
 					{__('Reset to defaults', 'prc-chart-builder')}
 				</Button>
@@ -252,6 +251,7 @@ export function AnnotationPanel({
 					isDestructive
 					onClick={onDelete}
 					style={{ marginTop: '8px' }}
+					__next40pxDefaultSize
 				>
 					{__('Delete annotation', 'prc-chart-builder')}
 				</Button>

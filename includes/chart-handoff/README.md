@@ -76,7 +76,7 @@ plugins/prc-chart-builder/
 
 | Field | Type | Description |
 |---|---|---|
-| `colors` | `array` | Hex color palette |
+| `colors` | `array` | Hex color palette, in series order. Imports as `io.customColors` |
 | `width` / `height` | `number` | Chart dimensions in px |
 | `independentAxis` | `object` | Axis label, scale, domain, tickFormat, tickUnit, etc. |
 | `dependentAxis` | `object` | Same fields as independentAxis + showZero |

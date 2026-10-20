@@ -15,7 +15,6 @@ import { store as blocksStore } from '@wordpress/blocks';
 import {
 	BoxControl,
 	PanelBody,
-	PanelRow,
 	RangeControl,
 	SelectControl,
 } from '@wordpress/components';
@@ -66,6 +65,7 @@ import WaffleControls from './waffle-controls';
 import HeatMapTableControls from './heat-map-table-controls';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import ProductionControls from './production-controls';
+import { PanelDescription } from './control-ui';
 
 function ControlSections(props) {
 	const { attributes, limitControls } = props;
@@ -189,6 +189,7 @@ function ChartControls({
 		padding,
 		overflowX,
 	} = layout;
+	const isSmallMultiples = chartType === 'small-multiples';
 	// Content attribute - NOT viewport-aware
 	const io = attributes.io || {};
 	const { isStaticChart, isFreeformChart } = io;
@@ -248,6 +249,7 @@ function ChartControls({
 				<PanelBody title={__('Chart Layout')} initialOpen={false}>
 					{!limitControls && chartTypeOptions.length > 0 && (
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Chart Type')}
 							value={controllerChartType || chartType}
 							options={chartTypeOptions}
@@ -264,6 +266,7 @@ function ChartControls({
 						('bar' === chartType ||
 							'stacked-bar' === chartType) && (
 							<SelectControl
+								__next40pxDefaultSize
 								label={__(
 									'Chart Orientation (Bar charts only)'
 								)}
@@ -286,6 +289,7 @@ function ChartControls({
 							/>
 						)}
 					<RangeControl
+						__next40pxDefaultSize
 						label={__('Width')}
 						withInputField
 						min={0}
@@ -297,19 +301,29 @@ function ChartControls({
 							})
 						}
 					/>
-					<RangeControl
-						label={__('Height')}
-						withInputField
-						min={0}
-						max={1200}
-						value={parseInt(height, 10)}
-						onChange={(h) =>
-							updateAttributeForDevice('layout', {
-								height: formatNum(h, 'integer'),
-							})
-						}
-					/>
+					{isSmallMultiples ? (
+						<PanelDescription>
+							{__(
+								'Small multiples set their height per panel. Use Panel Height in the Small Multiples panel.'
+							)}
+						</PanelDescription>
+					) : (
+						<RangeControl
+							__next40pxDefaultSize
+							label={__('Height')}
+							withInputField
+							min={0}
+							max={1200}
+							value={parseInt(height, 10)}
+							onChange={(h) =>
+								updateAttributeForDevice('layout', {
+									height: formatNum(h, 'integer'),
+								})
+							}
+						/>
+					)}
 					<SelectControl
+						__next40pxDefaultSize
 						label={__('Overflow')}
 						value={overflowX}
 						help={__(
@@ -341,6 +355,7 @@ function ChartControls({
 					/>
 					{!limitControls && (
 						<BoxControl
+							__next40pxDefaultSize
 							label={__('Padding')}
 							values={{
 								top: padding.top,

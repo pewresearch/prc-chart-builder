@@ -13,6 +13,7 @@ import deprecated from './deprecations';
 import edit from './edit';
 import save from './save';
 import store from './edit/store';
+import './edit.scss';
 
 const { name } = metadata;
 const settings = {
@@ -34,7 +35,7 @@ register(store);
 
 registerBlockType(name, { ...metadata, ...settings });
 
-/**
+/*
  * @benwormald use our hooks
  * prc-platform.onIncrementalSave` Occurs often, whenever a post in a `draft` state is updated.
   - `prc-platform.onPublish` Occurs when a post transitions from `draft` to `publish` state.

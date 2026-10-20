@@ -78,6 +78,12 @@ return array(
 					'#5B798F'
 				)
 			),
+			'seriesStyles' => array(
+				'type' => 'object',
+				'default' => array(
+					
+				)
+			),
 			'plotBands' => array(
 				'type' => 'object',
 				'default' => array(
@@ -470,7 +476,7 @@ return array(
 					),
 					'abbreviateLabels' => true,
 					'blockRectSize' => 44,
-					'pathBackgroundFill' => '#f7f7f7',
+					'pathBackgroundFill' => 'light-dark(#F7F7F7, #242424)',
 					'pathStroke' => '#d3d3d3',
 					'pathStrokeWidth' => 0.5,
 					'showCountyBoundaries' => true,
@@ -652,10 +658,7 @@ return array(
 				'default' => array(
 					'cellGap' => 0,
 					'cellRadius' => 0,
-					'showValues' => true,
 					'emptyFill' => '#F5F5F5',
-					'rowLabelWidth' => 0,
-					'columnHeaderHeight' => 48,
 					'minCellWidth' => 40,
 					'minCellHeight' => 28
 				)
@@ -670,6 +673,10 @@ return array(
 					'sharedScale' => true,
 					'axisTreatment' => 'minimal',
 					'emphasisMode' => 'own-series',
+					'colorMode' => 'shared',
+					'panelStyles' => array(
+						
+					),
 					'ghost' => array(
 						'stroke' => '#E6E7E8',
 						'strokeWidth' => 1.5,
@@ -913,6 +920,7 @@ return array(
 			'lock' => false
 		),
 		'editorScript' => 'file:./index.js',
+		'editorStyle' => 'file:./index.css',
 		'viewScriptModule' => 'file:./view.js'
 	),
 	'controller' => array(

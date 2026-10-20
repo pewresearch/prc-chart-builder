@@ -14,11 +14,11 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { PanelColorSettings } from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
 import { WidePanelItem } from './control-ui';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 function DiffColumnControls({ attributes, setAttributes, clientId }) {
 	// Viewport-aware attribute management
@@ -50,6 +50,7 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<TextControl
+							__next40pxDefaultSize
 							label={__('Column Header')}
 							value={getCurrentValue(
 								'diffColumn',
@@ -156,6 +157,7 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Column Appearance')}
 							value={
 								getCurrentValue('diffColumn', 'style')
@@ -208,7 +210,7 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 						isShownByDefault
 						panelId={clientId}
 					>
-						<PanelColorSettings
+						<ChartPanelColorSettings
 							__experimentalHasMultipleOrigins
 							__experimentalIsRenderedInSidebar
 							title={__('Column Colors')}

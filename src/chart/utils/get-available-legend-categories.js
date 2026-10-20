@@ -1,5 +1,14 @@
 import { getGroupColorDomain } from '../../../../prc-scripts/includes/scripts/src/@prc/charting-utilities/compute/groupColorDomain.ts';
-import { BUBBLE_MAP_CHART_TYPES, POINT_CHART_TYPES } from './chart-types';
+import { getThresholdLegendLabels } from '../../../../prc-scripts/includes/scripts/src/@prc/charting-utilities/heatMapTable/thresholdLegendLabels.ts';
+import {
+	BUBBLE_MAP_CHART_TYPES,
+	POINT_CHART_TYPES,
+	VALUE_SCALE_CHART_TYPES,
+} from './chart-types';
+
+function usesValueScaleColorDomain(chartType, chartFamily) {
+	return chartFamily === 'map' || VALUE_SCALE_CHART_TYPES.includes(chartType);
+}
 
 /**
  * Treemap legend categories mirror Treemap.tsx groupNames: group values when
@@ -82,8 +91,8 @@ function getSankeyLegendCategories(chartData = [], sankey = {}) {
 /**
  * Part-to-whole charts (pie, waffle) color by row label (`x`), like the pie color scale.
  *
- * @param {Object[]} chartData
- * @return {string[]}
+ * @param {Object[]} chartData Chart rows. Each row label is `x`.
+ * @return {string[]} Row labels in first-seen order.
  */
 function getPartToWholeLegendCategories(chartData = []) {
 	const seen = new Set();
@@ -100,6 +109,48 @@ function getPartToWholeLegendCategories(chartData = []) {
 }
 
 /**
+ * Columns whose values make up an ordinal value scale: a map's one data
+ * category, or every value column of a heat map.
+ *
+ * @param {string}   chartType  Block chart type.
+ * @param {string[]} categories dataRender.categories.
+ * @return {string[]} Column keys.
+ */
+export function getOrdinalValueColumns(chartType, categories = []) {
+	const columns = (categories ?? []).map(String);
+	return VALUE_SCALE_CHART_TYPES.includes(chartType)
+		? columns
+		: columns.slice(0, 1);
+}
+
+/**
+ * Ordinal color domain from the values in the given columns.
+ *
+ * Unique values follow first-seen order, row by row. A saved domain keeps
+ * that order for values still in the table and drops the rest. New values
+ * append. An empty table keeps the saved domain so a chart does not lose
+ * its scale before data loads.
+ *
+ * @param {Array<Object>}        chartData   Table rows.
+ * @param {string[]}             columns     Columns that hold the values.
+ * @param {Array<string|number>} savedDomain Stored mapScaleDomain.
+ * @return {string[]} Domain keys in palette order.
+ */
+export function getOrdinalValueDomain(chartData, columns, savedDomain = []) {
+	const saved = (Array.isArray(savedDomain) ? savedDomain : [])
+		.map((value) => String(value))
+		.filter((value) => value.trim() !== '');
+	const cells = (Array.isArray(chartData) ? chartData : []).flatMap((row) =>
+		columns.map((column) => ({ value: row?.[column] }))
+	);
+	const inferred = getGroupColorDomain(cells, 'value', {
+		groupOrder: saved,
+	});
+
+	return inferred.length > 0 ? inferred : saved;
+}
+
+/**
  * Derive the set of legend categories for the current chart configuration.
  * Shared by legend-controls.jsx (editor sorter) and get-config.js (render).
  *
@@ -111,6 +162,7 @@ function getPartToWholeLegendCategories(chartData = []) {
  * @param {Object} [params.divergingBar]
  * @param {Object} [params.sankey]
  * @param {Object} [params.smallMultiples]
+ * @param {Object} [params.legend]
  * @return {string[]} Available legend category labels.
  */
 export function getAvailableLegendCategories({
@@ -121,6 +173,7 @@ export function getAvailableLegendCategories({
 	divergingBar = {},
 	sankey = {},
 	smallMultiples = {},
+	legend = {},
 }) {
 	const { availableCategories = [], chartData = [] } = io;
 	const {
@@ -161,8 +214,29 @@ export function getAvailableLegendCategories({
 		return divergingCategories;
 	}
 
-	if (chartFamily === 'map' && mapScale === 'ordinal') {
-		return mapScaleDomain;
+	if (isBubbleMapLegendMode(chartType, dataRender.mapStyle)) {
+		if (groupBreaksCategory) {
+			return getGroupColorDomain(chartData, groupBreaksCategory, {
+				groupOrder: groupBreaksCategoryValues,
+			});
+		}
+		return dataCategories?.[0] ? [String(dataCategories[0])] : [];
+	}
+
+	if (usesValueScaleColorDomain(chartType, chartFamily)) {
+		if (mapScale === 'threshold') {
+			return getThresholdLegendLabels(mapScaleDomain, legend);
+		}
+		if (mapScale === 'ordinal') {
+			return getOrdinalValueDomain(
+				chartData,
+				getOrdinalValueColumns(chartType, dataCategories),
+				mapScaleDomain
+			);
+		}
+		if (mapScale === 'linear') {
+			return [];
+		}
 	}
 
 	if (POINT_CHART_TYPES.includes(chartType) && groupBreaksCategory) {
@@ -179,10 +253,31 @@ export function getAvailableLegendCategories({
 		return getSankeyLegendCategories(chartData, sankey);
 	}
 
-	// Standalone pie/waffle: legend keys are row labels (independent variable).
-	// Small-multiples pie/waffle panels fall through to series columns below.
+	// Pie slices and standalone waffle cells key by row label.
 	if (chartType === 'pie' || chartType === 'waffle') {
 		return getPartToWholeLegendCategories(chartData);
+	}
+
+	if (chartType === 'small-multiples') {
+		if (smallMultiples.panelType === 'pie') {
+			return getPartToWholeLegendCategories(chartData);
+		}
+		// Each waffle panel is one series keyed by panel name.
+		if (
+			smallMultiples.panelType === 'waffle' &&
+			dataRender.groupBreaksActive &&
+			groupBreaksCategory
+		) {
+			return getGroupColorDomain(chartData, groupBreaksCategory, {
+				groupOrder: groupBreaksCategoryValues,
+			});
+		}
+		// The grouping column names the panels; it is not a series.
+		if (dataRender.groupBreaksActive && groupBreaksCategory) {
+			return defaultCategories.filter(
+				(category) => category !== groupBreaksCategory
+			);
+		}
 	}
 
 	return defaultCategories;

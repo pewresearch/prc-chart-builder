@@ -29,10 +29,7 @@ import {
 	Tip,
 } from '@wordpress/components';
 import { useState, useMemo } from 'react';
-import {
-	__experimentalPublishDateTimePicker as DateTimePicker,
-	PanelColorSettings,
-} from '@wordpress/block-editor';
+import { __experimentalPublishDateTimePicker as DateTimePicker } from '@wordpress/block-editor';
 import { getDate, dateI18n } from '@wordpress/date';
 /**
  * Internal dependencies
@@ -40,11 +37,14 @@ import { getDate, dateI18n } from '@wordpress/date';
 import { formatNum } from '../utils/helpers';
 import presidentPlotBands from '../utils/president-plot-bands';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 function PlotBandControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
-	const { getCurrentValue, updateAttributeForDevice } =
-		useViewportAttributes(attributes, setAttributes);
+	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
+		attributes,
+		setAttributes
+	);
 
 	const plotBands = getCurrentValue('plotBands') || {};
 	const bands = plotBands.bands || [];
@@ -75,6 +75,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 			/>
 			<Spacer height={10} />
 			<Button
+				__next40pxDefaultSize
 				variant="secondary"
 				onClick={() => {
 					updateAttributeForDevice('plotBands', {
@@ -96,6 +97,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 					<Card>
 						<CardHeader>
 							<TextControl
+								__next40pxDefaultSize
 								placeholder={__('Plot Band') + ` ${index + 1}`}
 								value={plotBand.label}
 								onChange={(value) => {
@@ -141,6 +143,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 						<CardBody>
 							<Heading level={2}>Label Positioning</Heading>
 							<SelectControl
+								__next40pxDefaultSize
 								label={__('Orientation')}
 								value={plotBand.style.label.orientation}
 								options={[
@@ -167,6 +170,7 @@ function PlotBandControls({ attributes, setAttributes }) {
 								}}
 							/>
 							<SelectControl
+								__next40pxDefaultSize
 								label={__('Alignment')}
 								value={plotBand.style.label.align}
 								options={[
@@ -204,7 +208,10 @@ function PlotBandControls({ attributes, setAttributes }) {
 													...band.style,
 													label: {
 														...band.style.label,
-														dx: formatNum(value, 'integer'),
+														dx: formatNum(
+															value,
+															'integer'
+														),
 													},
 												},
 											}));
@@ -222,7 +229,10 @@ function PlotBandControls({ attributes, setAttributes }) {
 													...band.style,
 													label: {
 														...band.style.label,
-														dy: formatNum(value, 'integer'),
+														dy: formatNum(
+															value,
+															'integer'
+														),
 													},
 												},
 											}));
@@ -234,10 +244,12 @@ function PlotBandControls({ attributes, setAttributes }) {
 						<CardFooter>
 							{/* Button to delete this card */}
 							<Button
+								__next40pxDefaultSize
 								isDestructive
 								onClick={() => {
 									const currentBands =
-										getCurrentValue('plotBands', 'bands') || [];
+										getCurrentValue('plotBands', 'bands') ||
+										[];
 									updateAttributeForDevice('plotBands', {
 										bands: currentBands.filter(
 											(band, i) => i !== index
@@ -253,8 +265,10 @@ function PlotBandControls({ attributes, setAttributes }) {
 				</>
 			))}
 			<Button
+				__next40pxDefaultSize
 				onClick={() => {
-					const currentBands = getCurrentValue('plotBands', 'bands') || [];
+					const currentBands =
+						getCurrentValue('plotBands', 'bands') || [];
 					updateAttributeForDevice('plotBands', {
 						bands: [
 							...currentBands,
@@ -294,6 +308,7 @@ const StyleOptions = ({ style, updateBand, index }) => {
 		<>
 			<Heading level={2}>Styles</Heading>
 			<FontSizePicker
+				__next40pxDefaultSize
 				__nextHasNoMarginBottom
 				value={label.fontSize}
 				fontSizes={[
@@ -336,7 +351,7 @@ const StyleOptions = ({ style, updateBand, index }) => {
 					}));
 				}}
 			/>
-			<PanelColorSettings
+			<ChartPanelColorSettings
 				__experimentalHasMultipleOrigins
 				__experimentalIsRenderedInSidebar
 				title={__('Fills')}
@@ -441,6 +456,7 @@ function PostScheduleToggle({ isOpen, onClick, value }) {
 
 	return (
 		<Button
+			__next40pxDefaultSize
 			className="edit-post-post-schedule__toggle"
 			variant="tertiary"
 			label={label}

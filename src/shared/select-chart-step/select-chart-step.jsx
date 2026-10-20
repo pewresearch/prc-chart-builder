@@ -48,6 +48,7 @@ const CHART_TYPE_ICON_MAP = {
 	line: trendingUp,
 	'map-usa': globe,
 	'map-usa-block': globe,
+	'map-usa-cbsa': globe,
 	'map-usa-county': globe,
 	'map-usa-counties': globe,
 	'map-usa-hex': globe,
@@ -604,6 +605,7 @@ export function PatternPicker({
 					{primaryAction && (
 						<FlexItem>
 							<Button
+								__next40pxDefaultSize
 								variant="primary"
 								onClick={primaryAction.onClick}
 								disabled={primaryAction.disabled}
@@ -614,6 +616,7 @@ export function PatternPicker({
 					)}
 					<FlexItem>
 						<Button
+							__next40pxDefaultSize
 							variant="secondary"
 							onClick={onBack}
 							icon={chevronLeft}

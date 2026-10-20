@@ -64,6 +64,9 @@ class Apple_News_Integration {
 	/**
 	 * Convert a synced chart reference into ANF components.
 	 *
+	 * The placed block's Apple News alignment and column count apply to this
+	 * placement only; the chart post is untouched.
+	 *
 	 * @param array    $block Parsed block.
 	 * @param \WP_Post $post  Post.
 	 * @return array<int,array<string,mixed>>
@@ -74,7 +77,14 @@ class Apple_News_Integration {
 			return array();
 		}
 
-		$align = isset( $block['attrs']['align'] ) ? sanitize_key( (string) $block['attrs']['align'] ) : '';
+		$alignment = '\PRC\Platform\Apple_News\ANF\ANF_Alignment';
+		if ( class_exists( $alignment ) ) {
+			$align   = (string) $alignment::align_from_block( $block );
+			$columns = $alignment::columns_from_block( $block );
+		} else {
+			$align   = isset( $block['attrs']['align'] ) ? sanitize_key( (string) $block['attrs']['align'] ) : '';
+			$columns = null;
+		}
 
 		$chart_post = get_post( (int) $ref );
 		if ( ! $chart_post || Content_Type::$post_type !== $chart_post->post_type ) {
@@ -102,13 +112,13 @@ class Apple_News_Integration {
 				if ( '' === trim( $title ) ) {
 					$title = 'Chart';
 				}
-				return $this->chart_photo_components( $png_url, wp_strip_all_tags( $title ), $align, $width );
+				return $this->chart_photo_components( $png_url, wp_strip_all_tags( $title ), $align, $width, $columns );
 			}
 		}
 
 		foreach ( $chart_blocks as $chart_block ) {
 			if ( 'prc-chart-builder/controller' === ( $chart_block['blockName'] ?? '' ) ) {
-				return $this->controller_to_anf( $chart_block, $post, $align );
+				return $this->controller_to_anf( $chart_block, $post, $align, null, $columns );
 			}
 		}
 
@@ -153,13 +163,14 @@ class Apple_News_Integration {
 	/**
 	 * Convert a chart controller block into ANF components.
 	 *
-	 * @param array    $block Parsed block.
-	 * @param \WP_Post $post  Post.
-	 * @param string   $align Gutenberg alignment.
-	 * @param int|null $width Authored chart width in pixels.
+	 * @param array    $block   Parsed block.
+	 * @param \WP_Post $post    Post.
+	 * @param string   $align   Gutenberg alignment.
+	 * @param int|null $width   Authored chart width in pixels.
+	 * @param int|null $columns Apple News column count for a left/right float; null for Auto.
 	 * @return array<int,array<string,mixed>>
 	 */
-	public function controller_to_anf( array $block, \WP_Post $post, string $align = '', ?int $width = null ): array {
+	public function controller_to_anf( array $block, \WP_Post $post, string $align = '', ?int $width = null, ?int $columns = null ): array {
 		$inner_blocks = $block['innerBlocks'] ?? array();
 		$chart_block  = null;
 
@@ -191,26 +202,27 @@ class Apple_News_Integration {
 		$metadata = $attrs['metadata'] ?? array();
 		$title    = wp_strip_all_tags( $metadata['title'] ?? 'Chart' );
 
-		return $this->chart_photo_components( $png_url, $title, $align, $width );
+		return $this->chart_photo_components( $png_url, $title, $align, $width, $columns );
 	}
 
 	/**
 	 * Build the photo (and caption) components for a chart PNG.
 	 *
-	 * @param string   $url   Image URL.
-	 * @param string   $title Alt/caption text.
-	 * @param string   $align Gutenberg alignment.
-	 * @param int|null $width Authored chart width in pixels.
+	 * @param string   $url     Image URL.
+	 * @param string   $title   Alt/caption text.
+	 * @param string   $align   Gutenberg alignment.
+	 * @param int|null $width   Authored chart width in pixels.
+	 * @param int|null $columns Apple News column count; wins over the width for a left/right float.
 	 * @return array<int,array<string,mixed>>
 	 */
-	private function chart_photo_components( string $url, string $title, string $align = '', ?int $width = null ): array {
+	private function chart_photo_components( string $url, string $title, string $align = '', ?int $width = null, ?int $columns = null ): array {
 		if ( null === $width || $width <= 0 ) {
 			$width = self::DEFAULT_CHART_WIDTH;
 		}
 
 		$alignment = '\PRC\Platform\Apple_News\ANF\ANF_Alignment';
 		$mapping   = class_exists( $alignment )
-			? $alignment::layout_for_alignment( $align, $width )
+			? $alignment::layout_for_alignment( $align, $width, $columns )
 			: null;
 
 		$photo = array(

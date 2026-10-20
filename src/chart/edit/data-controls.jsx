@@ -11,7 +11,6 @@ import {
 	__experimentalNumberControl as NumberControl,
 	PanelBody,
 	SelectControl,
-	TextareaControl,
 	ToggleControl,
 	__experimentalToolsPanel as ToolsPanel,
 } from '@wordpress/components';
@@ -35,6 +34,7 @@ import { formatNum } from '../utils/helpers';
 import Sorter from './sorter';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
+import ValueScaleControls from './value-scale-controls';
 
 function uniqueCanonicalColumnValues(data, column) {
 	const unique = new Set();
@@ -73,30 +73,24 @@ function DataControls({ attributes, setAttributes, clientId }) {
 	// so table parsing + tooltip date formatting stay available for bar/column/pie.
 	const showXScaleControl =
 		LINE_CHART_TYPES.includes(effectiveType) || isSmallMultiples;
-	const categories = dataRender.categories || [];
-	const positiveCategories = divergingBar.positiveCategories || [];
-	const negativeCategories = divergingBar.negativeCategories || [];
 	const secondary = divergingBar.secondary || {};
 	const secondaryActive = secondary.active || false;
-	const secondaryPositiveCategories = secondary.positiveCategories || [];
-	const secondaryNegativeCategories = secondary.negativeCategories || [];
 	const groupBreaksActive = dataRender.groupBreaksActive || false;
 	const groupBreaksCategory = dataRender.groupBreaksCategory || '';
 
-	const availableOptions = useMemo(
-		() =>
-			(availableCategories || []).map((category) => {
-				return {
-					label: category,
-					// isHidden — not `disabled` (react-movable blocks drag on disabled).
-					isHidden:
-						categories.length > 0
-							? !categories.includes(category)
-							: false,
-				};
-			}),
-		[availableCategories, categories]
-	);
+	const availableOptions = useMemo(() => {
+		const categories = dataRender.categories || [];
+		return (availableCategories || []).map((category) => {
+			return {
+				label: category,
+				// isHidden — not `disabled` (react-movable blocks drag on disabled).
+				isHidden:
+					categories.length > 0
+						? !categories.includes(category)
+						: false,
+			};
+		});
+	}, [availableCategories, dataRender.categories]);
 	const availableSelectableOptions = useMemo(
 		() =>
 			availableOptions.map((option) => ({
@@ -105,42 +99,40 @@ function DataControls({ attributes, setAttributes, clientId }) {
 			})),
 		[availableOptions]
 	);
-	const availablePositiveOptions = useMemo(
-		() =>
-			availableCategories.map((category) => ({
-				label: category,
-				value: category,
-				isHidden: !positiveCategories.includes(category),
-			})),
-		[availableCategories, positiveCategories]
-	);
-	const availableNegativeOptions = useMemo(
-		() =>
-			availableCategories.map((category) => ({
-				label: category,
-				value: category,
-				isHidden: !negativeCategories.includes(category),
-			})),
-		[availableCategories, negativeCategories]
-	);
-	const availableSecondaryPositiveOptions = useMemo(
-		() =>
-			availableCategories.map((category) => ({
-				label: category,
-				value: category,
-				isHidden: !secondaryPositiveCategories.includes(category),
-			})),
-		[availableCategories, secondaryPositiveCategories]
-	);
-	const availableSecondaryNegativeOptions = useMemo(
-		() =>
-			availableCategories.map((category) => ({
-				label: category,
-				value: category,
-				isHidden: !secondaryNegativeCategories.includes(category),
-			})),
-		[availableCategories, secondaryNegativeCategories]
-	);
+	const availablePositiveOptions = useMemo(() => {
+		const positiveCategories = divergingBar.positiveCategories || [];
+		return availableCategories.map((category) => ({
+			label: category,
+			value: category,
+			isHidden: !positiveCategories.includes(category),
+		}));
+	}, [availableCategories, divergingBar.positiveCategories]);
+	const availableNegativeOptions = useMemo(() => {
+		const negativeCategories = divergingBar.negativeCategories || [];
+		return availableCategories.map((category) => ({
+			label: category,
+			value: category,
+			isHidden: !negativeCategories.includes(category),
+		}));
+	}, [availableCategories, divergingBar.negativeCategories]);
+	const availableSecondaryPositiveOptions = useMemo(() => {
+		const secondaryPositiveCategories =
+			divergingBar.secondary?.positiveCategories || [];
+		return availableCategories.map((category) => ({
+			label: category,
+			value: category,
+			isHidden: !secondaryPositiveCategories.includes(category),
+		}));
+	}, [availableCategories, divergingBar.secondary?.positiveCategories]);
+	const availableSecondaryNegativeOptions = useMemo(() => {
+		const secondaryNegativeCategories =
+			divergingBar.secondary?.negativeCategories || [];
+		return availableCategories.map((category) => ({
+			label: category,
+			value: category,
+			isHidden: !secondaryNegativeCategories.includes(category),
+		}));
+	}, [availableCategories, divergingBar.secondary?.negativeCategories]);
 
 	// Derive unique group values from the selected groupBreaksCategory
 	const availableGroupValues = useMemo(() => {
@@ -192,6 +184,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('X Scale')}
 							value={dataRender.xScale}
 							onChange={(value) => {
@@ -222,6 +215,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Time series input format')}
 							value={dataRender.xFormat}
 							help={__(
@@ -291,6 +285,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								to use to render your map’s data.
 							</PanelDescription>
 							<SelectControl
+								__next40pxDefaultSize
 								label={__('Map Data Category')}
 								value={dataRender.categories?.[0]}
 								onChange={(value) =>
@@ -319,6 +314,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 									)}
 								</PanelDescription>
 								<SelectControl
+									__next40pxDefaultSize
 									label={__('Map Style')}
 									value={dataRender.mapStyle || 'choropleth'}
 									onChange={(value) =>
@@ -342,253 +338,89 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								/>
 							</WidePanelItem>
 						)}
-						{!(
-							BUBBLE_MAP_CHART_TYPES.includes(chartType) &&
-							dataRender.mapStyle === 'bubble'
-						) && (
-							<>
+						{BUBBLE_MAP_CHART_TYPES.includes(chartType) &&
+							dataRender.mapStyle === 'bubble' && (
 								<WidePanelItem
-									hasValue={() => true}
-									label={__('Map Color Scale')}
+									hasValue={() =>
+										!!dataRender.groupBreaksCategory
+									}
+									label={__('Group By')}
 									isShownByDefault
 									panelId={clientId}
 								>
 									<SelectControl
-										label={__('Map Scale')}
-										value={dataRender.mapScale}
-										onChange={(value) =>
+										__next40pxDefaultSize
+										label={__('Color Bubbles By Group')}
+										help={__(
+											'Select a column to group and color bubbles. Each unique value becomes a series in the color panel.'
+										)}
+										value={
+											dataRender.groupBreaksCategory || ''
+										}
+										onChange={(value) => {
+											const categoryValues =
+												value && chartData
+													? [
+															...new Set(
+																chartData
+																	.map(
+																		(d) =>
+																			d[
+																				value
+																			]
+																	)
+																	.filter(
+																		Boolean
+																	)
+															),
+														]
+													: [];
 											setAttributes({
 												dataRender: {
 													...dataRender,
-													mapScale: value,
+													groupBreaksCategory:
+														value || '',
+													groupBreaksActive: !!value,
+													groupBreaksCategoryValues:
+														categoryValues,
 												},
-											})
-										}
+											});
+										}}
 										options={[
 											{
-												value: 'threshold',
-												label: 'Threshold',
+												value: '',
+												label: __(
+													'— None (one bubble color) —'
+												),
 											},
-											{
-												value: 'ordinal',
-												label: 'Ordinal',
-											},
-											{
-												value: 'linear',
-												label: 'Linear',
-											},
+											...availableCategories.map(
+												(category) => ({
+													label: category,
+													value: category,
+												})
+											),
 										]}
 									/>
 								</WidePanelItem>
-								<WidePanelItem
-									hasValue={() => true}
-									label={__('Map Color Scale Domain')}
-									isShownByDefault
-									panelId={clientId}
-								>
-									{dataRender.mapScale === 'ordinal' ? (
-										<>
-											<PanelDescription>
-												Enter the categories in the
-												order you would like them to
-												appear, one per line.
-											</PanelDescription>
-											<TextareaControl
-												label={__(
-													'Map Color Scale Domain'
-												)}
-												value={(
-													dataRender.mapScaleDomain ||
-													[]
-												).join('\n')}
-												onChange={(value) => {
-													// Keep all lines during editing (including empty)
-													const mapScaleCategories =
-														value.split('\n');
-													setAttributes({
-														dataRender: {
-															...dataRender,
-															mapScaleDomain:
-																mapScaleCategories,
-														},
-													});
-												}}
-												onBlur={() => {
-													// Clean up empty lines when user leaves field
-													const cleaned = (
-														dataRender.mapScaleDomain ||
-														[]
-													).filter(
-														(line) =>
-															line.trim() !== ''
-													);
-													setAttributes({
-														dataRender: {
-															...dataRender,
-															mapScaleDomain:
-																cleaned,
-														},
-													});
-												}}
-												help={__(
-													'One category per line.'
-												)}
-												rows={5}
-											/>
-										</>
-									) : (
-										<>
-											<PanelDescription>
-												{dataRender.mapScale ===
-												'threshold'
-													? 'Enter the thresholds for each color.'
-													: 'Enter the min and max values for the scale.'}
-											</PanelDescription>
-											<FormTokenField
-												label={__(
-													'Map Color Scale Domain'
-												)}
-												value={
-													dataRender.mapScaleDomain ||
-													[]
-												}
-												onChange={(c) => {
-													c = c
-														.map((v) =>
-															parseFloat(v)
-														)
-														.filter(
-															(v) => !isNaN(v)
-														)
-														.sort((a, b) => a - b);
-													setAttributes({
-														dataRender: {
-															...dataRender,
-															mapScaleDomain: c,
-														},
-													});
-												}}
-												help={__(
-													'Separate with commas or the Enter key.'
-												)}
-											/>
-										</>
-									)}
-								</WidePanelItem>
-							</>
+							)}
+						{!(
+							BUBBLE_MAP_CHART_TYPES.includes(chartType) &&
+							dataRender.mapStyle === 'bubble'
+						) && (
+							<ValueScaleControls
+								dataRender={dataRender}
+								setAttributes={setAttributes}
+								clientId={clientId}
+							/>
 						)}
 					</>
 				)}
 				{VALUE_SCALE_CHART_TYPES.includes(chartType) && (
-					<>
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Value Color Scale')}
-							isShownByDefault
-							panelId={clientId}
-						>
-							<SelectControl
-								label={__('Value Scale')}
-								value={dataRender.mapScale}
-								onChange={(value) =>
-									setAttributes({
-										dataRender: {
-											...dataRender,
-											mapScale: value,
-										},
-									})
-								}
-								options={[
-									{
-										value: 'threshold',
-										label: 'Threshold',
-									},
-									{
-										value: 'ordinal',
-										label: 'Ordinal',
-									},
-									{
-										value: 'linear',
-										label: 'Linear',
-									},
-								]}
-							/>
-						</WidePanelItem>
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Value Color Scale Domain')}
-							isShownByDefault
-							panelId={clientId}
-						>
-							{dataRender.mapScale === 'ordinal' ? (
-								<>
-									<PanelDescription>
-										Enter the categories in the order you
-										would like them to appear, one per line.
-									</PanelDescription>
-									<TextareaControl
-										label={__('Value Color Scale Domain')}
-										value={(
-											dataRender.mapScaleDomain || []
-										).join('\n')}
-										onChange={(value) => {
-											const mapScaleCategories =
-												value.split('\n');
-											setAttributes({
-												dataRender: {
-													...dataRender,
-													mapScaleDomain:
-														mapScaleCategories,
-												},
-											});
-										}}
-										onBlur={() => {
-											const cleaned = (
-												dataRender.mapScaleDomain || []
-											).filter(
-												(line) => line.trim() !== ''
-											);
-											setAttributes({
-												dataRender: {
-													...dataRender,
-													mapScaleDomain: cleaned,
-												},
-											});
-										}}
-										help={__('One category per line.')}
-										rows={5}
-									/>
-								</>
-							) : (
-								<>
-									<PanelDescription>
-										{dataRender.mapScale === 'threshold'
-											? 'Enter the thresholds for each color.'
-											: 'Enter the min and max values for the scale.'}
-									</PanelDescription>
-									<FormTokenField
-										label={__('Value Color Scale Domain')}
-										value={dataRender.mapScaleDomain || []}
-										onChange={(c) => {
-											c = c
-												.map((v) => parseFloat(v))
-												.filter((v) => !isNaN(v))
-												.sort((a, b) => a - b);
-											setAttributes({
-												dataRender: {
-													...dataRender,
-													mapScaleDomain: c,
-												},
-											});
-										}}
-										help={__(
-											'Separate with commas or the Enter key.'
-										)}
-									/>
-								</>
-							)}
-						</WidePanelItem>
-					</>
+					<ValueScaleControls
+						dataRender={dataRender}
+						setAttributes={setAttributes}
+						clientId={clientId}
+					/>
 				)}
 				{'diverging-bar' === chartType && (
 					<WidePanelItem
@@ -666,6 +498,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						/>
 						{divergingBar.neutralBar?.active && (
 							<SelectControl
+								__next40pxDefaultSize
 								label={__('Neutral Category')}
 								value={divergingBar.neutralBar?.category}
 								onChange={(value) => {
@@ -817,6 +650,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						)}
 					</PanelDescription>
 					<FormTokenField
+						__next40pxDefaultSize
 						label={__('Exclude rows')}
 						value={dataRender.rowFilter?.exclude || []}
 						suggestions={rowFilterSuggestions}
@@ -841,6 +675,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						panelId={clientId}
 					>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Color Points By Group')}
 							help={__(
 								'Select a column to group and color points. Each unique value becomes a color group in the legend.'
@@ -912,6 +747,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							{dataRender.groupBreaksActive && (
 								<>
 									<SelectControl
+										__next40pxDefaultSize
 										label={__('Group By Category')}
 										value={dataRender.groupBreaksCategory}
 										onChange={(value) =>
@@ -934,6 +770,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 									) && (
 										<>
 											<SelectControl
+												__next40pxDefaultSize
 												label={__('Break Line Style')}
 												value={
 													dataRender.groupBreaks
@@ -1069,6 +906,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							{/* Sort Key is meaningless for treemap (always the implicit value column). */}
 							{chartType !== 'treemap' && (
 								<SelectControl
+									__next40pxDefaultSize
 									label={__('Sort Key')}
 									value={dataRender.sortKey}
 									help={__(
@@ -1092,6 +930,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								/>
 							)}
 							<SelectControl
+								__next40pxDefaultSize
 								label={__('Sort Order')}
 								value={dataRender.sortOrder}
 								help={
@@ -1162,6 +1001,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							</PanelDescription>
 							{getCurrentValue('diffColumn', 'active') && (
 								<SelectControl
+									__next40pxDefaultSize
 									label={__('Diff Column Category')}
 									value={getCurrentValue(
 										'diffColumn',
@@ -1215,6 +1055,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							{getCurrentValue('netValues', 'active') && (
 								<>
 									<SelectControl
+										__next40pxDefaultSize
 										label={__('Positive column')}
 										value={
 											getCurrentValue(
@@ -1279,6 +1120,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 												'negative'
 											)?.active && (
 												<SelectControl
+													__next40pxDefaultSize
 													label={__(
 														'Negative column'
 													)}

@@ -23,7 +23,6 @@ import {
 /**
  * Internal dependencies
  */
-import { PanelColorSettings } from '@wordpress/block-editor';
 import { effectiveChartTypeForControls } from '../utils/chart-types';
 import {
 	buildEditedAxisDomain,
@@ -34,6 +33,8 @@ import {
 } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
+import ChartPanelColorSettings from './chart-panel-color-settings';
+import { RichTextField } from './popover/panels/RichTextField';
 
 function IndependentAxisControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
@@ -120,7 +121,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 						})
 					}
 				/>
-				<TextControl
+				<RichTextField
 					label={__('Label')}
 					value={getCurrentValue('independentAxis', 'label')}
 					onChange={(val) =>
@@ -175,6 +176,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 					}}
 				/>
 				<SelectControl
+					__next40pxDefaultSize
 					label={__('Independent axis scale')}
 					value={getCurrentValue('independentAxis', 'scale')}
 					options={[
@@ -195,6 +197,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 				/>
 				{'time' === getCurrentValue('independentAxis', 'scale') && (
 					<SelectControl
+						__next40pxDefaultSize
 						label={__('Time scale format')}
 						value={getCurrentValue('independentAxis', 'dateFormat')}
 						options={[
@@ -332,6 +335,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 					}
 				/>
 				<TextControl
+					__next40pxDefaultSize
 					label={__('Specific Ticks')}
 					value={getCurrentValue('independentAxis', 'tickValues')}
 					onChange={(val) =>
@@ -422,6 +426,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 					</>
 				)}
 				<TextControl
+					__next40pxDefaultSize
 					label={__('Tick Units')}
 					value={getCurrentValue('independentAxis', 'tickUnit')}
 					onChange={(val) =>
@@ -431,6 +436,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 					}
 				/>
 				<SelectControl
+					__next40pxDefaultSize
 					label={__('Tick Unit Position')}
 					value={getCurrentValue(
 						'independentAxis',
@@ -620,7 +626,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 					<ToggleGroupControlOption label="Middle" value="middle" />
 					<ToggleGroupControlOption label="End" value="end" />
 				</ToggleGroupControl>
-				<PanelColorSettings
+				<ChartPanelColorSettings
 					__experimentalHasMultipleOrigins
 					__experimentalIsRenderedInSidebar
 					title={__('Axis Styles')}
@@ -707,6 +713,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 					}}
 				/>
 				<TextControl
+					__next40pxDefaultSize
 					label={__('Grid Stroke Dasharray')}
 					value={
 						getCurrentValue('independentAxis', 'grid')

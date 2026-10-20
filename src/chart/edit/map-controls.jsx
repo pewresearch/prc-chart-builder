@@ -3,7 +3,6 @@
 /**
  * WordPress dependencies
  */
-import { PanelColorSettings } from '@wordpress/block-editor';
 import {
 	Flex,
 	FlexItem,
@@ -29,6 +28,7 @@ import { formatNum } from '../utils/helpers';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { WidePanelItem, StyledLabel, Help } from './control-ui';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 // Map projection presets — single source of truth lives in
 // `@prc/charting-utilities` (MAP_REGION_PRESETS).
@@ -131,7 +131,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 								/>
 							</>
 						)}
-						<PanelColorSettings
+						<ChartPanelColorSettings
 							__experimentalHasMultipleOrigins
 							__experimentalIsRenderedInSidebar
 							title={__('Map Styles')}
@@ -269,6 +269,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 									panelId={clientId}
 								>
 									<RangeControl
+										__next40pxDefaultSize
 										label={__('Opacity')}
 										value={
 											getCurrentValue('map', 'bubble')
@@ -305,6 +306,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 								panelId={clientId}
 							>
 								<SelectControl
+									__next40pxDefaultSize
 									label={__('Select Region')}
 									value={
 										getCurrentValue(
@@ -527,7 +529,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 									'Display latitude and longitude grid lines on the globe.'
 								)}
 							/>
-							<PanelColorSettings
+							<ChartPanelColorSettings
 								__experimentalHasMultipleOrigins
 								__experimentalIsRenderedInSidebar
 								title={__('Globe Colors')}
@@ -613,6 +615,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 							/>
 							{(globe.showPlayPause ?? true) && (
 								<SelectControl
+									__next40pxDefaultSize
 									label={__('Control Position')}
 									value={
 										globe.playPausePosition ??

@@ -6,6 +6,7 @@
 // TODO: add to prc scripts so that it's available to all components
 import { useSelect } from '@wordpress/data';
 import { store as editorStore } from '@wordpress/editor';
+import { useCallback } from '@wordpress/element';
 
 /**
  * Get the current device type from WordPress editor
@@ -37,27 +38,32 @@ export function useViewportAttributes(attributes, setAttributes) {
 	 * @param {string} attributeKey   - The specific attribute key (e.g., 'title')
 	 * @return {*} The current value (viewport override if exists, otherwise default)
 	 */
-	const getCurrentValue = (attributeGroup, attributeKey) => {
-		// If not desktop and viewport override exists, use it
-		if (
-			deviceType !== 'desktop' &&
-			attributes[deviceType]?.[attributeGroup]?.[attributeKey] !==
-				undefined
-		) {
-			return attributes[deviceType][attributeGroup][attributeKey];
-		}
+	// Group reads build a merged object, so callers memoizing on this function
+	// need it to hold its identity until the attributes or device change.
+	const getCurrentValue = useCallback(
+		(attributeGroup, attributeKey) => {
+			// If not desktop and viewport override exists, use it
+			if (
+				deviceType !== 'desktop' &&
+				attributes[deviceType]?.[attributeGroup]?.[attributeKey] !==
+					undefined
+			) {
+				return attributes[deviceType][attributeGroup][attributeKey];
+			}
 
-		// If only attributeGroup is requested, return the merged group
-		if (!attributeKey) {
-			const baseGroup = attributes[attributeGroup] || {};
-			const viewportOverrides =
-				attributes[deviceType]?.[attributeGroup] || {};
-			return { ...baseGroup, ...viewportOverrides };
-		}
+			// If only attributeGroup is requested, return the merged group
+			if (!attributeKey) {
+				const baseGroup = attributes[attributeGroup] || {};
+				const viewportOverrides =
+					attributes[deviceType]?.[attributeGroup] || {};
+				return { ...baseGroup, ...viewportOverrides };
+			}
 
-		// Otherwise, fall back to default attribute
-		return attributes[attributeGroup]?.[attributeKey];
-	};
+			// Otherwise, fall back to default attribute
+			return attributes[attributeGroup]?.[attributeKey];
+		},
+		[attributes, deviceType]
+	);
 
 	/**
 	 * Update attribute for the current device
@@ -65,16 +71,19 @@ export function useViewportAttributes(attributes, setAttributes) {
 	 * @param {string} attributeGroup - The attribute group (e.g., 'metadata', 'layout')
 	 * @param {Object} updates        - Key-value pairs of attributes to update
 	 */
-	const updateAttributeForDevice = (attributeGroup, updates) => {
-		if (deviceType === 'desktop' || !deviceType) {
-			// Desktop: update default attributes
-			setAttributes({
-				[attributeGroup]: {
-					...attributes[attributeGroup],
-					...updates,
-				},
-			});
-		} else {
+	const updateAttributeForDevice = useCallback(
+		(attributeGroup, updates) => {
+			if (deviceType === 'desktop' || !deviceType) {
+				// Desktop: update default attributes
+				setAttributes({
+					[attributeGroup]: {
+						...attributes[attributeGroup],
+						...updates,
+					},
+				});
+				return;
+			}
+
 			// Mobile/Tablet: update viewport-specific overrides
 			const currentViewportOverrides = attributes[deviceType] || {};
 			const currentGroupOverrides =
@@ -89,8 +98,9 @@ export function useViewportAttributes(attributes, setAttributes) {
 					},
 				},
 			});
-		}
-	};
+		},
+		[attributes, deviceType, setAttributes]
+	);
 
 	return {
 		deviceType,

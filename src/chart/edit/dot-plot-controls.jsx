@@ -13,7 +13,6 @@ import {
 	RangeControl,
 	ToggleControl,
 } from '@wordpress/components';
-import { PanelColorSettings } from '@wordpress/block-editor';
 
 /**
  * Internal dependencies
@@ -21,6 +20,7 @@ import { PanelColorSettings } from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 function DotPlotControls({
 	attributes,
@@ -37,13 +37,13 @@ function DotPlotControls({
 	const io = attributes.io || {};
 	const dataRender = attributes.dataRender || {};
 	const categories = dataRender.categories || [];
-	const availableCategories = io.availableCategories || [];
+	const availableCategories = io.availableCategories;
 
 	// Column options for the low/high dropdowns — all table headers except 'x'
 	const columnOptions = useMemo(
 		() => [
 			{ value: '', label: __('— Select column —') },
-			...availableCategories.map((col) => ({
+			...(availableCategories || []).map((col) => ({
 				value: col,
 				label: col,
 			})),
@@ -82,7 +82,7 @@ function DotPlotControls({
 					{!curated &&
 						getCurrentValue('dotPlot', 'connectPoints') && (
 							<>
-								<PanelColorSettings
+								<ChartPanelColorSettings
 									__experimentalHasMultipleOrigins
 									__experimentalIsRenderedInSidebar
 									title={__('Line Styles')}
@@ -140,6 +140,7 @@ function DotPlotControls({
 									}}
 								/>
 								<TextControl
+									__next40pxDefaultSize
 									label={__('Line Stroke Dash Array')}
 									help={__(
 										'A list of comma and/or white space separated <length>s and <percentage>s that specify the lengths of alternating dashes and gaps. If an odd number of values is provided, then the list of values is repeated to yield an even number of values. Thus, 5,3,2 is equivalent to 5,3,2,5,3,2.'
@@ -257,6 +258,7 @@ function DotPlotControls({
 												{category}
 											</StyledLabel>
 											<SelectControl
+												__next40pxDefaultSize
 												label={__('Low value column')}
 												value={
 													currentMapping.lowColumn ||
@@ -270,6 +272,7 @@ function DotPlotControls({
 												}
 											/>
 											<SelectControl
+												__next40pxDefaultSize
 												label={__('High value column')}
 												value={
 													currentMapping.highColumn ||
@@ -282,7 +285,7 @@ function DotPlotControls({
 													})
 												}
 											/>
-											<PanelColorSettings
+											<ChartPanelColorSettings
 												__experimentalHasMultipleOrigins
 												__experimentalIsRenderedInSidebar
 												title={__('Category Styles')}
@@ -327,6 +330,7 @@ function DotPlotControls({
 												}
 											/>
 											<RangeControl
+												__next40pxDefaultSize
 												label={__('Stroke Opacity')}
 												value={
 													currentMapping.styles

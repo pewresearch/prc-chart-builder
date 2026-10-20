@@ -26,10 +26,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import {
-	PanelColorSettings,
-	__experimentalSpacingSizesControl as SpacingSizesControl,
-} from '@wordpress/block-editor';
+import { __experimentalSpacingSizesControl as SpacingSizesControl } from '@wordpress/block-editor';
 import { chartTypeSupportsSeriesMask } from '@prc/charting-utilities';
 import {
 	getAvailableLegendCategories,
@@ -37,6 +34,7 @@ import {
 } from '../utils/get-available-legend-categories';
 import {
 	LINE_CHART_TYPES,
+	VALUE_SCALE_CHART_TYPES,
 	effectiveChartTypeForControls,
 } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
@@ -45,6 +43,7 @@ import {
 	mergeLegendCategoryOrder,
 } from '../utils/merge-legend-category-order';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
+import { RichTextField } from './popover/panels/RichTextField';
 import { FONT_WEIGHT_OPTIONS } from './popover/utils';
 import Sorter from './sorter';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
@@ -54,6 +53,7 @@ import {
 	StyledLabel,
 	Help,
 } from './control-ui';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 
 function LegendControls({
 	attributes,
@@ -68,16 +68,13 @@ function LegendControls({
 	);
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('legend');
 
-	const legend = getCurrentValue('legend') || {};
 	// Content attributes - NOT viewport-aware
 	const io = attributes.io || {};
 	const dataRender = attributes.dataRender || {};
-	const sankey = attributes.sankey || {};
-	const smallMultiples = attributes.smallMultiples || {};
 
 	// Presentation attributes - viewport-aware
 	const layout = getCurrentValue('layout') || {};
-	const divergingBar = attributes.divergingBar || {};
+	const legend = getCurrentValue('legend') || {};
 
 	const { type: chartType } = layout;
 	const effectiveType = effectiveChartTypeForControls(attributes);
@@ -90,21 +87,22 @@ function LegendControls({
 		() =>
 			getAvailableLegendCategories({
 				chartType,
-				chartFamily,
-				io,
-				dataRender,
-				divergingBar,
-				sankey,
-				smallMultiples,
+				chartFamily: attributes.io?.chartFamily,
+				io: attributes.io || {},
+				dataRender: attributes.dataRender || {},
+				divergingBar: attributes.divergingBar || {},
+				sankey: attributes.sankey || {},
+				smallMultiples: attributes.smallMultiples || {},
+				legend: getCurrentValue('legend') || {},
 			}),
 		[
 			chartType,
-			chartFamily,
-			io,
-			dataRender,
-			divergingBar,
-			sankey,
-			smallMultiples,
+			attributes.io,
+			attributes.dataRender,
+			attributes.divergingBar,
+			attributes.sankey,
+			attributes.smallMultiples,
+			getCurrentValue,
 		]
 	);
 
@@ -156,11 +154,11 @@ function LegendControls({
 		});
 	};
 
-	// Determine if Legend Order control should be visible
-	// Hide for maps with threshold or linear scale (they don't use ordinal legends)
+	// Hide legend order for threshold/linear value scales (maps and heat-map-table).
+	const usesValueScaleChart =
+		chartFamily === 'map' || VALUE_SCALE_CHART_TYPES.includes(chartType);
 	const shouldShowLegendOrder =
-		chartFamily !== 'map' ||
-		(chartFamily === 'map' && mapScale === 'ordinal');
+		!usesValueScaleChart || (usesValueScaleChart && mapScale === 'ordinal');
 
 	return (
 		<div ref={panelRef}>
@@ -316,7 +314,7 @@ function LegendControls({
 							label={__('Title')}
 							panelId={clientId}
 						>
-							<TextControl
+							<RichTextField
 								label={__('Legend Title')}
 								value={getCurrentValue('legend', 'title')}
 								onChange={(value) =>
@@ -408,7 +406,7 @@ function LegendControls({
 								label={__('Circle Fill')}
 								value={
 									getCurrentValue('legend', 'bubbleLegend')
-										?.fill ?? 'category'
+										?.fill ?? 'none'
 								}
 								onChange={(value) => {
 									const legendAttr =
@@ -845,7 +843,7 @@ function LegendControls({
 								label={__('Fill and Stroke')}
 								panelId={clientId}
 							>
-								<PanelColorSettings
+								<ChartPanelColorSettings
 									__experimentalHasMultipleOrigins
 									__experimentalIsRenderedInSidebar
 									title={__('Fill and Stroke')}

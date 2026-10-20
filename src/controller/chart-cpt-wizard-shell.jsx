@@ -23,6 +23,7 @@ import {
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
+import PchImportStep from '../../includes/admin/src/components/pch-import';
 import { buildPreviewChartData } from '../chart/utils/build-preview-chart-data';
 import getConfig from '../chart/utils/get-config';
 import { prepareChartAttributesForPreview } from '../chart/utils/prepare-chart-attributes-for-preview';
@@ -37,11 +38,7 @@ import {
 } from '../shared/chart-preview';
 import CuratedControls from '../shared/curated-controls';
 import CsvDataInput from '../shared/data-step/csv-data-input';
-import {
-	SelectChartStep,
-	WizardEditorShell,
-	useChartPatterns,
-} from '../shared/select-chart-step';
+import { SelectChartStep, useChartPatterns } from '../shared/select-chart-step';
 import { csvToTableAttributes } from '../shared/utils/csv';
 import {
 	TemplateResetWarning,
@@ -67,6 +64,7 @@ import {
 import PreviewVisionFilters from '../shared/wizard-chrome/preview-vision-filters';
 import { WorkflowStatusPaneSlot } from '../shared/wizard-chrome/workflow-status-pane-slot';
 import { WizardChartActionsContext } from '../shared/wizard-chrome/wizard-chart-actions-context';
+import useKeepCaretInsideBlock from './use-keep-caret-inside-block';
 import { applyControllerTemplateContent } from './utils/apply-controller-template';
 import useHideBlockToolbar from './use-hide-block-toolbar';
 
@@ -164,6 +162,7 @@ export default function ChartCptWizardShell({
 	);
 	const [selectedPattern, setSelectedPattern] = useState(null);
 	const [activeTab, setActiveTab] = useState('pattern');
+	const [isPchImport, setIsPchImport] = useState(false);
 	const [showTemplateResetWarning, setShowTemplateResetWarning] =
 		useState(false);
 	const { selectBlock, updateBlockAttributes } =
@@ -172,6 +171,7 @@ export default function ChartCptWizardShell({
 		useDispatch(editPostStore);
 
 	const addAnnotationHandlerRef = useRef(null);
+	const curatedControlsRef = useKeepCaretInsideBlock();
 
 	const wizardChartActions = useMemo(
 		() => ({
@@ -379,7 +379,7 @@ export default function ChartCptWizardShell({
 						<figure
 							className="prc-chart-modal__preview-figure"
 							style={{
-								width: '100%',
+								width: `${previewConfig.layout?.width}px`,
 								maxWidth: `${previewConfig.layout?.width}px`,
 							}}
 						>
@@ -456,11 +456,16 @@ export default function ChartCptWizardShell({
 									)}
 								</Notice>
 							)}
-							<WizardEditorShell>
+							{isPchImport ? (
+								<PchImportStep
+									onBack={() => setIsPchImport(false)}
+								/>
+							) : (
 								<SelectChartStep
 									layout="full"
 									selectedType={selectedType}
 									onSelectType={handleSelectType}
+									onImportPch={() => setIsPchImport(true)}
 									patterns={patterns}
 									patternsLoading={patternsLoading}
 									onSelectPattern={handleSelectPattern}
@@ -470,7 +475,7 @@ export default function ChartCptWizardShell({
 									activeTab={activeTab}
 									onChangeTab={setActiveTab}
 								/>
-							</WizardEditorShell>
+							)}
 						</div>
 					)}
 
@@ -489,7 +494,10 @@ export default function ChartCptWizardShell({
 						chartAttributes &&
 						!isDesignMode && (
 							<div className="prc-chart-modal__configure">
-								<div className="prc-chart-modal__configure-controls">
+								<div
+									ref={curatedControlsRef}
+									className="prc-chart-modal__configure-controls"
+								>
 									<CuratedControls
 										chartAttributes={chartAttributes}
 										onChange={onChartAttributesChange}
@@ -507,7 +515,14 @@ export default function ChartCptWizardShell({
 										</Button>
 									</div>
 								</div>
-								<div className="prc-chart-modal__preview-pane editor-styles-wrapper">
+								<div
+									className="prc-chart-modal__preview-pane editor-styles-wrapper"
+									style={getPreviewViewportStyle(
+										'desktop',
+										null,
+										previewWidthRange?.max
+									)}
+								>
 									{refineContent}
 								</div>
 							</div>

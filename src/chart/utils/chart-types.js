@@ -104,11 +104,13 @@ export const GROUP_BREAKS_CHART_TYPES = [
 	'heat-map-table',
 ];
 
-/** Charts that can partition data by a category field (groupBreaksCategory).
- *  Superset of GROUP_BREAKS_CHART_TYPES — these charts support the underlying
- *  group-by + group-order controls, but not all draw visual divider lines.
- *  Pie uses angular explode offset (pie-controls.jsx) instead of break lines.
- *  Small multiples facets one panel per group value (multi-series panels). */
+/**
+ * Charts that can partition data by a category field (groupBreaksCategory).
+ * Superset of GROUP_BREAKS_CHART_TYPES — these charts support the underlying
+ * group-by + group-order controls, but not all draw visual divider lines.
+ * Pie uses angular explode offset (pie-controls.jsx) instead of break lines.
+ * Small multiples facets one panel per group value (multi-series panels).
+ */
 export const GROUPABLE_CHART_TYPES = [
 	...GROUP_BREAKS_CHART_TYPES,
 	'treemap',
@@ -134,22 +136,11 @@ export const SORTABLE_CHART_TYPES = [
 	'treemap',
 ];
 
-/** Charts that support supplemental column features rendered alongside the chart
- *  (Diff Column, Net Value Labels). Bar and dot-plot layouts only — not pie. */
-export const SUPPLEMENTAL_COLUMN_CHART_TYPES = [...BAR_CHART_TYPES, 'dot-plot'];
-
 /**
- * Charts that support highlightedCategories / highlightColor / deselectedColor.
- * Multi-series legend keys only — not per-element emphasis (pie, treemap, maps).
+ * Charts that support supplemental column features rendered alongside the chart
+ * (Diff Column, Net Value Labels). Bar and dot-plot layouts only — not pie.
  */
-export const HIGHLIGHTABLE_CHART_TYPES = [
-	...BAR_CHART_TYPES,
-	'dot-plot',
-	...LINE_CHART_TYPES,
-	'scatter',
-	'bee-swarm',
-	'sankey',
-];
+export const SUPPLEMENTAL_COLUMN_CHART_TYPES = [...BAR_CHART_TYPES, 'dot-plot'];
 
 /**
  * Resolve layout.type for inspector control gating.
@@ -177,9 +168,9 @@ export function effectiveChartTypeForControls(attributes = {}) {
 /**
  * Whether the effective chart type is in a list (or matches a predicate).
  *
- * @param {Object}                 attributes        Chart block attributes
- * @param {string[]|Function}      typesOrPredicate  Allowed types or predicate(effective)
- * @return {boolean}
+ * @param {Object}            attributes       Chart block attributes
+ * @param {string[]|Function} typesOrPredicate Allowed types or predicate(effective)
+ * @return {boolean} Whether the effective type matches.
  */
 export function chartTypeMatches(attributes, typesOrPredicate) {
 	const effective = effectiveChartTypeForControls(attributes);
