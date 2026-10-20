@@ -143,6 +143,7 @@ export function LabelPanel({
 						)}
 						colorField="fill"
 						colorPanelTitle={__('Label Color', 'prc-chart-builder')}
+						contrast={false}
 						fontSizeOptions={['10', '12', '14', '16']}
 						fontSizeHelp={__(
 							'Leave unselected to use chart default',
@@ -168,6 +169,7 @@ export function LabelPanel({
 
 			{hasCustomizations && (
 				<Button
+					__next40pxDefaultSize
 					variant="secondary"
 					isDestructive
 					onClick={handleReset}

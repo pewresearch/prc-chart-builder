@@ -9,36 +9,11 @@ import {
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
-import { desktop, mobile, tablet } from '@wordpress/icons';
 import { __, sprintf } from '@wordpress/i18n';
 
 import { withColorScheme, withVision } from './preview-appearance';
-import {
-	PREVIEW_CARD_PADDING,
-	PREVIEW_VIEWPORT_WIDTHS,
-} from './preview-viewports';
-
-/** Local preview viewport keys (not WordPress editor deviceType). */
-export const PREVIEW_VIEWPORTS = {
-	desktop: {
-		value: 'desktop',
-		label: __('Desktop', 'prc-chart-builder'),
-		icon: desktop,
-		width: PREVIEW_VIEWPORT_WIDTHS.desktop,
-	},
-	tablet: {
-		value: 'tablet',
-		label: __('Tablet', 'prc-chart-builder'),
-		icon: tablet,
-		width: PREVIEW_VIEWPORT_WIDTHS.tablet,
-	},
-	mobile: {
-		value: 'mobile',
-		label: __('Mobile', 'prc-chart-builder'),
-		icon: mobile,
-		width: PREVIEW_VIEWPORT_WIDTHS.mobile,
-	},
-};
+import PreviewViewportToggle from './preview-viewport-toggle';
+import { PREVIEW_VIEWPORT_WIDTHS } from './preview-viewports';
 
 /**
  * @param {Object}      props
@@ -46,7 +21,7 @@ export const PREVIEW_VIEWPORTS = {
  * @param {Function}    props.onViewportChange
  * @param {number|null} props.customWidth         Hand-picked canvas width, if any.
  * @param {Function}    props.onCustomWidthChange
- * @param {Object|null} props.widthRange          `{ min, max }` slider bounds, or null to hide it.
+ * @param {Object|null} props.widthRange          `{ min, max, chartWidth }` slider bounds, or null to hide it.
  * @param {Object}      props.appearance          PreviewAppearance.
  * @param {Function}    props.onAppearanceChange
  * @return {import('react').ReactNode} The preview size, color mode, and color vision panels.
@@ -75,26 +50,11 @@ export default function PreviewToolbar({
 				title={__('Preview size', 'prc-chart-builder')}
 				initialOpen
 			>
-				<ToggleGroupControl
-					label={__('Preview size', 'prc-chart-builder')}
-					hideLabelFromVision
-					value={viewport}
+				<PreviewViewportToggle
+					viewport={viewport}
+					onViewportChange={onViewportChange}
 					isBlock
-					onChange={onViewportChange}
-					__nextHasNoMarginBottom
-					__next40pxDefaultSize
-				>
-					{Object.values(PREVIEW_VIEWPORTS).map(
-						({ value, label, icon }) => (
-							<ToggleGroupControlOption
-								key={value}
-								value={value}
-								label={label}
-								icon={icon}
-							/>
-						)
-					)}
-				</ToggleGroupControl>
+				/>
 				{widthRange && (
 					<RangeControl
 						className="prc-chart-wizard__preview-width"
@@ -102,10 +62,10 @@ export default function PreviewToolbar({
 						help={sprintf(
 							/* translators: %d: chart width in pixels. */
 							__(
-								'This chart is capped at %dpx wide, so wider previews render identically.',
+								'This chart is capped at %dpx wide. Below 782px the preview uses the Tablet settings, and below 480px the Mobile settings.',
 								'prc-chart-builder'
 							),
-							widthRange.max - PREVIEW_CARD_PADDING
+							widthRange.chartWidth
 						)}
 						value={customWidth ?? presetWidth}
 						min={widthRange.min}

@@ -378,14 +378,14 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 					</ToolsPanelItem>
 					<ToolsPanelItem
 						hasValue={() => true}
-						label={__('Stroke Width')}
+						label={__('Line width')}
 						isShownByDefault
 						panelId={clientId}
 						style={{ gridColumn: 'span 2' }}
 					>
 						<NumberControl
 							min={1}
-							label={__('Stroke Width')}
+							label={__('Line width')}
 							value={getCurrentValue('regression', 'strokeWidth')}
 							disabled={!isActive}
 							onChange={(value) =>
@@ -397,14 +397,14 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 					</ToolsPanelItem>
 					<ToolsPanelItem
 						hasValue={() => true}
-						label={__('Stroke Dash Array')}
+						label={__('Dash pattern')}
 						isShownByDefault
 						panelId={clientId}
 						style={{ gridColumn: 'span 2' }}
 					>
 						<TextControl
 							__next40pxDefaultSize
-							label={__('Stroke Dash Array')}
+							label={__('Dash pattern')}
 							help={__(
 								'Alternating dash and gap lengths, e.g. "4,2" or "5,3,2". Leave empty for a solid line.'
 							)}

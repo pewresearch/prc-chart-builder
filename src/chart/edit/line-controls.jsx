@@ -7,11 +7,10 @@ import {
 	PanelBody,
 	ToggleControl,
 	SelectControl,
-	Button,
-	__experimentalToolsPanel as ToolsPanel,
 	__experimentalNumberControl as NumberControl,
 	ExternalLink,
 	TextControl,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 /**
  * Internal dependencies
@@ -20,14 +19,9 @@ import { effectiveChartTypeForControls } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
-import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
+import { PanelDescription, StyledLabel } from './control-ui';
 
-function LineControls({
-	attributes,
-	setAttributes,
-	clientId,
-	curated = false,
-}) {
+function LineControls({ attributes, setAttributes, curated = false }) {
 	// Viewport-aware attribute management
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -42,6 +36,11 @@ function LineControls({
 	// When active, the curve interpolation setting has no effect because each
 	// segment is a straight path. Clearing styles alone doesn't exit segment mode.
 	const segmentsActive = getCurrentValue('shapes', 'segmentsActive') ?? false;
+	const showPoints = Boolean(getCurrentValue('line', 'showPoints'));
+	const areaShown =
+		'area' === chartType ||
+		'stacked-area' === chartType ||
+		Boolean(getCurrentValue('line', 'showArea'));
 
 	return (
 		<div ref={panelRef}>
@@ -50,22 +49,10 @@ function LineControls({
 				opened={isOpen}
 				onToggle={onToggle}
 			>
-				<ToolsPanel
-					label={__('Attributes')}
-					panelId={clientId}
-					style={{
-						paddingLeft: '0',
-						paddingRight: '0',
-					}}
-				>
+				<VStack spacing={4}>
 					{!curated && (
 						<>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Segment Mode')}
-								isShownByDefault
-								panelId={clientId}
-							>
+							<VStack spacing={2}>
 								<ToggleControl
 									label={__('Enable segment mode')}
 									help={
@@ -92,14 +79,10 @@ function LineControls({
 										});
 									}}
 								/>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Line Curve')}
-								isShownByDefault
-								panelId={clientId}
-							>
+							</VStack>
+							<VStack spacing={2}>
 								<SelectControl
+									__next40pxDefaultSize
 									label={__('Curve')}
 									disabled={segmentsActive}
 									help={
@@ -193,128 +176,74 @@ function LineControls({
 										</ExternalLink>
 									</PanelDescription>
 								)}
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Line Stroke Width')}
-								panelId={clientId}
-							>
-								<NumberControl
-									min={1}
-									label={__('Line Stroke Width')}
-									value={getCurrentValue(
-										'line',
-										'strokeWidth'
-									)}
-									onChange={(value) =>
-										updateAttributeForDevice('line', {
-											strokeWidth: formatNum(
-												value,
-												'integer'
-											),
-										})
-									}
-								/>
-								<TextControl
-									label={__('Line Stroke Dash Array')}
-									help={__(
-										'A list of comma and/or white space separated <length>s and <percentage>s that specify the lengths of alternating dashes and gaps. If an odd number of values is provided, then the list of values is repeated to yield an even number of values. Thus, 5,3,2 is equivalent to 5,3,2,5,3,2.'
-									)}
-									value={getCurrentValue(
-										'line',
-										'strokeDasharray'
-									)}
-									placeholder=""
-									onChange={(val) =>
-										updateAttributeForDevice('line', {
-											strokeDasharray: val,
-										})
-									}
-								/>
-							</WidePanelItem>
+							</VStack>
 						</>
 					)}
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Line Nodes')}
-						panelId={clientId}
-					>
-						<StyledLabel>Line Nodes</StyledLabel>
-						<ToggleControl
-							label="Line nodes"
-							help={
-								getCurrentValue('line', 'showPoints')
-									? 'Shows data point nodes on chart.'
-									: 'No data point nodes.'
+					<VStack spacing={2}>
+						<NumberControl
+							min={1}
+							label={__('Line width')}
+							value={getCurrentValue('line', 'strokeWidth')}
+							onChange={(value) =>
+								updateAttributeForDevice('line', {
+									strokeWidth: formatNum(value, 'integer'),
+								})
 							}
-							checked={getCurrentValue('line', 'showPoints')}
+						/>
+						{!curated && (
+							<TextControl
+								__next40pxDefaultSize
+								label={__('Dash pattern')}
+								help={__(
+									'A list of comma and/or white space separated <length>s and <percentage>s that specify the lengths of alternating dashes and gaps. If an odd number of values is provided, then the list of values is repeated to yield an even number of values. Thus, 5,3,2 is equivalent to 5,3,2,5,3,2.'
+								)}
+								value={getCurrentValue(
+									'line',
+									'strokeDasharray'
+								)}
+								placeholder=""
+								onChange={(val) =>
+									updateAttributeForDevice('line', {
+										strokeDasharray: val,
+									})
+								}
+							/>
+						)}
+					</VStack>
+					<VStack spacing={2}>
+						<StyledLabel>Point markers</StyledLabel>
+						<ToggleControl
+							label="Point markers"
+							help={
+								showPoints
+									? 'Shows point markers on chart.'
+									: 'No point markers.'
+							}
+							checked={showPoints}
 							onChange={(newValue) =>
 								updateAttributeForDevice('line', {
 									showPoints: newValue,
 								})
 							}
 						/>
-						<ToggleControl
-							label={__('Display only first and last nodes')}
-							checked={getCurrentValue(
-								'line',
-								'showFirstLastPointsOnly'
-							)}
-							disabled={!getCurrentValue('line', 'showPoints')}
-							onChange={(newValue) =>
-								updateAttributeForDevice('line', {
-									showFirstLastPointsOnly: newValue,
-								})
-							}
-						/>
-						<NumberControl
-							disabled={!getCurrentValue('line', 'showPoints')}
-							min={1}
-							label={__('Line Node Size')}
-							value={getCurrentValue('nodes', 'pointSize')}
-							onChange={(value) =>
-								updateAttributeForDevice('nodes', {
-									pointSize: formatNum(value, 'integer'),
-								})
-							}
-						/>
-						<NumberControl
-							disabled={!getCurrentValue('line', 'showPoints')}
-							min={1}
-							label={__('Line Node Stroke Width')}
-							value={getCurrentValue('nodes', 'pointStrokeWidth')}
-							onChange={(value) =>
-								updateAttributeForDevice('nodes', {
-									pointStrokeWidth: formatNum(
-										value,
-										'integer'
-									),
-								})
-							}
-						/>
-						<NumberControl
-							disabled={!getCurrentValue('line', 'showPoints')}
-							min={0}
-							max={1}
-							step={0.1}
-							label={__('Line Node Fill Opacity')}
-							value={
-								getCurrentValue('nodes', 'pointFillOpacity') ??
-								1
-							}
-							onChange={(value) =>
-								updateAttributeForDevice('nodes', {
-									pointFillOpacity:
-										formatNum(value, 'float') ?? 1,
-								})
-							}
-						/>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Area')}
-						panelId={clientId}
-					>
+						{showPoints && (
+							<ToggleControl
+								label={__(
+									'Display only first and last markers'
+								)}
+								checked={getCurrentValue(
+									'line',
+									'showFirstLastPointsOnly'
+								)}
+								onChange={(newValue) =>
+									updateAttributeForDevice('line', {
+										showFirstLastPointsOnly: newValue,
+									})
+								}
+							/>
+						)}
+					</VStack>
+					<VStack spacing={2}>
 						<StyledLabel>Area</StyledLabel>
 						{chartType !== 'stacked-area' && (
 							<ToggleControl
@@ -332,23 +261,26 @@ function LineControls({
 								}
 							/>
 						)}
-						<NumberControl
-							disabled={
-								'area' !== chartType &&
-								'stacked-area' !== chartType &&
-								!getCurrentValue('line', 'showArea')
-							}
-							label={__('Fill Opacity')}
-							step={0.1}
-							value={getCurrentValue('line', 'areaFillOpacity')}
-							onChange={(value) =>
-								updateAttributeForDevice('line', {
-									areaFillOpacity: formatNum(value, 'float'),
-								})
-							}
-						/>
-					</WidePanelItem>
-				</ToolsPanel>
+						{areaShown && (
+							<NumberControl
+								label={__('Fill Opacity')}
+								step={0.1}
+								value={getCurrentValue(
+									'line',
+									'areaFillOpacity'
+								)}
+								onChange={(value) =>
+									updateAttributeForDevice('line', {
+										areaFillOpacity: formatNum(
+											value,
+											'float'
+										),
+									})
+								}
+							/>
+						)}
+					</VStack>
+				</VStack>
 			</PanelBody>
 		</div>
 	);

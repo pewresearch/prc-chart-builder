@@ -25,9 +25,9 @@ export const STORE_NAME = 'prc/chart-builder-theme-settings';
 
 /**
  * @typedef {Object} ThemeSettingsStoreState
- * @property {ChartTheme} settings
- * @property {ChartTheme} savedSettings
- * @property {boolean} isLoaded
+ * @property {ChartTheme} settings      Theme being edited.
+ * @property {ChartTheme} savedSettings Theme as last saved.
+ * @property {boolean}    isLoaded      Whether the saved theme has loaded.
  */
 
 export const store = createSettingsStore({
@@ -87,10 +87,10 @@ export const store = createSettingsStore({
 		deletePalette(slug) {
 			return { type: 'DELETE_PALETTE', payload: { slug } };
 		},
-		togglePaletteColor(slug, hex) {
+		togglePaletteColor(slug, color) {
 			return {
 				type: 'TOGGLE_PALETTE_COLOR',
-				payload: { slug, hex },
+				payload: { slug, color },
 			};
 		},
 		reorderPaletteColors(slug, fromIndex, toIndex) {
@@ -228,12 +228,11 @@ export const store = createSettingsStore({
 		}
 
 		if (action.type === 'TOGGLE_PALETTE_COLOR') {
-			const { slug, hex } = /** @type {{ slug: string, hex: string }} */ (
-				action.payload
-			);
+			const { slug, color } =
+				/** @type {{ slug: string, color: string }} */ (action.payload);
 			return {
 				...state,
-				settings: togglePaletteColor(state.settings, slug, hex),
+				settings: togglePaletteColor(state.settings, slug, color),
 			};
 		}
 
@@ -294,6 +293,9 @@ export const store = createSettingsStore({
 		 * Resolved active palette slug: the stored selection when it still
 		 * exists, otherwise the first palette (so the designer always has a
 		 * target without needing an on-load initializer).
+		 *
+		 * @param {ThemeSettingsStoreState} state Store state.
+		 * @return {string|null} Active palette slug, or null with no palettes.
 		 */
 		getSelectedPaletteSlug(state) {
 			const palettes = getPalettes(state.settings);

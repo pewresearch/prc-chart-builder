@@ -5,13 +5,12 @@
 import { __ } from '@wordpress/i18n';
 import {
 	PanelBody,
-	__experimentalToolsPanel as ToolsPanel,
 	__experimentalNumberControl as NumberControl,
 	ToggleControl,
 	SelectControl,
 	RangeControl,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { ColorPalette } from '@wordpress/block-editor';
 
 /**
  * Internal dependencies
@@ -19,13 +18,9 @@ import { ColorPalette } from '@wordpress/block-editor';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
-import {
-	PanelDescription,
-	WidePanelItem,
-	StyledLabel,
-} from './control-ui';
+import { PanelDescription, StyledLabel } from './control-ui';
 
-function TreemapControls({ attributes, setAttributes, clientId }) {
+function TreemapControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -42,22 +37,11 @@ function TreemapControls({ attributes, setAttributes, clientId }) {
 				opened={isOpen}
 				onToggle={onToggle}
 			>
-				<ToolsPanel
-					label={__('Attributes')}
-					panelId={clientId}
-					style={{
-						paddingLeft: '0',
-						paddingRight: '0',
-					}}
-				>
+				<VStack spacing={4}>
 					{/* Tiling Algorithm */}
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Tiling Algorithm')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Tiling Algorithm')}
 							help={__(
 								'Controls how the treemap rectangles are arranged.'
@@ -83,19 +67,14 @@ function TreemapControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
 					{/* Spacing Section */}
 					<PanelDescription>
 						<StyledLabel>Spacing</StyledLabel>
 					</PanelDescription>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Inner Padding')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Inner Padding (px)')}
 							help={__(
@@ -112,14 +91,9 @@ function TreemapControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Outer Padding')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Outer Padding (px)')}
 							help={__('Spacing between parent and child nodes.')}
@@ -134,19 +108,14 @@ function TreemapControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
 					{/* Stroke Section */}
 					<PanelDescription>
 						<StyledLabel>Stroke</StyledLabel>
 					</PanelDescription>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Stroke Width')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Stroke Width (px)')}
 							help={__(
@@ -163,14 +132,9 @@ function TreemapControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Border Radius')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Border Radius (px)')}
 							help={__('Corner rounding for treemap rectangles.')}
@@ -185,19 +149,14 @@ function TreemapControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
 					{/* Opacity Section */}
 					<PanelDescription>
 						<StyledLabel>Opacity</StyledLabel>
 					</PanelDescription>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Scale Opacity')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<ToggleControl
 							label={__('Scale Opacity by Value')}
 							help={__(
@@ -210,17 +169,13 @@ function TreemapControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
 					{treemap.scaleOpacity && (
 						<>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Min Opacity')}
-								isShownByDefault
-								panelId={clientId}
-							>
+							<VStack spacing={2}>
 								<RangeControl
+									__next40pxDefaultSize
 									label={__('Min Opacity')}
 									min={0}
 									max={1}
@@ -235,15 +190,11 @@ function TreemapControls({ attributes, setAttributes, clientId }) {
 										});
 									}}
 								/>
-							</WidePanelItem>
+							</VStack>
 
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Max Opacity')}
-								isShownByDefault
-								panelId={clientId}
-							>
+							<VStack spacing={2}>
 								<RangeControl
+									__next40pxDefaultSize
 									label={__('Max Opacity')}
 									min={0}
 									max={1}
@@ -259,10 +210,10 @@ function TreemapControls({ attributes, setAttributes, clientId }) {
 										});
 									}}
 								/>
-							</WidePanelItem>
+							</VStack>
 						</>
 					)}
-				</ToolsPanel>
+				</VStack>
 			</PanelBody>
 		</div>
 	);

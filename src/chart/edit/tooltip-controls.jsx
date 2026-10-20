@@ -10,32 +10,27 @@ import { __ } from '@wordpress/i18n';
 import {
 	Flex,
 	FlexItem,
-	PanelBody,
 	TextControl,
 	ToggleControl,
 	SelectControl,
 	__experimentalNumberControl as NumberControl,
-	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 	ExternalLink,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 /**
  * Internal dependencies
  */
+import FocusedPanelBody from './focused-panel-body';
 import { formatNum, formatOptionalNum } from '../utils/helpers';
 import { effectiveChartTypeForControls } from '../utils/chart-types';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
-import {
-	PanelDescription,
-	WidePanelItem,
-	StyledLabel,
-	Help,
-} from './control-ui';
+import { PanelDescription, StyledLabel, Help } from './control-ui';
 import TooltipTemplateControl from './tooltip-template-control';
 import ChartPanelColorSettings from './chart-panel-color-settings';
 
-function TooltipControls({ attributes, setAttributes, clientId }) {
+function TooltipControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -52,615 +47,601 @@ function TooltipControls({ attributes, setAttributes, clientId }) {
 	const effectiveType = effectiveChartTypeForControls(attributes);
 	const showTooltipMode =
 		effectiveType === 'line' || effectiveType === 'area';
-	const tooltipActive = getCurrentValue('tooltip', 'active');
+	const tooltipActive = Boolean(getCurrentValue('tooltip', 'active'));
+	const headerActive = Boolean(getCurrentValue('tooltip', 'headerActive'));
+	const deemphasizeSiblings = Boolean(
+		getCurrentValue('tooltip', 'deemphasizeSiblings')
+	);
+	const emphasizeStrokeActive = Boolean(
+		getCurrentValue('tooltip', 'emphasizeStrokeActive')
+	);
 	return (
-		<PanelBody title={__('Tooltip')} initialOpen={false}>
-			<ToolsPanel
-				label={__('Attributes')}
-				panelId={clientId}
-				style={{
-					paddingLeft: '0',
-					paddingRight: '0',
-				}}
-			>
-				<WidePanelItem
-					hasValue={() => true}
+		<FocusedPanelBody
+			panelId="tooltip"
+			title={__('Tooltip')}
+			initialOpen={false}
+		>
+			<VStack spacing={2}>
+				<ToggleControl
 					label={__('Show Tooltip')}
-					isShownByDefault
-					panelId={clientId}
-				>
-					<ToggleControl
-						label={__('Show Tooltip')}
-						checked={getCurrentValue('tooltip', 'active')}
-						onChange={(newValue) =>
-							updateAttributeForDevice('tooltip', {
-								active: newValue,
-							})
-						}
-					/>
-				</WidePanelItem>
-				{showTooltipMode && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Tooltip Mode')}
-						panelId={clientId}
-					>
-						<SelectControl
-							__next40pxDefaultSize
-							label={__('Tooltip Mode')}
-							value={
-								getCurrentValue('tooltip', 'mode') || 'point'
-							}
-							disabled={!getCurrentValue('tooltip', 'active')}
-							options={[
-								{
-									label: __('Point', 'prc-chart-builder'),
-									value: 'point',
-								},
-								{
-									label: __('Unified', 'prc-chart-builder'),
-									value: 'unified',
-								},
-							]}
-							help={__(
-								'Point shows one series at a time. Unified shows every series at the hovered x value.',
-								'prc-chart-builder'
-							)}
-							onChange={(value) =>
+					checked={tooltipActive}
+					onChange={(newValue) =>
+						updateAttributeForDevice('tooltip', {
+							active: newValue,
+						})
+					}
+				/>
+			</VStack>
+			{tooltipActive && (
+				<VStack spacing={4}>
+					{showTooltipMode && (
+						<VStack spacing={2}>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Tooltip Mode')}
+								value={
+									getCurrentValue('tooltip', 'mode') ||
+									'point'
+								}
+								options={[
+									{
+										label: __('Point', 'prc-chart-builder'),
+										value: 'point',
+									},
+									{
+										label: __(
+											'Unified',
+											'prc-chart-builder'
+										),
+										value: 'unified',
+									},
+								]}
+								help={__(
+									'Point shows one series at a time. Unified shows every series at the hovered x value.',
+									'prc-chart-builder'
+								)}
+								onChange={(value) =>
+									updateAttributeForDevice('tooltip', {
+										mode: value,
+									})
+								}
+							/>
+						</VStack>
+					)}
+					<VStack spacing={2}>
+						<ToggleControl
+							label={__('Show Header')}
+							help={__('Show a header in the tooltip')}
+							checked={headerActive}
+							onChange={(newValue) =>
 								updateAttributeForDevice('tooltip', {
-									mode: value,
+									headerActive: newValue,
 								})
 							}
 						/>
-					</WidePanelItem>
-				)}
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Show Header')}
-					panelId={clientId}
-				>
-					<ToggleControl
-						label={__('Show Header')}
-						help={__('Show a header in the tooltip')}
-						checked={getCurrentValue('tooltip', 'headerActive')}
-						onChange={(newValue) =>
-							updateAttributeForDevice('tooltip', {
-								headerActive: newValue,
-							})
-						}
-					/>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Header Value')}
-					panelId={clientId}
-				>
-					<SelectControl
-						__next40pxDefaultSize
-						label={__('Header Value')}
-						value={getCurrentValue('tooltip', 'headerValue')}
-						disabled={!getCurrentValue('tooltip', 'headerActive')}
-						help={__('Select the value to display in the header')}
-						options={[
-							{ label: __('Column'), value: 'categoryValue' },
-							{ label: __('Row'), value: 'independentValue' },
-						]}
-						onChange={(value) =>
-							updateAttributeForDevice('tooltip', {
-								headerValue: value,
-							})
-						}
-					/>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Tooltip Positioning')}
-					panelId={clientId}
-				>
-					<StyledLabel>Tooltip Positioning</StyledLabel>
-					<Flex>
-						<FlexItem>
-							<NumberControl
-								label={__('DX')}
-								value={getCurrentValue('tooltip', 'offsetX')}
-								disabled={!getCurrentValue('tooltip', 'active')}
+					</VStack>
+					{headerActive && (
+						<VStack spacing={2}>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Header Value')}
+								value={getCurrentValue(
+									'tooltip',
+									'headerValue'
+								)}
+								help={__(
+									'Select the value to display in the header'
+								)}
+								options={[
+									{
+										label: __('Column'),
+										value: 'categoryValue',
+									},
+									{
+										label: __('Row'),
+										value: 'independentValue',
+									},
+								]}
 								onChange={(value) =>
 									updateAttributeForDevice('tooltip', {
-										offsetX: formatNum(value, 'integer'),
+										headerValue: value,
 									})
 								}
 							/>
-						</FlexItem>
-						<FlexItem>
-							<NumberControl
-								label={__('DY')}
-								value={getCurrentValue('tooltip', 'offsetY')}
-								disabled={!getCurrentValue('tooltip', 'active')}
-								onChange={(value) =>
-									updateAttributeForDevice('tooltip', {
-										offsetY: formatNum(value, 'integer'),
-									})
-								}
-							/>
-						</FlexItem>
-					</Flex>
-					<PanelDescription>
-						<Help>
-							Determines the position of tooltip relative to the
-							cursor
-						</Help>
-					</PanelDescription>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Tooltip Size')}
-					panelId={clientId}
-				>
-					<StyledLabel>Tooltip Size</StyledLabel>
-					<Flex>
-						<FlexItem>
-							<NumberControl
-								label={__('Min Width')}
-								value={minWidth}
-								disabled={!getCurrentValue('tooltip', 'active')}
-								onChange={(value) =>
-									updateAttributeForDevice('tooltip', {
-										style: {
-											...style,
-											minWidth: formatNum(
+						</VStack>
+					)}
+					<VStack spacing={2}>
+						<StyledLabel>Tooltip Positioning</StyledLabel>
+						<Flex>
+							<FlexItem>
+								<NumberControl
+									label={__('DX')}
+									value={getCurrentValue(
+										'tooltip',
+										'offsetX'
+									)}
+									onChange={(value) =>
+										updateAttributeForDevice('tooltip', {
+											offsetX: formatNum(
 												value,
 												'integer'
 											),
-										},
-									})
-								}
-							/>
-						</FlexItem>
-						<FlexItem>
-							<NumberControl
-								label={__('Max Width')}
-								value={maxWidth}
-								disabled={!getCurrentValue('tooltip', 'active')}
-								onChange={(value) =>
-									updateAttributeForDevice('tooltip', {
-										style: {
-											...style,
-											maxWidth: formatNum(
+										})
+									}
+								/>
+							</FlexItem>
+							<FlexItem>
+								<NumberControl
+									label={__('DY')}
+									value={getCurrentValue(
+										'tooltip',
+										'offsetY'
+									)}
+									onChange={(value) =>
+										updateAttributeForDevice('tooltip', {
+											offsetY: formatNum(
 												value,
 												'integer'
 											),
-										},
-									})
-								}
-							/>
-						</FlexItem>
-					</Flex>
-					<Flex>
-						<FlexItem>
-							<NumberControl
-								label={__('Min Height')}
-								value={minHeight}
-								disabled={!getCurrentValue('tooltip', 'active')}
-								onChange={(value) =>
-									updateAttributeForDevice('tooltip', {
-										style: {
-											...style,
-											minHeight: formatNum(
-												value,
-												'integer'
-											),
-										},
-									})
-								}
-							/>
-						</FlexItem>
-						<FlexItem>
-							<NumberControl
-								label={__('Max Height')}
-								value={maxHeight}
-								disabled={!getCurrentValue('tooltip', 'active')}
-								onChange={(value) =>
-									updateAttributeForDevice('tooltip', {
-										style: {
-											...style,
-											maxHeight: formatNum(
-												value,
-												'integer'
-											),
-										},
-									})
-								}
-							/>
-						</FlexItem>
-					</Flex>
-					<PanelDescription>
-						<Help>
-							Define the minimum and maximum size of the tooltip
-						</Help>
-					</PanelDescription>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					isShownByDefault
-					label={__('Tooltip Template')}
-					panelId={clientId}
-				>
-					<TooltipTemplateControl
-						value={getCurrentValue('tooltip', 'template')}
-						chartData={chartData}
-						disabled={!tooltipActive}
-						onChange={(template) =>
-							updateAttributeForDevice('tooltip', {
-								template,
-							})
-						}
-					/>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					isShownByDefault
-					label={__('Tooltip Format')}
-					panelId={clientId}
-				>
-					<TextControl
-						__next40pxDefaultSize
-						label={__('Tooltip Format')}
-						help={__(
-							"Tooltip formatter is a string that takes up to three variables. The first variable {{column}} corresponds with the category/column header of a data point, the second {{value}}, the numerical value, and the third {{row}} is the row of the value. (eg. '{{column}}: {{value}} people in {{row}}' would return something like '2010: 500 people in France'). Adding `.toLowerCase()` to the end of any of these variables will lowercase the entire string. The Tooltip Template above takes precedence when it is not empty."
-						)}
-						disabled={!tooltipActive}
-						value={getCurrentValue('tooltip', 'format')}
-						placeholder="{{row}}: {{value}}"
-						onChange={(val) =>
-							updateAttributeForDevice('tooltip', { format: val })
-						}
-					/>
-					<ExternalLink href="https://platform.pewresearch.org/wiki/2024/06/25/chart-builder-documentation/#tooltip">
-						For more information on tooltip formatting, see the dev
-						docs.
-					</ExternalLink>
-				</WidePanelItem>
-				{'time' === dataRender.xScale && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Tooltip Date Format')}
-						panelId={clientId}
-					>
-						<SelectControl
-							__next40pxDefaultSize
-							label={__('Time scale format')}
-							value={getCurrentValue('tooltip', 'dateFormat')}
-							options={[
-								{ value: '%Y', label: '2023' },
-								{ value: "'%y", label: "'23" },
-								{ value: '%-m/%Y', label: '4/2023' },
-								{ value: '%-m/%y', label: '4/23' },
-								{ value: '%m/%Y', label: '04/2023' },
-								{ value: '%m/%y', label: '04/23' },
-								{ value: '%B %Y', label: 'April 2023' },
-								{ value: '%b %Y', label: 'Apr 2023' },
-								{ value: "%B '%y", label: "April '23" },
-								{ value: "%b '%y", label: "Apr '23" },
-								{ value: '%-m/%-d/%Y', label: '4/15/2023' },
-								{ value: '%-d/%-m/%Y', label: '15/4/2023' },
-								{ value: '%-m/%-d/%y', label: '4/15/23' },
-								{ value: '%-d/%-m/%y', label: '15/4/23' },
-								{ value: '%-m/%-d', label: '4/15' },
-								{ value: '%-d/%-m', label: '15/4' },
-								{ value: '%m/%d/%Y', label: '04/15/2023' },
-								{ value: '%d/%m/%Y', label: '15/04/2023' },
-								{ value: '%m/%d/%y', label: '04/15/23' },
-								{ value: '%d/%m/%y', label: '15/04/23' },
-								{ value: '%m/%-d', label: '04/15' },
-								{ value: '%-d/%m', label: '15/04' },
-								{
-									value: '%B %-d, %Y',
-									label: 'April 15, 2023',
-								},
-								{ value: '%B %-d %Y', label: 'April 15 2023' },
-								{ value: '%b %-d, %Y', label: 'Apr 15, 2023' },
-								{ value: '%b %-d %Y', label: 'Apr 15 2023' },
-								{
-									value: '%-d %B, %Y',
-									label: '15 April, 2023',
-								},
-								{ value: '%-d %B %Y', label: '15 April 2023' },
-								{ value: '%-d %b, %Y', label: '15 Apr, 2023' },
-								{ value: '%-d %b %Y', label: '15 Apr 2023' },
-								{ value: "%B %-d '%y", label: "April 15 '23" },
-								{ value: "%-d %B '%y", label: "15 April '23" },
-								{ value: "%b %-d '%y", label: "Apr 15 '23" },
-								{ value: "%-d %b '%y", label: "15 Apr '23" },
-								{ value: '%B %-d', label: 'April 15' },
-								{ value: '%-d %B', label: '15 April' },
-								{ value: '%b %-d', label: 'Apr 15' },
-								{ value: '%-d %b', label: '15 Apr' },
-								{ value: '%B', label: 'April' },
-								{ value: '%b', label: 'Apr' },
-							]}
-							onChange={(type) => {
+										})
+									}
+								/>
+							</FlexItem>
+						</Flex>
+						<PanelDescription>
+							<Help>
+								Determines the position of tooltip relative to
+								the cursor
+							</Help>
+						</PanelDescription>
+					</VStack>
+					<VStack spacing={2}>
+						<StyledLabel>Tooltip Size</StyledLabel>
+						<Flex>
+							<FlexItem>
+								<NumberControl
+									label={__('Min Width')}
+									value={minWidth}
+									onChange={(value) =>
+										updateAttributeForDevice('tooltip', {
+											style: {
+												...style,
+												minWidth: formatNum(
+													value,
+													'integer'
+												),
+											},
+										})
+									}
+								/>
+							</FlexItem>
+							<FlexItem>
+								<NumberControl
+									label={__('Max Width')}
+									value={maxWidth}
+									onChange={(value) =>
+										updateAttributeForDevice('tooltip', {
+											style: {
+												...style,
+												maxWidth: formatNum(
+													value,
+													'integer'
+												),
+											},
+										})
+									}
+								/>
+							</FlexItem>
+						</Flex>
+						<Flex>
+							<FlexItem>
+								<NumberControl
+									label={__('Min Height')}
+									value={minHeight}
+									onChange={(value) =>
+										updateAttributeForDevice('tooltip', {
+											style: {
+												...style,
+												minHeight: formatNum(
+													value,
+													'integer'
+												),
+											},
+										})
+									}
+								/>
+							</FlexItem>
+							<FlexItem>
+								<NumberControl
+									label={__('Max Height')}
+									value={maxHeight}
+									onChange={(value) =>
+										updateAttributeForDevice('tooltip', {
+											style: {
+												...style,
+												maxHeight: formatNum(
+													value,
+													'integer'
+												),
+											},
+										})
+									}
+								/>
+							</FlexItem>
+						</Flex>
+						<PanelDescription>
+							<Help>
+								Define the minimum and maximum size of the
+								tooltip
+							</Help>
+						</PanelDescription>
+					</VStack>
+					<VStack spacing={2}>
+						<TooltipTemplateControl
+							value={getCurrentValue('tooltip', 'template')}
+							chartData={chartData}
+							onChange={(template) =>
 								updateAttributeForDevice('tooltip', {
-									dateFormat: type,
-								});
-							}}
+									template,
+								})
+							}
 						/>
-					</WidePanelItem>
-				)}
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Absolute Value')}
-					panelId={clientId}
-				>
-					<ToggleControl
-						label={__('Absolute Value')}
-						checked={getCurrentValue('tooltip', 'absoluteValue')}
-						disabled={!getCurrentValue('tooltip', 'active')}
-						onChange={(newValue) =>
-							updateAttributeForDevice('tooltip', {
-								absoluteValue: newValue,
-							})
-						}
-					/>
-					<PanelDescription>
-						<Help>
-							{__(
-								'If the chart is displaying negative values, this will ensure the value displayed in the tooltip is always positive. Often used on bar charts with a diverging axis.'
+					</VStack>
+					<VStack spacing={2}>
+						<TextControl
+							__next40pxDefaultSize
+							label={__('Tooltip Format')}
+							help={__(
+								"Tooltip formatter is a string that takes up to three variables. The first variable {{column}} corresponds with the category/column header of a data point, the second {{value}}, the numerical value, and the third {{row}} is the row of the value. (eg. '{{column}}: {{value}} people in {{row}}' would return something like '2010: 500 people in France'). Adding `.toLowerCase()` to the end of any of these variables will lowercase the entire string. The Tooltip Template above takes precedence when it is not empty."
 							)}
-						</Help>
-					</PanelDescription>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Abbreviate Value')}
-					panelId={clientId}
-				>
-					<ToggleControl
-						label={__('Abbreviate Value')}
-						checked={getCurrentValue('tooltip', 'abbreviateValue')}
-						disabled={!getCurrentValue('tooltip', 'active')}
-						onChange={(newValue) =>
-							updateAttributeForDevice('tooltip', {
-								abbreviateValue: newValue,
-							})
-						}
-					/>
-					<PanelDescription>
-						<Help>
-							{__(
-								'If checked, abbreviates the value displayed in the tooltip.'
-							)}
-						</Help>
-					</PanelDescription>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Decimal Places')}
-					panelId={clientId}
-					isShownByDefault
-				>
-					<NumberControl
-						label={__('Decimal Places')}
-						value={getCurrentValue('tooltip', 'toFixedDecimal')}
-						disabled={!getCurrentValue('tooltip', 'active')}
-						min={0}
-						max={100}
-						onChange={(value) =>
-							updateAttributeForDevice('tooltip', {
-								toFixedDecimal: formatNum(value, 'integer'),
-								truncateDecimal: false,
-							})
-						}
-					/>
-					<PanelDescription>
-						<Help>
-							{__(
-								'Values render with exactly this many decimal places, so 20 at 3 places reads 20.000. Zero keeps each number as it is.'
-							)}
-						</Help>
-					</PanelDescription>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() =>
-						null !==
-						(getCurrentValue('tooltip', 'minDisplayValue') ?? null)
-					}
-					label={__('Minimum Display Value')}
-					panelId={clientId}
-				>
-					<NumberControl
-						label={__('Minimum Display Value')}
-						value={
-							getCurrentValue('tooltip', 'minDisplayValue') ?? ''
-						}
-						disabled={!getCurrentValue('tooltip', 'active')}
-						min={0}
-						step="any"
-						onChange={(value) =>
-							updateAttributeForDevice('tooltip', {
-								minDisplayValue: formatOptionalNum(value),
-							})
-						}
-					/>
-					<PanelDescription>
-						<Help>
-							{__(
-								'Values below this read as "<value" instead of rounding to zero. Eg. with 0.1 and one decimal place, 0.04 reads "<0.1" rather than "0.0". Leave empty to format every value normally.'
-							)}
-						</Help>
-					</PanelDescription>
-				</WidePanelItem>
-
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Format Value')}
-					panelId={clientId}
-				>
-					<ToggleControl
-						label={__('Format Value')}
-						checked={getCurrentValue('tooltip', 'toLocaleString')}
-						disabled={!getCurrentValue('tooltip', 'active')}
-						onChange={(newValue) =>
-							updateAttributeForDevice('tooltip', {
-								toLocaleString: newValue,
-							})
-						}
-					/>
-					<PanelDescription>
-						<Help>
-							{__(
-								'If checked, formats number into locale string (eg. 100000 -> 100,000).'
-							)}
-						</Help>
-					</PanelDescription>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Font Size')}
-					panelId={clientId}
-				>
-					<ToggleGroupControl
-						__nextHasNoMarginBottom
-						isBlock
-						value={fontSize}
-						label={__('Tooltip Font Size')}
-						disabled={!getCurrentValue('tooltip', 'active')}
-						onChange={(value) => {
-							updateAttributeForDevice('tooltip', {
-								style: {
-									...style,
-									fontSize: formatNum(value, 'integer'),
-								},
-							});
-						}}
-					>
-						<ToggleGroupControlOption label="10px" value={10} />
-						<ToggleGroupControlOption label="12px" value={12} />
-						<ToggleGroupControlOption label="13px" value={13} />
-						<ToggleGroupControlOption label="14px" value={14} />
-						<ToggleGroupControlOption label="16px" value={16} />
-					</ToggleGroupControl>
-					<PanelDescription>
-						<Help>
-							{__(
-								'Select the font size for tooltip text. Default is 13px.'
-							)}
-						</Help>
-					</PanelDescription>
-				</WidePanelItem>
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Deemphasize Siblings')}
-					panelId={clientId}
-				>
-					<ToggleControl
-						label={__('Deemphasize Siblings')}
-						help={__(
-							'When hovering over a data point, deemphasize all other data points visually'
-						)}
-						checked={getCurrentValue(
-							'tooltip',
-							'deemphasizeSiblings'
-						)}
-						onChange={(newValue) =>
-							updateAttributeForDevice('tooltip', {
-								deemphasizeSiblings: newValue,
-							})
-						}
-					/>
-					<NumberControl
-						label={__('Opacity')}
-						value={getCurrentValue('tooltip', 'deemphasizeOpacity')}
-						min={0}
-						max={1}
-						step={0.1}
-						disabled={
-							!getCurrentValue('tooltip', 'deemphasizeSiblings')
-						}
-						onChange={(value) =>
-							updateAttributeForDevice('tooltip', {
-								deemphasizeOpacity: formatNum(value, 'float'),
-							})
-						}
-					/>
-				</WidePanelItem>
-				{'map' === io.chartFamily && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Emphasize Stroke')}
-						panelId={clientId}
-					>
+							value={getCurrentValue('tooltip', 'format')}
+							placeholder="{{row}}: {{value}}"
+							onChange={(val) =>
+								updateAttributeForDevice('tooltip', {
+									format: val,
+								})
+							}
+						/>
+						<ExternalLink href="https://platform.pewresearch.org/wiki/2024/06/25/chart-builder-documentation/#tooltip">
+							For more information on tooltip formatting, see the
+							dev docs.
+						</ExternalLink>
+					</VStack>
+					{'time' === dataRender.xScale && (
+						<VStack spacing={2}>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Time scale format')}
+								value={getCurrentValue('tooltip', 'dateFormat')}
+								options={[
+									{ value: '%Y', label: '2023' },
+									{ value: "'%y", label: "'23" },
+									{ value: '%-m/%Y', label: '4/2023' },
+									{ value: '%-m/%y', label: '4/23' },
+									{ value: '%m/%Y', label: '04/2023' },
+									{ value: '%m/%y', label: '04/23' },
+									{ value: '%B %Y', label: 'April 2023' },
+									{ value: '%b %Y', label: 'Apr 2023' },
+									{ value: "%B '%y", label: "April '23" },
+									{ value: "%b '%y", label: "Apr '23" },
+									{ value: '%-m/%-d/%Y', label: '4/15/2023' },
+									{ value: '%-d/%-m/%Y', label: '15/4/2023' },
+									{ value: '%-m/%-d/%y', label: '4/15/23' },
+									{ value: '%-d/%-m/%y', label: '15/4/23' },
+									{ value: '%-m/%-d', label: '4/15' },
+									{ value: '%-d/%-m', label: '15/4' },
+									{ value: '%m/%d/%Y', label: '04/15/2023' },
+									{ value: '%d/%m/%Y', label: '15/04/2023' },
+									{ value: '%m/%d/%y', label: '04/15/23' },
+									{ value: '%d/%m/%y', label: '15/04/23' },
+									{ value: '%m/%-d', label: '04/15' },
+									{ value: '%-d/%m', label: '15/04' },
+									{
+										value: '%B %-d, %Y',
+										label: 'April 15, 2023',
+									},
+									{
+										value: '%B %-d %Y',
+										label: 'April 15 2023',
+									},
+									{
+										value: '%b %-d, %Y',
+										label: 'Apr 15, 2023',
+									},
+									{
+										value: '%b %-d %Y',
+										label: 'Apr 15 2023',
+									},
+									{
+										value: '%-d %B, %Y',
+										label: '15 April, 2023',
+									},
+									{
+										value: '%-d %B %Y',
+										label: '15 April 2023',
+									},
+									{
+										value: '%-d %b, %Y',
+										label: '15 Apr, 2023',
+									},
+									{
+										value: '%-d %b %Y',
+										label: '15 Apr 2023',
+									},
+									{
+										value: "%B %-d '%y",
+										label: "April 15 '23",
+									},
+									{
+										value: "%-d %B '%y",
+										label: "15 April '23",
+									},
+									{
+										value: "%b %-d '%y",
+										label: "Apr 15 '23",
+									},
+									{
+										value: "%-d %b '%y",
+										label: "15 Apr '23",
+									},
+									{ value: '%B %-d', label: 'April 15' },
+									{ value: '%-d %B', label: '15 April' },
+									{ value: '%b %-d', label: 'Apr 15' },
+									{ value: '%-d %b', label: '15 Apr' },
+									{ value: '%B', label: 'April' },
+									{ value: '%b', label: 'Apr' },
+								]}
+								onChange={(type) => {
+									updateAttributeForDevice('tooltip', {
+										dateFormat: type,
+									});
+								}}
+							/>
+						</VStack>
+					)}
+					<VStack spacing={2}>
 						<ToggleControl
-							label={__('Emphasize Stroke')}
+							label={__('Absolute Value')}
 							checked={getCurrentValue(
 								'tooltip',
-								'emphasizeStrokeActive'
+								'absoluteValue'
 							)}
 							onChange={(newValue) =>
 								updateAttributeForDevice('tooltip', {
-									emphasizeStrokeActive: newValue,
+									absoluteValue: newValue,
 								})
 							}
-							help={__(
-								'If selected, the stroke(outline) of the data point will be emphasized when hovering over it.'
-							)}
 						/>
-						<ChartPanelColorSettings
-							__experimentalHasMultipleOrigins
-							__experimentalIsRenderedInSidebar
-							title={__('Emphasize Stroke Color')}
-							style={{
-								paddingLeft: '0',
-								paddingRight: '0',
-								marginTop: '10px',
-							}}
-							disabled={
-								!getCurrentValue(
-									'tooltip',
-									'emphasizeStrokeActive'
-								)
-							}
-							colorSettings={[
-								{
-									value: getCurrentValue(
-										'tooltip',
-										'emphasizeStrokeColor'
-									),
-									onChange: (value) =>
-										updateAttributeForDevice('tooltip', {
-											emphasizeStrokeColor: value ?? '',
-										}),
-									label: __('Stroke Color'),
-								},
-							]}
-						/>
-						<NumberControl
-							label={__('Stroke Width')}
-							value={getCurrentValue(
+						<PanelDescription>
+							<Help>
+								{__(
+									'If the chart is displaying negative values, this will ensure the value displayed in the tooltip is always positive. Often used on bar charts with a diverging axis.'
+								)}
+							</Help>
+						</PanelDescription>
+					</VStack>
+					<VStack spacing={2}>
+						<ToggleControl
+							label={__('Abbreviate Value')}
+							checked={getCurrentValue(
 								'tooltip',
-								'emphasizeStrokeWidth'
+								'abbreviateValue'
 							)}
-							min={0}
-							max={10}
-							step={0.1}
-							disabled={
-								!getCurrentValue(
-									'tooltip',
-									'emphasizeStrokeActive'
-								)
+							onChange={(newValue) =>
+								updateAttributeForDevice('tooltip', {
+									abbreviateValue: newValue,
+								})
 							}
+						/>
+						<PanelDescription>
+							<Help>
+								{__(
+									'If checked, abbreviates the value displayed in the tooltip.'
+								)}
+							</Help>
+						</PanelDescription>
+					</VStack>
+					<VStack spacing={2}>
+						<NumberControl
+							label={__('Decimal Places')}
+							value={getCurrentValue('tooltip', 'toFixedDecimal')}
+							min={0}
+							max={100}
 							onChange={(value) =>
 								updateAttributeForDevice('tooltip', {
-									emphasizeStrokeWidth: formatNum(
-										value,
-										'integer'
-									),
+									toFixedDecimal: formatNum(value, 'integer'),
+									truncateDecimal: false,
 								})
 							}
 						/>
-					</WidePanelItem>
-				)}
-			</ToolsPanel>
-		</PanelBody>
+						<PanelDescription>
+							<Help>
+								{__(
+									'Values render with exactly this many decimal places, so 20 at 3 places reads 20.000. Zero keeps each number as it is.'
+								)}
+							</Help>
+						</PanelDescription>
+					</VStack>
+					<VStack spacing={2}>
+						<NumberControl
+							label={__('Minimum Display Value')}
+							value={
+								getCurrentValue('tooltip', 'minDisplayValue') ??
+								''
+							}
+							min={0}
+							step="any"
+							onChange={(value) =>
+								updateAttributeForDevice('tooltip', {
+									minDisplayValue: formatOptionalNum(value),
+								})
+							}
+						/>
+						<PanelDescription>
+							<Help>
+								{__(
+									'Values below this read as "<value" instead of rounding to zero. Eg. with 0.1 and one decimal place, 0.04 reads "<0.1" rather than "0.0". Leave empty to format every value normally.'
+								)}
+							</Help>
+						</PanelDescription>
+					</VStack>
+
+					<VStack spacing={2}>
+						<ToggleControl
+							label={__('Format Value')}
+							checked={getCurrentValue(
+								'tooltip',
+								'toLocaleString'
+							)}
+							onChange={(newValue) =>
+								updateAttributeForDevice('tooltip', {
+									toLocaleString: newValue,
+								})
+							}
+						/>
+						<PanelDescription>
+							<Help>
+								{__(
+									'If checked, formats number into locale string (eg. 100000 -> 100,000).'
+								)}
+							</Help>
+						</PanelDescription>
+					</VStack>
+					<VStack spacing={2}>
+						<ToggleGroupControl
+							__nextHasNoMarginBottom
+							isBlock
+							value={fontSize}
+							label={__('Tooltip Font Size')}
+							onChange={(value) => {
+								updateAttributeForDevice('tooltip', {
+									style: {
+										...style,
+										fontSize: formatNum(value, 'integer'),
+									},
+								});
+							}}
+						>
+							<ToggleGroupControlOption label="10px" value={10} />
+							<ToggleGroupControlOption label="12px" value={12} />
+							<ToggleGroupControlOption label="13px" value={13} />
+							<ToggleGroupControlOption label="14px" value={14} />
+							<ToggleGroupControlOption label="16px" value={16} />
+						</ToggleGroupControl>
+						<PanelDescription>
+							<Help>
+								{__(
+									'Select the font size for tooltip text. Default is 13px.'
+								)}
+							</Help>
+						</PanelDescription>
+					</VStack>
+					<VStack spacing={2}>
+						<ToggleControl
+							label={__('Deemphasize Siblings')}
+							help={__(
+								'When hovering over a data point, deemphasize all other data points visually'
+							)}
+							checked={deemphasizeSiblings}
+							onChange={(newValue) =>
+								updateAttributeForDevice('tooltip', {
+									deemphasizeSiblings: newValue,
+								})
+							}
+						/>
+						{deemphasizeSiblings && (
+							<NumberControl
+								label={__('Opacity')}
+								value={getCurrentValue(
+									'tooltip',
+									'deemphasizeOpacity'
+								)}
+								min={0}
+								max={1}
+								step={0.1}
+								onChange={(value) =>
+									updateAttributeForDevice('tooltip', {
+										deemphasizeOpacity: formatNum(
+											value,
+											'float'
+										),
+									})
+								}
+							/>
+						)}
+					</VStack>
+					{'map' === io.chartFamily && (
+						<VStack spacing={2}>
+							<ToggleControl
+								label={__('Emphasize Stroke')}
+								checked={emphasizeStrokeActive}
+								onChange={(newValue) =>
+									updateAttributeForDevice('tooltip', {
+										emphasizeStrokeActive: newValue,
+									})
+								}
+								help={__(
+									'If selected, the stroke(outline) of the data point will be emphasized when hovering over it.'
+								)}
+							/>
+							{emphasizeStrokeActive && (
+								<>
+									<ChartPanelColorSettings
+										__experimentalHasMultipleOrigins
+										__experimentalIsRenderedInSidebar
+										title={__('Emphasize Stroke Color')}
+										style={{
+											paddingLeft: '0',
+											paddingRight: '0',
+											marginTop: '10px',
+										}}
+										colorSettings={[
+											{
+												value: getCurrentValue(
+													'tooltip',
+													'emphasizeStrokeColor'
+												),
+												onChange: (value) =>
+													updateAttributeForDevice(
+														'tooltip',
+														{
+															emphasizeStrokeColor:
+																value ?? '',
+														}
+													),
+												label: __('Stroke Color'),
+											},
+										]}
+									/>
+									<NumberControl
+										label={__('Stroke Width')}
+										value={getCurrentValue(
+											'tooltip',
+											'emphasizeStrokeWidth'
+										)}
+										min={0}
+										max={10}
+										step={0.1}
+										onChange={(value) =>
+											updateAttributeForDevice(
+												'tooltip',
+												{
+													emphasizeStrokeWidth:
+														formatNum(
+															value,
+															'integer'
+														),
+												}
+											)
+										}
+									/>
+								</>
+							)}
+						</VStack>
+					)}
+				</VStack>
+			)}
+		</FocusedPanelBody>
 	);
 }
 

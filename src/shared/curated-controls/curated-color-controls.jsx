@@ -87,6 +87,10 @@ export default function CuratedColorControls({ attributes, setAttributes }) {
 		!['pie', 'waffle'].includes(smallMultiples.panelType);
 	const usesPanelColors =
 		offersPanelColors && smallMultiples.colorMode === 'panel';
+	const legacyBarStroke = Boolean(attributes.io?.elementHasStroke);
+	const chartBarStrokeEnabled = Boolean(
+		attributes.bar?.hasRectStroke || legacyBarStroke
+	);
 
 	const onChangeSources = (tokens) => {
 		const nextSources = tokens
@@ -131,7 +135,7 @@ export default function CuratedColorControls({ attributes, setAttributes }) {
 					suggestions={colorNames.map(({ label }) => label)}
 					onChange={onChangeSources}
 					help={__(
-						'Series take the first palette by default. Every selected palette is offered when you set a series color.',
+						'Series take the first palette by default. Every selected palette is offered when you set a series color. For each series, click a color swatch to change it. Click “Edit series” for stroke, opacity, and label styles.',
 						'prc-chart-builder'
 					)}
 					__experimentalRenderItem={({ item }) => (
@@ -188,6 +192,7 @@ export default function CuratedColorControls({ attributes, setAttributes }) {
 						? undefined
 						: attributes.dataRender?.mapScale
 				}
+				chartBarStrokeEnabled={chartBarStrokeEnabled}
 				onChange={(next) => setAttributes({ seriesStyles: next })}
 			/>
 			{usesPanelColors && (

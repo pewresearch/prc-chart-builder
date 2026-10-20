@@ -15,7 +15,6 @@ import {
 } from '@wordpress/block-editor';
 import {
 	ToggleControl,
-	PanelBody,
 	TextControl,
 	Button,
 	Modal,
@@ -28,6 +27,8 @@ import { store as editorStore } from '@wordpress/editor';
  */
 import Placeholder from './placeholder';
 import ViewModeControls from './view-mode-controls';
+import FocusedPanelBody from '../chart/edit/focused-panel-body';
+import { InspectorFocusProvider } from '../chart/edit/hooks/inspector-focus-context';
 import ChartCptWizardShell from './chart-cpt-wizard-shell';
 import { isNewCreationUiEnabled, shouldHostCptWizard } from './creation-ui';
 import { prefetchChartPatternsLibrary } from '../shared/select-chart-step';
@@ -553,109 +554,116 @@ export default function Edit({
 
 	const inspector = (
 		<InspectorControls>
-			<PanelBody
-				title={__('Tab Controls / Data Download / Schema.org')}
-				initialOpen={true}
-			>
-				<p
-					style={{
-						marginTop: 0,
-						marginBottom: '12px',
-						fontSize: '12px',
-					}}
+			<InspectorFocusProvider persist>
+				<FocusedPanelBody
+					panelId="controllerData"
+					title={__('Tab Controls / Data Download / Schema.org')}
+					initialOpen={true}
 				>
-					{__(
-						'Control which tabs appear below the chart. Hiding a tab removes it from the frontend entirely — users can only interact with what is shown.'
-					)}
-				</p>
-				<ToggleControl
-					label={__('Chart tab')}
-					checked={chartTabActive}
-					onChange={() =>
-						setAttributes({ chartTabActive: !chartTabActive })
-					}
-				/>
-				<ToggleControl
-					label={__('Data tab')}
-					checked={dataTabActive}
-					onChange={() =>
-						setAttributes({ dataTabActive: !dataTabActive })
-					}
-				/>
-				<ToggleControl
-					label={__('Allow data download')}
-					checked={allowDataDownload}
-					disabled={!dataTabActive || !chartClientId}
-					onChange={() => {
-						if (chartClientId) {
-							updateBlockAttributes(chartClientId, {
-								io: {
-									...chartIo,
-									allowDataDownload: !allowDataDownload,
-								},
-							});
+					<p
+						style={{
+							marginTop: 0,
+							marginBottom: '12px',
+							fontSize: '12px',
+						}}
+					>
+						{__(
+							'Control which tabs appear below the chart. Hiding a tab removes it from the frontend entirely — users can only interact with what is shown.'
+						)}
+					</p>
+					<ToggleControl
+						label={__('Chart tab')}
+						checked={chartTabActive}
+						onChange={() =>
+							setAttributes({ chartTabActive: !chartTabActive })
 						}
-					}}
-				/>
-				<ToggleControl
-					label={__('Download Image tab')}
-					checked={downloadImageTabActive}
-					onChange={() =>
-						setAttributes({
-							downloadImageTabActive: !downloadImageTabActive,
-						})
-					}
-				/>
-				<ToggleControl
-					label={__('Share tab')}
-					checked={shareActive}
-					onChange={() =>
-						setAttributes({ shareActive: !shareActive })
-					}
-				/>
-				<ToggleControl
-					label={__('Include in structured data (schema.org)')}
-					help={__(
-						"When enabled, this chart will be included in the page's JSON-LD schema as a Dataset. Disable for decorative or supplementary charts that should not appear in search results."
-					)}
-					checked={enableSchemaOutput}
-					onChange={() =>
-						setAttributes({
-							enableSchemaOutput: !enableSchemaOutput,
-						})
-					}
-				/>
-			</PanelBody>
-			<PanelBody title={__('Chart ID (advanced)')} initialOpen={false}>
-				<p
-					style={{
-						marginTop: 0,
-						marginBottom: '12px',
-						fontSize: '12px',
-					}}
+					/>
+					<ToggleControl
+						label={__('Data tab')}
+						checked={dataTabActive}
+						onChange={() =>
+							setAttributes({ dataTabActive: !dataTabActive })
+						}
+					/>
+					<ToggleControl
+						label={__('Allow data download')}
+						checked={allowDataDownload}
+						disabled={!dataTabActive || !chartClientId}
+						onChange={() => {
+							if (chartClientId) {
+								updateBlockAttributes(chartClientId, {
+									io: {
+										...chartIo,
+										allowDataDownload: !allowDataDownload,
+									},
+								});
+							}
+						}}
+					/>
+					<ToggleControl
+						label={__('Download Image tab')}
+						checked={downloadImageTabActive}
+						onChange={() =>
+							setAttributes({
+								downloadImageTabActive: !downloadImageTabActive,
+							})
+						}
+					/>
+					<ToggleControl
+						label={__('Share tab')}
+						checked={shareActive}
+						onChange={() =>
+							setAttributes({ shareActive: !shareActive })
+						}
+					/>
+					<ToggleControl
+						label={__('Include in structured data (schema.org)')}
+						help={__(
+							"When enabled, this chart will be included in the page's JSON-LD schema as a Dataset. Disable for decorative or supplementary charts that should not appear in search results."
+						)}
+						checked={enableSchemaOutput}
+						onChange={() =>
+							setAttributes({
+								enableSchemaOutput: !enableSchemaOutput,
+							})
+						}
+					/>
+				</FocusedPanelBody>
+				<FocusedPanelBody
+					panelId="controllerChartId"
+					title={__('Chart ID (advanced)')}
+					initialOpen={false}
 				>
-					{__(
-						'This is the unique identifier for this chart. If you copied this chart from another chart, it may share an ID with the original — which can break rendering when both appear on the same page. Give it a distinct ID, or click Regenerate for a fresh one.'
-					)}
-				</p>
-				<TextControl
-					label={__('Chart ID')}
-					value={id || ''}
-					onChange={(next) => applyControllerId(next)}
-					help={__(
-						'Only letters, numbers, hyphens and underscores are allowed.'
-					)}
-					__nextHasNoMarginBottom
-					__next40pxDefaultSize
-				/>
-				<Button
-					variant="secondary"
-					onClick={() => applyControllerId(generateChartId())}
-					__next40pxDefaultSize
-				>
-					{__('Regenerate ID')}
-				</Button>
-			</PanelBody>
+					<p
+						style={{
+							marginTop: 0,
+							marginBottom: '12px',
+							fontSize: '12px',
+						}}
+					>
+						{__(
+							'This is the unique identifier for this chart. If you copied this chart from another chart, it may share an ID with the original — which can break rendering when both appear on the same page. Give it a distinct ID, or click Regenerate for a fresh one.'
+						)}
+					</p>
+					<TextControl
+						label={__('Chart ID')}
+						value={id || ''}
+						onChange={(next) => applyControllerId(next)}
+						help={__(
+							'Only letters, numbers, hyphens and underscores are allowed.'
+						)}
+						__nextHasNoMarginBottom
+						__next40pxDefaultSize
+					/>
+					<Button
+						variant="secondary"
+						onClick={() => applyControllerId(generateChartId())}
+						__next40pxDefaultSize
+					>
+						{__('Regenerate ID')}
+					</Button>
+				</FocusedPanelBody>
+			</InspectorFocusProvider>
 		</InspectorControls>
 	);
 

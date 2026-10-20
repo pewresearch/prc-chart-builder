@@ -273,6 +273,7 @@ function AnimationControls({
 				{enabled && (
 					<>
 						<RangeControl
+							__next40pxDefaultSize
 							label={__('Duration (ms)')}
 							value={duration}
 							min={0}
@@ -289,6 +290,7 @@ function AnimationControls({
 							}}
 						/>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Easing')}
 							value={easing}
 							options={EASING_OPTIONS}
@@ -331,6 +333,7 @@ function AnimationControls({
 						)}
 						{entranceEnabled && triggerOnViewport && (
 							<RangeControl
+								__next40pxDefaultSize
 								label={__('Entrance delay (ms)')}
 								value={viewportDelay}
 								min={0}
@@ -350,6 +353,7 @@ function AnimationControls({
 						{entranceEnabled && (
 							<>
 								<SelectControl
+									__next40pxDefaultSize
 									label={__('Entrance style')}
 									value={entranceType}
 									options={entranceOptions}
@@ -362,6 +366,7 @@ function AnimationControls({
 								/>
 								{'none' !== entranceType && (
 									<RangeControl
+										__next40pxDefaultSize
 										label={__('Entrance duration (ms)')}
 										value={entranceDuration}
 										min={0}
@@ -406,6 +411,7 @@ function AnimationControls({
 										{followEnabled && (
 											<>
 												<RangeControl
+													__next40pxDefaultSize
 													label={__(
 														'Secondary entrance duration (ms)'
 													)}
@@ -430,6 +436,7 @@ function AnimationControls({
 													}}
 												/>
 												<RangeControl
+													__next40pxDefaultSize
 													label={__(
 														'Delay after primary (ms)'
 													)}
@@ -469,6 +476,7 @@ function AnimationControls({
 						/>
 						{updateEnabled && (
 							<RangeControl
+								__next40pxDefaultSize
 								label={__('Update duration (ms)')}
 								value={updateDuration}
 								min={0}
@@ -500,6 +508,7 @@ function AnimationControls({
 								}
 							>
 								<Button
+									__next40pxDefaultSize
 									variant="secondary"
 									onClick={onPreviewAnimation}
 									isBusy={isPreviewingAnimation}

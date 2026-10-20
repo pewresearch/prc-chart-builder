@@ -539,6 +539,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 								});
 							},
 							label: __('Grid Stroke'),
+							contrast: false,
 						},
 						{
 							value: getCurrentValue(
@@ -559,6 +560,7 @@ function DependentAxisControls({ attributes, setAttributes }) {
 								});
 							},
 							label: __('Text Fill'),
+							contrast: 'text',
 						},
 					]}
 				/>

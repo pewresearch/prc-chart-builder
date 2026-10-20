@@ -142,7 +142,7 @@ export function RegressionLinePanel({
 			/>
 
 			<NumberControl
-				label={__('Stroke Width', 'prc-chart-builder')}
+				label={__('Line width', 'prc-chart-builder')}
 				value={strokeWidth}
 				onChange={(val) =>
 					handleStyleChange('strokeWidth', parseFloat(val) || 0)

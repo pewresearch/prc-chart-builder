@@ -12,16 +12,21 @@ import { Fragment } from 'react';
 /**
  * WordPress Dependencies
  */
-import { __ } from '@wordpress/i18n';
 import { BlockControls, InspectorControls } from '@wordpress/block-editor';
+import { useCommand } from '@wordpress/commands';
 import {
-	PanelBody,
 	ToggleControl,
 	ToolbarButton,
 	ToolbarGroup,
 } from '@wordpress/components';
-import { useCommand } from '@wordpress/commands';
-import { table, chartBar } from '@wordpress/icons';
+import { __ } from '@wordpress/i18n';
+import { chartBar, table } from '@wordpress/icons';
+
+/**
+ * Internal Dependencies
+ */
+import FocusedPanelBody from '../chart/edit/focused-panel-body';
+import { InspectorFocusProvider } from '../chart/edit/hooks/inspector-focus-context';
 
 const SWITCH_TO_DATA_LABEL = __('Switch to data', 'prc-chart-builder');
 const SWITCH_TO_CHART_LABEL = __('Switch to chart', 'prc-chart-builder');
@@ -33,7 +38,6 @@ const VIEW_COMMAND_KEYWORDS = ['chart', 'data', 'table', 'view', 'switch'];
  * @param {boolean}        props.showBoth          Whether both panes are visible.
  * @param {Function}       props.onChangeView      Called with the next single-pane view value.
  * @param {Function}       props.onChangeShowBoth  Called with the next boolean.
- * @param {boolean}        [props.initialOpen]     Inspector panel default open state (defaults to true).
  * @param {boolean}        [props.isBlockSelected] When true, registers command palette toggle (defaults to false).
  */
 export default function ViewModeControls({
@@ -41,7 +45,6 @@ export default function ViewModeControls({
 	showBoth,
 	onChangeView,
 	onChangeShowBoth,
-	initialOpen = true,
 	isBlockSelected = false,
 }) {
 	const toolbarLabel =
@@ -65,16 +68,22 @@ export default function ViewModeControls({
 	return (
 		<Fragment>
 			<InspectorControls>
-				<PanelBody title={__('Editor view')} initialOpen={initialOpen}>
-					<ToggleControl
-						label={__('Show both data and chart')}
-						help={__(
-							'Display the data table and chart side-by-side in the editor. This is a per-user editor preference and does not affect the published view.'
-						)}
-						checked={showBoth}
-						onChange={(next) => onChangeShowBoth(next)}
-					/>
-				</PanelBody>
+				<InspectorFocusProvider persist>
+					<FocusedPanelBody
+						panelId="editorView"
+						title={__('Editor view')}
+						initialOpen={false}
+					>
+						<ToggleControl
+							label={__('Show both data and chart')}
+							help={__(
+								'Display the data table and chart side-by-side in the editor. This is a per-user editor preference and does not affect the published view.'
+							)}
+							checked={showBoth}
+							onChange={(next) => onChangeShowBoth(next)}
+						/>
+					</FocusedPanelBody>
+				</InspectorFocusProvider>
 			</InspectorControls>
 			{!showBoth && (
 				<BlockControls>

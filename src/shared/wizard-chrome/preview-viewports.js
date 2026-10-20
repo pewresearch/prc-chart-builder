@@ -21,6 +21,22 @@ export const PREVIEW_VIEWPORT_WIDTHS = {
 	mobile: 479,
 };
 
+/** Narrowest canvas that counts as Desktop (Gutenberg's tablet→desktop). */
+const DESKTOP_MIN_WIDTH = PREVIEW_VIEWPORT_WIDTHS.tablet + 1;
+
+/**
+ * The viewport whose settings a canvas of this width shows on the site.
+ *
+ * @param {number} width Canvas width in px.
+ * @return {string} `'desktop'` | `'tablet'` | `'mobile'`.
+ */
+export function getPreviewViewportForWidth(width) {
+	if (width <= PREVIEW_VIEWPORT_WIDTHS.mobile) {
+		return 'mobile';
+	}
+	return width < DESKTOP_MIN_WIDTH ? 'tablet' : 'desktop';
+}
+
 /**
  * Every viewport resolves to a definite width. A shrink-to-fit card would
  * settle at whatever the chart last rendered, which caps the preview at the
@@ -29,7 +45,8 @@ export const PREVIEW_VIEWPORT_WIDTHS = {
  * @param {string}      viewport      `'desktop'` | `'tablet'` | `'mobile'`.
  * @param {number|null} [customWidth] Hand-picked canvas width, if any.
  * @param {number|null} [fullWidth]   Canvas width that renders the chart at
- *                                    its authored `layout.width`; desktop.
+ *                                    its authored `layout.width`. Desktop
+ *                                    uses it, and no viewport is wider.
  * @return {Object} Inline style for the preview pane.
  */
 export function getPreviewViewportStyle(
@@ -37,7 +54,12 @@ export function getPreviewViewportStyle(
 	customWidth = null,
 	fullWidth = null
 ) {
-	const width = customWidth || PREVIEW_VIEWPORT_WIDTHS[viewport] || fullWidth;
+	const requested =
+		customWidth || PREVIEW_VIEWPORT_WIDTHS[viewport] || fullWidth;
+	// The chart never draws wider than its layout.width, so a wider card
+	// only adds margin and makes the chart look smaller than on Desktop.
+	const width =
+		requested && fullWidth ? Math.min(requested, fullWidth) : requested;
 
 	return {
 		'--prc-chart-preview-width': width ? `${width}px` : 'max-content',
@@ -45,16 +67,19 @@ export function getPreviewViewportStyle(
 }
 
 /**
- * Range of canvas widths worth offering for a chart, given its own width cap.
+ * Range of canvas widths worth offering for a chart: up to its own width cap,
+ * and always far enough to reach the Desktop breakpoint.
  *
  * @param {number} chartWidth The chart's `layout.width`.
- * @return {{min: number, max: number}} Inclusive slider bounds.
+ * @return {{min: number, max: number, chartWidth: number}} Inclusive slider
+ *                                                         bounds, and the cap.
  */
 export function getPreviewWidthRange(chartWidth) {
-	const max = chartWidth + PREVIEW_CARD_PADDING;
+	const max = Math.max(chartWidth + PREVIEW_CARD_PADDING, DESKTOP_MIN_WIDTH);
 
 	return {
 		min: Math.min(PREVIEW_MIN_WIDTH, max),
 		max,
+		chartWidth,
 	};
 }

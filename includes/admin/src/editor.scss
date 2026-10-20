@@ -1,4 +1,21 @@
-@import "@wordpress/dataviews/build-style/style.css";
+// Shared wizard chrome (also brings in the DataViews base styles).
+@import "../../../src/shared/wizard-ui/style";
+@import "../../../src/chart/edit/control-ui";
+
+$admin-text: var(--wp--preset--color--ui-text-color);
+$admin-text-muted: var(--wp--preset--color--ui-gray-very-dark);
+$admin-border: var(--wp--preset--color--ui-gray-light);
+$admin-border-strong: var(--wp--preset--color--ui-gray-dark);
+$admin-surface: var(--wp--preset--color--ui-white);
+$admin-surface-subtle: var(--wp--preset--color--ui-gray-very-light);
+$admin-accent: var(--wp--preset--color--ui-link-color);
+$admin-accent-soft: color-mix(in srgb, #{$admin-accent} 8%, #{$admin-surface});
+$admin-success: var(--wp--preset--color--ui-success);
+$admin-success-soft: color-mix(
+	in srgb,
+	#{$admin-success} 8%,
+	#{$admin-surface}
+);
 
 #prc-chart-dataviews-admin {
 	box-sizing: border-box;
@@ -50,15 +67,11 @@
 	}
 }
 
-// ── Chart Wizard / modal UI (shared with CPT Controller host) ───────────────
-@import "../../../src/shared/wizard-ui/style";
-@import "../../../src/chart/edit/control-ui";
-
 // ── CSV Data Input ─────────────────────────────────────────────────────────────
 
 .prc-csv-input {
 	position: relative;
-	border: 1px solid #ddd;
+	border: 1px solid $admin-border;
 	border-radius: 4px;
 	padding: 8px;
 	transition:
@@ -66,8 +79,8 @@
 		background-color 0.15s;
 
 	&--drag-over {
-		border-color: #007cba;
-		background-color: #f0f8ff;
+		border-color: $admin-accent;
+		background-color: $admin-accent-soft;
 
 		textarea {
 			opacity: 0.4;
@@ -76,7 +89,7 @@
 	}
 
 	&--has-data {
-		border-color: #949494;
+		border-color: $admin-border-strong;
 	}
 
 	&__label {
@@ -85,7 +98,7 @@
 		font-weight: 500;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
-		color: #757575;
+		color: $admin-text-muted;
 		margin-bottom: 6px;
 	}
 
@@ -102,13 +115,13 @@
 	&__footer {
 		margin-top: 6px;
 		padding-top: 6px;
-		border-top: 1px solid #f0f0f0;
+		border-top: 1px solid $admin-border;
 		font-size: 12px;
 	}
 
 	&__filename {
 		font-size: 12px;
-		color: #1e1e1e;
+		color: $admin-text;
 		max-width: 200px;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -121,11 +134,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		background: rgba(240, 248, 255, 0.85);
+		background: color-mix(in srgb, #{$admin-accent-soft} 85%, transparent);
 		border-radius: 4px;
 		font-size: 13px;
 		font-weight: 500;
-		color: #007cba;
+		color: $admin-accent;
 		pointer-events: none;
 	}
 }
@@ -135,7 +148,7 @@
 .prc-ai-create {
 	&__intro {
 		margin: 0 0 16px;
-		color: #757575;
+		color: $admin-text-muted;
 		font-size: 13px;
 	}
 
@@ -149,17 +162,17 @@
 		font-weight: 500;
 		text-transform: uppercase;
 		letter-spacing: 0.5px;
-		color: #757575;
+		color: $admin-text-muted;
 		margin-bottom: 8px;
 	}
 
 	&__file-label {
 		font-size: 12px;
-		color: #757575;
+		color: $admin-text-muted;
 		cursor: pointer;
 
 		&:hover {
-			color: #007cba;
+			color: $admin-accent;
 		}
 	}
 
@@ -169,12 +182,12 @@
 		align-items: center;
 		justify-content: center;
 		min-height: 80px;
-		border: 2px dashed #ddd;
+		border: 2px dashed $admin-border;
 		border-radius: 4px;
 		padding: 16px;
 		cursor: pointer;
 		font-size: 13px;
-		color: #757575;
+		color: $admin-text-muted;
 		transition:
 			border-color 0.15s,
 			background-color 0.15s;
@@ -182,16 +195,16 @@
 
 		&:hover,
 		&--drag-over {
-			border-color: #007cba;
-			background-color: #f0f8ff;
-			color: #007cba;
+			border-color: $admin-accent;
+			background-color: $admin-accent-soft;
+			color: $admin-accent;
 		}
 
 		&--has-file {
 			border-style: solid;
-			border-color: #00a32a;
-			background-color: #f0faf3;
-			color: #1e1e1e;
+			border-color: $admin-success;
+			background-color: $admin-success-soft;
+			color: $admin-text;
 		}
 
 		&-filename {
@@ -208,16 +221,16 @@
 		&-label {
 			margin: 0 0 12px;
 			font-size: 13px;
-			color: #757575;
+			color: $admin-text-muted;
 		}
 
 		&-frame {
 			width: 100%;
 			aspect-ratio: 16 / 9;
 			overflow: hidden;
-			border: 1px solid #ddd;
+			border: 1px solid $admin-border;
 			border-radius: 4px;
-			background: #f6f7f7;
+			background: $admin-surface-subtle;
 			position: relative;
 
 			.block-editor-block-preview__content {

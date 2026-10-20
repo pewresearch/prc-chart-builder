@@ -136,6 +136,31 @@ function resolvePanelTitleCustomizations(customTitles = {}) {
 }
 
 /**
+ * Resolve row fills and strokes to light-dark(). Renderers read these colors
+ * directly, and react-spring cannot animate between a light-dark() color and a
+ * plain one.
+ *
+ * @param {Object|undefined} rows Key to style map, e.g. seriesStyles.
+ * @return {Object} Rows with resolved fill and stroke colors.
+ */
+function resolveStyleColors(rows = {}) {
+	return Object.fromEntries(
+		Object.entries(rows ?? {}).map(([key, row]) => [
+			key,
+			row && typeof row === 'object'
+				? {
+						...row,
+						...(row.fill ? { fill: resolveColor(row.fill) } : {}),
+						...(row.stroke
+							? { stroke: resolveColor(row.stroke) }
+							: {}),
+					}
+				: row,
+		])
+	);
+}
+
+/**
  * Resolve panel row fills the way compiled series fills resolve.
  *
  * @param {Object|undefined} panelStyles smallMultiples.panelStyles from block attrs.
@@ -145,12 +170,7 @@ function resolvePanelStyleFills(panelStyles = {}) {
 	return Object.fromEntries(
 		Object.entries(panelStyles).map(([panelKey, rows]) => [
 			panelKey,
-			Object.fromEntries(
-				Object.entries(rows ?? {}).map(([seriesKey, row]) => [
-					seriesKey,
-					row?.fill ? { ...row, fill: resolveColor(row.fill) } : row,
-				])
-			),
+			resolveStyleColors(rows),
 		])
 	);
 }
@@ -334,7 +354,7 @@ const getConfig = (
 				resolvedColorPalette
 			)
 		).map(resolveColor),
-		seriesStyles: seriesStyles ?? {},
+		seriesStyles: resolveStyleColors(seriesStyles),
 		plotBands: {
 			...baseConfig.plotBands,
 			...plotBands,
@@ -650,7 +670,17 @@ const getConfig = (
 		bar: {
 			...baseConfig.bar,
 			...bar,
-			hasRectStroke: elementHasStroke,
+			hasRectStroke: (() => {
+				const strokeWidth =
+					bar.rectStrokeWidth ?? baseConfig.bar?.rectStrokeWidth ?? 1;
+				return (
+					Boolean(bar.hasRectStroke || elementHasStroke) &&
+					strokeWidth > 0
+				);
+			})(),
+			rectStrokeColor: resolveColor(
+				bar.rectStrokeColor ?? baseConfig.bar?.rectStrokeColor
+			),
 		},
 		line: {
 			...baseConfig.line,
@@ -758,8 +788,8 @@ const getConfig = (
 			),
 		},
 		shapes: {
-			customStyles: shapes?.customStyles || {},
-			segmentStyles: shapes?.segmentStyles || {},
+			customStyles: resolveStyleColors(shapes?.customStyles),
+			segmentStyles: resolveStyleColors(shapes?.segmentStyles),
 			segmentsActive: shapes?.segmentsActive ?? false,
 		},
 		voronoi: {

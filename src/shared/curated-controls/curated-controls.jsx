@@ -108,36 +108,33 @@ export default function CuratedControls({ chartAttributes, onChange }) {
 				aria-labelledby={`prc-chart-configure-tab-${activeTab}`}
 				className="prc-chart-modal__configure-tab-content"
 			>
-				{activeTab === 'appearance' && (
-					<AppearanceTab
-						chartAttributes={chartAttributes}
-						onChange={onChange}
-						setAttributes={setAttributes}
-					/>
-				)}
-				{activeTab === 'data' && (
-					<DataTab
-						chartAttributes={chartAttributes}
-						onChange={onChange}
-						setAttributes={setAttributes}
-					/>
-				)}
-				{activeTab === 'text' && (
-					<InspectorFocusProvider>
+				<InspectorFocusProvider exclusive>
+					{activeTab === 'appearance' && (
+						<AppearanceTab
+							chartAttributes={chartAttributes}
+							setAttributes={setAttributes}
+						/>
+					)}
+					{activeTab === 'data' && (
+						<DataTab
+							chartAttributes={chartAttributes}
+							onChange={onChange}
+							setAttributes={setAttributes}
+						/>
+					)}
+					{activeTab === 'text' && (
 						<TextTab
 							chartAttributes={chartAttributes}
 							setAttributes={setAttributes}
 						/>
-					</InspectorFocusProvider>
-				)}
-				{activeTab === 'chart-type' && chartTypeTab && (
-					<InspectorFocusProvider>
+					)}
+					{activeTab === 'chart-type' && chartTypeTab && (
 						<ChartTypeTab
 							chartAttributes={chartAttributes}
 							setAttributes={setAttributes}
 						/>
-					</InspectorFocusProvider>
-				)}
+					)}
+				</InspectorFocusProvider>
 			</div>
 		</div>
 	);

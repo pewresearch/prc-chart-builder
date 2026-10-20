@@ -5,7 +5,6 @@ import { useState } from '@wordpress/element';
 import {
 	Button,
 	ExternalLink,
-	PanelBody,
 	PanelRow,
 	TextControl,
 } from '@wordpress/components';
@@ -19,6 +18,7 @@ import apiFetch from '@wordpress/api-fetch';
 /**
  * Internal Dependencies
  */
+import FocusedPanelBody from './focused-panel-body';
 import { createSVG } from '../utils/image-exports';
 import useCopyPasteStyles from './hooks/use-copy-paste-styles';
 
@@ -183,7 +183,8 @@ export default function ProductionControls({
 
 	return (
 		<InspectorControls>
-			<PanelBody
+			<FocusedPanelBody
+				panelId="production"
 				title={__('Production Tools', 'prc-chart-builder')}
 				initialOpen={false}
 			>
@@ -386,7 +387,7 @@ export default function ProductionControls({
 						</PanelRow>
 					</>
 				)}
-			</PanelBody>
+			</FocusedPanelBody>
 		</InspectorControls>
 	);
 }

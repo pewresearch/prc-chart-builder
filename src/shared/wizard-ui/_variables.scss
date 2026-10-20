@@ -1,0 +1,44 @@
+/**
+ * Shared Chart Wizard tokens and mixins. Emits no CSS, so any sheet can import
+ * it without duplicating the wizard rules.
+ *
+ * Colors and type come from the PRC Design System theme.json presets.
+ */
+
+$wizard-font: var(--wp--preset--font-family--sans-serif);
+$wizard-font-size-small: 13px;
+$wizard-font-size-medium: 16px;
+$wizard-font-size-large: 20px;
+$wizard-text: var(--wp--preset--color--ui-text-color);
+$wizard-gray-very-dark: var(--wp--preset--color--ui-gray-very-dark);
+$wizard-gray: var(--wp--preset--color--ui-gray-dark);
+$wizard-border: var(--wp--preset--color--ui-gray-light);
+$wizard-surface: var(--wp--preset--color--ui-white);
+$wizard-surface-subtle: var(--wp--preset--color--ui-gray-very-light);
+$wizard-accent: var(--wp--preset--color--ui-link-color);
+$wizard-on-accent: var(--wp--preset--color--ui-white);
+$wizard-ink: var(--wp--preset--color--ui-black);
+$wizard-accent-soft: color-mix(
+	in srgb,
+	var(--wp--preset--color--ui-link-color) 12%,
+	var(--wp--preset--color--ui-white)
+);
+
+// Compact/modal template grid: cap height so the picker scrolls and preview
+// lazy-loading has a stable scrollport (see use-pattern-preview-visibility).
+$wizard-pattern-picker-max-height: min(65vh, 560px);
+
+@mixin pattern-picker-scrollport {
+	overflow: auto;
+	overscroll-behavior: contain;
+
+	// Let content height the grid; the picker scrolls, not DataViews.
+	.dataviews-wrapper {
+		height: auto;
+		min-height: 0;
+	}
+
+	.dataviews-layout__container {
+		min-height: 0;
+	}
+}

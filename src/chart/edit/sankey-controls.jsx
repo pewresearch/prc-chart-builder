@@ -5,10 +5,10 @@
 import { __ } from '@wordpress/i18n';
 import {
 	PanelBody,
-	__experimentalToolsPanel as ToolsPanel,
 	__experimentalNumberControl as NumberControl,
 	SelectControl,
 	RangeControl,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 
 /**
@@ -17,13 +17,9 @@ import {
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
-import {
-	PanelDescription,
-	WidePanelItem,
-	StyledLabel,
-} from './control-ui';
+import { PanelDescription, StyledLabel } from './control-ui';
 
-function SankeyControls({ attributes, setAttributes, clientId }) {
+function SankeyControls({ attributes, setAttributes, curated = false }) {
 	// Viewport-aware attribute management
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -35,15 +31,14 @@ function SankeyControls({ attributes, setAttributes, clientId }) {
 	const io = attributes.io || {};
 	const { availableCategories = [], independentVariable } = io;
 
-	// All columns: independent variable (x) + available categories
-	const allColumns = [
-		...(independentVariable ? [independentVariable] : []),
-		...availableCategories,
+	// Rows key the first table column as `x`, not by its header.
+	const columnOptions = [
+		{ value: 'x', label: independentVariable || __('First column') },
+		...availableCategories.map((col) => ({
+			value: col,
+			label: col,
+		})),
 	];
-	const columnOptions = allColumns.map((col) => ({
-		value: col,
-		label: col,
-	}));
 
 	return (
 		<div ref={panelRef}>
@@ -52,22 +47,11 @@ function SankeyControls({ attributes, setAttributes, clientId }) {
 				opened={isOpen}
 				onToggle={onToggle}
 			>
-				<ToolsPanel
-					label={__('Attributes')}
-					panelId={clientId}
-					style={{
-						paddingLeft: '0',
-						paddingRight: '0',
-					}}
-				>
+				<VStack spacing={4}>
 					{/* Node Alignment */}
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Node Alignment')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Node Alignment')}
 							help={__(
 								'Controls how nodes are aligned within the diagram. "Justify" spreads nodes evenly, "Left" aligns to the start, "Right" to the end, and "Center" centers them.'
@@ -88,19 +72,14 @@ function SankeyControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
 					{/* Node Section */}
 					<PanelDescription>
 						<StyledLabel>Nodes</StyledLabel>
 					</PanelDescription>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Node Width')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Node Width (px)')}
 							help={__('Width of the rectangular node bars.')}
@@ -115,14 +94,9 @@ function SankeyControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Node Padding')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Node Padding (px)')}
 							help={__('Vertical spacing between nodes.')}
@@ -137,14 +111,9 @@ function SankeyControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Node Border Radius')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Border Radius (px)')}
 							help={__('Corner rounding for node rectangles.')}
@@ -159,20 +128,16 @@ function SankeyControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
 					{/* Link Section */}
 					<PanelDescription>
 						<StyledLabel>Links</StyledLabel>
 					</PanelDescription>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Link Opacity')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<RangeControl
+							__next40pxDefaultSize
 							label={__('Link Opacity')}
 							help={__(
 								'Opacity of the connecting bands between nodes.'
@@ -187,76 +152,68 @@ function SankeyControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
 
-					{/* Data Column Mapping */}
-					<PanelDescription>
-						<StyledLabel>Data Column Mapping</StyledLabel>
-					</PanelDescription>
+					{!curated && (
+						<>
+							{/* Data Column Mapping */}
+							<PanelDescription>
+								<StyledLabel>Data Column Mapping</StyledLabel>
+							</PanelDescription>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Source Column')}
-						isShownByDefault={false}
-						panelId={clientId}
-					>
-						<SelectControl
-							label={__('Source Column')}
-							help={__(
-								'The column in your data table that defines the source node for each flow.'
-							)}
-							value={sankey.sourceKey ?? 'x'}
-							options={columnOptions}
-							onChange={(value) => {
-								updateAttributeForDevice('sankey', {
-									sourceKey: value,
-								});
-							}}
-						/>
-					</WidePanelItem>
+							<VStack spacing={2}>
+								<SelectControl
+									__next40pxDefaultSize
+									label={__('Source Column')}
+									help={__(
+										'The column in your data table that defines the source node for each flow.'
+									)}
+									value={sankey.sourceKey ?? 'x'}
+									options={columnOptions}
+									onChange={(value) => {
+										updateAttributeForDevice('sankey', {
+											sourceKey: value,
+										});
+									}}
+								/>
+							</VStack>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Target Column')}
-						isShownByDefault={false}
-						panelId={clientId}
-					>
-						<SelectControl
-							label={__('Target Column')}
-							help={__(
-								'The column in your data table that defines the target node for each flow.'
-							)}
-							value={sankey.targetKey ?? 'target'}
-							options={columnOptions}
-							onChange={(value) => {
-								updateAttributeForDevice('sankey', {
-									targetKey: value,
-								});
-							}}
-						/>
-					</WidePanelItem>
+							<VStack spacing={2}>
+								<SelectControl
+									__next40pxDefaultSize
+									label={__('Target Column')}
+									help={__(
+										'The column in your data table that defines the target node for each flow.'
+									)}
+									value={sankey.targetKey ?? 'target'}
+									options={columnOptions}
+									onChange={(value) => {
+										updateAttributeForDevice('sankey', {
+											targetKey: value,
+										});
+									}}
+								/>
+							</VStack>
 
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Value Column')}
-						isShownByDefault={false}
-						panelId={clientId}
-					>
-						<SelectControl
-							label={__('Value Column')}
-							help={__(
-								'The column in your data table that defines the numeric value (flow size) for each link.'
-							)}
-							value={sankey.valueKey ?? 'value'}
-							options={columnOptions}
-							onChange={(value) => {
-								updateAttributeForDevice('sankey', {
-									valueKey: value,
-								});
-							}}
-						/>
-					</WidePanelItem>
-				</ToolsPanel>
+							<VStack spacing={2}>
+								<SelectControl
+									__next40pxDefaultSize
+									label={__('Value Column')}
+									help={__(
+										'The column in your data table that defines the numeric value (flow size) for each link.'
+									)}
+									value={sankey.valueKey ?? 'value'}
+									options={columnOptions}
+									onChange={(value) => {
+										updateAttributeForDevice('sankey', {
+											valueKey: value,
+										});
+									}}
+								/>
+							</VStack>
+						</>
+					)}
+				</VStack>
 			</PanelBody>
 		</div>
 	);

@@ -9,13 +9,13 @@
 
 import { __ } from '@wordpress/i18n';
 import {
-	PanelBody,
 	PanelRow,
 	Button,
 	ButtonGroup,
 	RangeControl,
 	SelectControl,
 } from '@wordpress/components';
+import FocusedPanelBody from './focused-panel-body';
 import { getSmallMultiplesPanelKeys } from './popover/utils';
 import { repositionDrawingToContext } from './utils/panel-anchor';
 import ChartPanelColorSettings from './chart-panel-color-settings';
@@ -516,6 +516,7 @@ function SelectedDrawingStyles({
 								onChange: (value) =>
 									onUpdate({ fill: value ?? '' }),
 								label: __('Fill Color', 'prc-chart-builder'),
+								contrast: false,
 							},
 						]}
 					/>
@@ -629,7 +630,8 @@ export default function DrawingControls({
 	}
 
 	return (
-		<PanelBody
+		<FocusedPanelBody
+			panelId="drawing"
 			title={__('Drawing Tools (Experimental)', 'prc-chart-builder')}
 			initialOpen={false}
 		>
@@ -745,6 +747,6 @@ export default function DrawingControls({
 					</PanelRow>
 				</>
 			)}
-		</PanelBody>
+		</FocusedPanelBody>
 	);
 }

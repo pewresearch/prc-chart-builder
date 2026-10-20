@@ -12,6 +12,7 @@
 /**
  * WordPress Dependencies
  */
+import { useDispatch, useRegistry, useSelect } from '@wordpress/data';
 import {
 	createContext,
 	useCallback,
@@ -20,22 +21,67 @@ import {
 	useRef,
 	useState,
 } from '@wordpress/element';
+import { store as preferencesStore } from '@wordpress/preferences';
 
 export const InspectorFocusContext = createContext(null);
 
+const PREFERENCES_SCOPE = 'prc-chart-builder';
+const OPEN_PANELS_PREFERENCE = 'openPanels';
+const NO_OPEN_PANELS = {};
+
 /**
- * Provides focus state for inspector panels.
- * Holds an array of panel IDs that should be opened on the next render cycle.
+ * Returns the next open-state map after a panel toggles.
+ *
+ * @param {Object<string, boolean>} openPanels Current open state by panel ID.
+ * @param {string}                  panelId    Panel being toggled.
+ * @param {boolean}                 open       Whether the panel is opening.
+ * @param {boolean}                 exclusive  Close every other panel on open.
+ * @return {Object<string, boolean>} Next open state by panel ID.
+ */
+function getNextOpenPanels(openPanels, panelId, open, exclusive) {
+	if (!open || !exclusive) {
+		return { ...openPanels, [panelId]: open };
+	}
+	const closed = Object.fromEntries(
+		Object.keys(openPanels).map((id) => [id, false])
+	);
+	return { ...closed, [panelId]: true };
+}
+
+/**
+ * Provides focus and open state for inspector panels.
+ * Holds which panels are open, and an array of panel IDs that should be
+ * opened on the next render cycle.
  *
  * @param {Object}                    props
  * @param {import('react').ReactNode} props.children
  * @param {boolean}                   [props.defaultPanelsOpen] When true, panels using `useFocusedPanel` start expanded.
+ * @param {boolean}                   [props.exclusive]         When true, opening a panel closes the others (accordion).
+ * @param {boolean}                   [props.persist]           When true, open state is saved to user preferences, so it survives reloads and is shared by every provider that persists.
  */
 export function InspectorFocusProvider({
 	children,
 	defaultPanelsOpen = false,
+	exclusive = false,
+	persist = false,
 }) {
 	const [focusedPanels, setFocusedPanels] = useState([]);
+	const [localOpenPanels, setLocalOpenPanels] = useState(NO_OPEN_PANELS);
+	const persistedOpenPanels = useSelect(
+		(select) =>
+			persist
+				? select(preferencesStore).get(
+						PREFERENCES_SCOPE,
+						OPEN_PANELS_PREFERENCE
+					)
+				: undefined,
+		[persist]
+	);
+	const openPanels = persist
+		? (persistedOpenPanels ?? NO_OPEN_PANELS)
+		: localOpenPanels;
+	const registry = useRegistry();
+	const { set: setPreference } = useDispatch(preferencesStore);
 	const [selectedAnnotationIndex, setSelectedAnnotationIndex] =
 		useState(null);
 
@@ -45,6 +91,28 @@ export function InspectorFocusProvider({
 
 	const clearFocus = useCallback(() => setFocusedPanels([]), []);
 
+	const setPanelOpen = useCallback(
+		(panelId, open) => {
+			if (!persist) {
+				setLocalOpenPanels((current) =>
+					getNextOpenPanels(current, panelId, open, exclusive)
+				);
+				return;
+			}
+			const current =
+				registry
+					.select(preferencesStore)
+					.get(PREFERENCES_SCOPE, OPEN_PANELS_PREFERENCE) ??
+				NO_OPEN_PANELS;
+			setPreference(
+				PREFERENCES_SCOPE,
+				OPEN_PANELS_PREFERENCE,
+				getNextOpenPanels(current, panelId, open, exclusive)
+			);
+		},
+		[exclusive, persist, registry, setPreference]
+	);
+
 	return (
 		<InspectorFocusContext.Provider
 			value={{
@@ -52,6 +120,8 @@ export function InspectorFocusProvider({
 				focusPanels,
 				clearFocus,
 				defaultPanelsOpen,
+				openPanels,
+				setPanelOpen,
 				selectedAnnotationIndex,
 				setSelectedAnnotationIndex,
 			}}
@@ -64,7 +134,7 @@ export function InspectorFocusProvider({
 /**
  * Returns the raw focus context value.
  *
- * @return {{ focusedPanels: string[], focusPanels: Function, clearFocus: Function, defaultPanelsOpen?: boolean, selectedAnnotationIndex: number|null, setSelectedAnnotationIndex: Function }|null} Focus context, or null outside the provider.
+ * @return {{ focusedPanels: string[], focusPanels: Function, clearFocus: Function, defaultPanelsOpen?: boolean, openPanels: Object<string, boolean>, setPanelOpen: Function, selectedAnnotationIndex: number|null, setSelectedAnnotationIndex: Function }|null} Focus context, or null outside the provider.
  */
 export function useInspectorFocus() {
 	return useContext(InspectorFocusContext);
@@ -73,15 +143,26 @@ export function useInspectorFocus() {
 /**
  * Hook for use inside each *-controls.jsx panel component.
  * Returns controlled open state and a ref for scrollIntoView.
+ * Inside a provider the open state lives in the provider, so it survives
+ * the panel unmounting; outside one it is local.
  * When this panel's ID appears in focusedPanels, it opens itself
  * and scrolls into view, then clears the focus signal.
  *
- * @param {string} panelId The unique ID for this panel (e.g. 'labels', 'bar', 'colors').
+ * @param {string}  panelId               The unique ID for this panel (e.g. 'labels', 'bar', 'colors').
+ * @param {Object}  [options]
+ * @param {boolean} [options.initialOpen] Open state before the user toggles the panel. Defaults to the provider's `defaultPanelsOpen`.
  * @return {{ isOpen: boolean, panelRef: import('react').RefObject, onToggle: Function }} Controlled open state helpers for PanelBody.
  */
-export function useFocusedPanel(panelId) {
+export function useFocusedPanel(panelId, { initialOpen } = {}) {
 	const ctx = useInspectorFocus();
-	const [isOpen, setIsOpen] = useState(() => Boolean(ctx?.defaultPanelsOpen));
+	const defaultOpen = initialOpen ?? Boolean(ctx?.defaultPanelsOpen);
+	const [localIsOpen, setLocalIsOpen] = useState(defaultOpen);
+	const isOpen = ctx ? (ctx.openPanels[panelId] ?? defaultOpen) : localIsOpen;
+	const setIsOpen = useCallback(
+		(open) =>
+			ctx ? ctx.setPanelOpen(panelId, open) : setLocalIsOpen(open),
+		[ctx, panelId]
+	);
 	const panelRef = useRef(null);
 
 	useEffect(() => {

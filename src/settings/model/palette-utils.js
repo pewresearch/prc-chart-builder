@@ -3,11 +3,14 @@
  *
  * The active theme stores palettes as two parallel structures:
  *   - `palettes.colorNames`: ordered `[{ label, value }]` (value === slug)
- *   - `palettes.colors`: `{ [slug]: string[] }` (ordered hex swatches)
+ *   - `palettes.colors`: `{ [slug]: string[] }` (ordered swatches, each a
+ *     `light-dark()` theme value or plain hex)
  *
  * Every helper preserves that invariant: each colorNames entry has a matching
  * colors[slug] array, and the two stay in sync through add / rename / delete.
  */
+
+import { extractHex } from '../../chart/utils/light-dark';
 
 /**
  * @typedef {{ label: string, value: string }} PaletteName
@@ -17,8 +20,8 @@
 /**
  * Kebab-case slug from a human palette name.
  *
- * @param {string} name
- * @return {string}
+ * @param {string} name Palette name.
+ * @return {string} Slug.
  */
 export function slugifyPaletteName(name) {
 	return String(name ?? '')
@@ -31,8 +34,8 @@ export function slugifyPaletteName(name) {
 /**
  * Ordered list of palettes (safe accessor).
  *
- * @param {ChartTheme} theme
- * @return {PaletteName[]}
+ * @param {ChartTheme} theme Chart theme.
+ * @return {PaletteName[]} Palette names in order.
  */
 export function getPalettes(theme) {
 	const names = theme?.palettes?.colorNames;
@@ -45,11 +48,11 @@ export function getPalettes(theme) {
 }
 
 /**
- * Ordered hex swatches for one palette (safe accessor).
+ * Ordered swatches for one palette (safe accessor).
  *
- * @param {ChartTheme} theme
- * @param {string} slug
- * @return {string[]}
+ * @param {ChartTheme} theme Chart theme.
+ * @param {string}     slug  Palette slug.
+ * @return {string[]} Swatches in order.
  */
 export function getPaletteColors(theme, slug) {
 	const colors = theme?.palettes?.colors;
@@ -61,9 +64,9 @@ export function getPaletteColors(theme, slug) {
 /**
  * Return `base`, or `base-2`, `base-3`, … until it does not collide with `taken`.
  *
- * @param {string}   base
- * @param {string[]} taken
- * @return {string}
+ * @param {string}   base  Preferred slug.
+ * @param {string[]} taken Slugs already in use.
+ * @return {string} Unused slug.
  */
 export function ensureUniqueSlug(base, taken) {
 	const seed = base || 'palette';
@@ -80,8 +83,8 @@ export function ensureUniqueSlug(base, taken) {
 /**
  * Normalize a theme's palettes block into `{ colorNames, colors }`.
  *
- * @param {ChartTheme} theme
- * @return {{ colorNames: PaletteName[], colors: Record<string, string[]> }}
+ * @param {ChartTheme} theme Chart theme.
+ * @return {{ colorNames: PaletteName[], colors: Record<string, string[]> }} Normalized palettes.
  */
 function readPalettes(theme) {
 	const colorNames = getPalettes(theme);
@@ -94,9 +97,11 @@ function readPalettes(theme) {
 }
 
 /**
- * @param {ChartTheme}                                                   theme
- * @param {{ colorNames: PaletteName[], colors: Record<string, string[]> }} palettes
- * @return {ChartTheme}
+ * Theme with its palettes replaced.
+ *
+ * @param {ChartTheme}                                                      theme    Chart theme.
+ * @param {{ colorNames: PaletteName[], colors: Record<string, string[]> }} palettes Next palettes.
+ * @return {ChartTheme} Updated theme.
  */
 function writePalettes(theme, palettes) {
 	return {
@@ -113,9 +118,9 @@ function writePalettes(theme, palettes) {
  * Create a new empty palette from a name. Returns the updated theme plus the
  * generated slug (so callers can select the new palette).
  *
- * @param {ChartTheme} theme
- * @param {string}     name
- * @return {{ theme: ChartTheme, slug: string }}
+ * @param {ChartTheme} theme Chart theme.
+ * @param {string}     name  Palette name.
+ * @return {{ theme: ChartTheme, slug: string }} Updated theme and new slug.
  */
 export function addPalette(theme, name) {
 	const { colorNames, colors } = readPalettes(theme);
@@ -139,10 +144,10 @@ export function addPalette(theme, name) {
  * Rename a palette. The slug is re-derived from the new name (kept unique
  * against the other palettes) and the colors map is rekeyed to match.
  *
- * @param {ChartTheme} theme
- * @param {string}     slug
- * @param {string}     name
- * @return {{ theme: ChartTheme, slug: string }}
+ * @param {ChartTheme} theme Chart theme.
+ * @param {string}     slug  Current palette slug.
+ * @param {string}     name  New palette name.
+ * @return {{ theme: ChartTheme, slug: string }} Updated theme and new slug.
  */
 export function renamePalette(theme, slug, name) {
 	const { colorNames, colors } = readPalettes(theme);
@@ -181,9 +186,9 @@ export function renamePalette(theme, slug, name) {
 /**
  * Delete a palette (both its name entry and its swatch list).
  *
- * @param {ChartTheme} theme
- * @param {string}     slug
- * @return {ChartTheme}
+ * @param {ChartTheme} theme Chart theme.
+ * @param {string}     slug  Palette slug.
+ * @return {ChartTheme} Updated theme.
  */
 export function deletePalette(theme, slug) {
 	const { colorNames, colors } = readPalettes(theme);
@@ -199,10 +204,10 @@ export function deletePalette(theme, slug) {
 /**
  * Replace the ordered swatch list for one palette.
  *
- * @param {ChartTheme} theme
- * @param {string}     slug
- * @param {string[]}   nextSwatches
- * @return {ChartTheme}
+ * @param {ChartTheme} theme        Chart theme.
+ * @param {string}     slug         Palette slug.
+ * @param {string[]}   nextSwatches Swatches in order.
+ * @return {ChartTheme} Updated theme.
  */
 export function setPaletteColors(theme, slug, nextSwatches) {
 	const { colorNames, colors } = readPalettes(theme);
@@ -220,29 +225,33 @@ export function setPaletteColors(theme, slug, nextSwatches) {
 }
 
 /**
- * Toggle a hex swatch in a palette: append if absent, remove if present.
+ * Toggle a theme color in a palette: append it if absent, remove it if present.
+ * Swatches match by light-mode hex, so a palette saved with plain hex drops
+ * that swatch when its `light-dark()` theme color is toggled.
  *
- * @param {ChartTheme} theme
- * @param {string}     slug
- * @param {string}     hex
- * @return {ChartTheme}
+ * @param {ChartTheme} theme Chart theme.
+ * @param {string}     slug  Palette slug.
+ * @param {string}     color Theme color value, `light-dark()` or hex.
+ * @return {ChartTheme} Updated theme.
  */
-export function togglePaletteColor(theme, slug, hex) {
+export function togglePaletteColor(theme, slug, color) {
+	const lightHex = (value) => extractHex(value).toLowerCase();
+	const target = lightHex(color);
 	const swatches = getPaletteColors(theme, slug);
-	const next = swatches.includes(hex)
-		? swatches.filter((color) => color !== hex)
-		: [...swatches, hex];
+	const next = swatches.some((swatch) => lightHex(swatch) === target)
+		? swatches.filter((swatch) => lightHex(swatch) !== target)
+		: [...swatches, color];
 	return setPaletteColors(theme, slug, next);
 }
 
 /**
  * Move a swatch within a palette from one index to another.
  *
- * @param {ChartTheme} theme
- * @param {string}     slug
- * @param {number}     fromIndex
- * @param {number}     toIndex
- * @return {ChartTheme}
+ * @param {ChartTheme} theme     Chart theme.
+ * @param {string}     slug      Palette slug.
+ * @param {number}     fromIndex Current index.
+ * @param {number}     toIndex   Target index.
+ * @return {ChartTheme} Updated theme.
  */
 export function reorderPaletteColors(theme, slug, fromIndex, toIndex) {
 	const swatches = getPaletteColors(theme, slug);

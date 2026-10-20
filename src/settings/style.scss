@@ -1,23 +1,37 @@
-$gray-100: #f0f0f0;
-$gray-700: #757575;
+$text: var(--wp--preset--color--ui-text-color);
+$text-muted: var(--wp--preset--color--ui-gray-very-dark);
+$text-subtle: var(--wp--preset--color--ui-gray-dark);
+$border: var(--wp--preset--color--ui-gray-light);
+$border-strong: var(--wp--preset--color--ui-beige-very-dark);
+$surface: var(--wp--preset--color--ui-white);
+$surface-subtle: var(--wp--preset--color--ui-gray-very-light);
+$surface-strong: var(--wp--preset--color--ui-gray-light);
+$accent: var(--wp--preset--color--ui-link-color);
+$error: var(--wp--preset--color--ui-error);
+$ink: var(--wp--preset--color--ui-black);
 
 $grid-unit-05: 4px;
 $grid-unit-10: 8px;
 $grid-unit-15: 12px;
 $grid-unit-20: 16px;
 
+// Translucent ink: a dark edge in light mode, a light edge in dark mode.
+@function ink($percent) {
+	@return color-mix(in srgb, #{$ink} $percent, transparent);
+}
+
 .prc-chart-theme-settings {
 	box-sizing: border-box;
 
 	&__empty {
-		color: $gray-700;
+		color: $text-muted;
 		margin: 0;
 	}
 
 	&__json {
 		margin: 0;
 		padding: $grid-unit-15;
-		background: $gray-100;
+		background: $surface-subtle;
 		border-radius: 2px;
 		font-size: 12px;
 		line-height: 1.5;
@@ -35,7 +49,7 @@ $grid-unit-20: 16px;
 		padding: $grid-unit-15 0;
 
 		& + & {
-			border-top: 1px solid $gray-100;
+			border-top: 1px solid $border;
 		}
 	}
 
@@ -50,7 +64,7 @@ $grid-unit-20: 16px;
 	&__palette-slug {
 		font-family: monospace;
 		font-size: 11px;
-		color: $gray-700;
+		color: $text-muted;
 	}
 
 	&__swatches {
@@ -75,13 +89,13 @@ $grid-unit-20: 16px;
 		width: 32px;
 		height: 32px;
 		border-radius: 2px;
-		border: 1px solid rgba(0, 0, 0, 0.08);
+		border: 1px solid ink(8%);
 	}
 
 	&__swatch-hex {
 		font-family: monospace;
 		font-size: 10px;
-		color: $gray-700;
+		color: $text-muted;
 	}
 
 	&__global-save {
@@ -91,10 +105,10 @@ $grid-unit-20: 16px;
 		z-index: 10;
 		margin-bottom: $grid-unit-20;
 		padding: $grid-unit-15 $grid-unit-20;
-		background: #fff;
-		border: 1px solid $gray-100;
-		border-left: 4px solid #2271b1;
-		box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+		background: $surface;
+		border: 1px solid $border;
+		border-left: 4px solid $accent;
+		box-shadow: 0 1px 1px ink(4%);
 	}
 
 	&__table-wrap {
@@ -109,14 +123,14 @@ $grid-unit-20: 16px;
 		th,
 		td {
 			padding: $grid-unit-10 $grid-unit-15;
-			border-bottom: 1px solid $gray-100;
+			border-bottom: 1px solid $border;
 			vertical-align: top;
 			text-align: left;
 		}
 
 		th {
 			font-weight: 600;
-			background: $gray-100;
+			background: $surface-subtle;
 		}
 
 		code {
@@ -125,18 +139,18 @@ $grid-unit-20: 16px;
 	}
 
 	&__config-row.is-overridden {
-		background: rgba(34, 113, 177, 0.04);
+		background: color-mix(in srgb, #{$accent} 4%, transparent);
 	}
 
 	&__config-row.is-group-header {
-		background: $gray-100;
+		background: $surface-subtle;
 
 		code {
 			font-weight: 600;
 		}
 
 		td {
-			border-bottom: 1px solid darken($gray-100, 6%);
+			border-bottom: 1px solid $surface-strong;
 		}
 	}
 
@@ -151,7 +165,7 @@ $grid-unit-20: 16px;
 
 	&__config-default {
 		min-width: 120px;
-		color: $gray-700;
+		color: $text-muted;
 		font-family: monospace;
 		font-size: 12px;
 		white-space: nowrap;
@@ -164,14 +178,14 @@ $grid-unit-20: 16px;
 
 	&__config-type {
 		min-width: 72px;
-		color: $gray-700;
+		color: $text-muted;
 		font-family: monospace;
 		font-size: 11px;
 	}
 
 	&__config-description {
 		min-width: 200px;
-		color: $gray-700;
+		color: $text-muted;
 		line-height: 1.4;
 	}
 
@@ -188,7 +202,7 @@ $grid-unit-20: 16px;
 		width: 2rem;
 		height: 2rem;
 		padding: 0;
-		border: 1px solid $gray-700;
+		border: 1px solid $text-subtle;
 		border-radius: 2px;
 		background: transparent;
 		cursor: pointer;
@@ -199,12 +213,12 @@ $grid-unit-20: 16px;
 	}
 
 	&__number-pair-separator {
-		color: $gray-700;
+		color: $text-muted;
 		margin: 0;
 	}
 
 	&__readonly-value {
-		color: $gray-700;
+		color: $text-muted;
 	}
 }
 
@@ -224,7 +238,7 @@ $grid-unit-20: 16px;
 
 	&__intro {
 		margin: $grid-unit-20 0;
-		color: $gray-700;
+		color: $text-muted;
 		font-size: 13px;
 		line-height: 1.5;
 		max-width: 72rem;
@@ -243,128 +257,63 @@ $grid-unit-20: 16px;
 		height: 100%;
 		max-height: 800px;
 		overflow: hidden;
-		border: 1px solid $gray-100;
+		border: 1px solid $border;
 		border-radius: 4px;
 		padding: $grid-unit-15;
-		background: #fff;
+		background: $surface;
 
 		@media (max-width: 782px) {
 			grid-template-columns: 1fr;
 			grid-template-rows: auto minmax(0, 1fr);
 		}
 
+		// Every color in this file is a light-dark() preset, so the dark
+		// branch is one color-scheme away. Only the wp-components icon
+		// buttons, which carry their own fixed colors, need overrides.
 		&.is-dark-preview {
-			background: #1d2327;
-			border-color: #3c434a;
-			color: #f0f0f1;
-
-			.prc-palette-designer__list-label,
-			.prc-palette-designer__subhead,
-			.prc-palette-designer__subhead-hint,
-			.prc-palette-designer__ordered-index,
-			.prc-palette-designer__picker-group-label,
-			.prc-palette-designer__slug-hint,
-			.prc-chart-theme-settings__empty {
-				color: #c3c4c7;
-			}
-
-			.prc-palette-designer__slug-hint code {
-				background: #2c3338;
-				color: #f0f0f1;
-			}
-
-			.prc-palette-designer__drag-handle {
-				color: #c3c4c7;
-
-				svg {
-					fill: currentColor;
-				}
-
-				&:hover {
-					color: #f0f0f1;
-				}
-			}
-
-			.prc-palette-designer__palette-card {
-				background: #2c3338;
-				border-color: #3c434a;
-				color: #f0f0f1;
-
-				&:hover {
-					border-color: #50575e;
-				}
-
-				&.is-active {
-					border-color: #72aee6;
-					box-shadow: 0 0 0 1px #72aee6;
-				}
-
-				.prc-palette-designer__palette-slug {
-					color: #c3c4c7;
-				}
-			}
-
-			.prc-palette-designer__ordered-row {
-				background: #2c3338;
-				border-color: #3c434a;
-				color: #f0f0f1;
-
-				.prc-palette-designer__ordered-name,
-				.prc-palette-designer__ordered-value {
-					color: #f0f0f1;
-				}
-			}
-
-			.prc-palette-designer__picker-group:not(:first-child) {
-				border-top-color: #3c434a;
-			}
-
-			.prc-palette-designer__swatch-button.is-selected {
-				box-shadow:
-					0 0 0 2px #1d2327,
-					0 0 0 4px #72aee6;
-			}
+			color-scheme: dark;
+			color: $text;
 
 			.components-button.is-small.has-icon {
-				color: #c3c4c7;
+				color: $text-muted;
 
 				svg {
 					fill: currentColor;
 				}
 
 				&:not(:disabled):hover {
-					color: #f0f0f1;
-					background: #3c434a;
+					color: $text;
+					background: $surface-strong;
 				}
 
 				&:not(:disabled):active {
-					color: #f0f0f1;
-					background: #50575e;
+					color: $text;
+					background: $border-strong;
 				}
 
 				&:focus-visible {
 					box-shadow:
-						0 0 0 1px #1d2327,
-						0 0 0 3px #72aee6;
+						0 0 0 1px $surface,
+						0 0 0 3px $accent;
 				}
 			}
 
 			.prc-palette-designer__delete.components-button {
-				color: #f28a8a;
+				color: $error;
 
 				svg {
 					fill: currentColor;
 				}
 
 				&:not(:disabled):hover {
-					color: #ffabab;
-					background: rgba(214, 54, 56, 0.15);
+					color: $error;
+					background: color-mix(in srgb, #{$error} 15%, transparent);
 				}
 
 				&:focus-visible {
 					box-shadow:
-						0 0 0 1px #1d2327,
-						0 0 0 3px #72aee6;
+						0 0 0 1px $surface,
+						0 0 0 3px $accent;
 				}
 			}
 		}
@@ -399,7 +348,7 @@ $grid-unit-20: 16px;
 		font-weight: 600;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
-		color: $gray-700;
+		color: $text-muted;
 		margin-bottom: $grid-unit-10;
 	}
 
@@ -429,19 +378,19 @@ $grid-unit-20: 16px;
 		width: 100%;
 		text-align: left;
 		padding: $grid-unit-10 $grid-unit-15;
-		background: #fff;
-		border: 1px solid $gray-100;
+		background: $surface;
+		border: 1px solid $border;
 		border-radius: 4px;
 		cursor: pointer;
 		color: inherit;
 
 		&:hover {
-			border-color: #c3c4c7;
+			border-color: $border-strong;
 		}
 
 		&.is-active {
-			border-color: #2271b1;
-			box-shadow: 0 0 0 1px #2271b1;
+			border-color: $accent;
+			box-shadow: 0 0 0 1px $accent;
 		}
 	}
 
@@ -452,7 +401,7 @@ $grid-unit-20: 16px;
 	&__palette-slug {
 		font-family: monospace;
 		font-size: 11px;
-		color: $gray-700;
+		color: $text-muted;
 	}
 
 	&__palette-strip {
@@ -484,11 +433,12 @@ $grid-unit-20: 16px;
 
 	&__slug-hint {
 		margin: $grid-unit-10 0 0;
-		color: $gray-700;
+		color: $text-muted;
 		font-size: 12px;
 
 		code {
-			background: $gray-100;
+			background: $surface-subtle;
+			color: $text;
 			padding: 2px 6px;
 			border-radius: 2px;
 			margin-right: $grid-unit-05;
@@ -530,7 +480,7 @@ $grid-unit-20: 16px;
 	&__subhead-hint {
 		font-weight: 400;
 		font-size: 11px;
-		color: $gray-700;
+		color: $text-muted;
 	}
 
 	&__ordered-list {
@@ -547,8 +497,8 @@ $grid-unit-20: 16px;
 		align-items: flex-start;
 		gap: $grid-unit-10;
 		padding: $grid-unit-05 $grid-unit-10;
-		background: #fff;
-		border: 1px solid $gray-100;
+		background: $surface;
+		border: 1px solid $border;
 		border-radius: 4px;
 		list-style: none;
 		color: inherit;
@@ -556,7 +506,7 @@ $grid-unit-20: 16px;
 
 	&__drag-handle {
 		display: inline-flex;
-		color: $gray-700;
+		color: $text-muted;
 		cursor: grab;
 		margin-top: 2px;
 
@@ -565,13 +515,17 @@ $grid-unit-20: 16px;
 			height: 18px;
 			fill: currentColor;
 		}
+
+		&:hover {
+			color: $text;
+		}
 	}
 
 	&__ordered-swatch {
 		width: 30px;
 		height: 30px;
 		border-radius: 3px;
-		border: 1px solid rgba(0, 0, 0, 0.1);
+		border: 1px solid ink(10%);
 		flex: 0 0 auto;
 		align-self: flex-start;
 		margin-top: 2px;
@@ -607,7 +561,7 @@ $grid-unit-20: 16px;
 
 	// &__ordered-index {
 	// 	font-size: 11px;
-	// 	color: $gray-700;
+	// 	color: $text-muted;
 	// }
 
 	&__picker-groups {
@@ -618,7 +572,7 @@ $grid-unit-20: 16px;
 
 	&__picker-group {
 		&:not(:first-child) {
-			border-top: 1px solid $gray-100;
+			border-top: 1px solid $border;
 			padding-top: $grid-unit-15;
 		}
 	}
@@ -628,7 +582,7 @@ $grid-unit-20: 16px;
 		font-weight: 600;
 		letter-spacing: 0.05em;
 		text-transform: uppercase;
-		color: $gray-700;
+		color: $text-muted;
 		margin: 0 0 $grid-unit-10;
 	}
 
@@ -646,14 +600,14 @@ $grid-unit-20: 16px;
 		width: 100%;
 		aspect-ratio: 1;
 		border-radius: 3px;
-		border: 1px solid rgba(0, 0, 0, 0.12);
+		border: 1px solid ink(12%);
 		cursor: pointer;
 		padding: 0;
 
 		&.is-selected {
 			box-shadow:
-				0 0 0 2px #fff,
-				0 0 0 4px #2271b1;
+				0 0 0 2px $surface,
+				0 0 0 4px $accent;
 		}
 	}
 

@@ -3,22 +3,21 @@
  */
 import {
 	BoxControl,
-	Button,
 	Flex,
 	FlexItem,
 	__experimentalNumberControl as NumberControl,
-	PanelBody,
 	RangeControl,
 	SelectControl,
 	TextControl,
 	ToggleControl,
-	Tooltip,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
-import { useState } from '@wordpress/element';
+import { useEffect, useState } from '@wordpress/element';
 import { __, sprintf } from '@wordpress/i18n';
-import { info } from '@wordpress/icons';
 
+import FocusedPanelBody from '../../chart/edit/focused-panel-body';
+import WizardControlTip from '../wizard-ui/wizard-control-tip';
+import { useViewportAttributes } from '../../chart/edit/hooks/use-viewport-attributes';
 import { MAP_CHART_TYPES } from '../../chart/utils/chart-types';
 import {
 	buildEditedAxisDomain,
@@ -28,13 +27,61 @@ import {
 	isAutoAxisDomainForScale,
 	timeDomainBoundToYear,
 } from '../../chart/utils/helpers';
-import { applyCuratedControl } from './apply-curated-control';
 import CuratedColorControls from './curated-color-controls';
 import {
 	CUSTOM_WIDTH,
 	WIDTH_PRESETS,
 	getWidthPresetValue,
 } from './width-presets';
+
+const TICK_UNIT_POSITION_OPTIONS = [
+	{ value: 'start', label: __('Start', 'prc-chart-builder') },
+	{ value: 'end', label: __('End', 'prc-chart-builder') },
+];
+
+/**
+ * @param {Object}   props
+ * @param {string}   props.axisKey
+ * @param {Object}   props.axis
+ * @param {Function} props.updateAttributeForDevice
+ */
+function TickLabelMaxWidthControl({ axisKey, axis, updateAttributeForDevice }) {
+	return (
+		<VStack spacing={1}>
+			<div className="prc-chart-modal__control-label-with-tip">
+				<span className="components-base-control__label">
+					{__('Tick label max width', 'prc-chart-builder')}
+				</span>
+				<WizardControlTip
+					label={__(
+						'Help: tick label max width',
+						'prc-chart-builder'
+					)}
+					text={__(
+						'Max width is the longest a tick label can be before it wraps to multiple lines.',
+						'prc-chart-builder'
+					)}
+				/>
+			</div>
+			<NumberControl
+				hideLabelFromVision
+				label={__('Tick label max width', 'prc-chart-builder')}
+				value={axis.tickLabels?.maxWidth}
+				disableUnits
+				disabledUnits
+				min={0}
+				onChange={(value) =>
+					updateAttributeForDevice(axisKey, {
+						tickLabels: {
+							...(axis.tickLabels ?? {}),
+							maxWidth: formatNum(value, 'integer'),
+						},
+					})
+				}
+			/>
+		</VStack>
+	);
+}
 
 const AXIS_LESS_TYPES = new Set([
 	...MAP_CHART_TYPES,
@@ -107,19 +154,16 @@ function getAutoDomainHelpText(inferredDomain) {
 /**
  * @param {Object}   props
  * @param {Object}   props.chartAttributes
- * @param {Function} props.onChange
  * @param {Function} props.setAttributes
  */
-export default function AppearanceTab({
-	chartAttributes,
-	onChange,
-	setAttributes,
-}) {
-	const layout = chartAttributes.layout ?? {};
+export default function AppearanceTab({ chartAttributes, setAttributes }) {
+	const { deviceType, getCurrentValue, updateAttributeForDevice } =
+		useViewportAttributes(chartAttributes, setAttributes);
+	const layout = getCurrentValue('layout');
 	const padding = layout.padding ?? {};
 	const chartType = layout.type ?? 'bar';
-	const independentAxis = chartAttributes.independentAxis ?? {};
-	const dependentAxis = chartAttributes.dependentAxis ?? {};
+	const independentAxis = getCurrentValue('independentAxis');
+	const dependentAxis = getCurrentValue('dependentAxis');
 	const independentDomain = Array.isArray(independentAxis.domain)
 		? independentAxis.domain
 		: [];
@@ -167,8 +211,12 @@ export default function AppearanceTab({
 			scale: 'linear',
 		});
 
-	const setPath = (path, value) =>
-		onChange(applyCuratedControl(chartAttributes, path, value));
+	// Every path here is `<group>.<key>`; the group is what carries
+	// per-viewport overrides.
+	const setPath = (path, value) => {
+		const [group, key] = path.split('.');
+		updateAttributeForDevice(group, { [key]: value });
+	};
 
 	const widthValue = toInt(layout.width);
 	// A custom width can coincide with a preset value, so the mode is tracked
@@ -176,6 +224,11 @@ export default function AppearanceTab({
 	const [isCustomWidth, setIsCustomWidth] = useState(
 		() => getWidthPresetValue(widthValue) === CUSTOM_WIDTH
 	);
+	useEffect(() => {
+		setIsCustomWidth(getWidthPresetValue(widthValue) === CUSTOM_WIDTH);
+		// Re-derive only when switching viewports, not on every width edit.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [deviceType]);
 	const widthPreset = isCustomWidth
 		? CUSTOM_WIDTH
 		: getWidthPresetValue(widthValue);
@@ -183,7 +236,7 @@ export default function AppearanceTab({
 	const showAxes = !AXIS_LESS_TYPES.has(chartType);
 
 	const setAxisGridVisible = (axisKey, visible) => {
-		const current = chartAttributes[axisKey] ?? {};
+		const current = getCurrentValue(axisKey);
 		const grid = current.grid ?? {};
 		let nextOpacity = 0;
 		if (visible) {
@@ -198,44 +251,31 @@ export default function AppearanceTab({
 
 	return (
 		<VStack spacing={2} className="prc-chart-modal__configure-tab-panel">
-			<PanelBody
-				title={__('Layout', 'prc-chart-builder')}
-				initialOpen={false}
+			<FocusedPanelBody
+				panelId="wizardLayout"
+				title={__('Chart layout', 'prc-chart-builder')}
 			>
 				<VStack spacing={4}>
 					<VStack spacing={1}>
 						<div className="prc-chart-modal__control-label-with-tip">
 							<span className="components-base-control__label">
-								{__('Chart Width', 'prc-chart-builder')}
+								{__('Width', 'prc-chart-builder')}
 							</span>
-							<Tooltip
-								delay={300}
-								hideOnClick={false}
+							<WizardControlTip
+								label={__(
+									'Help: chart width',
+									'prc-chart-builder'
+								)}
 								text={__(
 									'Common publication widths. Choose Custom to set your own.',
 									'prc-chart-builder'
 								)}
-							>
-								<Button
-									className="prc-chart-modal__control-tip"
-									icon={info}
-									iconSize={16}
-									label={__(
-										'About chart width',
-										'prc-chart-builder'
-									)}
-									// `label` alone makes Button render its own
-									// tooltip, which races the wrapper below it.
-									showTooltip={false}
-									size="small"
-									variant="tertiary"
-								/>
-							</Tooltip>
+							/>
 						</div>
 						<SelectControl
 							__next40pxDefaultSize
 							hideLabelFromVision
-							label={__('Chart Width', 'prc-chart-builder')}
+							label={__('Width', 'prc-chart-builder')}
 							value={widthPreset}
 							options={WIDTH_PRESETS}
 							onChange={(value) => {
@@ -252,7 +292,7 @@ export default function AppearanceTab({
 					{isCustomWidth && (
 						<RangeControl
 							__next40pxDefaultSize
-							label={__('Width', 'prc-chart-builder')}
+							label={__('Custom width', 'prc-chart-builder')}
 							withInputField
 							min={0}
 							max={1152}
@@ -301,36 +341,46 @@ export default function AppearanceTab({
 						}
 					/>
 				</VStack>
-			</PanelBody>
+			</FocusedPanelBody>
 
-			<PanelBody
+			<FocusedPanelBody
+				panelId="wizardColor"
 				title={__('Chart color', 'prc-chart-builder')}
-				initialOpen={false}
 			>
 				<CuratedColorControls
 					attributes={chartAttributes}
 					setAttributes={setAttributes}
 				/>
-			</PanelBody>
+			</FocusedPanelBody>
 
 			{showAxes && (
 				<>
-					<PanelBody
+					<FocusedPanelBody
+						panelId="wizardIndependentAxis"
 						title={__('Independent axis', 'prc-chart-builder')}
-						initialOpen={false}
 					>
 						<VStack spacing={3}>
-							<ToggleControl
-								label={__('Show axis', 'prc-chart-builder')}
-								checked={Boolean(independentAxis.active)}
-								onChange={(value) =>
-									setPath('independentAxis.active', value)
-								}
-								__nextHasNoMarginBottom
-							/>
-							<p className="prc-chart-modal__control-group-label">
-								{__('Domain', 'prc-chart-builder')}
+							<p className="prc-chart-modal__control-help">
+								{__(
+									'The independent axis shows the values used to organize the chart, such as categories, dates, or x-values. It is usually horizontal, but vertical on horizontal bar charts.',
+									'prc-chart-builder'
+								)}
 							</p>
+							<div className="prc-chart-modal__control-label-with-tip">
+								<span className="prc-chart-modal__control-group-label">
+									{__('Domain', 'prc-chart-builder')}
+								</span>
+								<WizardControlTip
+									label={__(
+										'Help: independent axis domain',
+										'prc-chart-builder'
+									)}
+									text={__(
+										'The domain is the range of values shown on the axis, from minimum to maximum. Leave both fields empty to use the data range.',
+										'prc-chart-builder'
+									)}
+								/>
+							</div>
 							{independentDomainIsAuto && (
 								<p className="prc-chart-modal__control-help">
 									{getAutoDomainHelpText(
@@ -421,57 +471,134 @@ export default function AppearanceTab({
 								</FlexItem>
 							</Flex>
 							<ToggleControl
-								label={__(
-									'Show tick marks',
-									'prc-chart-builder'
-								)}
-								checked={Boolean(
-									independentAxis.tickMarksActive
-								)}
+								label={__('Show axis', 'prc-chart-builder')}
+								checked={Boolean(independentAxis.active)}
 								onChange={(value) =>
-									setPath(
-										'independentAxis.tickMarksActive',
-										value
-									)
+									setPath('independentAxis.active', value)
 								}
 								__nextHasNoMarginBottom
 							/>
-							<NumberControl
-								label={__(
-									'Number of ticks',
-									'prc-chart-builder'
-								)}
-								value={independentAxis.tickCount}
-								disableUnits
-								disabledUnits
-								min={1}
-								onChange={(value) =>
-									setPath(
-										'independentAxis.tickCount',
-										formatNum(value, 'integer')
-									)
-								}
-								help={__(
-									'Approximate tick count; the chart may adjust for even spacing.',
-									'prc-chart-builder'
-								)}
-							/>
-							<TextControl
-								label={__(
-									'Specific ticks',
-									'prc-chart-builder'
-								)}
-								value={independentAxis.tickValues ?? ''}
-								onChange={(value) =>
-									setPath('independentAxis.tickValues', value)
-								}
-								help={__(
-									'Comma-separated values (e.g. 0, 50, 100). Overrides number of ticks when set.',
-									'prc-chart-builder'
-								)}
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-							/>
+							{Boolean(independentAxis.active) && (
+								<>
+									<NumberControl
+										label={__(
+											'Number of ticks',
+											'prc-chart-builder'
+										)}
+										value={independentAxis.tickCount}
+										disableUnits
+										disabledUnits
+										min={1}
+										onChange={(value) =>
+											setPath(
+												'independentAxis.tickCount',
+												formatNum(value, 'integer')
+											)
+										}
+										help={__(
+											'Approximate tick count; the chart may adjust for even spacing.',
+											'prc-chart-builder'
+										)}
+									/>
+									<ToggleControl
+										label={__(
+											'Show min domain label',
+											'prc-chart-builder'
+										)}
+										help={__(
+											"Forces the minimum domain value's label to appear on the axis. May overlap with the dependent axis.",
+											'prc-chart-builder'
+										)}
+										checked={Boolean(
+											independentAxis.showZero
+										)}
+										onChange={(value) =>
+											setPath(
+												'independentAxis.showZero',
+												value
+											)
+										}
+										__nextHasNoMarginBottom
+									/>
+									<TextControl
+										label={__(
+											'Specific ticks',
+											'prc-chart-builder'
+										)}
+										value={independentAxis.tickValues ?? ''}
+										onChange={(value) =>
+											setPath(
+												'independentAxis.tickValues',
+												value
+											)
+										}
+										help={__(
+											'Comma-separated values (e.g. 0, 50, 100). Overrides number of ticks when set.',
+											'prc-chart-builder'
+										)}
+										__nextHasNoMarginBottom
+										__next40pxDefaultSize
+									/>
+									<TextControl
+										label={__(
+											'Tick units',
+											'prc-chart-builder'
+										)}
+										value={independentAxis.tickUnit ?? ''}
+										onChange={(value) =>
+											setPath(
+												'independentAxis.tickUnit',
+												value
+											)
+										}
+										__nextHasNoMarginBottom
+										__next40pxDefaultSize
+									/>
+									<SelectControl
+										label={__(
+											'Tick unit position',
+											'prc-chart-builder'
+										)}
+										value={independentAxis.tickUnitPosition}
+										options={TICK_UNIT_POSITION_OPTIONS}
+										onChange={(value) =>
+											setPath(
+												'independentAxis.tickUnitPosition',
+												value
+											)
+										}
+										__nextHasNoMarginBottom
+										__next40pxDefaultSize
+									/>
+									<TickLabelMaxWidthControl
+										axisKey="independentAxis"
+										axis={independentAxis}
+										updateAttributeForDevice={
+											updateAttributeForDevice
+										}
+									/>
+									<ToggleControl
+										label={__(
+											'Show tick marks',
+											'prc-chart-builder'
+										)}
+										checked={Boolean(
+											independentAxis.tickMarksActive
+										)}
+										onChange={(value) =>
+											setPath(
+												'independentAxis.tickMarksActive',
+												value
+											)
+										}
+										help={__(
+											'Toggle display of tick markers on the independent axis.',
+											'prc-chart-builder'
+										)}
+										__nextHasNoMarginBottom
+									/>
+								</>
+							)}
 							<ToggleControl
 								label={__(
 									'Show grid lines',
@@ -484,24 +611,34 @@ export default function AppearanceTab({
 								__nextHasNoMarginBottom
 							/>
 						</VStack>
-					</PanelBody>
+					</FocusedPanelBody>
 
-					<PanelBody
+					<FocusedPanelBody
+						panelId="wizardDependentAxis"
 						title={__('Dependent axis', 'prc-chart-builder')}
-						initialOpen={false}
 					>
 						<VStack spacing={3}>
-							<ToggleControl
-								label={__('Show axis', 'prc-chart-builder')}
-								checked={Boolean(dependentAxis.active)}
-								onChange={(value) =>
-									setPath('dependentAxis.active', value)
-								}
-								__nextHasNoMarginBottom
-							/>
-							<p className="prc-chart-modal__control-group-label">
-								{__('Domain', 'prc-chart-builder')}
+							<p className="prc-chart-modal__control-help">
+								{__(
+									'The dependent axis shows the measured values. It is usually vertical, but horizontal on horizontal bar charts.',
+									'prc-chart-builder'
+								)}
 							</p>
+							<div className="prc-chart-modal__control-label-with-tip">
+								<span className="prc-chart-modal__control-group-label">
+									{__('Domain', 'prc-chart-builder')}
+								</span>
+								<WizardControlTip
+									label={__(
+										'Help: dependent axis domain',
+										'prc-chart-builder'
+									)}
+									text={__(
+										'The domain is the range of values shown on the axis, from minimum to maximum. Leave both fields empty to use the data range.',
+										'prc-chart-builder'
+									)}
+								/>
+							</div>
 							{dependentDomainIsAuto && (
 								<p className="prc-chart-modal__control-help">
 									{getAutoDomainHelpText(
@@ -590,55 +727,212 @@ export default function AppearanceTab({
 								</FlexItem>
 							</Flex>
 							<ToggleControl
-								label={__(
-									'Show tick marks',
-									'prc-chart-builder'
-								)}
-								checked={Boolean(dependentAxis.tickMarksActive)}
+								label={__('Show axis', 'prc-chart-builder')}
+								checked={Boolean(dependentAxis.active)}
 								onChange={(value) =>
-									setPath(
-										'dependentAxis.tickMarksActive',
-										value
-									)
+									setPath('dependentAxis.active', value)
 								}
 								__nextHasNoMarginBottom
 							/>
-							<NumberControl
-								label={__(
-									'Number of ticks',
-									'prc-chart-builder'
-								)}
-								value={dependentAxis.tickCount}
-								disableUnits
-								disabledUnits
-								min={1}
-								onChange={(value) =>
-									setPath(
-										'dependentAxis.tickCount',
-										formatNum(value, 'integer')
-									)
-								}
-								help={__(
-									'Approximate tick count; the chart may adjust for even spacing.',
-									'prc-chart-builder'
-								)}
-							/>
-							<TextControl
-								label={__(
-									'Specific ticks',
-									'prc-chart-builder'
-								)}
-								value={dependentAxis.tickValues ?? ''}
-								onChange={(value) =>
-									setPath('dependentAxis.tickValues', value)
-								}
-								help={__(
-									'Comma-separated values (e.g. 0, 50, 100). Overrides number of ticks when set.',
-									'prc-chart-builder'
-								)}
-								__nextHasNoMarginBottom
-								__next40pxDefaultSize
-							/>
+							{Boolean(dependentAxis.active) && (
+								<>
+									<NumberControl
+										label={__(
+											'Number of ticks',
+											'prc-chart-builder'
+										)}
+										value={dependentAxis.tickCount}
+										disableUnits
+										disabledUnits
+										min={1}
+										onChange={(value) =>
+											setPath(
+												'dependentAxis.tickCount',
+												formatNum(value, 'integer')
+											)
+										}
+										help={__(
+											'Approximate tick count; the chart may adjust for even spacing.',
+											'prc-chart-builder'
+										)}
+									/>
+									<ToggleControl
+										label={__(
+											'Show min domain label',
+											'prc-chart-builder'
+										)}
+										help={__(
+											"Forces the minimum domain value's label to appear on the axis. May overlap with the independent axis.",
+											'prc-chart-builder'
+										)}
+										checked={Boolean(
+											dependentAxis.showZero
+										)}
+										onChange={(value) =>
+											setPath(
+												'dependentAxis.showZero',
+												value
+											)
+										}
+										__nextHasNoMarginBottom
+									/>
+									<TextControl
+										label={__(
+											'Specific ticks',
+											'prc-chart-builder'
+										)}
+										value={dependentAxis.tickValues ?? ''}
+										onChange={(value) =>
+											setPath(
+												'dependentAxis.tickValues',
+												value
+											)
+										}
+										help={__(
+											'Comma-separated values (e.g. 0, 50, 100). Overrides number of ticks when set.',
+											'prc-chart-builder'
+										)}
+										__nextHasNoMarginBottom
+										__next40pxDefaultSize
+									/>
+									<TextControl
+										label={__(
+											'Tick units',
+											'prc-chart-builder'
+										)}
+										value={dependentAxis.tickUnit ?? ''}
+										onChange={(value) =>
+											setPath(
+												'dependentAxis.tickUnit',
+												value
+											)
+										}
+										__nextHasNoMarginBottom
+										__next40pxDefaultSize
+									/>
+									<SelectControl
+										label={__(
+											'Tick unit position',
+											'prc-chart-builder'
+										)}
+										value={dependentAxis.tickUnitPosition}
+										options={TICK_UNIT_POSITION_OPTIONS}
+										onChange={(value) =>
+											setPath(
+												'dependentAxis.tickUnitPosition',
+												value
+											)
+										}
+										__nextHasNoMarginBottom
+										__next40pxDefaultSize
+									/>
+									<TickLabelMaxWidthControl
+										axisKey="dependentAxis"
+										axis={dependentAxis}
+										updateAttributeForDevice={
+											updateAttributeForDevice
+										}
+									/>
+									<ToggleControl
+										label={__(
+											'Abbreviate ticks',
+											'prc-chart-builder'
+										)}
+										help={
+											dependentAxis.abbreviateTicks
+												? __(
+														'Tick values will be abbreviated when possible (eg. 100,000 -> 100K)',
+														'prc-chart-builder'
+													)
+												: __(
+														'Tick values will be displayed as-is',
+														'prc-chart-builder'
+													)
+										}
+										checked={Boolean(
+											dependentAxis.abbreviateTicks
+										)}
+										onChange={(value) =>
+											setPath(
+												'dependentAxis.abbreviateTicks',
+												value
+											)
+										}
+										__nextHasNoMarginBottom
+									/>
+									<NumberControl
+										label={__(
+											'Abbreviated tick to set decimal place (when applicable)',
+											'prc-chart-builder'
+										)}
+										value={
+											dependentAxis.abbreviateTicksDecimals
+										}
+										disabled={
+											!dependentAxis.abbreviateTicks
+										}
+										disableUnits
+										disabledUnits
+										min={0}
+										onChange={(value) =>
+											setPath(
+												'dependentAxis.abbreviateTicksDecimals',
+												formatNum(value, 'integer')
+											)
+										}
+									/>
+									<ToggleControl
+										label={__(
+											'Format ticks to locale string',
+											'prc-chart-builder'
+										)}
+										disabled={Boolean(
+											dependentAxis.abbreviateTicks
+										)}
+										help={
+											dependentAxis.ticksToLocaleString
+												? __(
+														'Tick values will be formatted to locale string (eg. 100000 -> 100,000)',
+														'prc-chart-builder'
+													)
+												: __(
+														'Tick values will be displayed as-is',
+														'prc-chart-builder'
+													)
+										}
+										checked={Boolean(
+											dependentAxis.ticksToLocaleString
+										)}
+										onChange={(value) =>
+											setPath(
+												'dependentAxis.ticksToLocaleString',
+												value
+											)
+										}
+										__nextHasNoMarginBottom
+									/>
+									<ToggleControl
+										label={__(
+											'Show tick marks',
+											'prc-chart-builder'
+										)}
+										checked={Boolean(
+											dependentAxis.tickMarksActive
+										)}
+										onChange={(value) =>
+											setPath(
+												'dependentAxis.tickMarksActive',
+												value
+											)
+										}
+										help={__(
+											'Toggle display of tick markers on the dependent axis.',
+											'prc-chart-builder'
+										)}
+										__nextHasNoMarginBottom
+									/>
+								</>
+							)}
 							<ToggleControl
 								label={__(
 									'Show grid lines',
@@ -651,7 +945,7 @@ export default function AppearanceTab({
 								__nextHasNoMarginBottom
 							/>
 						</VStack>
-					</PanelBody>
+					</FocusedPanelBody>
 				</>
 			)}
 		</VStack>

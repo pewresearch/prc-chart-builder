@@ -22,6 +22,7 @@ import {
 	getSeriesColorGroups,
 	getSourceColorGroups,
 } from '../utils/get-palette-groups';
+import { findPaletteSwatch } from '../utils/find-palette-swatch';
 
 const NUMERIC_FIELDS = [
 	'strokeWidth',
@@ -52,6 +53,7 @@ function SeriesStyleRow({
 	seriesStyles,
 	chartType,
 	mapScale,
+	chartBarStrokeEnabled,
 	onChange,
 }) {
 	const style = seriesStyles?.[category] ?? {};
@@ -116,6 +118,10 @@ function SeriesStyleRow({
 							className="prc-chart-series-style-list__palette"
 							colors={paletteOptions}
 							value={style.fill}
+							selectedSlug={
+								findPaletteSwatch(style.fill, paletteOptions)
+									?.slug
+							}
 							clearable
 							onChange={handleFillChange}
 						/>
@@ -149,6 +155,7 @@ function SeriesStyleRow({
 							paletteOptions={paletteOptions}
 							chartType={chartType}
 							mapScale={mapScale}
+							chartBarStrokeEnabled={chartBarStrokeEnabled}
 							onFillChange={handleFillChange}
 							onFieldChange={handleFieldChange}
 							onReset={() =>
@@ -173,14 +180,15 @@ function SeriesStyleRow({
  * paint settings.
  *
  * @param {Object}   props
- * @param {string[]} props.categories       Color domain keys, in slot order.
- * @param {Object}   props.seriesStyles     Current `seriesStyles` attribute.
- * @param {string[]} props.palette          Active palette colors.
- * @param {string[]} [props.fallbackColors] Per-row colors an unset row shows instead of its palette slot.
- * @param {string[]} [props.paletteSources] Selected palette slugs. When set, the pickers offer only these palettes and UI.
- * @param {string}   [props.chartType]      Block chart type for panel field gating.
- * @param {string}   [props.mapScale]       Active map value scale, for field gating.
- * @param {Function} props.onChange         Receives the next `seriesStyles`.
+ * @param {string[]} props.categories              Color domain keys, in slot order.
+ * @param {Object}   props.seriesStyles            Current `seriesStyles` attribute.
+ * @param {string[]} props.palette                 Active palette colors.
+ * @param {string[]} [props.fallbackColors]        Per-row colors an unset row shows instead of its palette slot.
+ * @param {string[]} [props.paletteSources]        Selected palette slugs. When set, the pickers offer only these palettes and UI.
+ * @param {string}   [props.chartType]             Block chart type for panel field gating.
+ * @param {string}   [props.mapScale]              Active map value scale, for field gating.
+ * @param {boolean}  [props.chartBarStrokeEnabled] When false, hide bar stroke fields in Edit series.
+ * @param {Function} props.onChange                Receives the next `seriesStyles`.
  */
 export default function SeriesStyleList({
 	categories = [],
@@ -190,15 +198,16 @@ export default function SeriesStyleList({
 	paletteSources,
 	chartType,
 	mapScale,
+	chartBarStrokeEnabled = true,
 	onChange,
 }) {
-	const { colors: colorGroups } = useChartColorGroups();
+	const { colors: colorGroups, themeColors } = useChartColorGroups();
 	const paletteOptions = useMemo(
 		() =>
 			paletteSources
 				? getSourceColorGroups(colorGroups, paletteSources)
-				: getSeriesColorGroups(palette, colorGroups),
-		[paletteSources, palette, colorGroups]
+				: getSeriesColorGroups(palette, colorGroups, themeColors),
+		[paletteSources, palette, colorGroups, themeColors]
 	);
 
 	if (!Array.isArray(categories) || categories.length === 0) {
@@ -230,6 +239,7 @@ export default function SeriesStyleList({
 						seriesStyles={seriesStyles}
 						chartType={chartType}
 						mapScale={mapScale}
+						chartBarStrokeEnabled={chartBarStrokeEnabled}
 						onChange={onChange}
 					/>
 				);

@@ -38,6 +38,7 @@ import {
 	strokeIsSeriesColor,
 } from '../../../utils/series-style-fields';
 import { TextStyleControls } from './TextStyleControls';
+import { findPaletteSwatch } from '../../../utils/find-palette-swatch';
 
 const PAINT_FIELDS = [
 	...SERIES_STYLE_FAMILIES.identityFill,
@@ -91,6 +92,8 @@ function SeriesColorField({
 	onChange,
 	className,
 }) {
+	const swatch = findPaletteSwatch(value, colors);
+
 	return (
 		<div
 			className={
@@ -115,7 +118,9 @@ function SeriesColorField({
 							style={{ backgroundColor: value ?? placeholder }}
 						/>
 						<span className="prc-chart-series-paint__color-value">
-							{value ?? __('Default', 'prc-chart-builder')}
+							{swatch?.name ??
+								value ??
+								__('Default', 'prc-chart-builder')}
 						</span>
 					</button>
 				)}
@@ -124,6 +129,7 @@ function SeriesColorField({
 						className="prc-chart-series-style-list__palette"
 						colors={colors}
 						value={value}
+						selectedSlug={swatch?.slug}
 						clearable
 						onChange={onChange}
 					/>
@@ -137,15 +143,16 @@ function SeriesColorField({
  * SeriesPaintPanel Component
  *
  * @param {Object}   props
- * @param {string}   props.category       - Color domain key.
- * @param {Object}   props.style          - Current style for this category.
- * @param {string}   props.paletteSlot    - Color the category falls back to.
- * @param {Object[]} props.paletteOptions - Palette groups (`{ name, colors }`) for the pickers.
- * @param {string}   [props.chartType]    - Block chart type for field gating.
- * @param {string}   [props.mapScale]     - Active map value scale, for field gating.
- * @param {Function} props.onFillChange   - Receives the picked fill, or undefined to clear.
- * @param {Function} props.onFieldChange  - Receives a field name and value.
- * @param {Function} props.onReset        - Hands the category back to the chart defaults.
+ * @param {string}   props.category                - Color domain key.
+ * @param {Object}   props.style                   - Current style for this category.
+ * @param {string}   props.paletteSlot             - Color the category falls back to.
+ * @param {Object[]} props.paletteOptions          - Palette groups (`{ name, colors }`) for the pickers.
+ * @param {string}   [props.chartType]             - Block chart type for field gating.
+ * @param {string}   [props.mapScale]              - Active map value scale, for field gating.
+ * @param {boolean}  [props.chartBarStrokeEnabled] - When false, hide bar stroke fields (chart-level stroke is off).
+ * @param {Function} props.onFillChange            - Receives the picked fill, or undefined to clear.
+ * @param {Function} props.onFieldChange           - Receives a field name and value.
+ * @param {Function} props.onReset                 - Hands the category back to the chart defaults.
  */
 export function SeriesPaintPanel({
 	category,
@@ -154,6 +161,7 @@ export function SeriesPaintPanel({
 	paletteOptions = [],
 	chartType,
 	mapScale,
+	chartBarStrokeEnabled = true,
 	onFillChange,
 	onFieldChange,
 	onReset,
@@ -161,7 +169,16 @@ export function SeriesPaintPanel({
 	const hasCustomizations = Object.keys(style).some(
 		(field) => field !== 'fillSource'
 	);
-	const show = (field) => offersField(chartType, mapScale, field);
+	const show = (field) => {
+		if (
+			!chartBarStrokeEnabled &&
+			SERIES_STYLE_FAMILIES.stroke.includes(field)
+		) {
+			return false;
+		}
+
+		return offersField(chartType, mapScale, field);
+	};
 	const strokeIsColor = strokeIsSeriesColor(chartType, { mapScale });
 	const showPaint = PAINT_FIELDS.some(show);
 	const showLabels = SERIES_STYLE_FAMILIES.labels.some(show);
@@ -484,6 +501,7 @@ export function SeriesPaintPanel({
 								<TextStyleControls
 									showText={false}
 									showTextOutline
+									contrast={false}
 									values={{
 										fill: style.label?.color,
 										fontWeight: style.label?.fontWeight,

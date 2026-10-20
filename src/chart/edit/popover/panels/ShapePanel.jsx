@@ -79,6 +79,7 @@ export function ShapePanel({
 						value: fill || defaultColor,
 						onChange: (val) => handleStyleChange('fill', val ?? ''),
 						label: __('Fill', 'prc-chart-builder'),
+						contrast: false,
 					},
 				]}
 			/>

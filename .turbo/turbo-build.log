@@ -5,13 +5,13 @@
 Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-assets by path [1m[32mcontroller/[39m[22m 1.59 MiB
-  assets by chunk 1.1 MiB (name: controller/index) 4 assets
-  assets by chunk 474 KiB (name: controller/style-index) 2 assets
+assets by path [1m[32mcontroller/[39m[22m 1.4 MiB
+  assets by chunk 1.34 MiB (name: controller/index) 4 assets
+  assets by chunk 24.2 KiB (name: controller/style-index) 2 assets
   asset [1m[32mcontroller/class-controller.php[39m[22m 33.1 KiB [1m[32m[emitted][39m[22m [from: src/controller/class-controller.php] [1m[32m[copied][39m[22m
   asset [1m[32mcontroller/block.json[39m[22m 1.94 KiB [1m[32m[emitted][39m[22m [from: src/controller/block.json] [1m[32m[copied][39m[22m
-assets by path [1m[32msynced-chart/[39m[22m 30.3 KiB
-  assets by chunk 13.2 KiB (name: synced-chart/index) 4 assets
+assets by path [1m[32msynced-chart/[39m[22m 30.6 KiB
+  assets by chunk 13.5 KiB (name: synced-chart/index) 4 assets
   assets by chunk 878 bytes (id hint: style) 2 assets
   asset [1m[32msynced-chart/class-synced-chart.php[39m[22m 15.6 KiB [1m[32m[emitted][39m[22m [from: src/synced-chart/class-synced-chart.php] [1m[32m[copied][39m[22m
   asset [1m[32msynced-chart/block.json[39m[22m 674 bytes [1m[32m[emitted][39m[22m [from: src/synced-chart/block.json] [1m[32m[copied][39m[22m
@@ -19,90 +19,97 @@ assets by path [1m[32mchart/[39m[22m 448 KiB
   assets by chunk 415 KiB (name: chart/index) 4 assets
   asset [1m[32mchart/block.json[39m[22m 20 KiB [1m[32m[emitted][39m[22m [from: src/chart/block.json] [1m[32m[copied][39m[22m
   asset [1m[32mchart/class-chart.php[39m[22m 13.2 KiB [1m[32m[emitted][39m[22m [from: src/chart/class-chart.php] [1m[32m[copied][39m[22m
-Entrypoint [1mchart/index[39m[22m [1m[33m[big][39m[22m 415 KiB = [1m[32mchart/index.css[39m[22m 1.59 KiB [1m[32mchart/index.js[39m[22m 411 KiB [1m[32mchart/index-rtl.css[39m[22m 1.59 KiB [1m[32mchart/index.asset.php[39m[22m 403 bytes
-Entrypoint [1mcontroller/index[39m[22m [1m[33m[big][39m[22m 1.56 MiB = 6 assets
-Entrypoint [1msynced-chart/index[39m[22m [1m[33m[big][39m[22m 488 KiB = 8 assets
-orphan modules 8.24 MiB (javascript) 5.49 KiB (runtime) [1m[33m[orphan][39m[22m 3662 modules
-runtime modules 8.48 KiB 16 modules
-built modules 3.94 MiB (javascript) 240 KiB (css/mini-extract) [1m[33m[built][39m[22m
-  cacheable modules 13 KiB (javascript) 240 KiB (css/mini-extract)
+Entrypoint [1mchart/index[39m[22m [1m[33m[big][39m[22m 415 KiB = [1m[32mchart/index.css[39m[22m 1.84 KiB [1m[32mchart/index.js[39m[22m 411 KiB [1m[32mchart/index-rtl.css[39m[22m 1.85 KiB [1m[32mchart/index.asset.php[39m[22m 421 bytes
+Entrypoint [1mcontroller/index[39m[22m [1m[33m[big][39m[22m 1.37 MiB = 6 assets
+Entrypoint [1msynced-chart/index[39m[22m 14.3 KiB = 6 assets
+orphan modules 8.16 MiB (javascript) 5.49 KiB (runtime) [1m[33m[orphan][39m[22m 3669 modules
+runtime modules 8.47 KiB 16 modules
+built modules 3.97 MiB (javascript) 138 KiB (css/mini-extract) [1m[33m[built][39m[22m
+  cacheable modules 13 KiB (javascript) 138 KiB (css/mini-extract)
     javascript modules 13 KiB
       modules by path [1m../../node_modules/use-sync-external-store/[39m[22m 5.03 KiB 4 modules
       + 2 modules
-    modules by path [1m./[39m[22m 240 KiB
-      modules by path [1m./src/controller/[39m[22m 127 KiB 2 modules
-      modules by path [1m./src/synced-chart/[39m[22m 1.18 KiB 2 modules
+    modules by path [1m./[39m[22m 138 KiB
+      modules by path [1m./src/controller/[39m[22m 21 KiB 2 modules
+      modules by path [1m./src/synced-chart/[39m[22m 1.24 KiB 2 modules
       + 2 modules
-  [1m./src/chart/index.js + 165 modules[39m[22m 1000 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-  [1m./src/controller/index.js + 883 modules[39m[22m 2.92 MiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-  [1m./src/synced-chart/index.js + 26 modules[39m[22m 21.9 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m./src/chart/index.js + 172 modules[39m[22m 1010 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m./src/controller/index.js + 889 modules[39m[22m 2.95 MiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  [1m./src/synced-chart/index.js + 26 modules[39m[22m 22.5 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1mexternal "React"[39m[22m 42 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
 
-[1m[33mWARNING[39m[22m in [1m./includes/admin/src/style.scss[39m[22m (./includes/admin/src/style.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./includes/admin/src/style.scss)
+[1m[33mWARNING[39m[22m in [1m./includes/admin/src/editor.scss[39m[22m (./includes/admin/src/editor.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./includes/admin/src/editor.scss)
 [1mModule Warning (from ../../node_modules/sass-loader/dist/cjs.js):
-Deprecation Warning on line 53, column 8 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/includes/admin/src/style.scss:53:8:
+Deprecation Warning on line 1, column 8 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/includes/admin/src/editor.scss:1:8:
 Sass @import rules are [1m[33mdeprecated[39m[22m[1m and will be removed in Dart Sass 3.0.0.
 
 More info and automated migrator: https://sass-lang.com/d/import
 
-53 | @import "../../../src/shared/wizard-ui/style";
+1 | @import "../../../src/shared/wizard-ui/style";
 
 
-includes/admin/src/style.scss 54:9  root stylesheet
+includes/admin/src/editor.scss 2:9  root stylesheet
 [39m[22m
- @ ./includes/admin/src/style.scss
- @ ./src/synced-chart/index.js 19:0-45
+ @ ./includes/admin/src/editor.scss
+ @ ./src/controller/placeholder.jsx 17:0-46
+ @ ./src/controller/Edit.jsx 18:0-40 433:29-40
+ @ ./src/controller/index.js 14:0-26 33:2-6
 
-[1m[33mWARNING[39m[22m in [1m./includes/admin/src/style.scss[39m[22m (./includes/admin/src/style.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./includes/admin/src/style.scss)
+[1m[33mWARNING[39m[22m in [1m./includes/admin/src/editor.scss[39m[22m (./includes/admin/src/editor.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./includes/admin/src/editor.scss)
 [1mModule Warning (from ../../node_modules/sass-loader/dist/cjs.js):
-Deprecation Warning on line 54, column 8 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/includes/admin/src/style.scss:54:8:
+Deprecation Warning on line 2, column 8 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/includes/admin/src/editor.scss:2:8:
 Sass @import rules are [1m[33mdeprecated[39m[22m[1m and will be removed in Dart Sass 3.0.0.
 
 More info and automated migrator: https://sass-lang.com/d/import
 
-54 | @import "../../../src/chart/edit/control-ui";
+2 | @import "../../../src/chart/edit/control-ui";
 
 
-includes/admin/src/style.scss 55:9  root stylesheet
+includes/admin/src/editor.scss 3:9  root stylesheet
 [39m[22m
- @ ./includes/admin/src/style.scss
- @ ./src/synced-chart/index.js 19:0-45
+ @ ./includes/admin/src/editor.scss
+ @ ./src/controller/placeholder.jsx 17:0-46
+ @ ./src/controller/Edit.jsx 18:0-40 433:29-40
+ @ ./src/controller/index.js 14:0-26 33:2-6
 
-[1m[33mWARNING[39m[22m in [1m./src/controller/style.scss[39m[22m (./src/controller/style.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./src/controller/style.scss)
+[1m[33mWARNING[39m[22m in [1m./includes/admin/src/editor.scss[39m[22m (./includes/admin/src/editor.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./includes/admin/src/editor.scss)
 [1mModule Warning (from ../../node_modules/sass-loader/dist/cjs.js):
-Deprecation Warning on line 33, column 8 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/src/controller/style.scss:33:8:
+Deprecation Warning on line 7, column 8 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/src/shared/wizard-ui/style.scss:7:8:
 Sass @import rules are [1m[33mdeprecated[39m[22m[1m and will be removed in Dart Sass 3.0.0.
 
 More info and automated migrator: https://sass-lang.com/d/import
 
-33 | @import "../shared/wizard-ui/style";
+7 | @import "variables";
 
 
-src/controller/style.scss 34:9  root stylesheet
+src/shared/wizard-ui/style.scss 8:9  @import
+includes/admin/src/editor.scss 2:9   root stylesheet
 [39m[22m
- @ ./src/controller/style.scss
- @ ./src/controller/index.js 19:0-22
+ @ ./includes/admin/src/editor.scss
+ @ ./src/controller/placeholder.jsx 17:0-46
+ @ ./src/controller/Edit.jsx 18:0-40 433:29-40
+ @ ./src/controller/index.js 14:0-26 33:2-6
 
-[1m[33mWARNING[39m[22m in [1m./src/controller/style.scss[39m[22m (./src/controller/style.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./src/controller/style.scss)
+[1m[33mWARNING[39m[22m in [1m./src/controller/editor.scss[39m[22m (./src/controller/editor.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./src/controller/editor.scss)
 [1mModule Warning (from ../../node_modules/sass-loader/dist/cjs.js):
-Deprecation Warning on line 35, column 8 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/src/controller/style.scss:35:8:
+Deprecation Warning on line 0, column 8 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/src/controller/editor.scss:0:8:
 Sass @import rules are [1m[33mdeprecated[39m[22m[1m and will be removed in Dart Sass 3.0.0.
 
 More info and automated migrator: https://sass-lang.com/d/import
 
-35 | @import "../chart/edit/control-ui";
+0 | @import "../shared/wizard-ui/variables";
 
 
-src/controller/style.scss 36:9  root stylesheet
+src/controller/editor.scss 1:9  root stylesheet
 [39m[22m
- @ ./src/controller/style.scss
- @ ./src/controller/index.js 19:0-22
+ @ ./src/controller/editor.scss
+ @ ./src/controller/index.js 18:0-23
 
 [1m[33mWARNING[39m[22m in [1masset size limit: The following asset(s) exceed the recommended size limit (244 KiB).
 This can impact web performance.
 Assets: 
   chart/index.js (411 KiB)
-  controller/index.js (1.09 MiB)[39m[22m
+  controller/index.js (1.1 MiB)[39m[22m
 
 [1m[33mWARNING[39m[22m in [1mentrypoint size limit: The following entrypoint(s) combined asset size exceeds the recommended limit (244 KiB). This can impact web performance.
 Entrypoints:
@@ -111,59 +118,50 @@ Entrypoints:
       chart/index.js
       chart/index-rtl.css
       chart/index.asset.php
-  controller/index (1.56 MiB)
+  controller/index (1.37 MiB)
       controller/style-index.css
       controller/style-index-rtl.css
       controller/index.css
       controller/index.js
       controller/index-rtl.css
       controller/index.asset.php
-  synced-chart/index (488 KiB)
-      controller/style-index.css
-      controller/style-index-rtl.css
-      synced-chart/style-index.css
-      synced-chart/style-index-rtl.css
-      synced-chart/index.css
-      synced-chart/index.js
-      synced-chart/index-rtl.css
-      synced-chart/index.asset.php
 [39m[22m
 
 [1m[33mWARNING[39m[22m in [1mwebpack performance recommendations: 
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/[39m[22m
 
-webpack 5.106.2 compiled with [1m[33m7 warnings[39m[22m in 21517 ms
+webpack 5.106.2 compiled with [1m[33m7 warnings[39m[22m in 103435 ms
 
-assets by path [1m[32mchart/[39m[22m 67 KiB
-  asset [1m[32mchart/view.js[39m[22m 66.8 KiB [1m[32m[emitted][39m[22m [javascript module] [1m[32m[minimized][39m[22m (name: chart/view)
+assets by path [1m[32mchart/[39m[22m 67.3 KiB
+  asset [1m[32mchart/view.js[39m[22m 67.2 KiB [1m[32m[emitted][39m[22m [javascript module] [1m[32m[minimized][39m[22m (name: chart/view)
   asset [1m[32mchart/view.asset.php[39m[22m 155 bytes [1m[32m[emitted][39m[22m (name: chart/view)
 assets by path [1m[32mcontroller/[39m[22m 39.6 KiB
   asset [1m[32mcontroller/view.js[39m[22m 39.4 KiB [1m[32m[emitted][39m[22m [javascript module] [1m[32m[minimized][39m[22m (name: controller/view)
   asset [1m[32mcontroller/view.asset.php[39m[22m 130 bytes [1m[32m[emitted][39m[22m (name: controller/view)
-Entrypoint [1mchart/view[39m[22m 67 KiB = [1m[32mchart/view.js[39m[22m 66.8 KiB [1m[32mchart/view.asset.php[39m[22m 155 bytes
+Entrypoint [1mchart/view[39m[22m 67.3 KiB = [1m[32mchart/view.js[39m[22m 67.2 KiB [1m[32mchart/view.asset.php[39m[22m 155 bytes
 Entrypoint [1mcontroller/view[39m[22m 39.6 KiB = [1m[32mcontroller/view.js[39m[22m 39.4 KiB [1m[32mcontroller/view.asset.php[39m[22m 130 bytes
-orphan modules 341 KiB [1m[33m[orphan][39m[22m 142 modules
-built modules 368 KiB [1m[33m[built][39m[22m
-  [1m./src/chart/view.js + 30 modules[39m[22m 252 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+orphan modules 342 KiB [1m[33m[orphan][39m[22m 142 modules
+built modules 369 KiB [1m[33m[built][39m[22m
+  [1m./src/chart/view.js + 30 modules[39m[22m 254 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1m./src/controller/view.js + 14 modules[39m[22m 115 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 9138 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 40849 ms
 Block metadata PHP file generated at: build/blocks-manifest.php
 Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-assets by path [1m[32m*.css[39m[22m 6.86 KiB
-  asset [1m[32mindex-rtl.css[39m[22m 3.43 KiB [1m[33m[compared for emit][39m[22m (name: index)
-  asset [1m[32mindex.css[39m[22m 3.43 KiB [1m[33m[compared for emit][39m[22m (name: index)
+assets by path [1m[32m*.css[39m[22m 8.56 KiB
+  asset [1m[32mindex-rtl.css[39m[22m 4.28 KiB [1m[33m[compared for emit][39m[22m (name: index)
+  asset [1m[32mindex.css[39m[22m 4.28 KiB [1m[33m[compared for emit][39m[22m (name: index)
 asset [1m[32mindex.js[39m[22m 6.71 KiB [1m[33m[compared for emit][39m[22m [1m[32m[minimized][39m[22m (name: index)
 asset [1m[32mindex.asset.php[39m[22m 218 bytes [1m[33m[compared for emit][39m[22m (name: index)
-Entrypoint [1mindex[39m[22m 13.8 KiB = [1m[32mindex.css[39m[22m 3.43 KiB [1m[32mindex.js[39m[22m 6.71 KiB [1m[32mindex-rtl.css[39m[22m 3.43 KiB [1m[32mindex.asset.php[39m[22m 218 bytes
-orphan modules 21.9 KiB (javascript) 937 bytes (runtime) [1m[33m[orphan][39m[22m 21 modules
+Entrypoint [1mindex[39m[22m 15.5 KiB = [1m[32mindex.css[39m[22m 4.28 KiB [1m[32mindex.js[39m[22m 6.71 KiB [1m[32mindex-rtl.css[39m[22m 4.28 KiB [1m[32mindex.asset.php[39m[22m 218 bytes
+orphan modules 22.7 KiB (javascript) 937 bytes (runtime) [1m[33m[orphan][39m[22m 21 modules
 runtime modules 663 bytes 3 modules
-built modules 16.6 KiB (javascript) 3.43 KiB (css/mini-extract) [1m[33m[built][39m[22m
+built modules 16.6 KiB (javascript) 4.28 KiB (css/mini-extract) [1m[33m[built][39m[22m
   [1m./includes/inspector-sidebar-panel/src/index.js + 13 modules[39m[22m 16.6 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-  css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./includes/inspector-sidebar-panel/src/editor.scss[39m[22m 3.43 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 1284 ms
+  css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./includes/inspector-sidebar-panel/src/editor.scss[39m[22m 4.28 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 4505 ms
 
 > @prc/chart-builder@3.16.0 build:admin-dataview
 > wp-scripts build --config webpack.admin-dataview.config.js
@@ -183,61 +181,24 @@ runtime modules 2.51 KiB 3 modules
 built modules 7.24 KiB (javascript) 0 bytes (css/mini-extract) [1m[33m[built][39m[22m
   [1m./src/admin-dataview/index.jsx + 10 modules[39m[22m 7.24 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/admin-dataview/style.scss[39m[22m 0 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 971 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 3402 ms
 Field registry sync OK (28 schema groups: layout, metadata, plotBands, independentAxis, dependentAxis, tooltip, legend, labels, shapes, bar, line, dotPlot, errorBars, explodedBar, pie, nodes, beeSwarm, regression, map, divergingBar, diffColumn, netValues, treemap, waffle, heatMapTable, sankey, smallMultiples, annotations).
 Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
   npx update-browserslist-db@latest
   Why you should do it regularly: https://github.com/browserslist/update-db#readme
-assets by chunk 137 KiB (name: index)
+assets by chunk 138 KiB (name: index)
   asset [1m[32mindex.js[39m[22m 137 KiB [1m[32m[emitted][39m[22m [1m[32m[minimized][39m[22m (name: index)
   asset [1m[32mindex.asset.php[39m[22m 243 bytes [1m[32m[emitted][39m[22m (name: index)
 assets by path [1m[32m./*.css[39m[22m 22.1 KiB
-  asset [1m[32m./style-index-rtl.css[39m[22m 11.1 KiB [1m[32m[emitted][39m[22m (name: ./style-index) (id hint: style)
-  asset [1m[32m./style-index.css[39m[22m 11.1 KiB [1m[32m[emitted][39m[22m (name: ./style-index) (id hint: style)
+  asset [1m[32m./style-index-rtl.css[39m[22m 11 KiB [1m[32m[emitted][39m[22m (name: ./style-index) (id hint: style)
+  asset [1m[32m./style-index.css[39m[22m 11 KiB [1m[32m[emitted][39m[22m (name: ./style-index) (id hint: style)
 asset [1m[32mchart/block.json[39m[22m 20 KiB [1m[32m[emitted][39m[22m [from: src/chart/block.json] [1m[32m[copied][39m[22m
 asset [1m[32mcontroller/block.json[39m[22m 1.94 KiB [1m[32m[emitted][39m[22m [from: src/controller/block.json] [1m[32m[copied][39m[22m
 asset [1m[32msynced-chart/block.json[39m[22m 674 bytes [1m[32m[emitted][39m[22m [from: src/synced-chart/block.json] [1m[32m[copied][39m[22m
-Entrypoint [1mindex[39m[22m 159 KiB = [1m[32m./style-index.css[39m[22m 11.1 KiB [1m[32m./style-index-rtl.css[39m[22m 11.1 KiB [1m[32mindex.js[39m[22m 137 KiB [1m[32mindex.asset.php[39m[22m 243 bytes
-orphan modules 5.37 MiB (javascript) 937 bytes (runtime) [1m[33m[orphan][39m[22m 2619 modules
+Entrypoint [1mindex[39m[22m 160 KiB = [1m[32m./style-index.css[39m[22m 11 KiB [1m[32m./style-index-rtl.css[39m[22m 11 KiB [1m[32mindex.js[39m[22m 137 KiB [1m[32mindex.asset.php[39m[22m 243 bytes
+orphan modules 5.37 MiB (javascript) 937 bytes (runtime) [1m[33m[orphan][39m[22m 2620 modules
 runtime modules 3.07 KiB 5 modules
-built modules 243 KiB (javascript) 11.1 KiB (css/mini-extract) [1m[33m[built][39m[22m
-  [1m./src/settings/index.js + 78 modules[39m[22m 243 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-  css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/settings/style.scss[39m[22m 11.1 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-
-[1m[33mWARNING[39m[22m in [1m./src/settings/style.scss[39m[22m (./src/settings/style.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./src/settings/style.scss)
-[1mModule Warning (from ../../node_modules/sass-loader/dist/cjs.js):
-Deprecation Warning on line 138, column 28 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/src/settings/style.scss:138:28:
-Global built-in functions are [1m[33mdeprecated[39m[22m[1m and will be removed in Dart Sass 3.0.0.
-[1m[33mUse color.adjust instead[39m[22m[1m.
-
-More info and automated migrator: https://sass-lang.com/d/import
-
-138 | 			border-bottom: 1px solid darken($gray-100, 6%);
-
-
-src/settings/style.scss 139:29  root stylesheet
-[39m[22m
- @ ./src/settings/style.scss
- @ ./src/settings/app.jsx 6:0-22
- @ ./src/settings/index.js 2:0-37 3:60-76
-
-[1m[33mWARNING[39m[22m in [1m./src/settings/style.scss[39m[22m (./src/settings/style.scss.webpack[javascript/auto]!=!../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./src/settings/style.scss)
-[1mModule Warning (from ../../node_modules/sass-loader/dist/cjs.js):
-Deprecation Warning on line 138, column 28 of file:///home/runner/work/prc-platform/prc-platform/plugins/prc-chart-builder/src/settings/style.scss:138:28:
-darken() is [1m[33mdeprecated[39m[22m[1m. Suggestions:
-
-color.scale($color, $lightness: -6.375%)
-color.adjust($color, $lightness: -6%)
-
-More info: https://sass-lang.com/d/color-functions
-
-138 | 			border-bottom: 1px solid darken($gray-100, 6%);
-
-
-src/settings/style.scss 139:29  root stylesheet
-[39m[22m
- @ ./src/settings/style.scss
- @ ./src/settings/app.jsx 6:0-22
- @ ./src/settings/index.js 2:0-37 3:60-76
-
-webpack 5.106.2 compiled with [1m[33m2 warnings[39m[22m in 4106 ms
+built modules 246 KiB (javascript) 11 KiB (css/mini-extract) [1m[33m[built][39m[22m
+  [1m./src/settings/index.js + 79 modules[39m[22m 246 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+  css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/settings/style.scss[39m[22m 11 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 13898 ms

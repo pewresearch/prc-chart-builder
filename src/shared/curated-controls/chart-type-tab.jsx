@@ -51,7 +51,9 @@ export default function ChartTypeTab({ chartAttributes, setAttributes }) {
 		chartAttributes,
 		LINE_CHART_TYPES
 	);
-	const showBarControls = chartTypeMatches(chartAttributes, BAR_CHART_TYPES);
+	const showBarControls =
+		chartTypeMatches(chartAttributes, BAR_CHART_TYPES) &&
+		chartType !== 'diverging-bar';
 	const showPieControls = chartTypeMatches(chartAttributes, ['pie']);
 	const showNodeControls =
 		NODE_CHART_TYPES.includes(chartType) || showLineControls;

@@ -1,46 +1,43 @@
 /**
  * Shared Chart Wizard / modal UI styles (Select, Data, Configure chrome).
- * Used by the admin Chart Library and the chart CPT Controller host.
- *
- * Colors and type come from the PRC Design System theme.json presets.
+ * Used by the admin Chart Library and the chart CPT Controller host. Bundled
+ * once, editor-only, through `includes/admin/src/editor.scss`.
  */
 
 @import "@wordpress/dataviews/build-style/style.css";
+@import "variables";
 
-$wizard-font: var(--wp--preset--font-family--sans-serif);
-$wizard-font-size-small: 13px;
-$wizard-font-size-medium: 16px;
-$wizard-font-size-large: 20px;
-$wizard-text: var(--wp--preset--color--ui-text-color);
-$wizard-gray-very-dark: var(--wp--preset--color--ui-gray-very-dark);
-$wizard-gray: var(--wp--preset--color--ui-gray);
-$wizard-border: var(--wp--preset--color--ui-gray-light);
-$wizard-surface: var(--wp--preset--color--ui-white);
-$wizard-surface-subtle: var(--wp--preset--color--ui-gray-very-light);
-$wizard-accent: var(--wp--preset--color--ui-link-color);
-$wizard-on-accent: var(--wp--preset--color--ui-white);
-$wizard-ink: var(--wp--preset--color--ui-black);
-$wizard-accent-soft: color-mix(
-	in srgb,
-	var(--wp--preset--color--ui-link-color) 12%,
-	var(--wp--preset--color--ui-white)
-);
-// Compact/modal template grid: cap height so the picker scrolls and preview
-// lazy-loading has a stable scrollport (see use-pattern-preview-visibility).
-$wizard-pattern-picker-max-height: min(65vh, 560px);
+// WizardControlTip — portaled Ariakit tooltip (not a child of .prc-chart-modal).
+.components-tooltip.prc-chart-modal__control-tip-tooltip {
+	box-sizing: border-box;
+	min-width: 200px;
+	max-width: 280px;
+	padding: 8px 12px;
+	font-size: 13px;
+	line-height: 1.45;
+	text-wrap: pretty;
+}
 
-@mixin pattern-picker-scrollport {
-	overflow: auto;
-	overscroll-behavior: contain;
-
-	// Let content height the grid; the picker scrolls, not DataViews.
-	.dataviews-wrapper {
-		height: auto;
-		min-height: 0;
+// wp-components hardcodes panel chrome as hex (no custom properties), so it
+// never follows the preset `light-dark()` palette without these overrides.
+.prc-chart-modal,
+.prc-chart-wizard {
+	.components-panel {
+		background: $wizard-surface;
+		border-color: $wizard-border;
 	}
 
-	.dataviews-layout__container {
-		min-height: 0;
+	.components-panel__body {
+		border-color: $wizard-border;
+
+		> .components-panel__body-title:hover {
+			background: $wizard-surface-subtle;
+		}
+	}
+
+	.components-panel__body-toggle.components-button,
+	.components-panel__body-toggle.components-button .components-panel__arrow {
+		color: $wizard-text;
 	}
 }
 
@@ -231,7 +228,7 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 		width: 100%;
 		height: 100%;
 		min-height: 160px;
-		background: var(--wp--preset--color--base, #f6f7f7);
+		background: $wizard-surface-subtle;
 		border-radius: 2px;
 		overflow: hidden;
 		pointer-events: none;
@@ -239,9 +236,9 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 		&.is-placeholder {
 			background: linear-gradient(
 				110deg,
-				#f0f0f0 8%,
-				#fafafa 18%,
-				#f0f0f0 33%
+				$wizard-border 8%,
+				$wizard-surface-subtle 18%,
+				$wizard-border 33%
 			);
 			background-size: 200% 100%;
 			animation: prc-chart-wizard-pattern-shimmer 1.2s linear infinite;
@@ -267,7 +264,7 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 		gap: 2px;
 
 		strong {
-			font-size: 13px;
+			font-size: $wizard-font-size-small;
 			color: $wizard-text;
 		}
 
@@ -315,7 +312,7 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 		border-bottom: 3px solid transparent;
 		margin-bottom: -1px;
 		font-family: inherit;
-		font-size: 13px;
+		font-size: $wizard-font-size-small;
 		font-weight: 500;
 		color: $wizard-gray-very-dark;
 		cursor: pointer;
@@ -342,9 +339,13 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 	}
 
 	&__configure-tab-bar {
+		position: sticky;
+		top: 0;
+		z-index: 2;
 		flex-wrap: wrap;
 		gap: 0 4px;
 		margin-bottom: 0;
+		background: $wizard-surface;
 	}
 
 	&__configure-tab {
@@ -386,14 +387,24 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 	&__control-label-with-tip {
 		display: flex;
 		align-items: center;
-		gap: 2px;
+		gap: 4px;
 	}
 
 	&__control-tip.components-button {
-		min-width: 24px;
-		height: 24px;
+		position: relative;
+		flex-shrink: 0;
+		min-width: 36px;
+		width: 36px;
+		height: 36px;
 		padding: 0;
 		color: $wizard-gray-very-dark;
+
+		// Larger hit target without shifting label alignment.
+		&::before {
+			content: "";
+			position: absolute;
+			inset: -6px;
+		}
 
 		&:hover,
 		&:focus {
@@ -491,7 +502,7 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 		margin: 0;
 		max-width: 28rem;
 		color: $wizard-gray-very-dark;
-		font-size: 13px;
+		font-size: $wizard-font-size-small;
 		line-height: 1.5;
 	}
 
@@ -506,6 +517,7 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 .prc-chart-wizard {
 	font-family: $wizard-font;
 	color: $wizard-text;
+	font-size: $wizard-font-size-small;
 
 	&[data-layout="full"] {
 		display: flex;
@@ -591,8 +603,9 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 	&__steps {
 		display: flex;
 		align-items: center;
+		justify-content: center;
 		gap: 8px;
-		margin: 0 0 12px;
+		margin: 12px 0;
 		padding: 0;
 		list-style: none;
 	}
@@ -604,8 +617,12 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 		gap: 16px;
 		margin: 0 0 16px;
 		padding: 12px 16px;
-		border-left: 4px solid #dba617;
-		background: #fcf9e8;
+		border-left: 4px solid var(--wp--preset--color--ui-mustard);
+		background: color-mix(
+			in srgb,
+			var(--wp--preset--color--ui-mustard) 12%,
+			$wizard-surface
+		);
 		color: $wizard-text;
 
 		p {
@@ -690,18 +707,36 @@ $wizard-pattern-picker-max-height: min(65vh, 560px);
 			color: $wizard-on-accent;
 		}
 
+		&.is-selectable .prc-chart-wizard__step-num {
+			box-shadow: 0 0 0 2px $wizard-accent-soft;
+			transition: box-shadow 0.1s;
+		}
+
 		// Clickable prior steps (Controller host / free navigation).
+		// The negative margin offsets the pill padding so the row keeps its
+		// spacing at rest.
 		&-button {
 			display: inline-flex;
 			align-items: center;
 			gap: 8px;
-			margin: 0;
-			padding: 0;
+			margin: -4px -10px -4px -4px;
+			padding: 4px 10px 4px 4px;
 			border: 0;
+			border-radius: 999px;
 			background: none;
 			color: inherit;
 			font: inherit;
 			cursor: pointer;
+			transition: background-color 0.1s;
+
+			&:hover,
+			&:focus-visible {
+				background: $wizard-accent-soft;
+
+				.prc-chart-wizard__step-num {
+					box-shadow: 0 0 0 2px $wizard-accent;
+				}
+			}
 
 			&:hover .prc-chart-wizard__step-label {
 				text-decoration: underline;

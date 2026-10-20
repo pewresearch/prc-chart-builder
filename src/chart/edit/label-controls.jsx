@@ -15,8 +15,7 @@ import {
 	ToggleControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
-	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 /**
@@ -28,23 +27,12 @@ import {
 	effectiveChartTypeForControls,
 } from '../utils/chart-types';
 import { formatNum, formatOptionalNum } from '../utils/helpers';
+import { Help, PanelDescription, StyledLabel } from './control-ui';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
-import { POSITION_DISABLED_CHART_TYPES } from './popover/utils';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
-import {
-	PanelDescription,
-	WidePanelItem,
-	SingleColumnItem,
-	StyledLabel,
-	Help,
-} from './control-ui';
+import { POSITION_DISABLED_CHART_TYPES } from './popover/utils';
 
-function LabelControls({
-	attributes,
-	setAttributes,
-	clientId,
-	curated = false,
-}) {
+function LabelControls({ attributes, setAttributes, curated = false }) {
 	// Viewport-aware attribute management
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -53,7 +41,7 @@ function LabelControls({
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('labels');
 
 	const layoutObj = getCurrentValue('layout') || {};
-	const { type: layoutType, orientation } = layoutObj;
+	const { type: layoutType } = layoutObj;
 	const chartType = effectiveChartTypeForControls({
 		layout: layoutObj,
 		smallMultiples: attributes.smallMultiples,
@@ -82,808 +70,685 @@ function LabelControls({
 			customPositions: {},
 		});
 	};
+	const labelsActive = Boolean(getCurrentValue('labels', 'active'));
 	return (
 		<div ref={panelRef}>
 			<PanelBody title={__('Labels')} opened={isOpen} onToggle={onToggle}>
-				<ToolsPanel
-					label={__('Attributes')}
-					panelId={clientId}
-					style={{
-						paddingLeft: '0',
-						paddingRight: '0',
-					}}
-				>
-					<ToolsPanelItem
-						hasValue={() => true}
+				<VStack spacing={2}>
+					<ToggleControl
 						label={__('Labels Active')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<ToggleControl
-							label={__('Labels Active')}
-							checked={getCurrentValue('labels', 'active')}
-							onChange={(newValue) =>
-								updateAttributeForDevice('labels', {
-									active: newValue,
-								})
-							}
-						/>
-						{'map-usa' === layoutType && (
+						checked={labelsActive}
+						onChange={(newValue) =>
+							updateAttributeForDevice('labels', {
+								active: newValue,
+							})
+						}
+					/>
+				</VStack>
+				{labelsActive && (
+					<VStack spacing={4}>
+						<VStack spacing={2}>
+							{'map-usa' === layoutType && (
+								<ToggleControl
+									label={__('Ignore Small State Labels')}
+									checked={
+										getCurrentValue(
+											'map',
+											'ignoreSmallStateLabels'
+										) || false
+									}
+									onChange={(newValue) => {
+										const map =
+											getCurrentValue('map') || {};
+										updateAttributeForDevice('map', {
+											...map,
+											ignoreSmallStateLabels: newValue,
+										});
+									}}
+								/>
+							)}
+
+							{LINE_CHART_TYPES.includes(chartType) && (
+								<VStack spacing={2}>
+									<ToggleControl
+										label={__(
+											'Display only first and last labels'
+										)}
+										checked={getCurrentValue(
+											'labels',
+											'showFirstLastPointsOnly'
+										)}
+										onChange={(newValue) =>
+											updateAttributeForDevice('labels', {
+												showFirstLastPointsOnly:
+													newValue,
+											})
+										}
+									/>
+								</VStack>
+							)}
+							{LINE_CHART_TYPES.includes(chartType) &&
+								getCurrentValue(
+									'labels',
+									'showFirstLastPointsOnly'
+								) && (
+									<VStack spacing={2}>
+										<ToggleGroupControl
+											__nextHasNoMarginBottom
+											isBlock
+											value={
+												getCurrentValue(
+													'labels',
+													'firstLastLabelLayout'
+												) || 'default'
+											}
+											label={__(
+												'First / Last Label Layout'
+											)}
+											onChange={(type) => {
+												updateAttributeForDevice(
+													'labels',
+													{
+														firstLastLabelLayout:
+															type,
+													}
+												);
+											}}
+										>
+											<ToggleGroupControlOption
+												label={__('Default')}
+												value="default"
+											/>
+											<ToggleGroupControlOption
+												label={__('Outside')}
+												value="outside"
+											/>
+										</ToggleGroupControl>
+										<PanelDescription>
+											<Help>
+												{__(
+													'Outside places the first label to the left of its point and the last label to the right. DX/DY offsets still apply on top.'
+												)}
+											</Help>
+										</PanelDescription>
+									</VStack>
+								)}
 							<ToggleControl
-								label={__('Ignore Small State Labels')}
+								label={__('Prevent label overlap (auto)')}
+								help={__(
+									'Automatically nudge labels to reduce overlap. Manual label positions always take priority.'
+								)}
 								checked={
 									getCurrentValue(
-										'map',
-										'ignoreSmallStateLabels'
+										'labels',
+										'autoDeclutter'
 									) || false
 								}
-								disabled={!getCurrentValue('labels', 'active')}
-								onChange={(newValue) => {
-									const map = getCurrentValue('map') || {};
-									updateAttributeForDevice('map', {
-										...map,
-										ignoreSmallStateLabels: newValue,
-									});
-								}}
+								onChange={(newValue) =>
+									updateAttributeForDevice('labels', {
+										autoDeclutter: newValue,
+										...(newValue
+											? {}
+											: {
+													declutterLeaderLines: false,
+												}),
+									})
+								}
 							/>
-						)}
-
-						{LINE_CHART_TYPES.includes(chartType) && (
-							<ToolsPanelItem
-								hasValue={() => true}
-								label={__('Show First and Last Points Only')}
-								isShownByDefault
-								panelId={clientId}
-							>
+							{(LINE_CHART_TYPES.includes(chartType) ||
+								chartType === 'scatter' ||
+								chartType === 'dot-plot') && (
 								<ToggleControl
-									label={__(
-										'Display only first and last labels'
+									label={__('Show leader lines')}
+									help={__(
+										'Draw a line from each data point to its label when auto overlap prevention moves the label.'
 									)}
-									checked={getCurrentValue(
-										'labels',
-										'showFirstLastPointsOnly'
-									)}
+									checked={
+										getCurrentValue(
+											'labels',
+											'declutterLeaderLines'
+										) || false
+									}
 									disabled={
-										!getCurrentValue('labels', 'active')
+										!getCurrentValue(
+											'labels',
+											'autoDeclutter'
+										)
 									}
 									onChange={(newValue) =>
 										updateAttributeForDevice('labels', {
-											showFirstLastPointsOnly: newValue,
+											declutterLeaderLines: newValue,
 										})
 									}
 								/>
-							</ToolsPanelItem>
-						)}
-						{LINE_CHART_TYPES.includes(chartType) &&
-							getCurrentValue(
-								'labels',
-								'showFirstLastPointsOnly'
-							) && (
-								<WidePanelItem
-									hasValue={() =>
-										'default' !==
-										(getCurrentValue(
-											'labels',
-											'firstLastLabelLayout'
-										) || 'default')
+							)}
+							<ToggleControl
+								label={__('Text outline for legibility')}
+								help={__(
+									'Draw a halo behind each label so it stays readable when it overlaps a line, bar, or shape.'
+								)}
+								checked={
+									getCurrentValue('labels', 'textOutline') ||
+									false
+								}
+								onChange={(newValue) =>
+									updateAttributeForDevice('labels', {
+										textOutline: newValue,
+									})
+								}
+							/>
+							{getCurrentValue('labels', 'textOutline') && (
+								<SelectControl
+									__next40pxDefaultSize
+									label={__('Outline color')}
+									help={
+										BAR_CHART_TYPES.includes(chartType) ||
+										chartType === 'pie' ||
+										chartType === 'treemap'
+											? __(
+													'Contrast with text is recommended for labels inside bars or colored shapes. Chart background works well when labels float over empty space.'
+												)
+											: __(
+													'Chart background works well when labels float over lines or empty space. Contrast with text is better inside colored shapes.'
+												)
 									}
-									label={__('First / Last Label Layout')}
-									isShownByDefault
-									panelId={clientId}
+									value={
+										getCurrentValue(
+											'labels',
+											'textOutlineMode'
+										) ||
+										(BAR_CHART_TYPES.includes(chartType) ||
+										chartType === 'pie' ||
+										chartType === 'treemap'
+											? 'contrast'
+											: 'background')
+									}
+									options={[
+										{
+											label: __('Chart background'),
+											value: 'background',
+										},
+										{
+											label: __('Contrast with text'),
+											value: 'contrast',
+										},
+									]}
+									onChange={(newValue) =>
+										updateAttributeForDevice('labels', {
+											textOutlineMode: newValue,
+										})
+									}
+								/>
+							)}
+							{chartType === 'pie' && (
+								<VStack spacing={2}>
+									<ToggleControl
+										label={__('Category Labels Active')}
+										checked={
+											getCurrentValue(
+												'pie',
+												'showCategoryLabels'
+											) || false
+										}
+										onChange={(newValue) => {
+											const pie =
+												getCurrentValue('pie') || {};
+											updateAttributeForDevice('pie', {
+												...pie,
+												showCategoryLabels: newValue,
+											});
+										}}
+									/>
+								</VStack>
+							)}
+							{chartType === 'treemap' && (
+								<>
+									<VStack spacing={2}>
+										<ToggleControl
+											label={__(
+												'Show Values in Rectangles'
+											)}
+											help={__(
+												'Display the numeric data value inside each rectangle below the name.'
+											)}
+											checked={
+												getCurrentValue(
+													'treemap',
+													'showValues'
+												) || false
+											}
+											onChange={(newValue) => {
+												const treemap =
+													getCurrentValue(
+														'treemap'
+													) || {};
+												updateAttributeForDevice(
+													'treemap',
+													{
+														...treemap,
+														showValues: newValue,
+													}
+												);
+											}}
+										/>
+									</VStack>
+									<VStack spacing={2}>
+										<NumberControl
+											label={__('Label Min Area (px²)')}
+											help={__(
+												'Minimum rectangle area (in square pixels) required to show a label. Increase to hide labels on small rectangles.'
+											)}
+											min={0}
+											max={10000}
+											step={100}
+											value={
+												getCurrentValue(
+													'treemap',
+													'labelMinArea'
+												) ?? 1600
+											}
+											onChange={(value) => {
+												const treemap =
+													getCurrentValue(
+														'treemap'
+													) || {};
+												updateAttributeForDevice(
+													'treemap',
+													{
+														...treemap,
+														labelMinArea: formatNum(
+															value,
+															'integer'
+														),
+													}
+												);
+											}}
+										/>
+									</VStack>
+								</>
+							)}
+						</VStack>
+						{!curated && (
+							<VStack spacing={2}>
+								<ToggleGroupControl
+									__nextHasNoMarginBottom
+									isBlock
+									value={getCurrentValue(
+										'labels',
+										'fontSize'
+									)}
+									label={__('Label Font Size')}
+									onChange={(value) => {
+										updateAttributeForDevice('labels', {
+											fontSize: formatNum(
+												value,
+												'integer'
+											),
+										});
+									}}
 								>
-									<ToggleGroupControl
-										__nextHasNoMarginBottom
-										isBlock
+									<ToggleGroupControlOption
+										label="10px"
+										value={10}
+									/>
+									<ToggleGroupControlOption
+										label="12px"
+										value={12}
+									/>
+									<ToggleGroupControlOption
+										label="14px"
+										value={14}
+									/>
+									<ToggleGroupControlOption
+										label="16px"
+										value={16}
+									/>
+								</ToggleGroupControl>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Select the font size of the label. Default is 10px.'
+										)}
+									</Help>
+								</PanelDescription>
+							</VStack>
+						)}
+						<VStack spacing={2}>
+							<PanelDescription>
+								<StyledLabel>Label Positioning</StyledLabel>
+							</PanelDescription>
+							<Flex>
+								<FlexItem>
+									<NumberControl
+										label={__('DX')}
+										value={getCurrentValue(
+											'labels',
+											'labelPositionDX'
+										)}
+										disabled={positionDisabled}
+										onChange={(value) =>
+											updateAttributeForDevice('labels', {
+												labelPositionDX: formatNum(
+													value,
+													'integer'
+												),
+											})
+										}
+									/>
+								</FlexItem>
+								<FlexItem>
+									<NumberControl
+										label={__('DY')}
+										value={getCurrentValue(
+											'labels',
+											'labelPositionDY'
+										)}
+										disabled={positionDisabled}
+										onChange={(value) =>
+											updateAttributeForDevice('labels', {
+												labelPositionDY: formatNum(
+													value,
+													'integer'
+												),
+											})
+										}
+									/>
+								</FlexItem>
+							</Flex>
+							<PanelDescription>
+								<Help>
+									{positionDisabled
+										? __(
+												'Label positions are algorithmically determined for this chart type. DX/DY offsets are disabled.',
+												'prc-chart-builder'
+											)
+										: __(
+												"Select the position of the label relative to it's parent node, as well as any label units number formatting.",
+												'prc-chart-builder'
+											)}
+								</Help>
+							</PanelDescription>
+						</VStack>
+						{hasCustomPositions && (
+							<VStack spacing={2}>
+								<Button
+									__next40pxDefaultSize
+									variant="secondary"
+									isDestructive
+									onClick={handleResetLabelPositions}
+								>
+									{__('Reset All Label Positions')}
+								</Button>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Remove all custom label positions and return to default positioning.'
+										)}
+									</Help>
+								</PanelDescription>
+							</VStack>
+						)}
+						<VStack spacing={2}>
+							<ToggleControl
+								label={__('Absolute Value')}
+								checked={
+									getCurrentValue(
+										'labels',
+										'absoluteValue'
+									) || false
+								}
+								onChange={(newValue) =>
+									updateAttributeForDevice('labels', {
+										absoluteValue: newValue,
+									})
+								}
+							/>
+							<PanelDescription>
+								<Help>
+									{__(
+										'If the chart is displaying negative values, this will ensure the label is always positive. Often used on bar charts with a diverging axis.'
+									)}
+								</Help>
+							</PanelDescription>
+						</VStack>
+						{!curated && (
+							<>
+								<VStack spacing={2}>
+									<ToggleControl
+										label={__(
+											'Format Value to Locale String'
+										)}
+										checked={
+											getCurrentValue(
+												'labels',
+												'toLocaleString'
+											) || false
+										}
+										onChange={(newValue) =>
+											updateAttributeForDevice('labels', {
+												toLocaleString: newValue,
+											})
+										}
+									/>
+									<PanelDescription>
+										<Help>
+											{__(
+												'If checked, formats number into locale string (eg. 100000 -> 100,000).'
+											)}
+										</Help>
+									</PanelDescription>
+								</VStack>
+								<VStack spacing={2}>
+									<NumberControl
+										label={__('Decimal Places')}
+										value={getCurrentValue(
+											'labels',
+											'toFixedDecimal'
+										)}
+										min={0}
+										max={100}
+										onChange={(value) =>
+											updateAttributeForDevice('labels', {
+												toFixedDecimal: formatNum(
+													value,
+													'integer'
+												),
+												truncateDecimal: false,
+											})
+										}
+									/>
+									<PanelDescription>
+										<Help>
+											{__(
+												'Values render with exactly this many decimal places, so 20 at 3 places reads 20.000. Zero keeps each number as it is.'
+											)}
+										</Help>
+									</PanelDescription>
+								</VStack>
+								<VStack spacing={2}>
+									<NumberControl
+										label={__('Minimum Display Value')}
 										value={
 											getCurrentValue(
 												'labels',
-												'firstLastLabelLayout'
-											) || 'default'
+												'minDisplayValue'
+											) ?? ''
 										}
-										disabled={
-											!getCurrentValue('labels', 'active')
+										min={0}
+										step="any"
+										onChange={(value) =>
+											updateAttributeForDevice('labels', {
+												minDisplayValue:
+													formatOptionalNum(value),
+											})
 										}
-										label={__('First / Last Label Layout')}
+									/>
+									<PanelDescription>
+										<Help>
+											{__(
+												'Values below this read as "<value" instead of rounding to zero. Eg. with 0.1 and one decimal place, 0.04 reads "<0.1" rather than "0.0". Leave empty to format every value normally.'
+											)}
+										</Help>
+									</PanelDescription>
+								</VStack>
+							</>
+						)}
+						<VStack spacing={2}>
+							<TextControl
+								__next40pxDefaultSize
+								label={__('Label Unit')}
+								value={getCurrentValue('labels', 'labelUnit')}
+								onChange={(value) =>
+									updateAttributeForDevice('labels', {
+										labelUnit: value,
+									})
+								}
+							/>
+							<PanelDescription>
+								<Help>
+									{__('Add a unit to the label. eg. % or $')}
+								</Help>
+							</PanelDescription>
+						</VStack>
+						<VStack spacing={2}>
+							<ToggleGroupControl
+								__nextHasNoMarginBottom
+								isBlock
+								value={getCurrentValue(
+									'labels',
+									'labelUnitPosition'
+								)}
+								label="Label Unit Position"
+								onChange={(type) => {
+									updateAttributeForDevice('labels', {
+										labelUnitPosition: type,
+									});
+								}}
+							>
+								<ToggleGroupControlOption
+									label="Start"
+									value="start"
+								/>
+								<ToggleGroupControlOption
+									label="End"
+									value="end"
+								/>
+							</ToggleGroupControl>
+							<PanelDescription>
+								<Help>
+									{__(
+										'Select the position of the label unit relative to the label.'
+									)}
+								</Help>
+							</PanelDescription>
+						</VStack>
+						{('bar' === chartType ||
+							'diverging-bar' === chartType ||
+							'stacked-bar' === chartType ||
+							'exploded-bar' === chartType) && (
+							<>
+								<VStack spacing={2}>
+									<ToggleGroupControl
+										__nextHasNoMarginBottom
+										isBlock
+										value={getCurrentValue(
+											'labels',
+											'labelPositionBar'
+										)}
+										label="Bar Label Position"
 										onChange={(type) => {
 											updateAttributeForDevice('labels', {
-												firstLastLabelLayout: type,
+												labelPositionBar: type,
 											});
 										}}
 									>
 										<ToggleGroupControlOption
-											label={__('Default')}
-											value="default"
+											label="Inside"
+											value="inside"
 										/>
 										<ToggleGroupControlOption
-											label={__('Outside')}
+											label="Center"
+											value="center"
+										/>
+										<ToggleGroupControlOption
+											label="Outside"
 											value="outside"
 										/>
 									</ToggleGroupControl>
 									<PanelDescription>
 										<Help>
 											{__(
-												'Outside places the first label to the left of its point and the last label to the right. DX/DY offsets still apply on top.'
+												'Select the position of the label relative to the bar.'
 											)}
 										</Help>
 									</PanelDescription>
-								</WidePanelItem>
-							)}
-						<ToggleControl
-							label={__('Prevent label overlap (auto)')}
-							help={__(
-								'Automatically nudge labels to reduce overlap. Manual label positions always take priority.'
-							)}
-							checked={
-								getCurrentValue('labels', 'autoDeclutter') ||
-								false
-							}
-							disabled={!getCurrentValue('labels', 'active')}
-							onChange={(newValue) =>
-								updateAttributeForDevice('labels', {
-									autoDeclutter: newValue,
-									...(newValue
-										? {}
-										: { declutterLeaderLines: false }),
-								})
-							}
-						/>
-						{(LINE_CHART_TYPES.includes(chartType) ||
-							chartType === 'scatter' ||
-							chartType === 'dot-plot') && (
-							<ToggleControl
-								label={__('Show leader lines')}
-								help={__(
-									'Draw a line from each data point to its label when auto overlap prevention moves the label.'
-								)}
-								checked={
-									getCurrentValue(
-										'labels',
-										'declutterLeaderLines'
-									) || false
-								}
-								disabled={
-									!getCurrentValue('labels', 'active') ||
-									!getCurrentValue('labels', 'autoDeclutter')
-								}
-								onChange={(newValue) =>
-									updateAttributeForDevice('labels', {
-										declutterLeaderLines: newValue,
-									})
-								}
-							/>
-						)}
-						<ToggleControl
-							label={__('Text outline for legibility')}
-							help={__(
-								'Draw a halo behind each label so it stays readable when it overlaps a line, bar, or shape.'
-							)}
-							checked={
-								getCurrentValue('labels', 'textOutline') ||
-								false
-							}
-							disabled={!getCurrentValue('labels', 'active')}
-							onChange={(newValue) =>
-								updateAttributeForDevice('labels', {
-									textOutline: newValue,
-								})
-							}
-						/>
-						{getCurrentValue('labels', 'textOutline') && (
-							<SelectControl
-								label={__('Outline color')}
-								help={
-									BAR_CHART_TYPES.includes(chartType) ||
-									chartType === 'pie' ||
-									chartType === 'treemap'
-										? __(
-												'Contrast with text is recommended for labels inside bars or colored shapes. Chart background works well when labels float over empty space.'
-											)
-										: __(
-												'Chart background works well when labels float over lines or empty space. Contrast with text is better inside colored shapes.'
-											)
-								}
-								value={
-									getCurrentValue(
-										'labels',
-										'textOutlineMode'
-									) ||
-									(BAR_CHART_TYPES.includes(chartType) ||
-									chartType === 'pie' ||
-									chartType === 'treemap'
-										? 'contrast'
-										: 'background')
-								}
-								options={[
-									{
-										label: __('Chart background'),
-										value: 'background',
-									},
-									{
-										label: __('Contrast with text'),
-										value: 'contrast',
-									},
-								]}
-								disabled={!getCurrentValue('labels', 'active')}
-								onChange={(newValue) =>
-									updateAttributeForDevice('labels', {
-										textOutlineMode: newValue,
-									})
-								}
-							/>
-						)}
-						{chartType === 'pie' && (
-							<ToolsPanelItem
-								hasValue={() => true}
-								label={__('Category Labels Active')}
-								isShownByDefault
-								panelId={clientId}
-							>
-								<ToggleControl
-									label={__('Category Labels Active')}
-									checked={
-										getCurrentValue(
-											'pie',
-											'showCategoryLabels'
-										) || false
-									}
-									onChange={(newValue) => {
-										const pie =
-											getCurrentValue('pie') || {};
-										updateAttributeForDevice('pie', {
-											...pie,
-											showCategoryLabels: newValue,
-										});
-									}}
-								/>
-							</ToolsPanelItem>
-						)}
-						{chartType === 'treemap' && (
-							<>
-								<ToolsPanelItem
-									hasValue={() => true}
-									label={__('Show Values in Rectangles')}
-									isShownByDefault
-									panelId={clientId}
-								>
-									<ToggleControl
-										label={__('Show Values in Rectangles')}
-										help={__(
-											'Display the numeric data value inside each rectangle below the name.'
-										)}
-										checked={
-											getCurrentValue(
-												'treemap',
-												'showValues'
-											) || false
-										}
-										disabled={
-											!getCurrentValue('labels', 'active')
-										}
-										onChange={(newValue) => {
-											const treemap =
-												getCurrentValue('treemap') ||
-												{};
-											updateAttributeForDevice(
-												'treemap',
-												{
-													...treemap,
-													showValues: newValue,
-												}
-											);
-										}}
-									/>
-								</ToolsPanelItem>
-								<ToolsPanelItem
-									hasValue={() => true}
-									label={__('Label Min Area')}
-									isShownByDefault
-									panelId={clientId}
-								>
+								</VStack>
+								<VStack spacing={2}>
 									<NumberControl
-										label={__('Label Min Area (px²)')}
-										help={__(
-											'Minimum rectangle area (in square pixels) required to show a label. Increase to hide labels on small rectangles.'
+										label={__('Label Cutoff')}
+										value={getCurrentValue(
+											'labels',
+											'labelCutoff'
 										)}
-										min={0}
-										max={10000}
-										step={100}
-										value={
-											getCurrentValue(
-												'treemap',
-												'labelMinArea'
-											) ?? 1600
-										}
 										disabled={
-											!getCurrentValue('labels', 'active')
-										}
-										onChange={(value) => {
-											const treemap =
-												getCurrentValue('treemap') ||
-												{};
-											updateAttributeForDevice(
-												'treemap',
-												{
-													...treemap,
-													labelMinArea: formatNum(
-														value,
-														'integer'
-													),
-												}
-											);
-										}}
-									/>
-								</ToolsPanelItem>
-							</>
-						)}
-					</ToolsPanelItem>
-					{!curated && (
-						<WidePanelItem
-							hasValue={() =>
-								getCurrentValue('labels', 'fontSize')
-							}
-							label={__('Label Font Size')}
-							panelId={clientId}
-						>
-							<ToggleGroupControl
-								__nextHasNoMarginBottom
-								isBlock
-								value={getCurrentValue('labels', 'fontSize')}
-								label={__('Label Font Size')}
-								disabled={!getCurrentValue('labels', 'active')}
-								onChange={(value) => {
-									updateAttributeForDevice('labels', {
-										fontSize: formatNum(value, 'integer'),
-									});
-								}}
-							>
-								<ToggleGroupControlOption
-									label="10px"
-									value={10}
-								/>
-								<ToggleGroupControlOption
-									label="12px"
-									value={12}
-								/>
-								<ToggleGroupControlOption
-									label="14px"
-									value={14}
-								/>
-								<ToggleGroupControlOption
-									label="16px"
-									value={16}
-								/>
-							</ToggleGroupControl>
-							<PanelDescription>
-								<Help>
-									{__(
-										'Select the font size of the label. Default is 10px.'
-									)}
-								</Help>
-							</PanelDescription>
-						</WidePanelItem>
-					)}
-					<WidePanelItem
-						hasValue={() =>
-							getCurrentValue('labels', 'labelPositionDX')
-						}
-						label={__('Label Positioning')}
-						panelId={clientId}
-						isShownByDefault
-					>
-						<PanelDescription>
-							<StyledLabel>Label Positioning</StyledLabel>
-						</PanelDescription>
-						<Flex>
-							<FlexItem>
-								<NumberControl
-									label={__('DX')}
-									value={getCurrentValue(
-										'labels',
-										'labelPositionDX'
-									)}
-									disabled={
-										!getCurrentValue('labels', 'active') ||
-										positionDisabled
-									}
-									onChange={(value) =>
-										updateAttributeForDevice('labels', {
-											labelPositionDX: formatNum(
-												value,
-												'integer'
-											),
-										})
-									}
-								/>
-							</FlexItem>
-							<FlexItem>
-								<NumberControl
-									label={__('DY')}
-									value={getCurrentValue(
-										'labels',
-										'labelPositionDY'
-									)}
-									disabled={
-										!getCurrentValue('labels', 'active') ||
-										positionDisabled
-									}
-									onChange={(value) =>
-										updateAttributeForDevice('labels', {
-											labelPositionDY: formatNum(
-												value,
-												'integer'
-											),
-										})
-									}
-								/>
-							</FlexItem>
-						</Flex>
-						<PanelDescription>
-							<Help>
-								{positionDisabled
-									? __(
-											'Label positions are algorithmically determined for this chart type. DX/DY offsets are disabled.',
-											'prc-chart-builder'
-										)
-									: __(
-											"Select the position of the label relative to it's parent node, as well as any label units number formatting.",
-											'prc-chart-builder'
-										)}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-					{hasCustomPositions && (
-						<WidePanelItem
-							hasValue={() => hasCustomPositions}
-							label={__('Reset Custom Positions')}
-							panelId={clientId}
-						>
-							<Button
-								variant="secondary"
-								isDestructive
-								onClick={handleResetLabelPositions}
-								disabled={!getCurrentValue('labels', 'active')}
-							>
-								{__('Reset All Label Positions')}
-							</Button>
-							<PanelDescription>
-								<Help>
-									{__(
-										'Remove all custom label positions and return to default positioning.'
-									)}
-								</Help>
-							</PanelDescription>
-						</WidePanelItem>
-					)}
-					<WidePanelItem
-						hasValue={() =>
-							getCurrentValue('labels', 'absoluteValue')
-						}
-						label={__('Absolute Value')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<ToggleControl
-							label={__('Absolute Value')}
-							checked={
-								getCurrentValue('labels', 'absoluteValue') ||
-								false
-							}
-							disabled={!getCurrentValue('labels', 'active')}
-							onChange={(newValue) =>
-								updateAttributeForDevice('labels', {
-									absoluteValue: newValue,
-								})
-							}
-						/>
-						<PanelDescription>
-							<Help>
-								{__(
-									'If the chart is displaying negative values, this will ensure the label is always positive. Often used on bar charts with a diverging axis.'
-								)}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-					{!curated && (
-						<>
-							<WidePanelItem
-								hasValue={() =>
-									getCurrentValue('labels', 'toLocaleString')
-								}
-								label={__('Format Value')}
-								panelId={clientId}
-								isShownByDefault
-							>
-								<ToggleControl
-									label={__('Format Value to Locale String')}
-									checked={
-										getCurrentValue(
-											'labels',
-											'toLocaleString'
-										) || false
-									}
-									disabled={
-										!getCurrentValue('labels', 'active')
-									}
-									onChange={(newValue) =>
-										updateAttributeForDevice('labels', {
-											toLocaleString: newValue,
-										})
-									}
-								/>
-								<PanelDescription>
-									<Help>
-										{__(
-											'If checked, formats number into locale string (eg. 100000 -> 100,000).'
-										)}
-									</Help>
-								</PanelDescription>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() =>
-									getCurrentValue('labels', 'toFixedDecimal')
-								}
-								label={__('Decimal Places')}
-								panelId={clientId}
-								isShownByDefault
-							>
-								<NumberControl
-									label={__('Decimal Places')}
-									value={getCurrentValue(
-										'labels',
-										'toFixedDecimal'
-									)}
-									disabled={
-										!getCurrentValue('labels', 'active')
-									}
-									min={0}
-									max={100}
-									onChange={(value) =>
-										updateAttributeForDevice('labels', {
-											toFixedDecimal: formatNum(
-												value,
-												'integer'
-											),
-											truncateDecimal: false,
-										})
-									}
-								/>
-								<PanelDescription>
-									<Help>
-										{__(
-											'Values render with exactly this many decimal places, so 20 at 3 places reads 20.000. Zero keeps each number as it is.'
-										)}
-									</Help>
-								</PanelDescription>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() =>
-									null !==
-									(getCurrentValue(
-										'labels',
-										'minDisplayValue'
-									) ?? null)
-								}
-								label={__('Minimum Display Value')}
-								panelId={clientId}
-							>
-								<NumberControl
-									label={__('Minimum Display Value')}
-									value={
-										getCurrentValue(
-											'labels',
-											'minDisplayValue'
-										) ?? ''
-									}
-									disabled={
-										!getCurrentValue('labels', 'active')
-									}
-									min={0}
-									step="any"
-									onChange={(value) =>
-										updateAttributeForDevice('labels', {
-											minDisplayValue:
-												formatOptionalNum(value),
-										})
-									}
-								/>
-								<PanelDescription>
-									<Help>
-										{__(
-											'Values below this read as "<value" instead of rounding to zero. Eg. with 0.1 and one decimal place, 0.04 reads "<0.1" rather than "0.0". Leave empty to format every value normally.'
-										)}
-									</Help>
-								</PanelDescription>
-							</WidePanelItem>
-						</>
-					)}
-					<WidePanelItem
-						hasValue={() => getCurrentValue('labels', 'labelUnit')}
-						label={__('Label Unit')}
-						panelId={clientId}
-						isShownByDefault
-					>
-						<TextControl
-							label={__('Label Unit')}
-							value={getCurrentValue('labels', 'labelUnit')}
-							disabled={!getCurrentValue('labels', 'active')}
-							onChange={(value) =>
-								updateAttributeForDevice('labels', {
-									labelUnit: value,
-								})
-							}
-						/>
-						<PanelDescription>
-							<Help>
-								{__('Add a unit to the label. eg. % or $')}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() =>
-							getCurrentValue('labels', 'labelUnitPosition')
-						}
-						label={__('Label Unit Position')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<ToggleGroupControl
-							__nextHasNoMarginBottom
-							isBlock
-							value={getCurrentValue(
-								'labels',
-								'labelUnitPosition'
-							)}
-							label="Label Unit Position"
-							onChange={(type) => {
-								updateAttributeForDevice('labels', {
-									labelUnitPosition: type,
-								});
-							}}
-						>
-							<ToggleGroupControlOption
-								label="Start"
-								value="start"
-							/>
-							<ToggleGroupControlOption label="End" value="end" />
-						</ToggleGroupControl>
-						<PanelDescription>
-							<Help>
-								{__(
-									'Select the position of the label unit relative to the label.'
-								)}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-					{('bar' === chartType ||
-						'diverging-bar' === chartType ||
-						'stacked-bar' === chartType ||
-						'exploded-bar' === chartType) && (
-						<>
-							<WidePanelItem
-								hasValue={() =>
-									getCurrentValue(
-										'labels',
-										'labelPositionBar'
-									)
-								}
-								label={__('Label Position')}
-								isShownByDefault
-								panelId={clientId}
-							>
-								<ToggleGroupControl
-									__nextHasNoMarginBottom
-									isBlock
-									value={getCurrentValue(
-										'labels',
-										'labelPositionBar'
-									)}
-									disabled={
-										!getCurrentValue('labels', 'active')
-									}
-									label="Bar Label Position"
-									onChange={(type) => {
-										updateAttributeForDevice('labels', {
-											labelPositionBar: type,
-										});
-									}}
-								>
-									<ToggleGroupControlOption
-										label="Inside"
-										value="inside"
-									/>
-									<ToggleGroupControlOption
-										label="Center"
-										value="center"
-									/>
-									<ToggleGroupControlOption
-										label="Outside"
-										value="outside"
-									/>
-								</ToggleGroupControl>
-								<PanelDescription>
-									<Help>
-										{__(
-											'Select the position of the label relative to the bar.'
-										)}
-									</Help>
-								</PanelDescription>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => {
-									const cutoff = getCurrentValue(
-										'labels',
-										'labelCutoff'
-									);
-									return cutoff !== null && cutoff !== '';
-								}}
-								label={__('Label Cutoff')}
-								isShownByDefault
-								panelId={clientId}
-							>
-								<NumberControl
-									label={__('Label Cutoff')}
-									value={getCurrentValue(
-										'labels',
-										'labelCutoff'
-									)}
-									disabled={
-										!getCurrentValue('labels', 'active') ||
-										'outside' ===
+											'outside' ===
 											getCurrentValue(
 												'labels',
 												'labelPositionBar'
 											)
-									}
-									onChange={(value) =>
-										updateAttributeForDevice('labels', {
-											labelCutoff: formatNum(
-												value,
-												'integer'
-											),
-										})
-									}
-								/>
-								<PanelDescription>
-									<Help>
-										{__(
-											'Hide labels that are smaller than this value. Use the device preview to set a different cutoff for mobile or tablet.'
-										)}
-									</Help>
-								</PanelDescription>
-							</WidePanelItem>
-						</>
-					)}
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Label Color')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<SelectControl
-							label={__('Label Color')}
-							value={getCurrentValue('labels', 'color')}
-							disabled={!getCurrentValue('labels', 'active')}
-							onChange={(value) =>
-								updateAttributeForDevice('labels', {
-									color: value,
-								})
-							}
-							options={[
-								{ label: __('Contrast'), value: 'contrast' },
-								{ label: __('Inherit'), value: 'inherit' },
-								{ label: __('Black'), value: 'black' },
-								{ label: __('White'), value: 'white' },
-							]}
-						/>
-						<PanelDescription>
-							<Help>
-								{__(
-									'Select the color of the label. Contrast will determine color based on bar background for optimal contrast.'
-								)}
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-				</ToolsPanel>
+										}
+										onChange={(value) =>
+											updateAttributeForDevice('labels', {
+												labelCutoff: formatNum(
+													value,
+													'integer'
+												),
+											})
+										}
+									/>
+									<PanelDescription>
+										<Help>
+											{__(
+												'Hide labels that are smaller than this value. Use the device preview to set a different cutoff for mobile or tablet.'
+											)}
+										</Help>
+									</PanelDescription>
+								</VStack>
+							</>
+						)}
+						<VStack spacing={2}>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Label Color')}
+								value={getCurrentValue('labels', 'color')}
+								onChange={(value) =>
+									updateAttributeForDevice('labels', {
+										color: value,
+									})
+								}
+								options={[
+									{
+										label: __('Contrast'),
+										value: 'contrast',
+									},
+									{
+										label: __('Inherit'),
+										value: 'inherit',
+									},
+									{ label: __('Black'), value: 'black' },
+									{ label: __('White'), value: 'white' },
+								]}
+							/>
+							<PanelDescription>
+								<Help>
+									{__(
+										'Select the color of the label. Contrast will determine color based on bar background for optimal contrast.'
+									)}
+								</Help>
+							</PanelDescription>
+						</VStack>
+					</VStack>
+				)}
 			</PanelBody>
 		</div>
 	);

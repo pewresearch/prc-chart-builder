@@ -10,6 +10,7 @@
 import { findAlignments, generateLabelId } from './utils/alignment-utils';
 import { translateDrawing } from './utils/drawing-utils';
 import * as drawingManipulation from './utils/drawing-manipulation';
+import { viewportKeyedMapUpdate } from '../utils/viewport-keyed-map';
 import {
 	POSITION_DISABLED_CHART_TYPES,
 	ANNOTATION_POPOVER_CHART_TYPES,
@@ -772,8 +773,8 @@ export function createWpEditorFunctions({
 
 					/**
 					 * Called when a detached legend item drag ends.
-					 * Writes the final position back to customLegendLabels[categoryValue].offsetX/offsetY
-					 * via setAttributes (top-level flat attribute, same pattern as customTickLabels).
+					 * Writes the final position to customLegendLabels[categoryValue].offsetX/offsetY
+					 * for the current viewport.
 					 * Coordinates are in layout space relative to the item's positioningContext
 					 * ('chart' = full chart area, 'inner' = data area only) — ClickableLegend
 					 * converts from display pixels before calling this handler.
@@ -786,17 +787,23 @@ export function createWpEditorFunctions({
 						if (setIsDragging) {
 							setIsDragging(false);
 						}
-						const current = attrs?.customLegendLabels || {};
-						setAttributes({
-							customLegendLabels: {
-								...current,
-								[categoryValue]: {
-									...(current[categoryValue] ?? {}),
-									offsetX: Math.round(finalX),
-									offsetY: Math.round(finalY),
-								},
-							},
-						});
+						const current =
+							getCurrentValue('customLegendLabels') || {};
+						setAttributes(
+							viewportKeyedMapUpdate(
+								attrs,
+								deviceType,
+								'customLegendLabels',
+								{
+									...current,
+									[categoryValue]: {
+										...(current[categoryValue] ?? {}),
+										offsetX: Math.round(finalX),
+										offsetY: Math.round(finalY),
+									},
+								}
+							)
+						);
 						if (toggleSelection) {
 							toggleSelection(true);
 						}
@@ -847,17 +854,23 @@ export function createWpEditorFunctions({
 						if (setIsDragging) {
 							setIsDragging(false);
 						}
-						const current = attrs?.customPanelTitles || {};
-						setAttributes({
-							customPanelTitles: {
-								...current,
-								[panelKey]: {
-									...(current[panelKey] ?? {}),
-									offsetX: Math.round(finalX),
-									offsetY: Math.round(finalY),
-								},
-							},
-						});
+						const current =
+							getCurrentValue('customPanelTitles') || {};
+						setAttributes(
+							viewportKeyedMapUpdate(
+								attrs,
+								deviceType,
+								'customPanelTitles',
+								{
+									...current,
+									[panelKey]: {
+										...(current[panelKey] ?? {}),
+										offsetX: Math.round(finalX),
+										offsetY: Math.round(finalY),
+									},
+								}
+							)
+						);
 						if (toggleSelection) {
 							toggleSelection(true);
 						}

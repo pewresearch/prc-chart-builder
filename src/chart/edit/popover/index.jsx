@@ -74,9 +74,9 @@ function getPanelTitle(elementType) {
 		case ELEMENT_TYPES.ERROR_BAR:
 			return __('Error Bar Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.DIFF_COLUMN_HEADER:
-			return __('Diff Column Header', 'prc-chart-builder');
+			return __('Additional Column Header', 'prc-chart-builder');
 		case ELEMENT_TYPES.DIFF_COLUMN_LABEL:
-			return __('Diff Column Cell', 'prc-chart-builder');
+			return __('Additional Column Cell', 'prc-chart-builder');
 		case ELEMENT_TYPES.LABEL:
 		default:
 			return __('Label Settings', 'prc-chart-builder');

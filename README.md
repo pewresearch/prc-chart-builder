@@ -1,6 +1,6 @@
 # PRC Chart Builder
 
-Version 3.15.0
+Version 3.16.0
 
 A WordPress plugin for building, managing, and embedding interactive SVG charts on the Pew Research Center platform. Charts are authored as a custom post type (`chart`) using the Gutenberg block editor and rendered via the PRC Charting Library (`prc-charting-library`), which is built on `@visx` and D3.
 
@@ -70,6 +70,19 @@ See `[docs/release-notes/3_14_0.md](../../docs/plugins/prc-chart-builder/release
 | Rich text labels          | Labels, ticks, legends, axis titles, annotations, and panel titles take inline formatting    |
 
 See `[docs/release-notes/3_15_0.md](../../docs/plugins/prc-chart-builder/release-notes/3_15_0.md)` for the full 3.15.0 release notes.
+
+### Key systems introduced in 3.16.0
+
+| System                   | What it does                                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| Wizard viewport controls | Desktop, Tablet, and Mobile buttons under the Style Chart preview edit that viewport's values      |
+| Panel open state         | Wizard panels open one at a time; right rail panels persist per user (`InspectorFocusProvider`)    |
+| Toggle-gated settings    | Panels show their toggle first and hide dependent settings while it is off                         |
+| Theme swatch names       | Pickers match swatches by theme.json slug; palettes save `light-dark()` values                     |
+| Low-contrast warnings    | Color pickers warn below 4.5:1 for text and 3:1 for lines and shapes against the chart background  |
+| Custom color resolution  | Series, element, segment, and panel style colors resolve to `light-dark()` so custom colors render |
+
+See `[docs/release-notes/3_16_0.md](../../docs/plugins/prc-chart-builder/release-notes/3_16_0.md)` for the full 3.16.0 release notes.
 
 ---
 
@@ -174,7 +187,7 @@ wp prc-chart-builder font-tokens-migrate --batch-size=100 --sleep=1
 | [viewport breakpoints](../../docs/plugins/prc-chart-builder/viewport-breakpoints.md) | Breakpoint values, detection logic, and fallback behavior         |
 | [reactive store](../../docs/plugins/prc-chart-builder/reactive-store.md)             | The `prc-chart-builder/chart` interactivity store and its actions |
 | [console helpers](../../docs/plugins/prc-chart-builder/console-helpers.md)           | `window.prcChartBuilder.*` devtools handles                       |
-| [release notes](../../docs/plugins/prc-chart-builder/release-notes/)                 | Per-version release notes (3.5.0 → 3.14.0)                        |
+| [release notes](../../docs/plugins/prc-chart-builder/release-notes/)                 | Per-version release notes (3.5.0 → 3.16.0)                        |
 | [element popover README](src/chart/edit/popover/panels/README.md)                    | Element popover system internals and extension guide              |
 
 ---

@@ -5,22 +5,27 @@
 
 // TODO: add to prc scripts so that it's available to all components
 import { useSelect } from '@wordpress/data';
-import { store as editorStore } from '@wordpress/editor';
 import { useCallback } from '@wordpress/element';
 
 /**
- * Get the current device type from WordPress editor
+ * Get the current device type: the chart wizard's preview viewport while it
+ * sets one, otherwise the WordPress editor device type.
  * @return {string} 'desktop' | 'tablet' | 'mobile'
  */
 export function useDeviceType() {
-	const deviceType = useSelect((select) => {
+	return useSelect((select) => {
+		// Read by store name: the controller and chart blocks ship as separate
+		// bundles, so a module-level React context would not be shared.
+		const previewDeviceType = select(
+			'prc-chart-builder/controller'
+		)?.getPreviewDeviceType?.();
+		if (previewDeviceType) {
+			return previewDeviceType;
+		}
 		// Admin wizard / non-editor hosts may not register core/editor.
-		const editor = select(editorStore);
-		const type = editor?.getDeviceType?.();
+		const type = select('core/editor')?.getDeviceType?.();
 		return type ? type.toLowerCase() : 'desktop';
 	}, []);
-
-	return deviceType || 'desktop';
 }
 
 /**

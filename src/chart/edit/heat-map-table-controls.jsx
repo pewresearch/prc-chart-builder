@@ -5,16 +5,15 @@ import {
 	__experimentalNumberControl as NumberControl,
 	PanelBody,
 	SelectControl,
-	__experimentalToolsPanel as ToolsPanel,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
 import { formatNum } from '../utils/helpers';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
-import { WidePanelItem } from './control-ui';
 
-function HeatMapTableControls({ attributes, setAttributes, clientId }) {
+function HeatMapTableControls({ attributes, setAttributes }) {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
 		setAttributes
@@ -39,20 +38,8 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 				opened={isOpen}
 				onToggle={onToggle}
 			>
-				<ToolsPanel
-					label={__('Attributes')}
-					panelId={clientId}
-					style={{
-						paddingLeft: '0',
-						paddingRight: '0',
-					}}
-				>
-					<WidePanelItem
-						hasValue={() => cellGap !== 0}
-						label={__('Cell Gap')}
-						isShownByDefault
-						panelId={clientId}
-					>
+				<VStack spacing={4}>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Cell Gap (px)')}
 							help={__('Space between cells.')}
@@ -67,13 +54,8 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => cellRadius !== 0}
-						label={__('Cell Radius')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					</VStack>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Cell Radius (px)')}
 							help={__('Corner radius for each cell.')}
@@ -89,13 +71,8 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => emptyFill !== '#F5F5F5'}
-						label={__('Empty Fill')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					</VStack>
+					<VStack spacing={2}>
 						<SelectControl
 							__next40pxDefaultSize
 							label={__('Empty Cell Color')}
@@ -109,13 +86,8 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 								updateHeatMapTable({ emptyFill: value });
 							}}
 						/>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => minCellWidth !== 40}
-						label={__('Minimum Cell Width')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					</VStack>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Minimum Cell Width (px)')}
 							withInputField
@@ -130,13 +102,8 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
-					<WidePanelItem
-						hasValue={() => minCellHeight !== 28}
-						label={__('Minimum Cell Height')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					</VStack>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Minimum Cell Height (px)')}
 							withInputField
@@ -151,8 +118,8 @@ function HeatMapTableControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
-				</ToolsPanel>
+					</VStack>
+				</VStack>
 			</PanelBody>
 		</div>
 	);

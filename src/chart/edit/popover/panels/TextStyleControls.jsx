@@ -60,6 +60,7 @@ const TEXT_OUTLINE_HELP = __(
  * @param {string}          [props.colorField]            - values key for color (fill or color)
  * @param {string}          [props.colorPanelTitle]
  * @param {string}          [props.colorLabel]
+ * @param {string|false}    [props.contrast]              - false for labels drawn on marks, whose background is not the chart's
  * @param {boolean}         [props.showTextOutline]
  * @param {string}          [props.textOutlineHelp]
  * @param {boolean}         [props.hasCustomizations]
@@ -82,6 +83,7 @@ export function TextStyleControls({
 	colorField = 'fill',
 	colorPanelTitle = __('Text Color', 'prc-chart-builder'),
 	colorLabel = __('Color', 'prc-chart-builder'),
+	contrast = 'text',
 	showTextOutline = false,
 	textOutlineHelp = TEXT_OUTLINE_HELP,
 	hasCustomizations = false,
@@ -204,6 +206,7 @@ export function TextStyleControls({
 						value: colorValue,
 						onChange: (value) => onChange(colorField, value ?? ''),
 						label: colorLabel,
+						contrast,
 					},
 				]}
 			/>

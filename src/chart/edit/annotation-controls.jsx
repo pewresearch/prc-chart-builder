@@ -27,19 +27,11 @@ import {
 	__experimentalNumberControl as NumberControl,
 	PanelBody,
 	SelectControl,
-	__experimentalSpacer as Spacer,
 	ToggleControl,
-	Tooltip,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import {
-	chevronDown,
-	chevronUp,
-	copy,
-	info,
-	plus,
-	trash,
-} from '@wordpress/icons';
+import { chevronDown, chevronUp, copy, plus, trash } from '@wordpress/icons';
 
 /**
  * Internal dependencies
@@ -50,6 +42,7 @@ import {
 	getAnnotationDrawerTitle,
 	getFocusAfterClone,
 } from './annotation-clipboard';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 import { StyledLabel } from './control-ui';
 import {
 	useFocusedPanel,
@@ -58,7 +51,7 @@ import {
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { RichTextField } from './popover/panels/RichTextField';
 import { getSmallMultiplesPanelKeys } from './popover/utils';
-import ChartPanelColorSettings from './chart-panel-color-settings';
+import WizardControlTip from '../../shared/wizard-ui/wizard-control-tip';
 
 function AnnotationDrawerItem({
 	index,
@@ -142,36 +135,25 @@ function AnnotationDrawerItem({
 							'prc-chart-builder'
 						)}
 					/>
-					<StyledLabel>
+					<StyledLabel className="prc-chart-modal__control-label-with-tip">
 						{__('Position', 'prc-chart-builder')}
-						<Tooltip
-							delay={300}
-							hideOnClick={false}
+						<WizardControlTip
+							label={__(
+								'Help: annotation position',
+								'prc-chart-builder'
+							)}
 							text={
 								hasPanelKeys
 									? __(
-											'Chart: full graphic. Inner: data area. Panel: full cell or plot area; travels with the cell on restack.'
+											'Chart: full graphic. Inner: data area. Panel: full cell or plot area; travels with the cell on restack.',
+											'prc-chart-builder'
 										)
 									: __(
-											'Chart: positions relative to the entire chart including axes and padding (eg. use for titles, etc.). Data Area: positions relative to the chart data area (eg. use if annotating a specific data point).'
+											'Chart: positions relative to the entire chart including axes and padding (eg. use for titles, etc.). Data Area: positions relative to the chart data area (eg. use if annotating a specific data point).',
+											'prc-chart-builder'
 										)
 							}
-						>
-							<Button
-								className="prc-chart-modal__control-tip"
-								icon={info}
-								iconSize={16}
-								label={__(
-									'About chart width',
-									'prc-chart-builder'
-								)}
-								// `label` alone makes Button render its own
-								// tooltip, which races the wrapper below it.
-								showTooltip={false}
-								size="small"
-								variant="tertiary"
-							/>
-						</Tooltip>
+						/>
 					</StyledLabel>
 					<SelectControl
 						__next40pxDefaultSize
@@ -379,6 +361,7 @@ function AnnotationDrawerItem({
 									updateAnnotation(index, 'fill', val ?? '');
 								},
 								label: __('Text Color'),
+								contrast: 'text',
 							},
 						]}
 					/>
@@ -392,7 +375,7 @@ function AnnotationDrawerItem({
 						max={1}
 						step={0.1}
 					/>
-					<Spacer marginTop={2} marginBottom={4}>
+					<VStack spacing={2}>
 						<Button
 							__next40pxDefaultSize
 							isDestructive
@@ -404,7 +387,7 @@ function AnnotationDrawerItem({
 						>
 							{__('Delete Annotation', 'prc-chart-builder')}
 						</Button>
-					</Spacer>
+					</VStack>
 				</div>
 			)}
 		</>
@@ -419,7 +402,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 	const { selectedAnnotationIndex, setSelectedAnnotationIndex } =
 		useInspectorFocus() ?? {};
 
-	const annotationsActive = getCurrentValue('annotations', 'active');
+	const annotationsActive = Boolean(getCurrentValue('annotations', 'active'));
 	const items = getCurrentValue('annotations', 'items') || [];
 	const layoutType = getCurrentValue('layout', 'type');
 	const panelKeys =
@@ -537,6 +520,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 		updateAttributeForDevice('annotations', {
 			items: [...currentItems, newAnnotation],
 		});
+		setSelectedAnnotationIndex?.(currentItems.length);
 	};
 
 	const duplicateAnnotation = (sourceIndex) => {
@@ -560,41 +544,46 @@ function AnnotationControls({ attributes, setAttributes }) {
 				opened={isOpen}
 				onToggle={onToggle}
 			>
-				<Spacer marginTop={4} marginBottom={4}>
+				<VStack spacing={2}>
 					<ToggleControl
 						label={__('Annotations Active')}
-						checked={annotationsActive || false}
+						checked={annotationsActive}
 						onChange={(newValue) =>
 							updateAttributeForDevice('annotations', {
 								active: newValue,
 							})
 						}
 					/>
-				</Spacer>
+				</VStack>
+				{annotationsActive && (
+					<>
+						{items.map((annotation, index) => (
+							<AnnotationDrawerItem
+								key={`${deviceType}-annotation-${rowKeysRef.current[index]}`}
+								index={index}
+								annotation={annotation}
+								selectedAnnotationIndex={
+									selectedAnnotationIndex
+								}
+								hasPanelKeys={hasPanelKeys}
+								panelKeys={panelKeys}
+								fontFamilyOptions={fontFamilyOptions}
+								updateAnnotation={updateAnnotation}
+								deleteAnnotation={deleteAnnotation}
+								onDuplicate={duplicateAnnotation}
+							/>
+						))}
 
-				{items.map((annotation, index) => (
-					<AnnotationDrawerItem
-						key={`${deviceType}-annotation-${rowKeysRef.current[index]}`}
-						index={index}
-						annotation={annotation}
-						selectedAnnotationIndex={selectedAnnotationIndex}
-						hasPanelKeys={hasPanelKeys}
-						panelKeys={panelKeys}
-						fontFamilyOptions={fontFamilyOptions}
-						updateAnnotation={updateAnnotation}
-						deleteAnnotation={deleteAnnotation}
-						onDuplicate={duplicateAnnotation}
-					/>
-				))}
-
-				<Button
-					__next40pxDefaultSize
-					icon={plus}
-					variant="secondary"
-					onClick={addAnnotation}
-				>
-					Add New Annotation
-				</Button>
+						<Button
+							__next40pxDefaultSize
+							icon={plus}
+							variant="secondary"
+							onClick={addAnnotation}
+						>
+							Add New Annotation
+						</Button>
+					</>
+				)}
 			</PanelBody>
 		</div>
 	);

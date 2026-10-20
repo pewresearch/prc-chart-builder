@@ -11,7 +11,7 @@ import {
 	RangeControl,
 	SelectControl,
 	ToggleControl,
-	__experimentalToolsPanel as ToolsPanel,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
@@ -27,14 +27,14 @@ import { BUBBLE_MAP_CHART_TYPES } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
-import { WidePanelItem, StyledLabel, Help } from './control-ui';
+import { StyledLabel, Help } from './control-ui';
 import ChartPanelColorSettings from './chart-panel-color-settings';
 
 // Map projection presets — single source of truth lives in
 // `@prc/charting-utilities` (MAP_REGION_PRESETS).
 const MAP_PROJECTION_PRESETS = MAP_REGION_PRESETS;
 
-function MapControls({ attributes, setAttributes, clientId }) {
+function MapControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -83,20 +83,8 @@ function MapControls({ attributes, setAttributes, clientId }) {
 	return (
 		<div ref={panelRef}>
 			<PanelBody title={__('Map')} opened={isOpen} onToggle={onToggle}>
-				<ToolsPanel
-					label={__('Attributes')}
-					panelId={clientId}
-					style={{
-						paddingLeft: '0',
-						paddingRight: '0',
-					}}
-				>
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Boundaries')}
-						isShownByDefault
-						panelId={clientId}
-					>
+				<VStack spacing={4}>
+					<VStack spacing={2}>
 						{'map-usa-counties' === chartType && (
 							<>
 								<ToggleControl
@@ -147,6 +135,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 											pathBackgroundFill: value ?? '',
 										}),
 									label: __('Background Fill'),
+									contrast: false,
 								},
 								{
 									value: getCurrentValue('map', 'pathStroke'),
@@ -155,6 +144,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 											pathStroke: value ?? '',
 										}),
 									label: __('Stroke'),
+									contrast: false,
 								},
 							]}
 						/>
@@ -170,17 +160,12 @@ function MapControls({ attributes, setAttributes, clientId }) {
 							max={10}
 							step={0.1}
 						/>
-					</WidePanelItem>
+					</VStack>
 					{/* Bubble mode controls — visible when Map Style is set to Bubble */}
 					{BUBBLE_MAP_CHART_TYPES.includes(chartType) &&
 						isBubbleMode && (
 							<>
-								<WidePanelItem
-									hasValue={() => true}
-									label={__('Bubble Radius')}
-									isShownByDefault
-									panelId={clientId}
-								>
+								<VStack spacing={2}>
 									<StyledLabel>
 										{__('Radius Range')}
 									</StyledLabel>
@@ -261,13 +246,8 @@ function MapControls({ attributes, setAttributes, clientId }) {
 											'Square-root scaled — circle area is proportional to value.'
 										)}
 									</Help>
-								</WidePanelItem>
-								<WidePanelItem
-									hasValue={() => true}
-									label={__('Bubble Opacity')}
-									isShownByDefault
-									panelId={clientId}
-								>
+								</VStack>
+								<VStack spacing={2}>
 									<RangeControl
 										__next40pxDefaultSize
 										label={__('Opacity')}
@@ -292,19 +272,14 @@ function MapControls({ attributes, setAttributes, clientId }) {
 											});
 										}}
 									/>
-								</WidePanelItem>
+								</VStack>
 							</>
 						)}
 					{/* Projection Controls - for World Map (Robinson + orthographic globe) */}
 					{('map-world' === chartType ||
 						'map-world-orthographic' === chartType) && (
 						<>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Region Preset')}
-								isShownByDefault={true}
-								panelId={clientId}
-							>
+							<VStack spacing={2}>
 								<SelectControl
 									__next40pxDefaultSize
 									label={__('Select Region')}
@@ -325,13 +300,8 @@ function MapControls({ attributes, setAttributes, clientId }) {
 										'Choose a region preset or select "Custom" to manually adjust projection settings.'
 									)}
 								/>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Projection View Controls')}
-								isShownByDefault={false}
-								panelId={clientId}
-							>
+							</VStack>
+							<VStack spacing={2}>
 								<p
 									style={{
 										fontSize: '12px',
@@ -387,13 +357,8 @@ function MapControls({ attributes, setAttributes, clientId }) {
 										'Latitude: -90 to 90 (0 = Equator)'
 									)}
 								/>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Rotation Controls')}
-								isShownByDefault={false}
-								panelId={clientId}
-							>
+							</VStack>
+							<VStack spacing={2}>
 								<NumberControl
 									label={__('Rotate Lambda (Yaw)')}
 									value={getCurrentValue(
@@ -455,13 +420,8 @@ function MapControls({ attributes, setAttributes, clientId }) {
 									step={1}
 									help={__('Axial rotation')}
 								/>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Scale Control')}
-								isShownByDefault={false}
-								panelId={clientId}
-							>
+							</VStack>
+							<VStack spacing={2}>
 								<NumberControl
 									label={__('Custom Scale Multiplier')}
 									value={getCurrentValue(
@@ -484,14 +444,9 @@ function MapControls({ attributes, setAttributes, clientId }) {
 										'Scale multiplier: 1 = default, >1 = zoom in, <1 = zoom out'
 									)}
 								/>
-							</WidePanelItem>
+							</VStack>
 							{'map-world' === chartType && (
-								<WidePanelItem
-									hasValue={() => true}
-									label={__('Interactive Zoom')}
-									isShownByDefault={false}
-									panelId={clientId}
-								>
+								<VStack spacing={2}>
 									<ToggleControl
 										label={__('Enable Interactive Zoom')}
 										checked={getCurrentValue(
@@ -507,18 +462,13 @@ function MapControls({ attributes, setAttributes, clientId }) {
 											'Allow users to zoom and pan the map interactively'
 										)}
 									/>
-								</WidePanelItem>
+								</VStack>
 							)}
 						</>
 					)}
 					{/* Globe Appearance Controls - orthographic world map only */}
 					{'map-world-orthographic' === chartType && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Globe Appearance')}
-							isShownByDefault={true}
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<ToggleControl
 								label={__('Show Graticule')}
 								checked={globe.showGraticule ?? true}
@@ -542,6 +492,7 @@ function MapControls({ attributes, setAttributes, clientId }) {
 												sphereFill: value ?? '',
 											}),
 										label: __('Ocean Fill'),
+										contrast: false,
 									},
 									{
 										value: globe.graticuleStroke ?? '',
@@ -550,19 +501,15 @@ function MapControls({ attributes, setAttributes, clientId }) {
 												graticuleStroke: value ?? '',
 											}),
 										label: __('Graticule Stroke'),
+										contrast: false,
 									},
 								]}
 							/>
-						</WidePanelItem>
+						</VStack>
 					)}
 					{/* Globe Interaction Controls - orthographic world map only */}
 					{'map-world-orthographic' === chartType && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Globe Interaction')}
-							isShownByDefault={true}
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<ToggleControl
 								label={__('Drag to Rotate')}
 								checked={globe.dragToRotate ?? true}
@@ -638,16 +585,11 @@ function MapControls({ attributes, setAttributes, clientId }) {
 									}
 								/>
 							)}
-						</WidePanelItem>
+						</VStack>
 					)}
 					{/* TODO: this doesn't quite work yet */}
 					{/* {'map-usa-block' === chartType && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Block Size')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('State Block Size')}
 							value={mapBlockRectSize}
@@ -662,9 +604,9 @@ function MapControls({ attributes, setAttributes, clientId }) {
 							min={1}
 							step={1}
 						/>
-					</WidePanelItem>
+					</VStack>
 				)} */}
-				</ToolsPanel>
+				</VStack>
 			</PanelBody>
 		</div>
 	);

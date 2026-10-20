@@ -17,7 +17,7 @@ import { chartBar } from '@wordpress/icons';
 import CreateNewChartModal from '../../includes/admin/src/components/create-new-chart-modal.jsx';
 import { prefetchChartPatternsLibrary } from '../shared/select-chart-step';
 import { applyControllerTemplateContent } from './utils/apply-controller-template';
-import '../../includes/admin/src/style.scss';
+import '../../includes/admin/src/editor.scss';
 
 /**
  * Classic Chart Builder Controller placeholder (trunk flow).
@@ -72,7 +72,11 @@ export default function Placeholder({ clientId, setAttributes }) {
 				label={__('Chart Builder Controller', 'prc-chart-builder')}
 				icon={chartBar}
 			>
-				<Button variant="primary" onClick={handleOpenCreate}>
+				<Button
+					__next40pxDefaultSize
+					variant="primary"
+					onClick={handleOpenCreate}
+				>
 					{__('Choose Chart Type', 'prc-chart-builder')}
 				</Button>
 			</WPComPlaceholder>

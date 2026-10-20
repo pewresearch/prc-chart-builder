@@ -3,6 +3,18 @@
  * Human-readable BEM classes — do not replace with emotion `styled` hashes.
  */
 
+$controls-text: var(--wp--preset--color--ui-text-color);
+$controls-text-muted: var(--wp--preset--color--ui-gray-very-dark);
+$controls-text-disabled: var(--wp--preset--color--ui-gray-dark);
+$controls-border: var(--wp--preset--color--ui-gray-light);
+$controls-surface: var(--wp--preset--color--ui-white);
+$controls-surface-active: var(--wp--preset--color--ui-gray-very-light);
+$controls-swatch-edge: color-mix(
+	in srgb,
+	var(--wp--preset--color--ui-black) 20%,
+	transparent
+);
+
 @mixin prc-chart-controls-label($with-margin: true) {
 	display: block;
 	font-size: 11px;
@@ -11,7 +23,7 @@
 	padding: 0;
 	text-transform: uppercase;
 	font-family: var(--wp--preset--font-family--sans-serif);
-
+	color: $controls-text;
 	@if $with-margin {
 		margin-bottom: 8px;
 	}
@@ -40,7 +52,7 @@
 		margin-bottom: 0;
 		font-size: 12px;
 		font-style: normal;
-		color: #757575;
+		color: $controls-text-muted;
 	}
 }
 
@@ -58,18 +70,18 @@
 		cursor: grab;
 		padding-top: 5px;
 		padding-bottom: 5px;
-		border-bottom: 1px solid #ccc;
-		background-color: #fff;
-		color: #333;
+		border-bottom: 1px solid $controls-border;
+		background-color: $controls-surface;
+		color: $controls-text;
 
 		&--dragging,
 		&--selected {
-			background-color: #eee;
+			background-color: $controls-surface-active;
 			cursor: grabbing;
 		}
 
 		&--disabled {
-			color: #888;
+			color: $controls-text-disabled;
 			text-decoration: line-through;
 		}
 	}
@@ -106,6 +118,11 @@
 		@include prc-chart-controls-label;
 	}
 
+	// A margin here would push the label off the info tip's center line.
+	.prc-chart-modal__control-label-with-tip .components-base-control__label {
+		margin-bottom: 0;
+	}
+
 	// Emotion styles this label with `&&&`; repeat the class to outrank it.
 	// Its flex wrapper already spaces it from the input.
 	.components-input-control__label.components-input-control__label.components-input-control__label {
@@ -130,12 +147,12 @@
 		width: 18px;
 		height: 18px;
 		border-radius: 50%;
-		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2);
+		box-shadow: inset 0 0 0 1px $controls-swatch-edge;
 	}
 
 	&__more {
 		margin-left: 4px;
 		font-size: 11px;
-		color: #757575;
+		color: $controls-text-muted;
 	}
 }

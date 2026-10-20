@@ -5,29 +5,96 @@
 import { __ } from '@wordpress/i18n';
 import {
 	PanelBody,
-	__experimentalToolsPanel as ToolsPanel,
+	ToggleControl,
 	__experimentalNumberControl as NumberControl,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 /**
  * Internal dependencies
  */
-import { effectiveChartTypeForControls } from '../utils/chart-types';
+import {
+	BAR_CHART_TYPES,
+	effectiveChartTypeForControls,
+} from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
+import { resolveColor } from '../utils/resolve-color';
+import ChartPanelColorSettings from './chart-panel-color-settings';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
-import { WidePanelItem } from './control-ui';
 
-function BarControls({ attributes, setAttributes, clientId }) {
+function BarControls({ attributes, setAttributes }) {
 	// Viewport-aware attribute management
-	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
-		attributes,
-		setAttributes
-	);
+	const { deviceType, getCurrentValue, updateAttributeForDevice } =
+		useViewportAttributes(attributes, setAttributes);
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('bar');
 
 	const layout = getCurrentValue('layout') || {};
 	const { type: chartType } = layout;
 	const effectiveType = effectiveChartTypeForControls(attributes);
+	const offersRectStroke =
+		BAR_CHART_TYPES.includes(chartType) ||
+		(chartType === 'small-multiples' && effectiveType === 'bar');
+	const legacyHasStroke = Boolean(attributes.io?.elementHasStroke);
+	const hasRectStroke = Boolean(
+		getCurrentValue('bar', 'hasRectStroke') || legacyHasStroke
+	);
+	const rectStrokeColor = hasRectStroke
+		? resolveColor(getCurrentValue('bar', 'rectStrokeColor') ?? 'white')
+		: undefined;
+
+	const applyBarStrokeUpdate = (strokeUpdate) => {
+		if (!legacyHasStroke) {
+			updateAttributeForDevice('bar', strokeUpdate);
+			return;
+		}
+
+		// `io.elementHasStroke` turns the stroke on for every viewport and
+		// cannot be cleared per viewport, so the first edit moves it into the
+		// desktop `bar.hasRectStroke` before applying this viewport's change.
+		const isDesktop = !deviceType || deviceType === 'desktop';
+		setAttributes({
+			io: { ...attributes.io, elementHasStroke: false },
+			bar: {
+				...attributes.bar,
+				...(isDesktop ? strokeUpdate : { hasRectStroke: true }),
+			},
+			...(isDesktop
+				? {}
+				: {
+						[deviceType]: {
+							...attributes[deviceType],
+							bar: {
+								...attributes[deviceType]?.bar,
+								...strokeUpdate,
+							},
+						},
+					}),
+		});
+	};
+
+	const onRectStrokeToggle = (enabled) => {
+		applyBarStrokeUpdate({
+			hasRectStroke: enabled,
+			...(enabled && !getCurrentValue('bar', 'rectStrokeColor')
+				? { rectStrokeColor: 'white' }
+				: {}),
+		});
+	};
+
+	const onRectStrokeColorChange = (value) => {
+		if (!value) {
+			applyBarStrokeUpdate({
+				hasRectStroke: false,
+				rectStrokeColor: undefined,
+			});
+			return;
+		}
+
+		applyBarStrokeUpdate({
+			hasRectStroke: true,
+			rectStrokeColor: value,
+		});
+	};
 
 	return (
 		<div ref={panelRef}>
@@ -36,21 +103,9 @@ function BarControls({ attributes, setAttributes, clientId }) {
 				opened={isOpen}
 				onToggle={onToggle}
 			>
-				<ToolsPanel
-					label={__('Attributes')}
-					panelId={clientId}
-					style={{
-						paddingLeft: '0',
-						paddingRight: '0',
-					}}
-				>
+				<VStack spacing={4}>
 					{effectiveType === 'bar' && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Bar Group Padding')}
-							isShownByDefault
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<NumberControl
 								label={__('Bar Group Padding')}
 								withInputField
@@ -71,14 +126,9 @@ function BarControls({ attributes, setAttributes, clientId }) {
 									});
 								}}
 							/>
-						</WidePanelItem>
+						</VStack>
 					)}
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Individual Bar Padding')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<NumberControl
 							label={__('Individual Bar Padding')}
 							withInputField
@@ -95,14 +145,66 @@ function BarControls({ attributes, setAttributes, clientId }) {
 								});
 							}}
 						/>
-					</WidePanelItem>
+					</VStack>
+					{offersRectStroke && (
+						<>
+							<ToggleControl
+								label={__(
+									'Show bar stroke',
+									'prc-chart-builder'
+								)}
+								help={__(
+									'Adds a border around each bar. Turn this off to remove the stroke, or set per-series stroke under Colors when it is on.',
+									'prc-chart-builder'
+								)}
+								checked={hasRectStroke}
+								onChange={onRectStrokeToggle}
+								__nextHasNoMarginBottom
+							/>
+							{hasRectStroke && (
+								<>
+									<ChartPanelColorSettings
+										__experimentalIsRenderedInSidebar
+										title={__('Bar stroke')}
+										colorSettings={[
+											{
+												label: __('Bar stroke'),
+												contrast: false,
+												value: rectStrokeColor,
+												onChange:
+													onRectStrokeColorChange,
+											},
+										]}
+									/>
+									<NumberControl
+										__next40pxDefaultSize
+										label={__(
+											'Bar stroke width',
+											'prc-chart-builder'
+										)}
+										min={0}
+										step={0.5}
+										value={
+											getCurrentValue(
+												'bar',
+												'rectStrokeWidth'
+											) ?? 1
+										}
+										onChange={(value) =>
+											updateAttributeForDevice('bar', {
+												rectStrokeWidth: formatNum(
+													value,
+													'float'
+												),
+											})
+										}
+									/>
+								</>
+							)}
+						</>
+					)}
 					{chartType === 'exploded-bar' && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Exploded Bar Column Gap')}
-							isShownByDefault
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<NumberControl
 								label={__('Exploded Bar Column Gap')}
 								withInputField
@@ -120,9 +222,9 @@ function BarControls({ attributes, setAttributes, clientId }) {
 									});
 								}}
 							/>
-						</WidePanelItem>
+						</VStack>
 					)}
-				</ToolsPanel>
+				</VStack>
 			</PanelBody>
 		</div>
 	);

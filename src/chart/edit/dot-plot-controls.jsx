@@ -5,7 +5,6 @@
 import { __ } from '@wordpress/i18n';
 import { useMemo } from '@wordpress/element';
 import {
-	PanelBody,
 	SelectControl,
 	TextControl,
 	__experimentalNumberControl as NumberControl,
@@ -17,6 +16,7 @@ import {
 /**
  * Internal dependencies
  */
+import FocusedPanelBody from './focused-panel-body';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
@@ -52,7 +52,11 @@ function DotPlotControls({
 	);
 
 	return (
-		<PanelBody title={__('Dot Plot')} initialOpen={false}>
+		<FocusedPanelBody
+			panelId="dotPlot"
+			title={__('Dot Plot')}
+			initialOpen={false}
+		>
 			<ToolsPanel
 				label={__('Attributes')}
 				panelId={clientId}
@@ -115,7 +119,7 @@ function DotPlotControls({
 								/>
 								<NumberControl
 									min={1}
-									label={__('Line Stroke Width')}
+									label={__('Connecting line width')}
 									value={
 										getCurrentValue(
 											'dotPlot',
@@ -141,7 +145,7 @@ function DotPlotControls({
 								/>
 								<TextControl
 									__next40pxDefaultSize
-									label={__('Line Stroke Dash Array')}
+									label={__('Connecting line dash pattern')}
 									help={__(
 										'A list of comma and/or white space separated <length>s and <percentage>s that specify the lengths of alternating dashes and gaps. If an odd number of values is provided, then the list of values is repeated to yield an even number of values. Thus, 5,3,2 is equivalent to 5,3,2,5,3,2.'
 									)}
@@ -354,7 +358,7 @@ function DotPlotControls({
 					</WidePanelItem>
 				)}
 			</ToolsPanel>
-		</PanelBody>
+		</FocusedPanelBody>
 	);
 }
 

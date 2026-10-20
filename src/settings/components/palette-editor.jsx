@@ -12,6 +12,7 @@ import { getPaletteColors, getPalettes } from '../model';
 import { store } from '../store';
 import {
 	colorForPreviewMode,
+	extractHex,
 	getColorDisplayValue,
 	getThemeColorName,
 } from '../site-theme';
@@ -43,7 +44,9 @@ export default function PaletteEditor({ slug }) {
 
 	const palette = getPalettes(settings).find((entry) => entry.value === slug);
 	const swatches = getPaletteColors(settings, slug);
-	const selectedHexes = new Set(swatches);
+	const selectedHexes = new Set(
+		swatches.map((swatch) => extractHex(swatch).toLowerCase())
+	);
 
 	if (!palette) {
 		return null;
@@ -59,8 +62,10 @@ export default function PaletteEditor({ slug }) {
 						onChange={(value) => renamePalette(slug, value)}
 						className="prc-palette-designer__name-input"
 						__nextHasNoMarginBottom
+						__next40pxDefaultSize
 					/>
 					<Button
+						__next40pxDefaultSize
 						variant="tertiary"
 						isDestructive
 						icon={trash}
@@ -181,7 +186,7 @@ export default function PaletteEditor({ slug }) {
 					<ThemeColorPicker
 						selectedHexes={selectedHexes}
 						colorPreviewMode={colorPreviewMode}
-						onToggle={(hex) => togglePaletteColor(slug, hex)}
+						onToggle={(color) => togglePaletteColor(slug, color)}
 					/>
 				</div>
 			</div>

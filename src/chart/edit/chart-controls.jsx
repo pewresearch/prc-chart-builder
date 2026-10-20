@@ -12,18 +12,14 @@ import {
 	store as blockEditorStore,
 } from '@wordpress/block-editor';
 import { store as blocksStore } from '@wordpress/blocks';
-import {
-	BoxControl,
-	PanelBody,
-	RangeControl,
-	SelectControl,
-} from '@wordpress/components';
+import { BoxControl, RangeControl, SelectControl } from '@wordpress/components';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { __ } from '@wordpress/i18n';
 
 /**
  * Internal Dependencies
  */
+import FocusedPanelBody from './focused-panel-body';
 import {
 	ANIMATED_CHART_TYPES,
 	BAR_CHART_TYPES,
@@ -246,7 +242,11 @@ function ChartControls({
 	return (
 		<>
 			<InspectorControls>
-				<PanelBody title={__('Chart Layout')} initialOpen={false}>
+				<FocusedPanelBody
+					panelId="chartLayout"
+					title={__('Chart Layout')}
+					initialOpen={false}
+				>
 					{!limitControls && chartTypeOptions.length > 0 && (
 						<SelectControl
 							__next40pxDefaultSize
@@ -388,7 +388,7 @@ function ChartControls({
 							}
 						/>
 					)}
-				</PanelBody>
+				</FocusedPanelBody>
 				<ControlSections
 					attributes={attributes}
 					setAttributes={setAttributes}

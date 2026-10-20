@@ -95,6 +95,8 @@ class Theme_Validator {
 	}
 
 	/**
+	 * Sanitize a validated theme payload.
+	 *
 	 * @param array<string, mixed> $input Validated theme input.
 	 * @return array<string, mixed>
 	 */
@@ -113,6 +115,27 @@ class Theme_Validator {
 	}
 
 	/**
+	 * A palette swatch: hex, or `light-dark(#hex, #hex)` from theme.json.
+	 *
+	 * @param mixed $color Raw swatch.
+	 * @return string|null Sanitized swatch, or null when invalid.
+	 */
+	private static function sanitize_swatch_color( $color ): ?string {
+		if ( ! is_string( $color ) ) {
+			return null;
+		}
+		$color = trim( $color );
+		if ( preg_match( '/^light-dark\(\s*([^,\s]+)\s*,\s*([^)\s]+)\s*\)$/i', $color, $parts ) ) {
+			$light = sanitize_hex_color( $parts[1] );
+			$dark  = sanitize_hex_color( $parts[2] );
+			return $light && $dark ? "light-dark({$light}, {$dark})" : null;
+		}
+		return sanitize_hex_color( $color );
+	}
+
+	/**
+	 * Sanitize palette swatches and names.
+	 *
 	 * @param array<string, mixed> $palettes Raw palettes object.
 	 * @return array<string, mixed>
 	 */
@@ -127,7 +150,7 @@ class Theme_Validator {
 				}
 				$colors[ sanitize_key( $slug ) ] = array_values(
 					array_filter(
-						array_map( 'sanitize_hex_color', $swatches ),
+						array_map( array( self::class, 'sanitize_swatch_color' ), $swatches ),
 						static fn( $color ) => is_string( $color ) && '' !== $color
 					)
 				);
@@ -158,6 +181,8 @@ class Theme_Validator {
 	}
 
 	/**
+	 * Whether a value is an associative (non-list) array.
+	 *
 	 * @param mixed $value Candidate array.
 	 */
 	private static function is_assoc_array( $value ): bool {

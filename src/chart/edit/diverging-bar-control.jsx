@@ -15,6 +15,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
+import FocusedPanelBody from './focused-panel-body';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
@@ -31,7 +32,11 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 	const neutralBar = divergingBar.neutralBar || {};
 
 	return (
-		<PanelBody title={__('Diverging Bar')} initialOpen={false}>
+		<FocusedPanelBody
+			panelId="divergingBar"
+			title={__('Diverging Bar')}
+			initialOpen={false}
+		>
 			<ToolsPanel
 				label={__('Attributes')}
 				panelId={clientId}
@@ -183,7 +188,7 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 									updateAttributeForDevice('divergingBar', {
 										percentOfInnerWidth: formatNum(
 											w,
-											'integer'
+											'float'
 										),
 									});
 								}}
@@ -192,7 +197,7 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 					</>
 				)}
 			</ToolsPanel>
-		</PanelBody>
+		</FocusedPanelBody>
 	);
 }
 
@@ -244,7 +249,11 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 	};
 
 	return (
-		<PanelBody title={__('Secondary (Ghost) Overlay')} initialOpen={false}>
+		<FocusedPanelBody
+			panelId="divergingBarOverlay"
+			title={__('Secondary (Ghost) Overlay')}
+			initialOpen={false}
+		>
 			<ToolsPanel
 				label={__('Secondary Overlay')}
 				panelId={`${clientId}-secondary`}
@@ -280,6 +289,7 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 										stroke: value ?? '#000000',
 									}),
 								label: __('Stroke'),
+								contrast: false,
 							},
 						]}
 					/>
@@ -385,6 +395,7 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 													stroke: value ?? '',
 												}),
 											label: __('Stroke'),
+											contrast: false,
 										},
 									]}
 								/>
@@ -441,11 +452,16 @@ function SecondaryOverlayControls({ attributes, setAttributes, clientId }) {
 					})}
 				</>
 			)}
-		</PanelBody>
+		</FocusedPanelBody>
 	);
 }
 
-function DivergingBarPanel({ attributes, setAttributes, clientId }) {
+function DivergingBarPanel({
+	attributes,
+	setAttributes,
+	clientId,
+	curated = false,
+}) {
 	return (
 		<>
 			<DivergingBarControls
@@ -453,11 +469,13 @@ function DivergingBarPanel({ attributes, setAttributes, clientId }) {
 				setAttributes={setAttributes}
 				clientId={clientId}
 			/>
-			<SecondaryOverlayControls
-				attributes={attributes}
-				setAttributes={setAttributes}
-				clientId={clientId}
-			/>
+			{!curated && (
+				<SecondaryOverlayControls
+					attributes={attributes}
+					setAttributes={setAttributes}
+					clientId={clientId}
+				/>
+			)}
 		</>
 	);
 }

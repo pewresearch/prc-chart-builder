@@ -18,49 +18,38 @@ import {
 	ToggleControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
-	__experimentalToolsPanel as ToolsPanel,
-	__experimentalToolsPanelItem as ToolsPanelItem,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { useEffect, useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { __experimentalSpacingSizesControl as SpacingSizesControl } from '@wordpress/block-editor';
 import { chartTypeSupportsSeriesMask } from '@prc/charting-utilities';
-import {
-	getAvailableLegendCategories,
-	isBubbleMapLegendMode,
-} from '../utils/get-available-legend-categories';
+import { __experimentalSpacingSizesControl as SpacingSizesControl } from '@wordpress/block-editor';
 import {
 	LINE_CHART_TYPES,
 	VALUE_SCALE_CHART_TYPES,
 	effectiveChartTypeForControls,
 } from '../utils/chart-types';
+import {
+	getAvailableLegendCategories,
+	isBubbleMapLegendMode,
+} from '../utils/get-available-legend-categories';
 import { formatNum } from '../utils/helpers';
 import {
 	isLegendCategoryOrderStale,
 	mergeLegendCategoryOrder,
 } from '../utils/merge-legend-category-order';
+import ChartPanelColorSettings from './chart-panel-color-settings';
+import { Help, PanelDescription, StyledLabel } from './control-ui';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
+import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { RichTextField } from './popover/panels/RichTextField';
 import { FONT_WEIGHT_OPTIONS } from './popover/utils';
 import Sorter from './sorter';
-import { useViewportAttributes } from './hooks/use-viewport-attributes';
-import {
-	PanelDescription,
-	WidePanelItem,
-	StyledLabel,
-	Help,
-} from './control-ui';
-import ChartPanelColorSettings from './chart-panel-color-settings';
 
-function LegendControls({
-	attributes,
-	setAttributes,
-	clientId,
-	curated = false,
-}) {
+function LegendControls({ attributes, setAttributes, curated = false }) {
 	// Viewport-aware attribute management
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
@@ -160,785 +149,752 @@ function LegendControls({
 	const shouldShowLegendOrder =
 		!usesValueScaleChart || (usesValueScaleChart && mapScale === 'ordinal');
 
+	const legendActive = Boolean(getCurrentValue('legend', 'active'));
 	return (
 		<div ref={panelRef}>
 			<PanelBody title={__('Legend')} opened={isOpen} onToggle={onToggle}>
-				<ToolsPanel
-					label={__('Attributes')}
-					panelId={clientId}
-					style={{
-						paddingLeft: '0',
-						paddingRight: '0',
-					}}
-				>
-					<ToolsPanelItem
-						hasValue={() => true}
-						label={__('Legend Active')}
-						isShownByDefault
-						panelId={clientId}
-					>
-						<ToggleControl
-							label="Legend Active"
-							checked={getCurrentValue('legend', 'active')}
-							onChange={(newValue) =>
-								updateAttributeForDevice('legend', {
-									active: newValue,
-								})
-							}
-						/>
-					</ToolsPanelItem>
-					{chartTypeSupportsSeriesMask(chartType) && (
-						<ToolsPanelItem
-							hasValue={() =>
-								getCurrentValue('legend', 'clickToHide') ===
-								true
-							}
-							label={__('Click to hide')}
-							isShownByDefault
-							panelId={clientId}
-						>
-							<ToggleControl
-								label="Click to hide series"
-								checked={
-									getCurrentValue('legend', 'clickToHide') ===
-									true
-								}
-								onChange={(newValue) =>
-									updateAttributeForDevice('legend', {
-										clickToHide: newValue,
-									})
-								}
-								help={__(
-									'On the published chart, click a legend item to hide that series for this page view. Click again to show it. Editor clicks still customize legend items.'
-								)}
-							/>
-						</ToolsPanelItem>
-					)}
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Positioning')}
-						panelId={clientId}
-					>
-						<PanelDescription>
-							<StyledLabel>Legend Positioning</StyledLabel>
-						</PanelDescription>
-						<ToggleGroupControl
-							isBlock
-							label="Legend Alignment"
-							value={getCurrentValue('legend', 'alignment')}
-							onChange={(type) => {
-								updateAttributeForDevice('legend', {
-									alignment: type,
-								});
-							}}
-						>
-							<ToggleGroupControlOption
-								label="Start"
-								value="flex-start"
-							/>
-							<ToggleGroupControlOption
-								label="Center"
-								value="center"
-							/>
-							<ToggleGroupControlOption
-								label="End"
-								value="flex-end"
-							/>
-							<ToggleGroupControlOption
-								label="None"
-								value="none"
-							/>
-						</ToggleGroupControl>
-						<Flex>
-							<FlexItem>
-								<NumberControl
-									label={__('DX')}
-									value={getCurrentValue('legend', 'offsetX')}
-									onChange={(value) =>
+				<VStack spacing={2}>
+					<ToggleControl
+						label="Legend Active"
+						checked={legendActive}
+						onChange={(newValue) =>
+							updateAttributeForDevice('legend', {
+								active: newValue,
+							})
+						}
+					/>
+				</VStack>
+				{legendActive && (
+					<VStack spacing={4}>
+						{chartTypeSupportsSeriesMask(chartType) && (
+							<VStack spacing={2}>
+								<ToggleControl
+									label="Click to hide series"
+									checked={
+										getCurrentValue(
+											'legend',
+											'clickToHide'
+										) === true
+									}
+									onChange={(newValue) =>
 										updateAttributeForDevice('legend', {
-											offsetX: formatNum(
-												value,
-												'integer'
-											),
+											clickToHide: newValue,
 										})
 									}
-								/>
-							</FlexItem>
-							<FlexItem>
-								<NumberControl
-									label={__('DY')}
-									value={getCurrentValue('legend', 'offsetY')}
-									onChange={(value) =>
-										updateAttributeForDevice('legend', {
-											offsetY: formatNum(
-												value,
-												'integer'
-											),
-										})
-									}
-								/>
-							</FlexItem>
-						</Flex>
-						<PanelDescription>
-							<Help>
-								Determines the position of legend relative to
-								the chart container
-							</Help>
-						</PanelDescription>
-					</WidePanelItem>
-					{hasCustomLegendPosition && (
-						<WidePanelItem
-							hasValue={() => hasCustomLegendPosition}
-							label={__('Reset Position')}
-							panelId={clientId}
-						>
-							<Button
-								variant="secondary"
-								isDestructive
-								onClick={handleResetLegendPosition}
-							>
-								{__('Reset Legend Position')}
-							</Button>
-							<PanelDescription>
-								<Help>
-									{__(
-										'Reset legend to default position and alignment.'
+									help={__(
+										'On the published chart, click a legend item to hide that series for this page view. Click again to show it. Editor clicks still customize legend items.'
 									)}
-								</Help>
-							</PanelDescription>
-						</WidePanelItem>
-					)}
-					{!curated && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Title')}
-							panelId={clientId}
-						>
-							<RichTextField
-								label={__('Legend Title')}
-								value={getCurrentValue('legend', 'title')}
-								onChange={(value) =>
-									updateAttributeForDevice('legend', {
-										title: value,
-									})
-								}
-							/>
-						</WidePanelItem>
-					)}
-					{isBubbleMode && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Bubble Legend')}
-							isShownByDefault
-							panelId={clientId}
-						>
+								/>
+							</VStack>
+						)}
+						<VStack spacing={2}>
 							<ToggleGroupControl
-								__nextHasNoMarginBottom
 								isBlock
-								label={__('Layout')}
-								value={
-									getCurrentValue('legend', 'bubbleLegend')
-										?.layout ?? 'stacked'
-								}
-								onChange={(value) => {
-									const legendAttr =
-										getCurrentValue('legend') || {};
+								label="Legend Alignment"
+								value={getCurrentValue('legend', 'alignment')}
+								onChange={(type) => {
 									updateAttributeForDevice('legend', {
-										bubbleLegend: {
-											...(legendAttr.bubbleLegend || {}),
-											layout: value,
-										},
+										alignment: type,
 									});
 								}}
 							>
 								<ToggleGroupControlOption
-									label={__('Stacked')}
-									value="stacked"
+									label="Start"
+									value="flex-start"
 								/>
 								<ToggleGroupControlOption
-									label={__('Spread')}
-									value="spread"
+									label="Center"
+									value="center"
+								/>
+								<ToggleGroupControlOption
+									label="End"
+									value="flex-end"
+								/>
+								<ToggleGroupControlOption
+									label="None"
+									value="none"
 								/>
 							</ToggleGroupControl>
-							<PanelDescription>
-								<Help>
-									{__(
-										'Stacked: nested concentric circles sharing a baseline. Spread: side-by-side circles with labels below.'
-									)}
-								</Help>
-							</PanelDescription>
-							<ToggleGroupControl
-								__nextHasNoMarginBottom
-								isBlock
-								label={__('Label Position')}
-								value={
-									getCurrentValue('legend', 'bubbleLegend')
-										?.labelPosition ?? 'outside'
-								}
-								onChange={(value) => {
-									const legendAttr =
-										getCurrentValue('legend') || {};
-									updateAttributeForDevice('legend', {
-										bubbleLegend: {
-											...(legendAttr.bubbleLegend || {}),
-											labelPosition: value,
-										},
-									});
-								}}
-							>
-								<ToggleGroupControlOption
-									label={__('Outside')}
-									value="outside"
-								/>
-								<ToggleGroupControlOption
-									label={__('Inside')}
-									value="inside"
-								/>
-							</ToggleGroupControl>
-							<PanelDescription>
-								<Help>
-									{__(
-										'Outside (default): labels render above each ring (stacked) or below the circles (spread). Inside: labels sit just inside the top edge of each circle.'
-									)}
-								</Help>
-							</PanelDescription>
-							<SelectControl
-								label={__('Circle Fill')}
-								value={
-									getCurrentValue('legend', 'bubbleLegend')
-										?.fill ?? 'none'
-								}
-								onChange={(value) => {
-									const legendAttr =
-										getCurrentValue('legend') || {};
-									updateAttributeForDevice('legend', {
-										bubbleLegend: {
-											...(legendAttr.bubbleLegend || {}),
-											fill: value,
-										},
-									});
-								}}
-								options={[
-									{
-										value: 'category',
-										label: __('Category color'),
-									},
-									{
-										value: 'none',
-										label: __('Outline only'),
-									},
-								]}
-							/>
-							<FormTokenField
-								label={__('Reference values')}
-								value={
-									getCurrentValue('legend', 'bubbleLegend')
-										?.refValues || []
-								}
-								onChange={(values) => {
-									const cleaned = values
-										.map((v) => parseFloat(v))
-										.filter((v) => !isNaN(v))
-										.sort((a, b) => a - b);
-									const legendAttr =
-										getCurrentValue('legend') || {};
-									updateAttributeForDevice('legend', {
-										bubbleLegend: {
-											...(legendAttr.bubbleLegend || {}),
-											refValues: cleaned,
-										},
-									});
-								}}
-							/>
-							<PanelDescription>
-								<Help>
-									{__(
-										'Leave empty to auto-compute three reference values (25%, 50%, 100% of max).'
-									)}
-								</Help>
-							</PanelDescription>
-						</WidePanelItem>
-					)}
-					{!isBubbleMode &&
-						shouldShowLegendOrder &&
-						legendOrderOptions.length > 0 && (
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Legend Order')}
-								panelId={clientId}
-							>
+							<VStack spacing={2}>
 								<PanelDescription>
-									<StyledLabel>Legend Order</StyledLabel>
+									<StyledLabel>
+										Legend Positioning
+									</StyledLabel>
 								</PanelDescription>
-								<Sorter
-									options={legendOrderOptions}
-									setAttributes={(updates) => {
-										// Sorter calls setAttributes with { legend: { ...legend, categories: [...] } }
-										// Extract categories and use updateAttributeForDevice
-										if (
-											updates.legend &&
-											updates.legend.categories
-										) {
+							</VStack>
+							<Flex>
+								<FlexItem>
+									<NumberControl
+										label={__('DX')}
+										value={getCurrentValue(
+											'legend',
+											'offsetX'
+										)}
+										onChange={(value) =>
 											updateAttributeForDevice('legend', {
-												categories:
-													updates.legend.categories,
-											});
+												offsetX: formatNum(
+													value,
+													'integer'
+												),
+											})
 										}
-									}}
-									attribute="categories"
-									parentObject="legend"
-									parentObjectValue={legend}
-									allowDisabled={false}
-								/>
-								<PanelDescription>
-									<Help>
-										{__(
-											'Drag to rearrange the order in which legend items appear. This order is independent of the data order set in Data Controls.'
+									/>
+								</FlexItem>
+								<FlexItem>
+									<NumberControl
+										label={__('DY')}
+										value={getCurrentValue(
+											'legend',
+											'offsetY'
 										)}
-									</Help>
-								</PanelDescription>
-							</WidePanelItem>
-						)}
-					{!isBubbleMode && isLineFamilyChart && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Layout')}
-							panelId={clientId}
-						>
-							<ToggleGroupControl
-								isBlock
-								label={__('Legend Layout')}
-								value={
-									getCurrentValue('legend', 'variation') ||
-									'grouped'
-								}
-								onChange={(value) =>
-									updateAttributeForDevice('legend', {
-										variation: value,
-									})
-								}
-							>
-								<ToggleGroupControlOption
-									label={__('Grouped')}
-									value="grouped"
-								/>
-								<ToggleGroupControlOption
-									label={__('Detached')}
-									value="detached"
-								/>
-								<ToggleGroupControlOption
-									label={__('Direct')}
-									value="direct"
-								/>
-							</ToggleGroupControl>
+										onChange={(value) =>
+											updateAttributeForDevice('legend', {
+												offsetY: formatNum(
+													value,
+													'integer'
+												),
+											})
+										}
+									/>
+								</FlexItem>
+							</Flex>
 							<PanelDescription>
 								<Help>
-									{__(
-										'Grouped: all items in one legend block. Detached: each item floats independently. Direct: series names render on their lines (line, area, and stacked area charts) with automatic overlap prevention.'
-									)}
+									Determines the position of legend relative
+									to the chart container
 								</Help>
 							</PanelDescription>
-						</WidePanelItem>
-					)}
-					{!isBubbleMode && !isLineFamilyChart && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Layout')}
-							panelId={clientId}
-						>
-							<ToggleGroupControl
-								isBlock
-								label={__('Legend Layout')}
-								value={
-									getCurrentValue('legend', 'variation') ===
-									'direct'
-										? 'grouped'
-										: getCurrentValue(
-												'legend',
-												'variation'
-											) || 'grouped'
-								}
-								onChange={(value) =>
-									updateAttributeForDevice('legend', {
-										variation: value,
-									})
-								}
-							>
-								<ToggleGroupControlOption
-									label={__('Grouped')}
-									value="grouped"
-								/>
-								<ToggleGroupControlOption
-									label={__('Detached')}
-									value="detached"
-								/>
-							</ToggleGroupControl>
-							<PanelDescription>
-								<Help>
-									{__(
-										'Grouped: all items render together in one legend block. Detached: each item floats independently on the chart — position by dragging or via the per-item popover.'
-									)}
-								</Help>
-							</PanelDescription>
-						</WidePanelItem>
-					)}
-					{!isBubbleMode && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Orientation')}
-							panelId={clientId}
-						>
-							<SelectControl
-								label={__('Orientation')}
-								value={getCurrentValue('legend', 'orientation')}
-								options={[
-									{
-										value: 'row',
-										label: 'Row',
-									},
-									{
-										value: 'column',
-										label: 'Column',
-									},
-									{
-										value: 'row-reverse',
-										label: 'Row reverse',
-									},
-									{
-										value: 'column-reverse',
-										label: 'Column reverse',
-									},
-								]}
-								onChange={(type) => {
-									updateAttributeForDevice('legend', {
-										orientation: type,
-									});
-								}}
-							/>
-						</WidePanelItem>
-					)}
-					{!isBubbleMode && (
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Marker Style')}
-							panelId={clientId}
-						>
-							<SelectControl
-								label={__('Marker Style')}
-								value={getCurrentValue('legend', 'markerStyle')}
-								options={[
-									{
-										value: 'rect',
-										label: 'Square',
-									},
-									{
-										value: 'circle',
-										label: 'Circle',
-									},
-									{
-										value: 'line',
-										label: 'Line',
-									},
-									{
-										value: 'none',
-										label: 'None',
-									},
-									{
-										value: 'label',
-										label: 'Category Color',
-									},
-								]}
-								onChange={(type) => {
-									updateAttributeForDevice('legend', {
-										markerStyle: type,
-									});
-								}}
-							/>
-						</WidePanelItem>
-					)}
-					{!isBubbleMode &&
-						getCurrentValue('legend', 'markerStyle') !== 'none' &&
-						getCurrentValue('legend', 'markerStyle') !==
-							'label' && (
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Marker Fill')}
-								panelId={clientId}
-							>
-								<ToggleGroupControl
-									__nextHasNoMarginBottom
-									isBlock
-									label={__('Marker Fill')}
-									value={
-										getCurrentValue(
-											'legend',
-											'markerFill'
-										) || 'solid'
-									}
-									onChange={(value) => {
-										updateAttributeForDevice('legend', {
-											markerFill: value,
-										});
-									}}
+						</VStack>
+						{hasCustomLegendPosition && (
+							<VStack spacing={2}>
+								<Button
+									variant="secondary"
+									isDestructive
+									onClick={handleResetLegendPosition}
 								>
-									<ToggleGroupControlOption
-										label={__('Solid')}
-										value="solid"
-									/>
-									<ToggleGroupControlOption
-										label={__('Outline')}
-										value="outline"
-									/>
-								</ToggleGroupControl>
+									{__('Reset Legend Position')}
+								</Button>
 								<PanelDescription>
 									<Help>
 										{__(
-											'Render markers as solid fills or stroked outlines (3px stroke).'
+											'Reset legend to default position and alignment.'
 										)}
 									</Help>
 								</PanelDescription>
-							</WidePanelItem>
+							</VStack>
 						)}
-					{!curated && (
-						<>
-							<WidePanelItem
-								hasValue={() =>
-									getCurrentValue('legend', 'fontSize')
-								}
-								label={__('Font Size')}
-								panelId={clientId}
-							>
-								<ToggleGroupControl
-									__nextHasNoMarginBottom
-									isBlock
-									value={getCurrentValue(
-										'legend',
-										'fontSize'
-									)}
-									label={__('Legend Font Size')}
-									onChange={(value) => {
-										updateAttributeForDevice('legend', {
-											fontSize: formatNum(
-												value,
-												'integer'
-											),
-										});
-									}}
-								>
-									<ToggleGroupControlOption
-										label="10px"
-										value={10}
-									/>
-									<ToggleGroupControlOption
-										label="12px"
-										value={12}
-									/>
-									<ToggleGroupControlOption
-										label="14px"
-										value={14}
-									/>
-									<ToggleGroupControlOption
-										label="16px"
-										value={16}
-									/>
-								</ToggleGroupControl>
-								<PanelDescription>
-									<Help>
-										{__(
-											'Select the font size for legend text. Default is 12px.'
-										)}
-									</Help>
-								</PanelDescription>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Font Weight')}
-								panelId={clientId}
-							>
-								<SelectControl
-									label={__('Font Weight')}
-									value={
-										getCurrentValue(
-											'legend',
-											'fontWeight'
-										) || 'normal'
-									}
-									options={[...FONT_WEIGHT_OPTIONS]}
+						{!curated && (
+							<VStack spacing={2}>
+								<RichTextField
+									label={__('Legend Title')}
+									value={getCurrentValue('legend', 'title')}
 									onChange={(value) =>
 										updateAttributeForDevice('legend', {
-											fontWeight: value,
+											title: value,
 										})
 									}
 								/>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Margin')}
-								panelId={clientId}
-							>
-								<SpacingSizesControl
-									label={__('Legend Margin')}
-									values={{
-										top: getCurrentValue('legend', 'margin')
-											?.top
-											? `${getCurrentValue('legend', 'margin').top}px`
-											: '0px',
-										right: getCurrentValue(
+							</VStack>
+						)}
+						{isBubbleMode && (
+							<VStack spacing={2}>
+								<ToggleGroupControl
+									__nextHasNoMarginBottom
+									isBlock
+									label={__('Layout')}
+									value={
+										getCurrentValue(
 											'legend',
-											'margin'
-										)?.right
-											? `${getCurrentValue('legend', 'margin').right}px`
-											: '0px',
-										bottom: getCurrentValue(
-											'legend',
-											'margin'
-										)?.bottom
-											? `${getCurrentValue('legend', 'margin').bottom}px`
-											: '0px',
-										left: getCurrentValue(
-											'legend',
-											'margin'
-										)?.left
-											? `${getCurrentValue('legend', 'margin').left}px`
-											: '0px',
-									}}
+											'bubbleLegend'
+										)?.layout ?? 'stacked'
+									}
 									onChange={(value) => {
-										// Parse string values like '12px' to numbers like 12
-										const parsedValue = {
-											top: parseInt(
-												value?.top || '0',
-												10
-											),
-											right: parseInt(
-												value?.right || '0',
-												10
-											),
-											bottom: parseInt(
-												value?.bottom || '0',
-												10
-											),
-											left: parseInt(
-												value?.left || '0',
-												10
-											),
-										};
+										const legendAttr =
+											getCurrentValue('legend') || {};
 										updateAttributeForDevice('legend', {
-											margin: parsedValue,
+											bubbleLegend: {
+												...(legendAttr.bubbleLegend ||
+													{}),
+												layout: value,
+											},
 										});
 									}}
-									sides={['top', 'right', 'bottom', 'left']}
-									units={[{ label: 'px' }]}
-									allowReset={true}
-								/>
+								>
+									<ToggleGroupControlOption
+										label={__('Stacked')}
+										value="stacked"
+									/>
+									<ToggleGroupControlOption
+										label={__('Spread')}
+										value="spread"
+									/>
+								</ToggleGroupControl>
 								<PanelDescription>
 									<Help>
 										{__(
-											'Spacing in pixels between legend items. Default: 0px 5px 0px 0px'
+											'Stacked: nested concentric circles sharing a baseline. Spread: side-by-side circles with labels below.'
 										)}
 									</Help>
 								</PanelDescription>
-							</WidePanelItem>
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Fill and Stroke')}
-								panelId={clientId}
-							>
-								<ChartPanelColorSettings
-									__experimentalHasMultipleOrigins
-									__experimentalIsRenderedInSidebar
-									title={__('Fill and Stroke')}
-									style={{
-										paddingLeft: '0',
-										paddingRight: '0',
+								<ToggleGroupControl
+									__nextHasNoMarginBottom
+									isBlock
+									label={__('Label Position')}
+									value={
+										getCurrentValue(
+											'legend',
+											'bubbleLegend'
+										)?.labelPosition ?? 'outside'
+									}
+									onChange={(value) => {
+										const legendAttr =
+											getCurrentValue('legend') || {};
+										updateAttributeForDevice('legend', {
+											bubbleLegend: {
+												...(legendAttr.bubbleLegend ||
+													{}),
+												labelPosition: value,
+											},
+										});
 									}}
-									colorSettings={[
+								>
+									<ToggleGroupControlOption
+										label={__('Outside')}
+										value="outside"
+									/>
+									<ToggleGroupControlOption
+										label={__('Inside')}
+										value="inside"
+									/>
+								</ToggleGroupControl>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Outside (default): labels render above each ring (stacked) or below the circles (spread). Inside: labels sit just inside the top edge of each circle.'
+										)}
+									</Help>
+								</PanelDescription>
+								<SelectControl
+									label={__('Circle Fill')}
+									value={
+										getCurrentValue(
+											'legend',
+											'bubbleLegend'
+										)?.fill ?? 'none'
+									}
+									onChange={(value) => {
+										const legendAttr =
+											getCurrentValue('legend') || {};
+										updateAttributeForDevice('legend', {
+											bubbleLegend: {
+												...(legendAttr.bubbleLegend ||
+													{}),
+												fill: value,
+											},
+										});
+									}}
+									options={[
 										{
-											value: getCurrentValue(
-												'legend',
-												'borderStroke'
-											),
-											onChange: (value) =>
-												updateAttributeForDevice(
-													'legend',
-													{
-														borderStroke:
-															value ?? '',
-													}
-												),
-											label: __('Stroke'),
+											value: 'category',
+											label: __('Category color'),
 										},
 										{
-											value: getCurrentValue(
-												'legend',
-												'fill'
-											),
-											onChange: (value) =>
-												updateAttributeForDevice(
-													'legend',
-													{
-														fill: value ?? '',
-													}
-												),
-											label: __('Fill'),
+											value: 'none',
+											label: __('Outline only'),
 										},
 									]}
 								/>
-							</WidePanelItem>
-						</>
-					)}
-					{!isBubbleMode &&
-						'map' === chartFamily &&
-						'threshold' === mapScale && (
-							<WidePanelItem
-								hasValue={() => true}
-								label={__('Threshold language')}
-								isShownByDefault
-								panelId={clientId}
-							>
-								<PanelDescription>
-									<StyledLabel>
-										{__('Threshold language')}
-									</StyledLabel>
-								</PanelDescription>
-								<TextControl
-									label={__('Lower label')}
-									value={getCurrentValue(
-										'legend',
-										'labelLower'
-									)}
-									onChange={(value) => {
+								<FormTokenField
+									label={__('Reference values')}
+									value={
+										getCurrentValue(
+											'legend',
+											'bubbleLegend'
+										)?.refValues || []
+									}
+									onChange={(values) => {
+										const cleaned = values
+											.map((v) => parseFloat(v))
+											.filter((v) => !isNaN(v))
+											.sort((a, b) => a - b);
+										const legendAttr =
+											getCurrentValue('legend') || {};
 										updateAttributeForDevice('legend', {
-											labelLower: value,
+											bubbleLegend: {
+												...(legendAttr.bubbleLegend ||
+													{}),
+												refValues: cleaned,
+											},
 										});
 									}}
 								/>
-								<TextControl
-									label={__('Label delimiter')}
-									value={getCurrentValue(
-										'legend',
-										'labelDelimiter'
-									)}
-									onChange={(value) =>
-										updateAttributeForDevice('legend', {
-											labelDelimiter: value,
-										})
-									}
-								/>
-								<TextControl
-									label={__('Upper label')}
-									value={getCurrentValue(
-										'legend',
-										'labelUpper'
-									)}
-									onChange={(value) =>
-										updateAttributeForDevice('legend', {
-											labelUpper: value,
-										})
-									}
-								/>
-							</WidePanelItem>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Leave empty to auto-compute three reference values (25%, 50%, 100% of max).'
+										)}
+									</Help>
+								</PanelDescription>
+							</VStack>
 						)}
-				</ToolsPanel>
+						{!isBubbleMode &&
+							shouldShowLegendOrder &&
+							legendOrderOptions.length > 0 && (
+								<VStack spacing={2}>
+									<PanelDescription>
+										<StyledLabel>Legend Order</StyledLabel>
+									</PanelDescription>
+									<Sorter
+										options={legendOrderOptions}
+										setAttributes={(updates) => {
+											// Sorter calls setAttributes with { legend: { ...legend, categories: [...] } }
+											// Extract categories and use updateAttributeForDevice
+											if (
+												updates.legend &&
+												updates.legend.categories
+											) {
+												updateAttributeForDevice(
+													'legend',
+													{
+														categories:
+															updates.legend
+																.categories,
+													}
+												);
+											}
+										}}
+										attribute="categories"
+										parentObject="legend"
+										parentObjectValue={legend}
+										allowDisabled={false}
+									/>
+									<PanelDescription>
+										<Help>
+											{__(
+												'Drag to rearrange the order in which legend items appear. This order is independent of the data order set in Data Controls.'
+											)}
+										</Help>
+									</PanelDescription>
+								</VStack>
+							)}
+						{!isBubbleMode && isLineFamilyChart && (
+							<VStack spacing={2}>
+								<ToggleGroupControl
+									isBlock
+									label={__('Legend Layout')}
+									value={
+										getCurrentValue(
+											'legend',
+											'variation'
+										) || 'grouped'
+									}
+									onChange={(value) =>
+										updateAttributeForDevice('legend', {
+											variation: value,
+										})
+									}
+								>
+									<ToggleGroupControlOption
+										label={__('Grouped')}
+										value="grouped"
+									/>
+									<ToggleGroupControlOption
+										label={__('Detached')}
+										value="detached"
+									/>
+									<ToggleGroupControlOption
+										label={__('Direct')}
+										value="direct"
+									/>
+								</ToggleGroupControl>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Grouped: all items in one legend block. Detached: each item floats independently. Direct: series names render on their lines (line, area, and stacked area charts) with automatic overlap prevention.'
+										)}
+									</Help>
+								</PanelDescription>
+							</VStack>
+						)}
+						{!isBubbleMode && !isLineFamilyChart && (
+							<VStack spacing={2}>
+								<ToggleGroupControl
+									isBlock
+									label={__('Legend Layout')}
+									value={
+										getCurrentValue(
+											'legend',
+											'variation'
+										) === 'direct'
+											? 'grouped'
+											: getCurrentValue(
+													'legend',
+													'variation'
+												) || 'grouped'
+									}
+									onChange={(value) =>
+										updateAttributeForDevice('legend', {
+											variation: value,
+										})
+									}
+								>
+									<ToggleGroupControlOption
+										label={__('Grouped')}
+										value="grouped"
+									/>
+									<ToggleGroupControlOption
+										label={__('Detached')}
+										value="detached"
+									/>
+								</ToggleGroupControl>
+								<PanelDescription>
+									<Help>
+										{__(
+											'Grouped: all items render together in one legend block. Detached: each item floats independently on the chart — position by dragging or via the per-item popover.'
+										)}
+									</Help>
+								</PanelDescription>
+							</VStack>
+						)}
+						{!isBubbleMode && (
+							<VStack spacing={2}>
+								<SelectControl
+									label={__('Orientation')}
+									value={getCurrentValue(
+										'legend',
+										'orientation'
+									)}
+									options={[
+										{
+											value: 'row',
+											label: 'Row',
+										},
+										{
+											value: 'column',
+											label: 'Column',
+										},
+										{
+											value: 'row-reverse',
+											label: 'Row reverse',
+										},
+										{
+											value: 'column-reverse',
+											label: 'Column reverse',
+										},
+									]}
+									onChange={(type) => {
+										updateAttributeForDevice('legend', {
+											orientation: type,
+										});
+									}}
+								/>
+							</VStack>
+						)}
+						{!isBubbleMode && (
+							<VStack spacing={2}>
+								<SelectControl
+									label={__('Marker Style')}
+									value={getCurrentValue(
+										'legend',
+										'markerStyle'
+									)}
+									options={[
+										{
+											value: 'rect',
+											label: 'Square',
+										},
+										{
+											value: 'circle',
+											label: 'Circle',
+										},
+										{
+											value: 'line',
+											label: 'Line',
+										},
+										{
+											value: 'none',
+											label: 'None',
+										},
+										{
+											value: 'label',
+											label: 'Category Color',
+										},
+									]}
+									onChange={(type) => {
+										updateAttributeForDevice('legend', {
+											markerStyle: type,
+										});
+									}}
+								/>
+							</VStack>
+						)}
+						{!isBubbleMode &&
+							getCurrentValue('legend', 'markerStyle') !==
+								'none' &&
+							getCurrentValue('legend', 'markerStyle') !==
+								'label' && (
+								<VStack spacing={2}>
+									<ToggleGroupControl
+										__nextHasNoMarginBottom
+										isBlock
+										label={__('Marker Fill')}
+										value={
+											getCurrentValue(
+												'legend',
+												'markerFill'
+											) || 'solid'
+										}
+										onChange={(value) => {
+											updateAttributeForDevice('legend', {
+												markerFill: value,
+											});
+										}}
+									>
+										<ToggleGroupControlOption
+											label={__('Solid')}
+											value="solid"
+										/>
+										<ToggleGroupControlOption
+											label={__('Outline')}
+											value="outline"
+										/>
+									</ToggleGroupControl>
+									<PanelDescription>
+										<Help>
+											{__(
+												'Render markers as solid fills or stroked outlines (3px stroke).'
+											)}
+										</Help>
+									</PanelDescription>
+								</VStack>
+							)}
+						{!curated && (
+							<>
+								<VStack spacing={2}>
+									<ToggleGroupControl
+										__nextHasNoMarginBottom
+										isBlock
+										value={getCurrentValue(
+											'legend',
+											'fontSize'
+										)}
+										label={__('Legend Font Size')}
+										onChange={(value) => {
+											updateAttributeForDevice('legend', {
+												fontSize: formatNum(
+													value,
+													'integer'
+												),
+											});
+										}}
+									>
+										<ToggleGroupControlOption
+											label="10px"
+											value={10}
+										/>
+										<ToggleGroupControlOption
+											label="12px"
+											value={12}
+										/>
+										<ToggleGroupControlOption
+											label="14px"
+											value={14}
+										/>
+										<ToggleGroupControlOption
+											label="16px"
+											value={16}
+										/>
+									</ToggleGroupControl>
+									<PanelDescription>
+										<Help>
+											{__(
+												'Select the font size for legend text. Default is 12px.'
+											)}
+										</Help>
+									</PanelDescription>
+								</VStack>
+								<VStack spacing={2}>
+									<SelectControl
+										label={__('Font Weight')}
+										value={
+											getCurrentValue(
+												'legend',
+												'fontWeight'
+											) || 'normal'
+										}
+										options={[...FONT_WEIGHT_OPTIONS]}
+										onChange={(value) =>
+											updateAttributeForDevice('legend', {
+												fontWeight: value,
+											})
+										}
+									/>
+								</VStack>
+								<VStack spacing={2}>
+									<SpacingSizesControl
+										label={__('Legend Margin')}
+										values={{
+											top: getCurrentValue(
+												'legend',
+												'margin'
+											)?.top
+												? `${getCurrentValue('legend', 'margin').top}px`
+												: '0px',
+											right: getCurrentValue(
+												'legend',
+												'margin'
+											)?.right
+												? `${getCurrentValue('legend', 'margin').right}px`
+												: '0px',
+											bottom: getCurrentValue(
+												'legend',
+												'margin'
+											)?.bottom
+												? `${getCurrentValue('legend', 'margin').bottom}px`
+												: '0px',
+											left: getCurrentValue(
+												'legend',
+												'margin'
+											)?.left
+												? `${getCurrentValue('legend', 'margin').left}px`
+												: '0px',
+										}}
+										onChange={(value) => {
+											// Parse string values like '12px' to numbers like 12
+											const parsedValue = {
+												top: parseInt(
+													value?.top || '0',
+													10
+												),
+												right: parseInt(
+													value?.right || '0',
+													10
+												),
+												bottom: parseInt(
+													value?.bottom || '0',
+													10
+												),
+												left: parseInt(
+													value?.left || '0',
+													10
+												),
+											};
+											updateAttributeForDevice('legend', {
+												margin: parsedValue,
+											});
+										}}
+										sides={[
+											'top',
+											'right',
+											'bottom',
+											'left',
+										]}
+										units={[{ label: 'px' }]}
+										allowReset={true}
+									/>
+									<PanelDescription>
+										<Help>
+											{__(
+												'Spacing in pixels between legend items. Default: 0px 5px 0px 0px'
+											)}
+										</Help>
+									</PanelDescription>
+								</VStack>
+								<VStack spacing={2}>
+									<ChartPanelColorSettings
+										__experimentalHasMultipleOrigins
+										__experimentalIsRenderedInSidebar
+										title={__('Fill and Stroke')}
+										style={{
+											paddingLeft: '0',
+											paddingRight: '0',
+										}}
+										colorSettings={[
+											{
+												value: getCurrentValue(
+													'legend',
+													'borderStroke'
+												),
+												onChange: (value) =>
+													updateAttributeForDevice(
+														'legend',
+														{
+															borderStroke:
+																value ?? '',
+														}
+													),
+												label: __('Stroke'),
+												contrast: false,
+											},
+											{
+												value: getCurrentValue(
+													'legend',
+													'fill'
+												),
+												onChange: (value) =>
+													updateAttributeForDevice(
+														'legend',
+														{
+															fill: value ?? '',
+														}
+													),
+												label: __('Fill'),
+												contrast: false,
+											},
+										]}
+									/>
+								</VStack>
+							</>
+						)}
+						{!isBubbleMode &&
+							'map' === chartFamily &&
+							'threshold' === mapScale && (
+								<VStack spacing={2}>
+									<PanelDescription>
+										<StyledLabel>
+											{__('Threshold language')}
+										</StyledLabel>
+									</PanelDescription>
+									<TextControl
+										label={__('Lower label')}
+										value={getCurrentValue(
+											'legend',
+											'labelLower'
+										)}
+										onChange={(value) => {
+											updateAttributeForDevice('legend', {
+												labelLower: value,
+											});
+										}}
+									/>
+									<TextControl
+										label={__('Label delimiter')}
+										value={getCurrentValue(
+											'legend',
+											'labelDelimiter'
+										)}
+										onChange={(value) =>
+											updateAttributeForDevice('legend', {
+												labelDelimiter: value,
+											})
+										}
+									/>
+									<TextControl
+										label={__('Upper label')}
+										value={getCurrentValue(
+											'legend',
+											'labelUpper'
+										)}
+										onChange={(value) =>
+											updateAttributeForDevice('legend', {
+												labelUpper: value,
+											})
+										}
+									/>
+								</VStack>
+							)}
+					</VStack>
+				)}
 			</PanelBody>
 		</div>
 	);

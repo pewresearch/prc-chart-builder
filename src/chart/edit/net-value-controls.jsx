@@ -11,10 +11,10 @@ import {
 	Button,
 	Flex,
 	FlexItem,
-	__experimentalToolsPanel as ToolsPanel,
 	__experimentalNumberControl as NumberControl,
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 /**
  * Internal dependencies
@@ -22,21 +22,20 @@ import {
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
-import {
-	PanelDescription,
-	WidePanelItem,
-	StyledLabel,
-	Help,
-} from './control-ui';
+import { PanelDescription, StyledLabel, Help } from './control-ui';
 
 const NET_VALUE_PREFIX = '__net_';
 
 /**
  * Renders the full set of controls for one net value side (positive or negative).
+ *
+ * @param {Object}   props
+ * @param {string}   props.side                     `positive` or `negative`.
+ * @param {Function} props.getCurrentValue          Viewport-aware attribute reader.
+ * @param {Function} props.updateAttributeForDevice Viewport-aware attribute writer.
  */
 function NetValueSideControls({
 	side,
-	clientId,
 	getCurrentValue,
 	updateAttributeForDevice,
 }) {
@@ -52,16 +51,12 @@ function NetValueSideControls({
 
 	return (
 		<>
-			<WidePanelItem
-				hasValue={() => true}
-				label={sideLabel}
-				isShownByDefault
-				panelId={clientId}
-			>
+			<VStack spacing={2}>
 				<PanelDescription>
 					<StyledLabel>{sideLabel}</StyledLabel>
 				</PanelDescription>
 				<TextControl
+					__next40pxDefaultSize
 					label={__('Label Unit')}
 					value={sideData.labelUnit || ''}
 					onChange={(value) => updateSide({ labelUnit: value })}
@@ -82,14 +77,9 @@ function NetValueSideControls({
 					/>
 					<ToggleGroupControlOption label={__('End')} value="end" />
 				</ToggleGroupControl>
-			</WidePanelItem>
+			</VStack>
 
-			<WidePanelItem
-				hasValue={() => !!sideData.fontSize && sideData.fontSize !== 12}
-				label={`${sideLabel} — ${__('Font Size')}`}
-				panelId={clientId}
-				isShownByDefault
-			>
+			<VStack spacing={2}>
 				<ToggleGroupControl
 					__nextHasNoMarginBottom
 					isBlock
@@ -102,17 +92,11 @@ function NetValueSideControls({
 					<ToggleGroupControlOption label="14px" value={14} />
 					<ToggleGroupControlOption label="16px" value={16} />
 				</ToggleGroupControl>
-			</WidePanelItem>
+			</VStack>
 
-			<WidePanelItem
-				hasValue={() =>
-					!!sideData.fontWeight && sideData.fontWeight !== 700
-				}
-				label={`${sideLabel} — ${__('Font Weight')}`}
-				panelId={clientId}
-				isShownByDefault
-			>
+			<VStack spacing={2}>
 				<SelectControl
+					__next40pxDefaultSize
 					label={__('Font Weight')}
 					value={sideData.fontWeight ?? 700}
 					onChange={(value) =>
@@ -124,14 +108,9 @@ function NetValueSideControls({
 						{ label: __('Bold'), value: 700 },
 					]}
 				/>
-			</WidePanelItem>
+			</VStack>
 
-			<WidePanelItem
-				hasValue={() => !!sideData.margin && sideData.margin !== 5}
-				label={`${sideLabel} — ${__('Offset from bar')}`}
-				panelId={clientId}
-				isShownByDefault
-			>
+			<VStack spacing={2}>
 				<NumberControl
 					label={__('Offset from bar (px)')}
 					withInputField
@@ -141,16 +120,9 @@ function NetValueSideControls({
 						updateSide({ margin: formatNum(value, 'integer') })
 					}
 				/>
-			</WidePanelItem>
+			</VStack>
 
-			<WidePanelItem
-				hasValue={() =>
-					!!sideData.labelPositionDX || !!sideData.labelPositionDY
-				}
-				label={`${sideLabel} — ${__('Label Positioning')}`}
-				panelId={clientId}
-				isShownByDefault
-			>
+			<VStack spacing={2}>
 				<PanelDescription>
 					<StyledLabel>{__('Label Positioning')}</StyledLabel>
 				</PanelDescription>
@@ -191,28 +163,18 @@ function NetValueSideControls({
 						)}
 					</Help>
 				</PanelDescription>
-			</WidePanelItem>
+			</VStack>
 
-			<WidePanelItem
-				hasValue={() => !!sideData.abbreviateValue}
-				label={`${sideLabel} — ${__('Abbreviate Value')}`}
-				panelId={clientId}
-				isShownByDefault
-			>
+			<VStack spacing={2}>
 				<ToggleControl
 					label={__('Abbreviate Value')}
 					checked={sideData.abbreviateValue || false}
 					onChange={(value) => updateSide({ abbreviateValue: value })}
 					help={__('Abbreviate large numbers (e.g. 1200 → 1.2K).')}
 				/>
-			</WidePanelItem>
+			</VStack>
 
-			<WidePanelItem
-				hasValue={() => !!sideData.absoluteValue}
-				label={`${sideLabel} — ${__('Absolute Value')}`}
-				panelId={clientId}
-				isShownByDefault
-			>
+			<VStack spacing={2}>
 				<ToggleControl
 					label={__('Absolute Value')}
 					checked={sideData.absoluteValue || false}
@@ -221,14 +183,9 @@ function NetValueSideControls({
 						'Always show the label as a positive number. Useful on diverging charts.'
 					)}
 				/>
-			</WidePanelItem>
+			</VStack>
 
-			<WidePanelItem
-				hasValue={() => !!sideData.toLocaleString}
-				label={`${sideLabel} — ${__('Format Value')}`}
-				panelId={clientId}
-				isShownByDefault
-			>
+			<VStack spacing={2}>
 				<ToggleControl
 					label={__('Format Value to Locale String')}
 					checked={sideData.toLocaleString || false}
@@ -237,14 +194,9 @@ function NetValueSideControls({
 						'Formats number into locale string (e.g. 100000 → 100,000).'
 					)}
 				/>
-			</WidePanelItem>
+			</VStack>
 
-			<WidePanelItem
-				hasValue={() => !!sideData.toFixedDecimal}
-				label={`${sideLabel} — ${__('Decimal Places')}`}
-				panelId={clientId}
-				isShownByDefault
-			>
+			<VStack spacing={2}>
 				<NumberControl
 					label={__('Decimal Places')}
 					value={sideData.toFixedDecimal ?? 0}
@@ -260,15 +212,11 @@ function NetValueSideControls({
 						'Values render with exactly this many decimal places, so 20 at 3 places reads 20.000. Zero keeps each number as it is.'
 					)}
 				/>
-			</WidePanelItem>
+			</VStack>
 
-			<WidePanelItem
-				hasValue={() => true}
-				label={`${sideLabel} — ${__('Label Color')}`}
-				isShownByDefault
-				panelId={clientId}
-			>
+			<VStack spacing={2}>
 				<SelectControl
+					__next40pxDefaultSize
 					label={__('Label Color')}
 					value={sideData.color || 'black'}
 					onChange={(value) => updateSide({ color: value })}
@@ -277,12 +225,12 @@ function NetValueSideControls({
 						{ label: __('White'), value: 'white' },
 					]}
 				/>
-			</WidePanelItem>
+			</VStack>
 		</>
 	);
 }
 
-function NetValueControls({ attributes, setAttributes, clientId }) {
+function NetValueControls({ attributes, setAttributes }) {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
 		setAttributes
@@ -314,17 +262,9 @@ function NetValueControls({ attributes, setAttributes, clientId }) {
 				opened={isOpen}
 				onToggle={onToggle}
 			>
-				<ToolsPanel
-					label={__('Attributes')}
-					panelId={clientId}
-					style={{
-						paddingLeft: '0',
-						paddingRight: '0',
-					}}
-				>
+				<VStack spacing={4}>
 					<NetValueSideControls
 						side="positive"
-						clientId={clientId}
 						getCurrentValue={getCurrentValue}
 						updateAttributeForDevice={updateAttributeForDevice}
 					/>
@@ -332,19 +272,15 @@ function NetValueControls({ attributes, setAttributes, clientId }) {
 					{isDiverging && (
 						<NetValueSideControls
 							side="negative"
-							clientId={clientId}
 							getCurrentValue={getCurrentValue}
 							updateAttributeForDevice={updateAttributeForDevice}
 						/>
 					)}
 
 					{hasNetValueCustomPositions && (
-						<WidePanelItem
-							hasValue={() => hasNetValueCustomPositions}
-							label={__('Reset Custom Positions')}
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<Button
+								__next40pxDefaultSize
 								variant="secondary"
 								isDestructive
 								onClick={handleResetNetValuePositions}
@@ -358,9 +294,9 @@ function NetValueControls({ attributes, setAttributes, clientId }) {
 									)}
 								</Help>
 							</PanelDescription>
-						</WidePanelItem>
+						</VStack>
 					)}
-				</ToolsPanel>
+				</VStack>
 			</PanelBody>
 		</div>
 	);

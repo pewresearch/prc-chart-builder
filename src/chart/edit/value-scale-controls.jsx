@@ -1,10 +1,14 @@
 /**
  * WordPress Dependencies
  */
-import { FormTokenField, SelectControl } from '@wordpress/components';
+import {
+	FormTokenField,
+	SelectControl,
+	__experimentalVStack as VStack,
+} from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
-import { PanelDescription, WidePanelItem } from './control-ui';
+import { PanelDescription } from './control-ui';
 
 const SCALE_OPTIONS = [
 	{ value: 'threshold', label: __('Threshold') },
@@ -19,24 +23,14 @@ const SCALE_OPTIONS = [
  * @param {Object}   props
  * @param {Object}   props.dataRender    Block dataRender attribute.
  * @param {Function} props.setAttributes Block attribute setter.
- * @param {string}   props.clientId      Block client id, for the tools panel.
  */
-export default function ValueScaleControls({
-	dataRender,
-	setAttributes,
-	clientId,
-}) {
+export default function ValueScaleControls({ dataRender, setAttributes }) {
 	const setDataRender = (updates) =>
 		setAttributes({ dataRender: { ...dataRender, ...updates } });
 
 	return (
 		<>
-			<WidePanelItem
-				hasValue={() => true}
-				label={__('Color Scale')}
-				isShownByDefault
-				panelId={clientId}
-			>
+			<VStack spacing={2}>
 				<SelectControl
 					__next40pxDefaultSize
 					label={__('Scale')}
@@ -51,14 +45,9 @@ export default function ValueScaleControls({
 						)}
 					</PanelDescription>
 				)}
-			</WidePanelItem>
+			</VStack>
 			{dataRender.mapScale !== 'ordinal' && (
-				<WidePanelItem
-					hasValue={() => true}
-					label={__('Color Scale Domain')}
-					isShownByDefault
-					panelId={clientId}
-				>
+				<VStack spacing={2}>
 					<PanelDescription>
 						{dataRender.mapScale === 'threshold'
 							? __('Enter the thresholds for each color.')
@@ -78,7 +67,7 @@ export default function ValueScaleControls({
 						}
 						help={__('Separate with commas or the Enter key.')}
 					/>
-				</WidePanelItem>
+				</VStack>
 			)}
 		</>
 	);

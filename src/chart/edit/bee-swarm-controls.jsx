@@ -1,17 +1,17 @@
 /**
  * WordPress dependencies
  */
-import { __ } from '@wordpress/i18n';
-import { useMemo } from '@wordpress/element';
 import {
-	PanelBody,
-	SelectControl,
 	__experimentalNumberControl as NumberControl,
+	SelectControl,
 } from '@wordpress/components';
+import { useMemo } from '@wordpress/element';
+import { __ } from '@wordpress/i18n';
 
 /**
  * Internal dependencies
  */
+import FocusedPanelBody from './focused-panel-body';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 
@@ -23,23 +23,27 @@ function BeeSwarmControls({ attributes, setAttributes }) {
 
 	const io = attributes.io || {};
 	const dataRender = attributes.dataRender || {};
-	const availableCategories = io.availableCategories || [];
 	const layoutMode = getCurrentValue('beeSwarm', 'layoutMode') || 'dodge';
 
 	const columnOptions = useMemo(
 		() => [
 			{ value: '', label: __('— None —') },
-			...availableCategories.map((col) => ({
+			...(io.availableCategories || []).map((col) => ({
 				value: col,
 				label: col,
 			})),
 		],
-		[availableCategories]
+		[io.availableCategories]
 	);
 
 	return (
-		<PanelBody title={__('Beeswarm')} initialOpen={false}>
+		<FocusedPanelBody
+			panelId="beeSwarm"
+			title={__('Beeswarm')}
+			initialOpen={false}
+		>
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Layout')}
 				value={layoutMode}
 				options={[
@@ -79,6 +83,7 @@ function BeeSwarmControls({ attributes, setAttributes }) {
 			{layoutMode === 'force' && (
 				<>
 					<SelectControl
+						__next40pxDefaultSize
 						label={__('Group by')}
 						value={getCurrentValue('beeSwarm', 'groupBy') || ''}
 						options={columnOptions}
@@ -124,7 +129,7 @@ function BeeSwarmControls({ attributes, setAttributes }) {
 					)}
 				</p>
 			)}
-		</PanelBody>
+		</FocusedPanelBody>
 	);
 }
 

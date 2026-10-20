@@ -57,13 +57,17 @@ import {
 	previewPaneProps,
 } from '../shared/wizard-chrome/preview-appearance';
 import PreviewToolbar from '../shared/wizard-chrome/preview-toolbar';
+import PreviewViewportToggle from '../shared/wizard-chrome/preview-viewport-toggle';
 import {
+	PREVIEW_CARD_PADDING,
+	getPreviewViewportForWidth,
 	getPreviewViewportStyle,
 	getPreviewWidthRange,
 } from '../shared/wizard-chrome/preview-viewports';
 import PreviewVisionFilters from '../shared/wizard-chrome/preview-vision-filters';
 import { WorkflowStatusPaneSlot } from '../shared/wizard-chrome/workflow-status-pane-slot';
 import { WizardChartActionsContext } from '../shared/wizard-chrome/wizard-chart-actions-context';
+import controllerStore from './store';
 import useKeepCaretInsideBlock from './use-keep-caret-inside-block';
 import { applyControllerTemplateContent } from './utils/apply-controller-template';
 import useHideBlockToolbar from './use-hide-block-toolbar';
@@ -155,6 +159,13 @@ export default function ChartCptWizardShell({
 	const handleViewportChange = useCallback((next) => {
 		setPreviewViewport(next);
 		setPreviewWidth(null);
+	}, []);
+
+	const handleCustomWidthChange = useCallback((next) => {
+		setPreviewWidth(next);
+		if (next) {
+			setPreviewViewport(getPreviewViewportForWidth(next));
+		}
 	}, []);
 
 	const [selectedType, setSelectedType] = useState(() =>
@@ -314,6 +325,17 @@ export default function ChartCptWizardShell({
 	);
 
 	const key = stepKey(activeStep);
+	// Style Chart and Preview edit and render the chart at the preview
+	// viewport. Advanced Settings keeps the editor's own device type.
+	const previewDeviceType =
+		key === 'preview' || (key === 'configure' && !isDesignMode)
+			? previewViewport
+			: null;
+	const { setPreviewDeviceType } = useDispatch(controllerStore);
+	useEffect(() => {
+		setPreviewDeviceType(previewDeviceType);
+		return () => setPreviewDeviceType(null);
+	}, [previewDeviceType, setPreviewDeviceType]);
 
 	const previewConfig = useMemo(() => {
 		if (!chartAttributes) {
@@ -330,6 +352,15 @@ export default function ChartCptWizardShell({
 			? getPreviewWidthRange(chartWidth)
 			: null;
 	}, [chartAttributes]);
+	// Canvas width that shows the chart at the previewed viewport's own
+	// layout.width; no preview card is wider than this.
+	const viewportChartWidth =
+		chartAttributes?.[previewViewport]?.layout?.width ??
+		chartAttributes?.layout?.width;
+	const previewFullWidth =
+		typeof viewportChartWidth === 'number'
+			? viewportChartWidth + PREVIEW_CARD_PADDING
+			: null;
 
 	const paneAppearance = previewPaneProps(appearance);
 
@@ -515,15 +546,26 @@ export default function ChartCptWizardShell({
 										</Button>
 									</div>
 								</div>
-								<div
-									className="prc-chart-modal__preview-pane editor-styles-wrapper"
-									style={getPreviewViewportStyle(
-										'desktop',
-										null,
-										previewWidthRange?.max
-									)}
-								>
-									{refineContent}
+								<div className="prc-chart-wizard__preview-stack">
+									<div
+										className="prc-chart-modal__preview-pane editor-styles-wrapper"
+										data-preview-viewport={previewViewport}
+										style={getPreviewViewportStyle(
+											previewViewport,
+											null,
+											previewFullWidth
+										)}
+									>
+										{refineContent}
+									</div>
+									<div className="prc-chart-wizard__preview-footer">
+										<PreviewViewportToggle
+											viewport={previewViewport}
+											onViewportChange={
+												handleViewportChange
+											}
+										/>
+									</div>
 								</div>
 							</div>
 						)}
@@ -554,7 +596,9 @@ export default function ChartCptWizardShell({
 									viewport={previewViewport}
 									onViewportChange={handleViewportChange}
 									customWidth={previewWidth}
-									onCustomWidthChange={setPreviewWidth}
+									onCustomWidthChange={
+										handleCustomWidthChange
+									}
 									widthRange={previewWidthRange}
 									appearance={appearance}
 									onAppearanceChange={setAppearance}
@@ -571,7 +615,7 @@ export default function ChartCptWizardShell({
 									...getPreviewViewportStyle(
 										previewViewport,
 										previewWidth,
-										previewWidthRange?.max
+										previewFullWidth
 									),
 									...paneAppearance.style,
 								}}

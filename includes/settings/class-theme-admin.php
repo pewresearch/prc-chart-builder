@@ -34,6 +34,8 @@ class Theme_Admin {
 	public const TOKEN_PREFIX = 'var:preset|font-family|';
 
 	/**
+	 * Registers the settings page menu and asset hooks.
+	 *
 	 * @param mixed $loader Loader object.
 	 */
 	public function __construct( $loader ) {
@@ -125,6 +127,9 @@ class Theme_Admin {
 				$style_deps,
 				$asset['version']
 			);
+			// Core prints the theme.json preset properties only for the editor
+			// and front end; this page's styles use the ui-* color presets.
+			wp_add_inline_style( $handle, wp_get_global_stylesheet( array( 'variables' ) ) );
 		}
 
 		Settings_Page_Boot::enqueue(
@@ -211,9 +216,17 @@ class Theme_Admin {
 			return array();
 		}
 
-		/** @var array<string, string> $raw_by_slug slug => unresolved fontFamily string */
+		/**
+		 * Unresolved fontFamily string, keyed by slug.
+		 *
+		 * @var array<string, string> $raw_by_slug
+		 */
 		$raw_by_slug = array();
-		/** @var array<string, string> $name_by_slug slug => display name */
+		/**
+		 * Display name, keyed by slug.
+		 *
+		 * @var array<string, string> $name_by_slug
+		 */
 		$name_by_slug = array();
 
 		foreach ( $entries as $entry ) {
@@ -234,7 +247,11 @@ class Theme_Admin {
 			return array();
 		}
 
-		/** @var array<string, string> $resolved_by_slug */
+		/**
+		 * Resolved font stack, keyed by slug.
+		 *
+		 * @var array<string, string> $resolved_by_slug
+		 */
 		$resolved_by_slug = array();
 		foreach ( $raw_by_slug as $slug => $font_family ) {
 			$resolved_by_slug[ $slug ] = self::resolve_theme_font_family_stack(

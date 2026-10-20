@@ -1,4 +1,7 @@
 import { resolveColor } from '../../chart/utils/resolve-color';
+import { extractDarkHex, extractHex } from '../../chart/utils/light-dark';
+
+export { extractDarkHex, extractHex };
 
 /**
  * Accessors for the site's registered theme.json color palette (PRC-528 slice 14).
@@ -6,8 +9,8 @@ import { resolveColor } from '../../chart/utils/resolve-color';
  * The admin page is not the block editor, so the palette is delivered by PHP as
  * `window.prcChartBuilderThemeEditor.themeColors` (see class-theme-admin.php).
  * Each entry is `{ slug, name, color }`, where `color` may be a `light-dark()`
- * string. Charts store plain hex, so `extractHex` pulls the light-mode hex out
- * for storage while the swatch UI can still render the full `color` value.
+ * string. Palettes store that full value; older palettes hold plain hex, so
+ * lookups match on the light-mode hex from `extractHex`.
  *
  * @typedef {{ slug: string, name: string, color: string }} ThemeColor
  * @typedef {'light' | 'dark'} ColorPreviewMode
@@ -16,7 +19,7 @@ import { resolveColor } from '../../chart/utils/resolve-color';
 /**
  * Registered theme.json colors (safe accessor).
  *
- * @return {ThemeColor[]}
+ * @return {ThemeColor[]} Theme colors with a `color` value.
  */
 export function getThemeColors() {
 	const editor =
@@ -33,49 +36,11 @@ export function getThemeColors() {
 }
 
 /**
- * Storable hex for a theme color value.
- *
- * - `light-dark(#456A83, #739EBA)` → `#456A83` (light component)
- * - `#456A83` → `#456A83`
- * - anything else → returned unchanged (e.g. rgba / named color)
- *
- * @param {string} color
- * @return {string}
- */
-export function extractHex(color) {
-	const value = String(color ?? '').trim();
-
-	const lightDark = value.match(/^light-dark\(\s*([^,]+?)\s*,/i);
-	if (lightDark) {
-		return lightDark[1].trim();
-	}
-
-	return value;
-}
-
-/**
- * Dark-mode component from a `light-dark()` string, or the value unchanged.
- *
- * @param {string} color
- * @return {string}
- */
-export function extractDarkHex(color) {
-	const value = String(color ?? '').trim();
-
-	const lightDark = value.match(/^light-dark\(\s*[^,]+?\s*,\s*(.+?)\s*\)$/i);
-	if (lightDark) {
-		return lightDark[1].trim();
-	}
-
-	return value;
-}
-
-/**
  * Hex for the active preview mode (light or dark).
  *
- * @param {string}          colorOrHex Stored hex or full CSS color.
- * @param {ColorPreviewMode} mode
- * @return {string}
+ * @param {string}           colorOrHex Stored hex or full CSS color.
+ * @param {ColorPreviewMode} mode       Preview mode.
+ * @return {string} Hex for that mode.
  */
 export function colorForPreviewMode(colorOrHex, mode) {
 	const resolved = resolveColor(colorOrHex);
@@ -86,8 +51,10 @@ export function colorForPreviewMode(colorOrHex, mode) {
 }
 
 /**
- * @param {string} hex
- * @return {ThemeColor|undefined}
+ * Theme color whose light-mode hex matches a stored color.
+ *
+ * @param {string} hex Stored hex or `light-dark()` value.
+ * @return {ThemeColor|undefined} Matching theme color.
  */
 function findThemeColorByHex(hex) {
 	const normalized = extractHex(hex).toLowerCase();
@@ -99,8 +66,8 @@ function findThemeColorByHex(hex) {
 /**
  * Registered theme color name for a stored hex, or the hex as fallback.
  *
- * @param {string} hex
- * @return {string}
+ * @param {string} hex Stored hex or `light-dark()` value.
+ * @return {string} Theme color name, or the light hex.
  */
 export function getThemeColorName(hex) {
 	const themeMatch = findThemeColorByHex(hex);
@@ -113,8 +80,8 @@ export function getThemeColorName(hex) {
 /**
  * Full display value for a stored hex (prefers the registered theme color).
  *
- * @param {string} hex
- * @return {string}
+ * @param {string} hex Stored hex or `light-dark()` value.
+ * @return {string} CSS color to render.
  */
 export function getColorDisplayValue(hex) {
 	const themeMatch = findThemeColorByHex(hex);
@@ -130,8 +97,8 @@ export function getColorDisplayValue(hex) {
  * PRC design-system colors follow `{Group} Spectrum …` or `UI …` conventions.
  * Generic theme.json palettes without grouped names fall back to "Other".
  *
- * @param {ThemeColor} themeColor
- * @return {string}
+ * @param {ThemeColor} themeColor Theme color.
+ * @return {string} Group label.
  */
 export function inferThemeColorGroup(themeColor) {
 	const name = String(themeColor?.name ?? '').trim();
@@ -171,8 +138,8 @@ export function inferThemeColorGroup(themeColor) {
 /**
  * Cluster theme colors into display groups, preserving palette order.
  *
- * @param {ThemeColor[]} colors
- * @return {ThemeColorGroup[]}
+ * @param {ThemeColor[]} colors Theme colors.
+ * @return {ThemeColorGroup[]} Groups in palette order.
  */
 export function groupThemeColors(colors) {
 	/** @type {ThemeColorGroup[]} */

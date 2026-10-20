@@ -226,12 +226,14 @@ export function LegendPanel({
 						value: legend.fill || '',
 						onChange: (value) => handleChange('fill', value ?? ''),
 						label: __('Fill', 'prc-chart-builder'),
+						contrast: false,
 					},
 					{
 						value: legend.borderStroke || '',
 						onChange: (value) =>
 							handleChange('borderStroke', value ?? ''),
 						label: __('Stroke', 'prc-chart-builder'),
+						contrast: false,
 					},
 				]}
 			/>

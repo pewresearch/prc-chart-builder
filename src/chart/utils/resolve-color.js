@@ -176,21 +176,26 @@ function normalizeRgba(value) {
 
 /** @param {string} value Candidate hex string. */
 function isHexColor(value) {
-	return /^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.trim());
+	return /^#(?:[0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i.test(value.trim());
+}
+
+/** @param {string} value Candidate rgb()/rgba()/hsl()/hsla() string. */
+function isColorFunction(value) {
+	return /^(?:rgba?|hsla?)\(.+\)$/i.test(value.trim());
 }
 
 /**
- * Wrap an unmapped hex in light-dark() so chart fills share one CSS format.
+ * Wrap an unmapped color in light-dark() so chart fills share one CSS format.
  *
- * Custom palette swatches from theme.json presets (e.g. #7bdcb5) often lack
- * PRC dual-mode pairs. Passthrough hex mixed with mapped light-dark() strings
- * breaks react-spring fill updates on animated bars.
+ * Custom palette swatches from theme.json presets (e.g. #7bdcb5) and custom
+ * picker colors lack PRC dual-mode pairs. Passthrough colors mixed with mapped
+ * light-dark() strings break react-spring fill updates on animated bars.
  *
- * @param {string} hex Normalized or original hex (#RGB / #RRGGBB).
+ * @param {string} color Hex or rgb()/hsl() color.
  * @return {string} light-dark() with the same value for both modes.
  */
-function wrapHexAsLightDark(hex) {
-	const trimmed = hex.trim();
+function wrapAsLightDark(color) {
+	const trimmed = color.trim();
 	return `light-dark(${trimmed}, ${trimmed})`;
 }
 
@@ -202,8 +207,9 @@ function wrapHexAsLightDark(hex) {
  * 2. 'transparent' / 'inherit' / 'contrast' / 'none' → passthrough
  * 3. Already a light-dark() string → passthrough
  * 4. Named color (white, black, gray) → themed equivalent
- * 5. rgba() value → known mapping or passthrough
- * 6. Hex value → palette lookup, else light-dark(hex, hex) for format parity
+ * 5. rgba() value → known mapping
+ * 6. Hex value → palette lookup
+ * 7. Other hex, rgb(), or hsl() → light-dark(color, color) for format parity
  *
  * @param {string} color - The color value to resolve.
  * @return {string} The resolved light-dark() string, or the original value if no match.
@@ -239,8 +245,10 @@ export function resolveColor(color) {
 
 	// rgba() lookup
 	if (lower.startsWith('rgba(')) {
-		const normalized = normalizeRgba(lower);
-		return RGBA_MAP[normalized] || color;
+		const known = RGBA_MAP[normalizeRgba(lower)];
+		if (known) {
+			return known;
+		}
 	}
 
 	// Hex lookup (normalize to lowercase)
@@ -249,8 +257,8 @@ export function resolveColor(color) {
 		return mapped;
 	}
 
-	if (isHexColor(color)) {
-		return wrapHexAsLightDark(color);
+	if (isHexColor(color) || isColorFunction(color)) {
+		return wrapAsLightDark(color);
 	}
 
 	return color;

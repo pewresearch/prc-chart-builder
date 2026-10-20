@@ -9,10 +9,9 @@
 import {
 	FormTokenField,
 	__experimentalNumberControl as NumberControl,
-	PanelBody,
 	SelectControl,
 	ToggleControl,
-	__experimentalToolsPanel as ToolsPanel,
+	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
@@ -21,6 +20,7 @@ import { canonicalRowValue } from '@prc/charting-utilities';
 
 import {
 	BUBBLE_MAP_CHART_TYPES,
+	effectiveChartTypeForControls,
 	GROUP_BREAKS_CHART_TYPES,
 	GROUPABLE_CHART_TYPES,
 	LINE_CHART_TYPES,
@@ -28,12 +28,12 @@ import {
 	SORTABLE_CHART_TYPES,
 	SUPPLEMENTAL_COLUMN_CHART_TYPES,
 	VALUE_SCALE_CHART_TYPES,
-	effectiveChartTypeForControls,
 } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
-import Sorter from './sorter';
+import { PanelDescription, StyledLabel } from './control-ui';
+import FocusedPanelBody from './focused-panel-body';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
-import { PanelDescription, WidePanelItem, StyledLabel } from './control-ui';
+import Sorter from './sorter';
 import ValueScaleControls from './value-scale-controls';
 
 function uniqueCanonicalColumnValues(data, column) {
@@ -50,7 +50,7 @@ function uniqueCanonicalColumnValues(data, column) {
 	return unique;
 }
 
-function DataControls({ attributes, setAttributes, clientId }) {
+function DataControls({ attributes, setAttributes }) {
 	const { getCurrentValue, updateAttributeForDevice } = useViewportAttributes(
 		attributes,
 		setAttributes
@@ -164,25 +164,16 @@ function DataControls({ attributes, setAttributes, clientId }) {
 		[chartData]
 	);
 	return (
-		<PanelBody title={__('Data')} initialOpen={true}>
-			<ToolsPanel
-				label={__('Data Rendering, Sorting, Grouping, and Accessors')}
-				panelId={clientId}
-				style={{
-					paddingLeft: '0',
-					paddingRight: '0',
-				}}
-			>
+		<FocusedPanelBody
+			panelId="data"
+			title={__('Data Rendering, Sorting, Grouping, and Accessors')}
+		>
+			<VStack spacing={4}>
 				<PanelDescription>
 					<StyledLabel>1. Data Accessors</StyledLabel>
 				</PanelDescription>
 				{showXScaleControl && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('X Scale')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<SelectControl
 							__next40pxDefaultSize
 							label={__('X Scale')}
@@ -205,15 +196,10 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								{ value: 'linear', label: 'Linear' },
 							]}
 						/>
-					</WidePanelItem>
+					</VStack>
 				)}
 				{'time' === dataRender.xScale && (
-					<WidePanelItem
-						hasValue={() => true}
-						label={__('Time Series Input Format')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<SelectControl
 							__next40pxDefaultSize
 							label={__('Time series input format')}
@@ -268,18 +254,11 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								},
 							]}
 						/>
-					</WidePanelItem>
+					</VStack>
 				)}
 				{'map' === chartFamily && (
 					<>
-						<WidePanelItem
-							hasValue={() =>
-								0 < availableSelectableOptions.length
-							}
-							label={__('Categories')}
-							isShownByDefault
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<PanelDescription>
 								Select the category you would like chart builder
 								to use to render your map’s data.
@@ -298,16 +277,9 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								}
 								options={availableSelectableOptions}
 							/>
-						</WidePanelItem>
+						</VStack>
 						{BUBBLE_MAP_CHART_TYPES.includes(chartType) && (
-							<WidePanelItem
-								hasValue={() =>
-									dataRender.mapStyle !== undefined
-								}
-								label={__('Map Style')}
-								isShownByDefault
-								panelId={clientId}
-							>
+							<VStack spacing={2}>
 								<PanelDescription>
 									{__(
 										'Heat fills each shape by value. Bubble draws proportional circles at each feature\u2019s centroid \u2014 bubble controls appear in the Map panel.'
@@ -336,18 +308,11 @@ function DataControls({ attributes, setAttributes, clientId }) {
 										},
 									]}
 								/>
-							</WidePanelItem>
+							</VStack>
 						)}
 						{BUBBLE_MAP_CHART_TYPES.includes(chartType) &&
 							dataRender.mapStyle === 'bubble' && (
-								<WidePanelItem
-									hasValue={() =>
-										!!dataRender.groupBreaksCategory
-									}
-									label={__('Group By')}
-									isShownByDefault
-									panelId={clientId}
-								>
+								<VStack spacing={2}>
 									<SelectControl
 										__next40pxDefaultSize
 										label={__('Color Bubbles By Group')}
@@ -401,7 +366,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 											),
 										]}
 									/>
-								</WidePanelItem>
+								</VStack>
 							)}
 						{!(
 							BUBBLE_MAP_CHART_TYPES.includes(chartType) &&
@@ -410,7 +375,6 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							<ValueScaleControls
 								dataRender={dataRender}
 								setAttributes={setAttributes}
-								clientId={clientId}
 							/>
 						)}
 					</>
@@ -419,16 +383,10 @@ function DataControls({ attributes, setAttributes, clientId }) {
 					<ValueScaleControls
 						dataRender={dataRender}
 						setAttributes={setAttributes}
-						clientId={clientId}
 					/>
 				)}
 				{'diverging-bar' === chartType && (
-					<WidePanelItem
-						hasValue={() => 0 < availableSelectableOptions.length}
-						label={__('Categories')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<PanelDescription>
 							Select the categories you would like chart builder
 							to use to render your data. A diverging bar chart
@@ -612,17 +570,12 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								/>
 							</>
 						)}
-					</WidePanelItem>
+					</VStack>
 				)}
 				{'map' !== chartFamily &&
 					'diverging-bar' !== chartType &&
 					'bee-swarm' !== chartType && (
-						<WidePanelItem
-							hasValue={() => 0 < availableOptions.length}
-							label={__('Categories')}
-							isShownByDefault
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<PanelDescription>
 								Select the categories you would like chart
 								builder to use to render your data.
@@ -634,16 +587,9 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								parentObject="dataRender"
 								parentObjectValue={dataRender}
 							/>
-						</WidePanelItem>
+						</VStack>
 					)}
-				<WidePanelItem
-					hasValue={() =>
-						0 < (dataRender.rowFilter?.exclude || []).length
-					}
-					label={__('Row filter')}
-					isShownByDefault
-					panelId={clientId}
-				>
+				<VStack spacing={2}>
 					<PanelDescription>
 						{__(
 							'Exclude values from the first table column. Those rows stay in the table and are not plotted.'
@@ -666,14 +612,9 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							});
 						}}
 					/>
-				</WidePanelItem>
+				</VStack>
 				{POINT_CHART_TYPES.includes(chartType) && (
-					<WidePanelItem
-						hasValue={() => !!dataRender.groupBreaksCategory}
-						label={__('Group By')}
-						isShownByDefault
-						panelId={clientId}
-					>
+					<VStack spacing={2}>
 						<SelectControl
 							__next40pxDefaultSize
 							label={__('Color Points By Group')}
@@ -713,19 +654,14 @@ function DataControls({ attributes, setAttributes, clientId }) {
 								})),
 							]}
 						/>
-					</WidePanelItem>
+					</VStack>
 				)}
 				{GROUPABLE_CHART_TYPES.includes(chartType) && (
 					<>
 						<PanelDescription>
 							<StyledLabel>2. Group By</StyledLabel>
 						</PanelDescription>
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Group By')}
-							isShownByDefault
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<ToggleControl
 								label={__('Enable Grouping')}
 								checked={dataRender.groupBreaksActive || false}
@@ -863,19 +799,14 @@ function DataControls({ attributes, setAttributes, clientId }) {
 									)}
 								</>
 							)}
-						</WidePanelItem>
+						</VStack>
 						<PanelDescription>
 							<StyledLabel>3. Group Order</StyledLabel>
 						</PanelDescription>
 						{groupBreaksActive &&
 							groupBreaksCategory &&
 							availableGroupValues.length > 0 && (
-								<WidePanelItem
-									hasValue={() => true}
-									label={__('Group Order')}
-									isShownByDefault
-									panelId={clientId}
-								>
+								<VStack spacing={2}>
 									<PanelDescription>
 										Drag to rearrange the order in which
 										groups appear in the chart.
@@ -888,7 +819,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 										parentObjectValue={dataRender}
 										allowDisabled={chartType === 'treemap'}
 									/>
-								</WidePanelItem>
+								</VStack>
 							)}
 					</>
 				)}
@@ -897,12 +828,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						<PanelDescription>
 							<StyledLabel>4. Data Sorting</StyledLabel>
 						</PanelDescription>
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Sorting')}
-							isShownByDefault
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							{/* Sort Key is meaningless for treemap (always the implicit value column). */}
 							{chartType !== 'treemap' && (
 								<SelectControl
@@ -963,20 +889,15 @@ function DataControls({ attributes, setAttributes, clientId }) {
 									});
 								}}
 							/>
-						</WidePanelItem>
+						</VStack>
 					</>
 				)}
 				{SUPPLEMENTAL_COLUMN_CHART_TYPES.includes(chartType) && (
 					<>
 						<PanelDescription>
-							<StyledLabel>5. Diff Column</StyledLabel>
+							<StyledLabel>5. Additional Column</StyledLabel>
 						</PanelDescription>
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Diff Column')}
-							isShownByDefault
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<ToggleControl
 								label={
 									getCurrentValue('diffColumn', 'active')
@@ -1002,7 +923,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							{getCurrentValue('diffColumn', 'active') && (
 								<SelectControl
 									__next40pxDefaultSize
-									label={__('Diff Column Category')}
+									label={__('Additional Column Category')}
 									value={getCurrentValue(
 										'diffColumn',
 										'category'
@@ -1018,7 +939,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 									}))}
 								/>
 							)}
-						</WidePanelItem>
+						</VStack>
 					</>
 				)}
 				{SUPPLEMENTAL_COLUMN_CHART_TYPES.includes(chartType) && (
@@ -1026,12 +947,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 						<PanelDescription>
 							<StyledLabel>6. Net Value Labels</StyledLabel>
 						</PanelDescription>
-						<WidePanelItem
-							hasValue={() => true}
-							label={__('Net Value Labels')}
-							isShownByDefault
-							panelId={clientId}
-						>
+						<VStack spacing={2}>
 							<ToggleControl
 								label={
 									getCurrentValue('netValues', 'active')
@@ -1050,7 +966,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 							/>
 							<PanelDescription>
 								Show extra data columns as labels outside the
-								bars (separate from the Diff column).
+								bars (separate from the additional column).
 							</PanelDescription>
 							{getCurrentValue('netValues', 'active') && (
 								<>
@@ -1089,7 +1005,7 @@ function DataControls({ attributes, setAttributes, clientId }) {
 										<>
 											<ToggleControl
 												label={__(
-													'Negative labels active'
+													'Show negative value labels'
 												)}
 												checked={
 													!!getCurrentValue(
@@ -1160,11 +1076,11 @@ function DataControls({ attributes, setAttributes, clientId }) {
 									)}
 								</>
 							)}
-						</WidePanelItem>
+						</VStack>
 					</>
 				)}
-			</ToolsPanel>
-		</PanelBody>
+			</VStack>
+		</FocusedPanelBody>
 	);
 }
 

@@ -2,13 +2,13 @@
  * WordPress dependencies
  */
 import {
-	PanelBody,
 	TextareaControl,
 	TextControl,
 	ToggleControl,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
 
+import FocusedPanelBody from './focused-panel-body';
 import { generateDefaultAltText } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 
@@ -32,7 +32,11 @@ function TextFieldControls({ attributes, setAttributes }) {
 	} = io;
 	const { type: chartType, horizontalRules } = layout;
 	return (
-		<PanelBody title={__('Text Fields')} initialOpen={false}>
+		<FocusedPanelBody
+			panelId="textFields"
+			title={__('Text Fields')}
+			initialOpen={false}
+		>
 			<ToggleControl
 				label={__('Text Fields Active')}
 				help={__(
@@ -47,131 +51,156 @@ function TextFieldControls({ attributes, setAttributes }) {
 					});
 				}}
 			/>
-			<ToggleControl
-				label={__('Show horizontal rules')}
-				help={__('Show horizontal rules above and below chart')}
-				checked={horizontalRules}
-				onChange={(newValue) => {
-					const currentLayout = getCurrentValue('layout') || {};
-					updateAttributeForDevice('layout', {
-						...currentLayout,
-						horizontalRules: newValue,
-					});
-				}}
-			/>
-			<TextControl
-				label={__('Title')}
-				value={getCurrentValue('metadata', 'title')}
-				onChange={(val) =>
-					updateAttributeForDevice('metadata', {
-						title: val,
-						alt:
-							val.length > 0
-								? val
-								: generateDefaultAltText(chartType, val),
-					})
-				}
-			/>
-			<TextControl
-				label={__('Subtitle')}
-				value={getCurrentValue('metadata', 'subtitle')}
-				onChange={(val) =>
-					updateAttributeForDevice('metadata', {
-						subtitle: val,
-					})
-				}
-			/>
-			{isStaticChart && (
-				<TextareaControl
-					label={__('Static Image Alt Text')}
-					help="Enter the alt text for the static image"
-					value={staticImageAltText}
-					onChange={(val) =>
-						setAttributes({
-							io: {
-								...io,
-								staticImageAltText: val,
-							},
-						})
-					}
-				/>
+			{active && (
+				<>
+					<ToggleControl
+						label={__('Show horizontal rules')}
+						help={__('Show horizontal rules above and below chart')}
+						checked={horizontalRules}
+						onChange={(newValue) => {
+							const currentLayout =
+								getCurrentValue('layout') || {};
+							updateAttributeForDevice('layout', {
+								...currentLayout,
+								horizontalRules: newValue,
+							});
+						}}
+					/>
+					<TextControl
+						label={__('Title')}
+						__next40pxDefaultSize
+						value={getCurrentValue('metadata', 'title')}
+						onChange={(val) =>
+							updateAttributeForDevice('metadata', {
+								title: val,
+								alt:
+									val.length > 0
+										? val
+										: generateDefaultAltText(
+												chartType,
+												val
+											),
+							})
+						}
+					/>
+					<TextControl
+						label={__('Subtitle')}
+						__next40pxDefaultSize
+						value={getCurrentValue('metadata', 'subtitle')}
+						onChange={(val) =>
+							updateAttributeForDevice('metadata', {
+								subtitle: val,
+							})
+						}
+					/>
+					{isStaticChart && (
+						<TextareaControl
+							label={__('Static Image Alt Text')}
+							help="Enter the alt text for the static image"
+							value={staticImageAltText}
+							onChange={(val) =>
+								setAttributes({
+									io: {
+										...io,
+										staticImageAltText: val,
+									},
+								})
+							}
+						/>
+					)}
+					{!isStaticChart && (
+						<TextareaControl
+							label={__(
+								'Alt Text (Accessibility) / SEO Description'
+							)}
+							help={
+								alt
+									? __('Custom alt text set')
+									: `Default: ${generateDefaultAltText(chartType, title)}`
+							}
+							value={alt}
+							placeholder={generateDefaultAltText(
+								chartType,
+								title
+							)}
+							onChange={(val) => {
+								const currentMetadata =
+									getCurrentValue('metadata') || {};
+								updateAttributeForDevice('metadata', {
+									...currentMetadata,
+									alt: val,
+								});
+							}}
+						/>
+					)}
+					<ToggleControl
+						label={__('Question Wording Active')}
+						help={__(
+							'If active, enables question wording field for chart'
+						)}
+						checked={questionWordingActive}
+						onChange={() =>
+							setAttributes({
+								io: {
+									...io,
+									questionWordingActive:
+										!questionWordingActive,
+								},
+							})
+						}
+					/>
+					{Boolean(questionWordingActive) && (
+						<>
+							<TextareaControl
+								label={__('Question Wording')}
+								help={__(
+									'Optional: Add the question wording for the chart'
+								)}
+								value={questionWording}
+								onChange={(val) =>
+									setAttributes({
+										io: {
+											...io,
+											questionWording: val,
+										},
+									})
+								}
+							/>
+						</>
+					)}
+					<TextareaControl
+						label={__('Note')}
+						help="Enter the note for the chart"
+						value={getCurrentValue('metadata', 'note')}
+						onChange={(val) =>
+							updateAttributeForDevice('metadata', {
+								note: val,
+							})
+						}
+					/>
+					<TextareaControl
+						label={__('Source')}
+						help="Enter the source of the chart"
+						value={getCurrentValue('metadata', 'source')}
+						onChange={(val) =>
+							updateAttributeForDevice('metadata', {
+								source: val,
+							})
+						}
+					/>
+					<TextControl
+						label={__('Tag')}
+						__next40pxDefaultSize
+						value={getCurrentValue('metadata', 'tag')}
+						onChange={(val) =>
+							updateAttributeForDevice('metadata', {
+								tag: val,
+							})
+						}
+					/>
+				</>
 			)}
-			{!isStaticChart && (
-				<TextareaControl
-					label={__('Alt Text (Accessibility) / SEO Description')}
-					help={
-						alt
-							? __('Custom alt text set')
-							: `Default: ${generateDefaultAltText(chartType, title)}`
-					}
-					value={alt}
-					placeholder={generateDefaultAltText(chartType, title)}
-					onChange={(val) => {
-						const currentMetadata =
-							getCurrentValue('metadata') || {};
-						updateAttributeForDevice('metadata', {
-							...currentMetadata,
-							alt: val,
-						});
-					}}
-				/>
-			)}
-			<ToggleControl
-				label={__('Question Wording Active')}
-				help={__('If active, enables question wording field for chart')}
-				checked={questionWordingActive}
-				onChange={() =>
-					setAttributes({
-						io: {
-							...io,
-							questionWordingActive: !questionWordingActive,
-						},
-					})
-				}
-			/>
-			<TextareaControl
-				label={__('Question Wording')}
-				help={__('Optional: Add the question wording for the chart')}
-				value={questionWording}
-				onChange={(val) =>
-					setAttributes({
-						io: {
-							...io,
-							questionWording: val,
-						},
-					})
-				}
-			/>
-			<TextareaControl
-				label={__('Note')}
-				help="Enter the note for the chart"
-				value={getCurrentValue('metadata', 'note')}
-				onChange={(val) =>
-					updateAttributeForDevice('metadata', {
-						note: val,
-					})
-				}
-			/>
-			<TextareaControl
-				label={__('Source')}
-				help="Enter the source of the chart"
-				value={getCurrentValue('metadata', 'source')}
-				onChange={(val) =>
-					updateAttributeForDevice('metadata', {
-						source: val,
-					})
-				}
-			/>
-			<TextControl
-				label={__('Tag')}
-				value={getCurrentValue('metadata', 'tag')}
-				onChange={(val) =>
-					updateAttributeForDevice('metadata', {
-						tag: val,
-					})
-				}
-			/>
-		</PanelBody>
+		</FocusedPanelBody>
 	);
 }
 

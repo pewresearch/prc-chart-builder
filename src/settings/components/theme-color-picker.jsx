@@ -1,3 +1,4 @@
+/* eslint-disable @wordpress/i18n-text-domain */
 import { __ } from '@wordpress/i18n';
 
 import { TEXT_DOMAIN } from '../constants';
@@ -14,8 +15,9 @@ import {
  * @param {{
  *   selectedHexes: Set<string>,
  *   colorPreviewMode: 'light' | 'dark',
- *   onToggle: (hex: string) => void,
- * }} props
+ *   onToggle: (color: string) => void,
+ * }} props Selected swatches as lowercase light-mode hex, the preview mode,
+ *                                                    and a handler that receives the theme color's full value.
  */
 export default function ThemeColorPicker({
 	selectedHexes,
@@ -50,7 +52,9 @@ export default function ThemeColorPicker({
 					<ul className="prc-palette-designer__swatch-grid">
 						{group.colors.map((themeColor) => {
 							const hex = extractHex(themeColor.color);
-							const isSelected = selectedHexes.has(hex);
+							const isSelected = selectedHexes.has(
+								hex.toLowerCase()
+							);
 							return (
 								<li key={themeColor.slug || hex}>
 									<button
@@ -67,7 +71,9 @@ export default function ThemeColorPicker({
 										}}
 										aria-pressed={isSelected}
 										title={`${themeColor.name} (${themeColor.color})`}
-										onClick={() => onToggle(hex)}
+										onClick={() =>
+											onToggle(themeColor.color)
+										}
 									/>
 								</li>
 							);

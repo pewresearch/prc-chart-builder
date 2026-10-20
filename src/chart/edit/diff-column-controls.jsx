@@ -31,7 +31,7 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 	return (
 		<div ref={panelRef}>
 			<PanelBody
-				title={__('Difference Column Configuration')}
+				title={__('Additional Column Configuration')}
 				opened={isOpen}
 				onToggle={onToggle}
 			>
@@ -235,6 +235,7 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 										});
 									},
 									label: __('Header Text Color'),
+									contrast: 'text',
 								},
 								{
 									value: getCurrentValue(
@@ -255,6 +256,7 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 										});
 									},
 									label: __('Cell Text Color'),
+									contrast: 'text',
 								},
 								{
 									value: getCurrentValue(
@@ -275,6 +277,7 @@ function DiffColumnControls({ attributes, setAttributes, clientId }) {
 										});
 									},
 									label: __('Background Color'),
+									contrast: false,
 								},
 							]}
 						/>

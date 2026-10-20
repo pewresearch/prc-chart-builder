@@ -20,7 +20,11 @@ $chart_highlight_color: #b8236d;
 			.is-multi-selected
 		) {
 		&::before {
-			background: rgba(2, 181, 213, 0.04);
+			background: color-mix(
+				in srgb,
+				var(--wp--preset--color--ui-link-color) 4%,
+				transparent
+			);
 			outline-color: $chart_highlight_color;
 		}
 	}

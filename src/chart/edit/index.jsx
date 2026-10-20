@@ -47,6 +47,7 @@ import {
 	hasOverlaysNeedingPanelAnchor,
 } from './utils/panel-anchor';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { viewportKeyedMapUpdate } from '../utils/viewport-keyed-map';
 import { ChartElementPopover, ELEMENT_TYPES } from './popover';
 import { getSmallMultiplesPanelKeys } from './popover/utils';
 import {
@@ -646,13 +647,18 @@ function EditInner({
 		});
 	};
 
-	// Handle legend item customization updates from popover.
-	// customLegendLabels is a flat object attribute (not a nested group), so we
-	// call setAttributes directly with the complete new value rather than using
-	// updateAttributeForDevice which would merge via spread and prevent deletions.
+	// customLegendLabels is a keyed map: updateAttributeForDevice would merge
+	// via spread and keep deleted keys.
 	const handleLegendItemCustomizationUpdate = (updates) => {
 		if (updates.customLegendLabels !== undefined) {
-			setAttributes({ customLegendLabels: updates.customLegendLabels });
+			setAttributes(
+				viewportKeyedMapUpdate(
+					attrs,
+					deviceType,
+					'customLegendLabels',
+					updates.customLegendLabels
+				)
+			);
 		}
 	};
 
@@ -662,7 +668,14 @@ function EditInner({
 
 	const handlePanelTitleCustomizationUpdate = (updates) => {
 		if (updates.customPanelTitles !== undefined) {
-			setAttributes({ customPanelTitles: updates.customPanelTitles });
+			setAttributes(
+				viewportKeyedMapUpdate(
+					attrs,
+					deviceType,
+					'customPanelTitles',
+					updates.customPanelTitles
+				)
+			);
 		}
 	};
 
@@ -1566,7 +1579,7 @@ function EditInner({
 
 export default function Edit(props) {
 	return (
-		<InspectorFocusProvider>
+		<InspectorFocusProvider persist>
 			<EditInner {...props} />
 		</InspectorFocusProvider>
 	);

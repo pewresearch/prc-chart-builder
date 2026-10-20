@@ -14,6 +14,7 @@ const store = createReduxStore('prc-chart-builder/controller', {
 			currentlySelectController: null,
 			viewModes: {},
 			showBothMap: {},
+			previewDeviceType: null,
 		},
 		action
 	) => {
@@ -45,6 +46,11 @@ const store = createReduxStore('prc-chart-builder/controller', {
 						[action.controllerId]: action.showBoth,
 					},
 				};
+			case 'SET_PREVIEW_DEVICE_TYPE':
+				return {
+					...state,
+					previewDeviceType: action.deviceType || null,
+				};
 			default:
 				return state;
 		}
@@ -69,6 +75,17 @@ const store = createReduxStore('prc-chart-builder/controller', {
 				showBoth: !!showBoth,
 			};
 		},
+		/**
+		 * @param {string|null} deviceType The chart wizard's preview viewport
+		 *                                 (`'desktop'` | `'tablet'` | `'mobile'`),
+		 *                                 or null to follow the editor device type.
+		 */
+		setPreviewDeviceType(deviceType) {
+			return {
+				type: 'SET_PREVIEW_DEVICE_TYPE',
+				deviceType,
+			};
+		},
 	},
 	selectors: {
 		getAllTableVisibility(state) {
@@ -85,6 +102,9 @@ const store = createReduxStore('prc-chart-builder/controller', {
 				return false;
 			}
 			return !!state.showBothMap[controllerId];
+		},
+		getPreviewDeviceType(state) {
+			return state.previewDeviceType;
 		},
 	},
 });

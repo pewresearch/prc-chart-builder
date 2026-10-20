@@ -3,7 +3,6 @@
  */
 import {
 	FormTokenField,
-	PanelBody,
 	SelectControl,
 	ToggleControl,
 	__experimentalNumberControl as NumberControl,
@@ -14,16 +13,20 @@ import { __ } from '@wordpress/i18n';
 
 import { canonicalRowValue } from '@prc/charting-utilities';
 
+import FocusedPanelBody from '../../chart/edit/focused-panel-body';
 import Sorter from '../../chart/edit/sorter';
 import {
 	GROUP_BREAKS_CHART_TYPES,
 	GROUPABLE_CHART_TYPES,
 	LINE_CHART_TYPES,
 	SORTABLE_CHART_TYPES,
+	SUPPLEMENTAL_COLUMN_CHART_TYPES,
 	effectiveChartTypeForControls,
 } from '../../chart/utils/chart-types';
 import { formatNum } from '../../chart/utils/helpers';
 import { applyCuratedControl } from './apply-curated-control';
+
+const NO_CATEGORIES = [];
 
 const SORT_ORDER_OPTIONS = [
 	{ value: 'ascending', label: __('Ascending', 'prc-chart-builder') },
@@ -71,10 +74,14 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 	const io = chartAttributes.io ?? {};
 	const dataRender = chartAttributes.dataRender ?? {};
 	const divergingBar = chartAttributes.divergingBar ?? {};
+	const diffColumn = chartAttributes.diffColumn ?? {};
+	const netValues = chartAttributes.netValues ?? {};
 	const chartFamily = io.chartFamily;
 	const isSmallMultiples = chartType === 'small-multiples';
 	const isDivergingBar = chartType === 'diverging-bar';
-	const availableCategories = io.availableCategories ?? [];
+	const isSankey = chartType === 'sankey';
+	const sankey = chartAttributes.sankey ?? {};
+	const availableCategories = io.availableCategories ?? NO_CATEGORIES;
 
 	const setPath = (path, value) =>
 		onChange(applyCuratedControl(chartAttributes, path, value));
@@ -85,16 +92,19 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 	const showSortKey = showSort && chartType !== 'treemap';
 	const showGrouping = GROUPABLE_CHART_TYPES.includes(chartType);
 	const showGroupBreakStyles = GROUP_BREAKS_CHART_TYPES.includes(chartType);
+	const showSupplementalColumns =
+		SUPPLEMENTAL_COLUMN_CHART_TYPES.includes(chartType);
 	// Mirror inspector Data panel: maps skip category sorters; diverging-bar
 	// uses positive / negative / neutral accessors instead of dataRender.categories.
-	const showCategorySorter = chartFamily !== 'map' && !isDivergingBar;
+	const showCategorySorter =
+		chartFamily !== 'map' && !isDivergingBar && !isSankey;
 	const showDivergingAccessors = isDivergingBar;
 	const groupBreaksActive = Boolean(dataRender.groupBreaksActive);
 	const groupBreaksCategory = dataRender.groupBreaksCategory || '';
 	const groupBreaks = dataRender.groupBreaks ?? {};
 	const breakStyles = groupBreaks.breakStyles ?? {};
-	const positiveCategories = divergingBar.positiveCategories || [];
-	const negativeCategories = divergingBar.negativeCategories || [];
+	const positiveCategories = divergingBar.positiveCategories || NO_CATEGORIES;
+	const negativeCategories = divergingBar.negativeCategories || NO_CATEGORIES;
 	const neutralBar = divergingBar.neutralBar || {};
 
 	const categoryOptions = useMemo(() => {
@@ -146,7 +156,23 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 		];
 	}, [availableCategories, io.independentVariable]);
 
-	const groupKeyOptions = useMemo(() => {
+	const sankeyColumnOptions = useMemo(
+		() => [
+			{
+				label:
+					io.independentVariable ??
+					__('First column', 'prc-chart-builder'),
+				value: 'x',
+			},
+			...availableCategories.map((category) => ({
+				label: category,
+				value: category,
+			})),
+		],
+		[availableCategories, io.independentVariable]
+	);
+
+	const columnOptions = useMemo(() => {
 		return [
 			{
 				value: '',
@@ -196,9 +222,9 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 
 	return (
 		<VStack spacing={2} className="prc-chart-modal__configure-tab-panel">
-			<PanelBody
-				title={__('Data accessors', 'prc-chart-builder')}
-				initialOpen={false}
+			<FocusedPanelBody
+				panelId="wizardDataAccessors"
+				title={__('Data series', 'prc-chart-builder')}
 			>
 				<VStack spacing={4}>
 					{showCategorySorter && categoryOptions.length > 0 && (
@@ -222,6 +248,7 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 						</>
 					)}
 					<FormTokenField
+						__next40pxDefaultSize
 						label={__('Exclude rows', 'prc-chart-builder')}
 						value={dataRender.rowFilter?.exclude || []}
 						suggestions={rowFilterSuggestions}
@@ -237,6 +264,52 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 						)}
 						__nextHasNoMarginBottom
 					/>
+					{isSankey && (
+						<>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Source column', 'prc-chart-builder')}
+								help={__(
+									'The column that defines the source node for each flow.',
+									'prc-chart-builder'
+								)}
+								value={sankey.sourceKey ?? 'x'}
+								options={sankeyColumnOptions}
+								onChange={(value) =>
+									setPath('sankey.sourceKey', value)
+								}
+								__nextHasNoMarginBottom
+							/>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Target column', 'prc-chart-builder')}
+								help={__(
+									'The column that defines the target node for each flow.',
+									'prc-chart-builder'
+								)}
+								value={sankey.targetKey ?? 'target'}
+								options={sankeyColumnOptions}
+								onChange={(value) =>
+									setPath('sankey.targetKey', value)
+								}
+								__nextHasNoMarginBottom
+							/>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Value column', 'prc-chart-builder')}
+								help={__(
+									'The column that defines the size of each flow.',
+									'prc-chart-builder'
+								)}
+								value={sankey.valueKey ?? 'value'}
+								options={sankeyColumnOptions}
+								onChange={(value) =>
+									setPath('sankey.valueKey', value)
+								}
+								__nextHasNoMarginBottom
+							/>
+						</>
+					)}
 					{showDivergingAccessors &&
 						availableCategories.length > 0 && (
 							<>
@@ -292,6 +365,7 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 								/>
 								{neutralBar.active && (
 									<SelectControl
+										__next40pxDefaultSize
 										label={__(
 											'Neutral category',
 											'prc-chart-builder'
@@ -311,6 +385,7 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 						)}
 					{showXScale && (
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('X scale', 'prc-chart-builder')}
 							value={dataRender.xScale || 'linear'}
 							options={X_SCALE_OPTIONS}
@@ -333,6 +408,7 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 					)}
 					{showXScale && dataRender.xScale === 'time' && (
 						<SelectControl
+							__next40pxDefaultSize
 							label={__(
 								'Time series input format',
 								'prc-chart-builder'
@@ -356,16 +432,17 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 						/>
 					)}
 				</VStack>
-			</PanelBody>
+			</FocusedPanelBody>
 
 			{showSort && (
-				<PanelBody
+				<FocusedPanelBody
+					panelId="wizardSorting"
 					title={__('Sorting', 'prc-chart-builder')}
-					initialOpen={false}
 				>
 					<VStack spacing={4}>
 						{showSortKey && (
 							<SelectControl
+								__next40pxDefaultSize
 								label={__('Sort key', 'prc-chart-builder')}
 								value={dataRender.sortKey ?? 'x'}
 								options={sortKeyOptions}
@@ -380,6 +457,7 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 							/>
 						)}
 						<SelectControl
+							__next40pxDefaultSize
 							label={__('Sort order', 'prc-chart-builder')}
 							value={dataRender.sortOrder ?? 'none'}
 							options={SORT_ORDER_OPTIONS}
@@ -389,13 +467,13 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 							__nextHasNoMarginBottom
 						/>
 					</VStack>
-				</PanelBody>
+				</FocusedPanelBody>
 			)}
 
 			{showGrouping && (
-				<PanelBody
+				<FocusedPanelBody
+					panelId="wizardGrouping"
 					title={__('Grouping', 'prc-chart-builder')}
-					initialOpen={false}
 				>
 					<VStack spacing={4}>
 						<ToggleControl
@@ -413,9 +491,10 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 						{groupBreaksActive && (
 							<>
 								<SelectControl
+									__next40pxDefaultSize
 									label={__('Group key', 'prc-chart-builder')}
 									value={groupBreaksCategory}
-									options={groupKeyOptions}
+									options={columnOptions}
 									onChange={(value) => {
 										const chartData = io.chartData;
 										const categoryValues =
@@ -449,6 +528,7 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 								{showGroupBreakStyles && (
 									<>
 										<SelectControl
+											__next40pxDefaultSize
 											label={__(
 												'Break line style',
 												'prc-chart-builder'
@@ -515,7 +595,107 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 							</>
 						)}
 					</VStack>
-				</PanelBody>
+				</FocusedPanelBody>
+			)}
+
+			{showSupplementalColumns && (
+				<FocusedPanelBody
+					panelId="wizardSupplementalColumns"
+					title={__('Supplemental columns', 'prc-chart-builder')}
+				>
+					<VStack spacing={4}>
+						<ToggleControl
+							label={__('Additional column', 'prc-chart-builder')}
+							checked={Boolean(diffColumn.active)}
+							onChange={(value) =>
+								setPath('diffColumn.active', value)
+							}
+							help={__(
+								'Show the total, difference, or another data column to the right of the chart.',
+								'prc-chart-builder'
+							)}
+							__nextHasNoMarginBottom
+						/>
+						{diffColumn.active && (
+							<SelectControl
+								__next40pxDefaultSize
+								label={__(
+									'Additional column category',
+									'prc-chart-builder'
+								)}
+								value={diffColumn.category || ''}
+								options={columnOptions}
+								onChange={(value) =>
+									setPath('diffColumn.category', value)
+								}
+								__nextHasNoMarginBottom
+							/>
+						)}
+						<ToggleControl
+							label={__('Net value labels', 'prc-chart-builder')}
+							checked={Boolean(netValues.active)}
+							onChange={(value) =>
+								setPath('netValues.active', value)
+							}
+							help={__(
+								'Show extra data columns as labels outside the bars (separate from the additional column).',
+								'prc-chart-builder'
+							)}
+							__nextHasNoMarginBottom
+						/>
+						{netValues.active && (
+							<SelectControl
+								__next40pxDefaultSize
+								label={__(
+									'Positive column',
+									'prc-chart-builder'
+								)}
+								value={netValues.positive?.category || ''}
+								options={columnOptions}
+								onChange={(value) =>
+									setPath(
+										'netValues.positive.category',
+										value
+									)
+								}
+								__nextHasNoMarginBottom
+							/>
+						)}
+						{netValues.active && isDivergingBar && (
+							<ToggleControl
+								label={__(
+									'Show negative value labels',
+									'prc-chart-builder'
+								)}
+								checked={Boolean(netValues.negative?.active)}
+								onChange={(value) =>
+									setPath('netValues.negative.active', value)
+								}
+								__nextHasNoMarginBottom
+							/>
+						)}
+						{netValues.active &&
+							isDivergingBar &&
+							netValues.negative?.active && (
+								<SelectControl
+									__next40pxDefaultSize
+									label={__(
+										'Negative column',
+										'prc-chart-builder'
+									)}
+									value={netValues.negative?.category || ''}
+									options={columnOptions}
+									onChange={(value) =>
+										setPath(
+											'netValues.negative.category',
+											value
+										)
+									}
+									__nextHasNoMarginBottom
+								/>
+							)}
+					</VStack>
+				</FocusedPanelBody>
 			)}
 		</VStack>
 	);

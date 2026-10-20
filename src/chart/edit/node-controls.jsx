@@ -14,6 +14,7 @@ import {
 /**
  * Internal dependencies
  */
+import { LINE_CHART_TYPES } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { useFocusedPanel } from './hooks/inspector-focus-context';
@@ -47,6 +48,13 @@ const NodeControls = ({ attributes, setAttributes, chartType }) => {
 		],
 		[availableCategories]
 	);
+
+	if (
+		LINE_CHART_TYPES.includes(chartType) &&
+		!getCurrentValue('line', 'showPoints')
+	) {
+		return null;
+	}
 
 	return (
 		<div ref={panelRef}>
@@ -266,6 +274,7 @@ const NodeControls = ({ attributes, setAttributes, chartType }) => {
 									});
 								},
 								label: __('Stroke'),
+								contrast: false,
 							},
 						]}
 					/>

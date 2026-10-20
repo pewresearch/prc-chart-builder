@@ -1,3 +1,25 @@
+@import "../shared/wizard-ui/variables";
+
+// The CPT wizard lives in the Gutenberg canvas iframe, so 100dvh is already
+// below the editor header. Leave room for canvas padding and the block
+// wrapper so the pinned action bar stays on screen.
+$wizard-cpt-shell-inset: 8rem;
+
+// Floor for the preview column, wide enough for a default 640px chart plus the
+// pane's own padding.
+$wizard-preview-min-width: 720px;
+
+// Preview Chart's controls column. Deliberately wider than the 280px editor
+// sidebar — the wizard exists so these controls aren't crammed into that
+// column — while still leaving the preview more room than an even split does.
+$wizard-preview-controls-width: 400px;
+
+// Below this the wizard stacks into one scrolling column. Matches the tablet
+// breakpoint in block-library's core-group styles. Because the wizard renders inside the
+// editor canvas iframe, this tracks the canvas width rather than the screen —
+// it also fires when the settings sidebar opens.
+$wizard-stack-below: 782px;
+
 // Chart CPT wizard: hide the block toolbar in both the floating (hover)
 // and Top toolbar modes. The body class comes from useHideBlockToolbar().
 body.prc-chart-builder-hide-block-toolbar {
@@ -5,4 +27,320 @@ body.prc-chart-builder-hide-block-toolbar {
 	.block-editor-block-contextual-toolbar {
 		display: none !important;
 	}
+}
+
+// Chart CPT wizard host — shared wizard-ui styles apply via .prc-chart-wizard /
+// .prc-chart-modal classes on the shell. Cap the shell to the canvas viewport
+// and pin the action bar; type rail, templates, data, and style controls
+// scroll in the body between them.
+.prc-chart-cpt-wizard.prc-chart-wizard[data-layout="full"] {
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+	height: calc(100dvh - $wizard-cpt-shell-inset);
+	max-height: calc(100dvh - $wizard-cpt-shell-inset);
+	min-height: 0;
+	overflow: hidden;
+
+	> .prc-chart-wizard__steps,
+	> .prc-chart-wizard__explainer,
+	> .prc-chart-wizard__data-upload,
+	> .prc-chart-wizard__template-reset-warning,
+	> .prc-chart-wizard__action-bar {
+		flex-shrink: 0;
+	}
+
+	> .prc-chart-wizard__action-bar {
+		margin-top: auto;
+	}
+
+	> .prc-chart-wizard__choose,
+	> .prc-chart-modal__configure,
+	> .prc-chart-cpt-wizard__body {
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+
+	.prc-chart-cpt-wizard__body {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		overflow: hidden;
+	}
+
+	.prc-chart-cpt-wizard__select {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.prc-chart-cpt-wizard__select,
+	.prc-chart-wizard__choose,
+	.prc-chart-modal__configure {
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow: hidden;
+	}
+
+	// Set Data + Configure share `.prc-chart-modal__configure` (controls | preview).
+	.prc-chart-modal__configure {
+		display: grid;
+		// The floor gives way to an even split on narrower canvases; the
+		// pane scrolls for charts wider than its column.
+		grid-template-columns: minmax(0, 1fr) minmax(
+				min(#{$wizard-preview-min-width}, 50%),
+				1fr
+			);
+		grid-template-areas: "controls preview";
+		gap: 16px;
+		align-items: stretch;
+		min-height: 0;
+		min-width: 0;
+
+		.prc-chart-modal__configure-controls {
+			grid-area: controls;
+			min-width: 0;
+			min-height: 0;
+			overflow: auto;
+		}
+
+		.prc-chart-modal__preview-pane {
+			grid-area: preview;
+			min-height: 0;
+			height: 100%;
+			overflow: auto;
+
+			// White card grows with the chart's layout width; the pane scrolls
+			// when the chart is wider than the column (text + SVG stay aligned).
+			// Direct-child only. Nested controllers in a freeform grid must
+			// keep the cell width so they scale the same way they do on the
+			// published page (same reason view-mode uses `>`).
+			> .wp-block-prc-chart-builder-controller {
+				background-color: var(--wp--preset--color--ui-white);
+				box-sizing: border-box;
+				margin: 20px auto;
+				padding: 16px;
+				// A shrink-to-fit card settles at whatever the chart last
+				// rendered, so the live canvas could shrink but never grow.
+				width: var(--prc-chart-preview-width, max-content);
+				max-width: none;
+				// The pane is a flex row, and a narrower viewport leaves the
+				// chart's min-content small. Without this, the card shrinks to
+				// the pane on the way back to Desktop and the chart follows.
+				flex-shrink: 0;
+
+				figure,
+				.cb__text-wrapper {
+					box-sizing: border-box;
+				}
+
+				.cb__title,
+				.cb__subtitle,
+				.cb__note,
+				.cb__tag {
+					max-width: 100%;
+					overflow-wrap: anywhere;
+					word-break: break-word;
+				}
+			}
+		}
+
+		// Style Chart: the preview pane with its device toggle underneath.
+		.prc-chart-wizard__preview-stack {
+			grid-area: preview;
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+			min-width: 0;
+			min-height: 0;
+
+			> .prc-chart-modal__preview-pane {
+				flex: 1 1 auto;
+				height: auto;
+			}
+
+			> .prc-chart-wizard__preview-footer {
+				display: flex;
+				flex-shrink: 0;
+				justify-content: center;
+			}
+		}
+
+		.prc-chart-modal__data-table {
+			min-width: 0;
+			overflow: auto;
+
+			.chart-builder-data-table,
+			.wp-block-prc-block-table {
+				max-width: 100%;
+				overflow: auto;
+			}
+		}
+	}
+
+	.prc-chart-wizard__design-mode-entry {
+		margin-top: 16px;
+		padding-top: 16px;
+		border-top: 1px solid var(--wp--preset--color--ui-gray-light);
+	}
+
+	.prc-chart-cpt-wizard__design-mode {
+		display: flex;
+		flex-direction: column;
+		flex: 1 1 auto;
+		min-height: 0;
+		min-width: 0;
+		gap: 12px;
+		overflow: auto;
+	}
+
+	.prc-chart-wizard__design-mode-header {
+		display: flex;
+		justify-content: flex-start;
+	}
+
+	// Preview Chart: viewport width + dark mode apply only to the right pane.
+	.prc-chart-wizard__preview {
+		// Reclaim the controls column's equal share for the preview. The pane
+		// scrolls for charts wider than it, so every pixel here is one less
+		// that a wide chart has to be scrolled to see.
+		grid-template-columns: $wizard-preview-controls-width minmax(0, 1fr);
+
+		.prc-chart-modal__preview-pane {
+			width: 100%;
+			justify-self: center;
+
+			// The fixed controls column already guarantees the pane the larger
+			// share, so the floor shared with the other steps would only force
+			// the two columns to overflow the canvas just above the stacking
+			// breakpoint. The pane scrolls for wide charts either way.
+			min-width: 0;
+
+			// Every viewport gives the card a definite width. A `max-width` cap
+			// wider than the chart never binds, and letting the card shrink to
+			// fit is worse still: the chart sizes itself from the card, so the
+			// two settle at the pane width and a chart authored wider than the
+			// pane can never reach full size. Definite widths mean Desktop
+			// shows the chart at its authored width and the pane scrolls.
+			// Direct-child only so nested freeform controllers are not forced
+			// to the outer canvas width.
+			> .wp-block-prc-chart-builder-controller {
+				transition: width 0.2s ease;
+			}
+
+			&.is-dark-preview {
+				// `color-scheme: dark` makes the `light-dark()` in every preset
+				// below resolve to its dark branch, so the palette supplies the
+				// dark surface rather than a parallel set of literals. The pane
+				// lands a shade lighter than the `ui-white` chart card, keeping
+				// the card readable against it.
+				color-scheme: dark;
+				background: var(--wp--preset--color--ui-gray-very-light);
+				border-color: var(--wp--preset--color--ui-gray-light);
+				color: var(--wp--preset--color--ui-text-color);
+
+				> .wp-block-prc-chart-builder-controller {
+					background-color: var(--wp--preset--color--ui-white);
+				}
+			}
+		}
+
+		.prc-chart-wizard__view-chart {
+			margin-top: 16px;
+		}
+	}
+
+	.prc-chart-wizard__preview-controls {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+
+		.prc-chart-wizard__preview-width {
+			margin-top: 16px;
+		}
+	}
+
+	// Narrow canvas: stack controls above the preview.
+	@media (max-width: $wizard-stack-below) {
+		// Stacked panes don't fit one viewport, so drop the height cap and let
+		// the editor canvas scroll the whole wizard.
+		height: auto;
+		max-height: none;
+		overflow: visible;
+
+		// One row of step numbers; only the current step shows its label.
+		// The other labels stay in the accessibility tree.
+		.prc-chart-wizard__steps {
+			gap: 6px;
+		}
+
+		.prc-chart-wizard__step {
+			gap: 6px;
+
+			&:not(:last-child)::after {
+				width: 16px;
+				margin-left: 0;
+			}
+
+			&:not(.is-active) .prc-chart-wizard__step-label {
+				position: absolute;
+				width: 1px;
+				height: 1px;
+				overflow: hidden;
+				clip-path: inset(50%);
+				white-space: nowrap;
+			}
+		}
+
+		.prc-chart-wizard__step-button {
+			margin: -4px;
+			padding: 4px;
+		}
+
+		.prc-chart-wizard__choose {
+			grid-template-columns: minmax(0, 1fr);
+
+			// Same cap as the compact host: the picker stays its own scroll
+			// box so template previews keep loading lazily as it scrolls.
+			.prc-chart-modal__pattern-picker {
+				flex: none;
+				max-height: $wizard-pattern-picker-max-height;
+			}
+		}
+
+		// Nested to match the specificity of the side-by-side rules above.
+		.prc-chart-modal__configure {
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-areas:
+				"controls"
+				"preview";
+
+			.prc-chart-modal__configure-controls {
+				overflow: visible;
+			}
+
+			.prc-chart-modal__preview-pane {
+				height: auto;
+			}
+		}
+	}
+}
+
+// Theme contentSize (640px) is applied to constrained root children via
+// `.is-root-container.is-layout-constrained > .wp-block`. Widen the Controller
+// host that wraps the CPT wizard (Edit puts useBlockProps on that host).
+// `:has()` covers the iframed editor where `body.post-type-chart` may be absent.
+.is-root-container.is-layout-constrained
+	> .wp-block-prc-chart-builder-controller:has(.prc-chart-cpt-wizard),
+.is-root-container.is-layout-constrained > .wp-block:has(.prc-chart-cpt-wizard),
+body.post-type-chart
+	.is-root-container.is-layout-constrained
+	> .wp-block-prc-chart-builder-controller {
+	max-width: 1240px !important;
+	width: 100%;
+}
+
+.prc-chart-cpt-wizard {
+	max-width: 1240px !important;
+	width: 100%;
+	box-sizing: border-box;
 }

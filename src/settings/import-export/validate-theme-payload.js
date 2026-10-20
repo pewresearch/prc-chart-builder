@@ -11,20 +11,27 @@ import { FIELD_REGISTRY } from '../field-registry';
 
 /** @typedef {import('./field-registry/types').FieldDefinition} FieldDefinition */
 
-const HEX_COLOR = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/;
+const HEX = '#(?:[0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})';
+const SWATCH_COLOR = new RegExp(
+	`^(?:${HEX}|light-dark\\(\\s*${HEX}\\s*,\\s*${HEX}\\s*\\))$`
+);
 
 /**
- * @param {unknown} value
- * @return {value is Record<string, unknown>}
+ * Whether a value is a non-null, non-array object.
+ *
+ * @param {unknown} value Candidate value.
+ * @return {value is Record<string, unknown>} True for plain objects.
  */
 function isPlainObject(value) {
 	return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 /**
- * @param {unknown} root
- * @param {string[]} path
- * @return {unknown}
+ * Value at a key path, or undefined when the path is missing.
+ *
+ * @param {unknown}  root Object to read.
+ * @param {string[]} path Key path.
+ * @return {unknown} Value at the path.
  */
 function valueAtPath(root, path) {
 	let current = root;
@@ -40,9 +47,9 @@ function valueAtPath(root, path) {
 /**
  * Collect leaf dot-paths (arrays / null / scalars / empty objects are leaves).
  *
- * @param {unknown} value
- * @param {string[]} [prefix]
- * @return {Set<string>}
+ * @param {unknown}  value    Value to walk.
+ * @param {string[]} [prefix] Path so far.
+ * @return {Set<string>} Leaf dot-paths.
  */
 export function collectThemePaths(value, prefix = []) {
 	/** @type {Set<string>} */
@@ -88,10 +95,12 @@ export function collectThemePaths(value, prefix = []) {
 }
 
 /**
- * @param {FieldDefinition} field
- * @param {unknown} value
- * @param {string} label
- * @return {string|null}
+ * Type error for one field value.
+ *
+ * @param {FieldDefinition} field Field definition.
+ * @param {unknown}         value Field value.
+ * @param {string}          label Field label for the message.
+ * @return {string|null} Error message, or null when the value fits.
  */
 function leafTypeError(field, value, label) {
 	if (field.enum?.length) {
@@ -145,8 +154,10 @@ function leafTypeError(field, value, label) {
 }
 
 /**
- * @param {unknown} palettes
- * @return {string[]}
+ * Shape errors in an imported palettes block.
+ *
+ * @param {unknown} palettes Imported palettes.
+ * @return {string[]} Error messages.
  */
 export function validateThemePalettes(palettes) {
 	/** @type {string[]} */
@@ -174,15 +185,18 @@ export function validateThemePalettes(palettes) {
 			for (const [slug, swatches] of Object.entries(palettes.colors)) {
 				if (!Array.isArray(swatches)) {
 					errors.push(
-						`palettes.colors.${slug} must be an array of hex colors.`
+						`palettes.colors.${slug} must be an array of colors.`
 					);
 					continue;
 				}
 				for (let i = 0; i < swatches.length; i++) {
 					const swatch = swatches[i];
-					if (typeof swatch !== 'string' || !HEX_COLOR.test(swatch)) {
+					if (
+						typeof swatch !== 'string' ||
+						!SWATCH_COLOR.test(swatch)
+					) {
 						errors.push(
-							`palettes.colors.${slug}[${i}] is not a hex color.`
+							`palettes.colors.${slug}[${i}] is not a hex or light-dark() color.`
 						);
 					}
 				}
@@ -219,10 +233,10 @@ export function validateThemePalettes(palettes) {
 }
 
 /**
- * @param {string} groupKey
- * @param {unknown} groupValue
- * @param {FieldDefinition[]} fields
- * @return {string[]}
+ * @param {string}            groupKey   Config group key.
+ * @param {unknown}           groupValue Config group value.
+ * @param {FieldDefinition[]} fields     Fields in the group.
+ * @return {string[]} Error messages.
  */
 function validateConfigGroup(groupKey, groupValue, fields) {
 	/** @type {string[]} */

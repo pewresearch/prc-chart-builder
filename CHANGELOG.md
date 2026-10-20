@@ -6,6 +6,74 @@ For detailed narrative release notes, see [`docs/plugins/prc-chart-builder/relea
 
 Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [3.16.0] — October 2026
+
+Narrative notes: [`docs/plugins/prc-chart-builder/release-notes/3_16_0.md`](../../docs/plugins/prc-chart-builder/release-notes/3_16_0.md). Tracking: [PRC-921](https://linear.app/pewresearch/issue/PRC-921/chart-builder-ux-improvements-cb-316).
+
+### Added
+
+- Desktop, Tablet, and Mobile buttons under the Style Chart preview. Layout and axis controls edit that viewport's values ([PRC-1123](https://linear.app/pewresearch/issue/PRC-1123/expose-viewport-values-to-chart-wizard)).
+- "Enable public preview" and the share link in the Preview Chart step's Workflow panel ([PRC-1007](https://linear.app/pewresearch/issue/PRC-1007/display-enable-public-preview-in-step-4)).
+- Low-contrast warnings in chart color pickers: 4.5:1 for text, 3:1 for lines and shapes. Backgrounds, fills, and data labels on marks do not warn ([PRC-930](https://linear.app/pewresearch/issue/PRC-930/warn-users-of-low-contrast-colors)).
+- Bar stroke color picker and stroke width for stacked bar, diverging bar, and column small multiples charts.
+- Wizard Line Stroke Width, tick units and tick unit position, and a Supplemental columns section in the Data tab.
+
+### Changed
+
+- Wizard steps are centered and show a hover and focus state; the Style Chart tab bar stays visible; narrow screens show one row of step numbers ([PRC-922](https://linear.app/pewresearch/issue/PRC-922/center-wizard-steps), [PRC-925](https://linear.app/pewresearch/issue/PRC-925/make-tabs-sticky-in-step-3), [PRC-926](https://linear.app/pewresearch/issue/PRC-926/emphasize-that-steps-are-clickable-in-wizard)).
+- "Layout" is now "Chart layout" with matching labels ([PRC-1004](https://linear.app/pewresearch/issue/PRC-1004/standardize-setting-label-formats-under-layout)). Adding an annotation opens it and collapses the others ([PRC-924](https://linear.app/pewresearch/issue/PRC-924/collapse-prior-annotations-when-new-one-opens)).
+- Panels show their toggle first and hide dependent settings while it is off; many panels drop the "Attributes" menu ([PRC-1005](https://linear.app/pewresearch/issue/PRC-1005/only-show-conditional-settings-if-toggle-is-active)).
+- Wizard panels open one at a time; right rail panels keep their open state across selection, chart switches, and reloads ([PRC-1006](https://linear.app/pewresearch/issue/PRC-1006/collapse-previously-opened-dropdown-when-user-opens-a-new-dropdown), [PRC-923](https://linear.app/pewresearch/issue/PRC-923/remember-menu-selection-in-right-rail)).
+- Palette swatches use theme color names, and chart settings save palette colors as `light-dark()` values. Import accepts hex and `light-dark()` swatches.
+- The Plot Bands panel uses one collapsible row per band.
+- Admin and editor screens use the design system's light and dark colors. Wizard styles load only in the editor; the public chart stylesheet is about 90% smaller.
+
+### Fixed
+
+- Color pickers named every light and dark theme color "UI White" ([PRC-1124](https://linear.app/pewresearch/issue/PRC-1124/color-pickers-show-the-wrong-swatch-name-for-light-dark-colors)).
+- Custom picker colors (hex, rgb, hsl, hex with alpha) and colors from older hex palettes did not render on the chart.
+- The default white bar stroke did not follow dark mode.
+- Sankey charts broke when the first table column was chosen as a source, target, or value column.
+- Diverging bar ghost bars take keyboard focus.
+
+## [3.15.0] — October 2026
+
+Narrative notes: [`docs/plugins/prc-chart-builder/release-notes/3_15_0.md`](../../docs/plugins/prc-chart-builder/release-notes/3_15_0.md). Tracking: [PRC-906](https://linear.app/pewresearch/issue/PRC-906/chart-builder-315-tracking).
+
+### Added
+
+- Series styles: fill, stroke, opacity, hatch pattern, nodes, and value labels stored per series name in `seriesStyles`, so a data reorder does not move colors ([PRC-869](https://linear.app/pewresearch/issue/PRC-869/replace-color-array-with-color-object-and-category-keys)).
+- Hatch patterns on bars, areas, pie, waffle, sankey, treemap, maps, bubbles, and heat map cells, with matching legend swatches.
+- "Color Bubbles By Group" for USA, county, CBSA, and world bubble maps.
+- "Color each panel separately" for line, column, and bar small multiples (`smallMultiples.colorMode`, `smallMultiples.panelStyles`) ([PRC-871](https://linear.app/pewresearch/issue/PRC-871/allow-individual-plots-in-small-mutltiples-to-have-their-own-color)).
+- Annotation copy and paste, and collapsible annotation lists ([PRC-956](https://linear.app/pewresearch/issue/PRC-956/annotation-copypaste-collapsible-inspector-controls)).
+- Grouped color pickers (UI colors, then each palette), and every picker except the drawing stroke can be cleared.
+- USA CBSA map in the chart wizard.
+- Legend click-to-hide on published diverging bar and scatter charts (first shipped in PRC Platform 1.17.0).
+- Rich text in chart labels: annotations, data labels, tick labels, legend items, the legend title, axis titles, and small multiples panel titles take bold, italic, underline, strikethrough, text color, and links ([PRC-891](https://linear.app/pewresearch/issue/PRC-891/add-rich-text-support-to-chart-labels)).
+- Offset X and Offset Y fields in the tick label popover move one tick label (`customTickLabels[…].offsetX` / `offsetY`) ([PRC-823](https://linear.app/pewresearch/issue/PRC-823/add-xy-coordinate-fields-to-annotationtick-labelslegend)).
+
+### Changed
+
+- The wizard and the block sidebar share one color section: pick palettes, then set each series color.
+- All seven maps and the heat map table build fills, hatch, labels, and legends from one shared value scale. Regions with a value of `0` take a scale color.
+- Heat map cell values follow the Labels panel. The "Show cell values", "Grid Inset", and "Column Header Height" options are gone.
+- Small multiples size from Panel Height for every panel type, and labels and custom tick labels save per panel ([PRC-915](https://linear.app/pewresearch/issue/PRC-915/edit-mini-multiple-labels-independently)).
+- The wizard preview grows with the chart width and stacks into one page below 782px.
+- Copy and paste styles carries `seriesStyles` and `smallMultiples.panelStyles` when the series match.
+
+### Removed
+
+- Color sorter, wizard swatch-picking step, Custom Colors field, Colors panel Stroke toggle, and category highlight controls. Saved values still render.
+
+### Fixed
+
+- Freeform charts keep the media upload handler, so image upload works inside the controller ([PRC-967](https://linear.app/pewresearch/issue/PRC-967/fix-broken-media-upload-for-freeform-charts)).
+- The wizard shows the "Import from pewplots" link again.
+- Screenshot exports capture a padded, full-height frame.
+- Series colors stay on the right series after a legend reorder.
+- `PRC_CHART_BUILDER_VERSION` now matches the plugin header (was `3.8.0`).
+
 ## [3.14.0] — August 2026
 
 Narrative notes: [`docs/plugins/prc-chart-builder/release-notes/3_14_0.md`](../../docs/plugins/prc-chart-builder/release-notes/3_14_0.md). Tracking: [PRC-626](https://linear.app/pewresearch/issue/PRC-626/chart-builder-314-tracking).
