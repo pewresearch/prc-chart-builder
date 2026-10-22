@@ -110,6 +110,84 @@ class Canonical_Parent {
 	}
 
 	/**
+	 * Resolved canonical parent title for public display.
+	 *
+	 * @param int $chart_post_id Chart post ID.
+	 * @return string Post title, or empty string when none.
+	 */
+	public static function resolve_parent_title( int $chart_post_id ): string {
+		$parent_id = self::resolve_parent_id( $chart_post_id );
+		if ( $parent_id <= 0 ) {
+			return '';
+		}
+
+		$title = get_the_title( $parent_id );
+
+		return is_string( $title ) ? $title : '';
+	}
+
+	/**
+	 * Published posts that embed this chart, excluding the canonical parent.
+	 *
+	 * @param int $chart_post_id Chart post ID.
+	 * @return array<int, array{id: int, title: string, url: string}>
+	 */
+	public static function get_public_referencing_posts( int $chart_post_id ): array {
+		$canonical_id  = self::resolve_parent_id( $chart_post_id );
+		$canonical_url = self::normalize_permalink( self::resolve_parent_url( $chart_post_id ) );
+		$posts         = array();
+		$seen_urls     = array();
+
+		foreach ( self::get_referencing_post_ids( $chart_post_id ) as $post_id ) {
+			$post_id = (int) $post_id;
+			if ( $post_id <= 0 || $post_id === $canonical_id ) {
+				continue;
+			}
+			if ( 'publish' !== get_post_status( $post_id ) ) {
+				continue;
+			}
+
+			$url = get_permalink( $post_id );
+			if ( ! is_string( $url ) || '' === $url ) {
+				continue;
+			}
+
+			$normalized_url = self::normalize_permalink( $url );
+			if ( '' !== $canonical_url && $normalized_url === $canonical_url ) {
+				continue;
+			}
+			if ( isset( $seen_urls[ $normalized_url ] ) ) {
+				continue;
+			}
+			$seen_urls[ $normalized_url ] = true;
+
+			$title = get_the_title( $post_id );
+			$posts[] = array(
+				'id'    => $post_id,
+				'title' => is_string( $title ) ? $title : '',
+				'url'   => $url,
+			);
+		}
+
+		return $posts;
+	}
+
+	/**
+	 * Compare permalinks without trailing slashes or casing differences.
+	 *
+	 * @param string $url Permalink.
+	 * @return string Normalized permalink, or empty string.
+	 */
+	private static function normalize_permalink( string $url ): string {
+		$url = trim( $url );
+		if ( '' === $url ) {
+			return '';
+		}
+
+		return untrailingslashit( strtolower( $url ) );
+	}
+
+	/**
 	 * Clear an invalid explicit selection on save.
 	 *
 	 * @hook save_post_chart

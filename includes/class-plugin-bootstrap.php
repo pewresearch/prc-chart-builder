@@ -295,6 +295,7 @@ class Plugin_Bootstrap {
 		}
 		new Controller( $this->get_loader() );
 		new Chart( $this->get_loader() );
+		new Chart_Usage_Links( $this->get_loader() );
 	}
 
 	/**

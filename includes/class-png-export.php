@@ -100,6 +100,37 @@ class PNG_Export {
 		self::register_action_hook( $this );
 
 		add_filter( 'attachment_fields_to_edit', array( $this, 'add_attachment_fields' ), 10, 2 );
+		add_filter( 'jetpack_sync_prevent_sending_post_data', array( $this, 'prevent_jetpack_sync_post_data' ), 10, 2 );
+	}
+
+	/**
+	 * Send Jetpack Sync only a checksum stub for the hidden PNG attachments this
+	 * class generates. WordPress.com does not use them.
+	 *
+	 * Cheap checks run first. They need no query once the post is cached. The
+	 * hidden-term lookup runs only for PNGs attached to a chart.
+	 *
+	 * @param bool  $prevent Whether post data is already blocked.
+	 * @param mixed $post    Post about to be synced.
+	 * @return bool
+	 *
+	 * @hook jetpack_sync_prevent_sending_post_data
+	 */
+	public function prevent_jetpack_sync_post_data( $prevent, $post ): bool {
+		if ( $prevent ) {
+			return true;
+		}
+
+		if ( ! $post instanceof \WP_Post
+			|| 'attachment' !== $post->post_type
+			|| 'image/png' !== $post->post_mime_type
+			|| 0 >= $post->post_parent
+			|| get_post_type( $post->post_parent ) !== Content_Type::$post_type
+		) {
+			return false;
+		}
+
+		return has_term( 'hidden', '_media_visibility', $post );
 	}
 
 	/**
@@ -325,7 +356,7 @@ class PNG_Export {
 
 		// Write binary to a temp file for media_handle_sideload().
 		$tmp_file = wp_tempnam( "chart-{$post_id}.png" );
-		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents
+		// phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_file_put_contents, WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_file_put_contents -- wp_tempnam() file in /tmp.
 		file_put_contents( $tmp_file, $png_binary );
 
 		$chart_title = isset( $chart_block['attrs']['metadata']['title'] ) ? (string) $chart_block['attrs']['metadata']['title'] : '';
@@ -343,7 +374,7 @@ class PNG_Export {
 		$attachment_id = media_handle_sideload( $file_array, $post_id );
 
 		// Clean up temp file regardless of outcome.
-		@unlink( $tmp_file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged
+		@unlink( $tmp_file ); // phpcs:ignore WordPress.PHP.NoSilencedErrors.Discouraged, WordPressVIPMinimum.Functions.RestrictedFunctions.file_ops_unlink -- wp_tempnam() file in /tmp.
 
 		if ( is_wp_error( $attachment_id ) ) {
 			// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log

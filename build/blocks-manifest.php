@@ -923,6 +923,25 @@ return array(
 		'editorStyle' => 'file:./index.css',
 		'viewScriptModule' => 'file:./view.js'
 	),
+	'chart-usage-links' => array(
+		'$schema' => 'https://schemas.wp.org/trunk/block.json',
+		'apiVersion' => 3,
+		'name' => 'prc-chart-builder/chart-usage-links',
+		'version' => '1.0.0',
+		'title' => 'Chart usage links',
+		'description' => 'Lists the canonical article and other articles where this chart appears.',
+		'category' => 'widgets',
+		'textdomain' => 'prc-chart-builder',
+		'usesContext' => array(
+			'postId'
+		),
+		'supports' => array(
+			'html' => false,
+			'multiple' => false
+		),
+		'editorScript' => 'file:./index.js',
+		'render' => 'file:./render.php'
+	),
 	'controller' => array(
 		'$schema' => 'https://schemas.wp.org/trunk/block.json',
 		'apiVersion' => 3,
