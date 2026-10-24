@@ -1,5 +1,5 @@
 
-> @prc/chart-builder@3.17.1 build
+> @prc/chart-builder@3.17.2 build
 > wp-scripts build --webpack-copy-php --experimental-modules && wp-scripts build-blocks-manifest && wp-scripts build --source-path=includes/inspector-sidebar-panel/src/ --output-path=includes/inspector-sidebar-panel/build/ && npm run build:admin-dataview && node bin/sync-field-registry.mjs --check && wp-scripts build --config webpack.settings.config.js
 
 Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
@@ -129,7 +129,7 @@ Entrypoints:
 You can limit the size of your bundles by using import() or require.ensure to lazy load some parts of your application.
 For more info visit https://webpack.js.org/guides/code-splitting/[39m[22m
 
-webpack 5.106.2 compiled with [1m[33m7 warnings[39m[22m in 15216 ms
+webpack 5.106.2 compiled with [1m[33m7 warnings[39m[22m in 37032 ms
 
 assets by path [1m[32mchart/[39m[22m 67.3 KiB
   asset [1m[32mchart/view.js[39m[22m 67.2 KiB [1m[32m[emitted][39m[22m [javascript module] [1m[32m[minimized][39m[22m (name: chart/view)
@@ -143,7 +143,7 @@ orphan modules 342 KiB [1m[33m[orphan][39m[22m 142 modules
 built modules 369 KiB [1m[33m[built][39m[22m
   [1m./src/chart/view.js + 30 modules[39m[22m 254 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   [1m./src/controller/view.js + 14 modules[39m[22m 115 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 5666 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 23519 ms
 Block metadata PHP file generated at: build/blocks-manifest.php
 Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
   npx update-browserslist-db@latest
@@ -159,9 +159,9 @@ runtime modules 663 bytes 3 modules
 built modules 16.6 KiB (javascript) 4.28 KiB (css/mini-extract) [1m[33m[built][39m[22m
   [1m./includes/inspector-sidebar-panel/src/index.js + 13 modules[39m[22m 16.6 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./includes/inspector-sidebar-panel/src/editor.scss[39m[22m 4.28 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 800 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 682 ms
 
-> @prc/chart-builder@3.17.1 build:admin-dataview
+> @prc/chart-builder@3.17.2 build:admin-dataview
 > wp-scripts build --config webpack.admin-dataview.config.js
 
 Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
@@ -179,7 +179,7 @@ runtime modules 2.51 KiB 3 modules
 built modules 7.24 KiB (javascript) 0 bytes (css/mini-extract) [1m[33m[built][39m[22m
   [1m./src/admin-dataview/index.jsx + 10 modules[39m[22m 7.24 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/admin-dataview/style.scss[39m[22m 0 bytes [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 826 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 756 ms
 Field registry sync OK (28 schema groups: layout, metadata, plotBands, independentAxis, dependentAxis, tooltip, legend, labels, shapes, bar, line, dotPlot, errorBars, explodedBar, pie, nodes, beeSwarm, regression, map, divergingBar, diffColumn, netValues, treemap, waffle, heatMapTable, sankey, smallMultiples, annotations).
 Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
   npx update-browserslist-db@latest
@@ -202,4 +202,4 @@ runtime modules 3.07 KiB 5 modules
 built modules 246 KiB (javascript) 11 KiB (css/mini-extract) [1m[33m[built][39m[22m
   [1m./src/settings/index.js + 79 modules[39m[22m 246 KiB [1m[31m[not cacheable][39m[22m [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
   css ../../node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!../../node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!../../node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]![1m./src/settings/style.scss[39m[22m 11 KiB [1m[33m[built][39m[22m [1m[33m[code generated][39m[22m
-webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 3854 ms
+webpack 5.106.2 compiled [1m[32msuccessfully[39m[22m in 3508 ms
