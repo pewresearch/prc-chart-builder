@@ -632,7 +632,7 @@ class Controller {
 			 */
 			ob_start();
 		?>
-		<div <?php echo wp_kses_post( $block_attrs ); ?>>
+		<div <?php echo $block_attrs; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_block_wrapper_attributes() escapes each value; kses would decode them (WP 7.2+). ?>>
 			<?php
 			// If the chart is a freeform chart, and the share tabs are active, render the freeform chart in the tabbed interface.
 			if ( $tabs_active && $is_freeform_chart && $blocks['freeform'] && $blocks['table'] ) {

@@ -286,7 +286,7 @@ class Chart {
 						%11$s
 					</div>
 				</div>',
-				wp_kses_post( $block_wrapper_attrs ),
+				$block_wrapper_attrs, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_block_wrapper_attributes() escapes each value; kses would decode them (WP 7.2+).
 				esc_attr( $max_width ),
 				$top_rule, // phpcs:ignore
 				wp_kses_post( $render_attributes['metadata']['title'] ?? '' ),
@@ -302,7 +302,7 @@ class Chart {
 
 		return wp_sprintf(
 			'<div %1$s><div class="cb__text-wrapper" style="max-width:%2$s;width:100%%;margin-left:auto;margin-right:auto;">%3$s</div></div>',
-			wp_kses_post( $block_wrapper_attrs ),
+			$block_wrapper_attrs, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- get_block_wrapper_attributes() escapes each value; kses would decode them (WP 7.2+).
 			esc_attr( $max_width ),
 			$chart_content //phpcs:ignore
 		);
