@@ -55,6 +55,13 @@ class Cloudflare_Provider implements Screenshot_Provider {
 			);
 		}
 
+		if ( null !== $this->gate_credentials( $url ) ) {
+			return new \WP_Error(
+				'cloudflare_basic_auth_gate',
+				__( 'Cloudflare Browser Rendering cannot capture pages behind the VIP basic auth gate: its authenticate option answers a login challenge from any host the page loads. Set PRC_PLATFORM_CHART_SCREENSHOT_PROVIDER to firebase on this environment.', 'prc-chart-builder' )
+			);
+		}
+
 		$response = wp_remote_post(
 			$this->build_api_url(),
 			array(
@@ -126,6 +133,17 @@ class Cloudflare_Provider implements Screenshot_Provider {
 				'fullPage' => false,
 			),
 		);
+	}
+
+	/**
+	 * The VIP basic auth gate login for the export page. Null except for this
+	 * non-production environment's own hosts.
+	 *
+	 * @param string $url Export URL.
+	 * @return array{login: string, password: string}|null
+	 */
+	protected function gate_credentials( string $url ): ?array {
+		return \PRC\Platform\Basic_Auth_Gate\credentials_for( $url );
 	}
 
 	/**

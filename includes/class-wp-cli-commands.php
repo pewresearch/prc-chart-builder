@@ -492,9 +492,8 @@ class WP_CLI_Commands extends \WPCOM_VIP_CLI_Command {
 	 *
 	 * [--base-url=<url>]
 	 * : Override the site base URL used to build export URLs. Useful when the
-	 *   site is not publicly reachable (e.g. local dev via ngrok) or when
-	 *   targeting a password-protected environment like alpha. HTTP basic auth
-	 *   credentials can be embedded directly in the URL.
+	 *   site is not publicly reachable (e.g. local dev via ngrok). Never put
+	 *   credentials in the URL.
 	 *
 	 * [--export-url=<url>]
 	 * : Bypass permalink construction entirely and pass this exact URL to

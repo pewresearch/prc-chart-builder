@@ -82,6 +82,13 @@ class Screenshotone_Provider implements Screenshot_Provider {
 			);
 		}
 
+		if ( null !== $this->gate_credentials( $url ) ) {
+			return new \WP_Error(
+				'screenshotone_basic_auth_gate',
+				__( 'ScreenshotOne cannot capture pages behind the VIP basic auth gate: its API takes page credentials only in the request URL. Set PRC_PLATFORM_CHART_SCREENSHOT_PROVIDER to firebase on this environment.', 'prc-chart-builder' )
+			);
+		}
+
 		$client = $this->get_client();
 		if ( ! $client instanceof Client ) {
 			return new \WP_Error(
@@ -189,5 +196,16 @@ class Screenshotone_Provider implements Screenshot_Provider {
 			->format( 'png' )
 			->fullPage( false )
 			->deviceScaleFactor( $spec->device_scale_factor );
+	}
+
+	/**
+	 * The VIP basic auth gate login for the export page. Null except for this
+	 * non-production environment's own hosts.
+	 *
+	 * @param string $url Export URL.
+	 * @return array{login: string, password: string}|null
+	 */
+	protected function gate_credentials( string $url ): ?array {
+		return \PRC\Platform\Basic_Auth_Gate\credentials_for( $url );
 	}
 }

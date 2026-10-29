@@ -101,7 +101,7 @@ class Firebase_Provider implements Screenshot_Provider {
 	 *
 	 * @param string                  $url  Export URL to capture.
 	 * @param Screenshot_Capture_Spec $spec Capture parameters.
-	 * @return array<string, int|string>
+	 * @return array<string, mixed>
 	 */
 	protected function build_request_body( string $url, Screenshot_Capture_Spec $spec ): array {
 		return array(
@@ -112,7 +112,19 @@ class Firebase_Provider implements Screenshot_Provider {
 			'viewportHeight'    => min( $spec->viewport_height, Screenshot_Capture_Spec::MAX_VIEWPORT_PX ),
 			'captureElement'    => true,
 			'deviceScaleFactor' => $spec->device_scale_factor,
+			'basicAuth'         => $this->gate_credentials( $url ),
 		);
+	}
+
+	/**
+	 * The VIP basic auth gate login for the export page. Null except for this
+	 * non-production environment's own hosts.
+	 *
+	 * @param string $url Export URL.
+	 * @return array{login: string, password: string}|null
+	 */
+	protected function gate_credentials( string $url ): ?array {
+		return \PRC\Platform\Basic_Auth_Gate\credentials_for( $url );
 	}
 
 	/**
