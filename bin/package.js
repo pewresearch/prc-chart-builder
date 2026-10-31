@@ -1,4 +1,4 @@
-// WIP: This script will be for packaging chart builder for as a standalone fully packaged plugin with no dependencies (remove requires-plugin header and bundles prc-scripts in output.
+// WIP: This script will be for packaging chart builder for as a standalone fully packaged plugin with no dependencies (remove requires-plugin header and bundles prc-shared in output.
 
 console.log('Packaging Chart Builder for .org Release...');
 

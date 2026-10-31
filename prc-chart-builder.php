@@ -14,7 +14,7 @@
  * Text Domain:       prc-chart-builder
  * Requires at least: 6.7
  * Requires PHP:      8.2
- * Requires Plugins:  prc-scripts, prc-block-tables, prc-post-publish-pipeline
+ * Requires Plugins:  prc-shared, prc-block-tables
  * @package           prc-chart-builder
  */
 

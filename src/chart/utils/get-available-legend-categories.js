@@ -1,5 +1,5 @@
-import { getGroupColorDomain } from '../../../../prc-scripts/includes/scripts/src/@prc/charting-utilities/compute/groupColorDomain.ts';
-import { getThresholdLegendLabels } from '../../../../prc-scripts/includes/scripts/src/@prc/charting-utilities/heatMapTable/thresholdLegendLabels.ts';
+import { getGroupColorDomain } from '../../../../prc-shared/includes/scripts/src/@prc/charting-utilities/compute/groupColorDomain.ts';
+import { getThresholdLegendLabels } from '../../../../prc-shared/includes/scripts/src/@prc/charting-utilities/heatMapTable/thresholdLegendLabels.ts';
 import {
 	BUBBLE_MAP_CHART_TYPES,
 	POINT_CHART_TYPES,

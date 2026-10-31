@@ -6,7 +6,7 @@
 import {
 	getLinearRampStops,
 	getThresholdLegendLabels,
-} from '../../../../prc-scripts/includes/scripts/src/@prc/charting-utilities/heatMapTable/thresholdLegendLabels.ts';
+} from '../../../../prc-shared/includes/scripts/src/@prc/charting-utilities/heatMapTable/thresholdLegendLabels.ts';
 import {
 	effectiveChartTypeForControls,
 	VALUE_SCALE_CHART_TYPES,

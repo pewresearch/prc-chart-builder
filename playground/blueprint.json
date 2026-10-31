@@ -22,12 +22,12 @@
 			"step": "installPlugin",
 			"pluginData": {
 				"resource": "git:directory",
-				"url": "https://github.com/pewresearch/prc-scripts",
+				"url": "https://github.com/pewresearch/prc-shared",
 				"ref": "trunk",
 				"refType": "branch"
 			},
 			"options": {
-				"targetFolderName": "prc-scripts",
+				"targetFolderName": "prc-shared",
 				"activate": true
 			}
 		},
