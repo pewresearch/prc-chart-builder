@@ -1,26 +1,51 @@
 /**
  * WordPress Dependencies
  */
+import { useState } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import { Button } from '@wordpress/components';
+import { useDispatch } from '@wordpress/data';
+import { store as coreStore } from '@wordpress/core-data';
+import { store as noticesStore } from '@wordpress/notices';
 import { SyncedEntityPlaceholder } from '@prc/components';
 
 /**
  * Internal Dependencies
  */
 import ChartSearch from './chart-search';
-
-const NEW_CHART_URL =
-	window?.prcChartBuilderLibrary?.newChartUrl ||
-	'post-new.php?post_type=chart';
+import { createAndOpenChartDraft } from './create-chart-draft';
 
 /**
- * Synced Chart empty-state: search existing charts, or open post-new in a new
- * tab. The compact CreateNewChartModal wizard is intentionally unused here for
- * now — keep that component around in case we reactivate this flow or remove
- * it later after the controller/library paths settle.
+ * Empty synced chart. Search for an existing chart, or create a draft and
+ * open that draft's editor in a new tab.
+ *
+ * @param {Object}   props
+ * @param {Function} props.setAttributes
+ * @param {boolean}  props.isNew
+ * @param {boolean}  props.isResolving
  */
-export default function Placeholder({ setAttributes, isNew, isResolving }) {
+export default function Placeholder(props) {
+	const { setAttributes, isNew, isResolving } = props;
+	const [status, setStatus] = useState('idle');
+	const { saveEntityRecord } = useDispatch(coreStore);
+	const { createSuccessNotice, createErrorNotice } =
+		useDispatch(noticesStore);
+	const isCreating = status === 'creating';
+
+	function handleCreateChart() {
+		if (isCreating) {
+			return;
+		}
+		setStatus('creating');
+		createAndOpenChartDraft({
+			saveEntityRecord,
+			setAttributes,
+			notices: { createSuccessNotice, createErrorNotice },
+		}).catch(() => {
+			setStatus('idle');
+		});
+	}
+
 	return (
 		<SyncedEntityPlaceholder
 			setAttributes={setAttributes}
@@ -41,11 +66,14 @@ export default function Placeholder({ setAttributes, isNew, isResolving }) {
 					<div style={{ marginTop: '1em' }}>
 						<Button
 							variant="primary"
-							href={NEW_CHART_URL}
-							target="_blank"
-							rel="noopener noreferrer"
+							__next40pxDefaultSize
+							isBusy={isCreating}
+							disabled={isCreating}
+							onClick={handleCreateChart}
 						>
-							{__('Create New Chart', 'prc-chart-builder')}
+							{isCreating
+								? __('Creating chart…', 'prc-chart-builder')
+								: __('Create New Chart', 'prc-chart-builder')}
 						</Button>
 					</div>
 				</>

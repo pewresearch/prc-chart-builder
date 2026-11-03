@@ -11,7 +11,11 @@ import { SyncedEntityEdit } from '@prc/components';
  */
 import Controls from './controls';
 import Placeholder from './placeholder';
-import { DEFAULT_CHART_WIDTH, findChartWidth } from './flatten';
+import {
+	DEFAULT_CHART_WIDTH,
+	findChartWidth,
+	findControllerBlock,
+} from './flatten';
 
 const CHART_PRESENCE_MESSAGES = {
 	/* translators: %s: display name of the user currently editing the chart */
@@ -35,6 +39,9 @@ export default function SyncedChartEdit(props) {
 			}
 			getShrinkWrapWidth={(blocks) =>
 				findChartWidth(blocks) || DEFAULT_CHART_WIDTH
+			}
+			isEmpty={(blocks) =>
+				!findControllerBlock(blocks)?.innerBlocks?.length
 			}
 			renderNotices={({ isForkActive }) =>
 				isForkActive ? (
@@ -62,7 +69,10 @@ export default function SyncedChartEdit(props) {
 					'Chart has been deleted or is unavailable.',
 					'prc-chart-builder'
 				),
-				emptyLabel: __('Empty Chart', 'prc-chart-builder'),
+				emptyLabel: __(
+					'This chart is empty. Finish building it in the chart editor.',
+					'prc-chart-builder'
+				),
 			}}
 			Controls={Controls}
 			controlsProps={{ setAttributes: props.setAttributes }}

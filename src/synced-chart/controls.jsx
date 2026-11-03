@@ -46,6 +46,7 @@ export default function Controls({
 		useDispatch(noticesStore);
 
 	const [isFlattening, setIsFlattening] = useState(false);
+	const [isDuplicating, setIsDuplicating] = useState(false);
 	const [isReplaceModalOpen, setIsReplaceModalOpen] = useState(false);
 	const replaceLabel = __('Replace chart', 'prc-chart-builder');
 
@@ -112,6 +113,46 @@ export default function Controls({
 		createSuccessNotice,
 		createErrorNotice,
 	]);
+
+	const handleDuplicate = useCallback(async () => {
+		if (!displayRef) {
+			return;
+		}
+
+		setIsDuplicating(true);
+		try {
+			const result = await apiFetch({
+				path: '/prc-api/v3/wp-admin-dataview/duplicate',
+				method: 'POST',
+				data: { postId: displayRef, postType: 'chart' },
+			});
+			const newRef = parseInt(result?.id, 10);
+			if (!newRef) {
+				throw new Error(
+					__(
+						'The duplicate chart was not created.',
+						'prc-chart-builder'
+					)
+				);
+			}
+			setAttributes({ ref: newRef });
+			createSuccessNotice(
+				__(
+					'Duplicated chart. This block now uses the new copy.',
+					'prc-chart-builder'
+				),
+				{ type: 'snackbar' }
+			);
+		} catch (error) {
+			createErrorNotice(
+				error?.message ||
+					__('Failed to duplicate chart.', 'prc-chart-builder'),
+				{ type: 'snackbar' }
+			);
+		} finally {
+			setIsDuplicating(false);
+		}
+	}, [displayRef, setAttributes, createSuccessNotice, createErrorNotice]);
 
 	const editLink = useMemo(() => {
 		if (!displayRef) {
@@ -182,16 +223,33 @@ export default function Controls({
 				extraToolbarItems={extraToolbarItems}
 				extraInspectorContent={extraInspectorContent}
 				extraInspectorActions={
-					<PanelRow>
-						<Button
-							__next40pxDefaultSize
-							variant="secondary"
-							aria-haspopup="dialog"
-							onClick={() => setIsReplaceModalOpen(true)}
-						>
-							{replaceLabel}
-						</Button>
-					</PanelRow>
+					<>
+						<PanelRow>
+							<Button
+								__next40pxDefaultSize
+								variant="secondary"
+								onClick={handleDuplicate}
+								isBusy={isDuplicating}
+								disabled={
+									isDuplicating ||
+									!displayRef ||
+									canEdit === false
+								}
+							>
+								{__('Duplicate chart', 'prc-chart-builder')}
+							</Button>
+						</PanelRow>
+						<PanelRow>
+							<Button
+								__next40pxDefaultSize
+								variant="secondary"
+								aria-haspopup="dialog"
+								onClick={() => setIsReplaceModalOpen(true)}
+							>
+								{replaceLabel}
+							</Button>
+						</PanelRow>
+					</>
 				}
 			/>
 			{isReplaceModalOpen && (

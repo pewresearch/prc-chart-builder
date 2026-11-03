@@ -142,16 +142,6 @@ class Content_Type {
 		);
 
 		register_taxonomy( self::$chart_type_taxonomy, self::$post_type, $args );
-
-		// Pre-register all known chart type terms so they exist for filtering
-		// even if no charts of that type have been saved yet.
-		// term_exists() matches by name when passed a string, so we look up by
-		// slug explicitly using get_term_by() to avoid creating duplicates.
-		foreach ( self::$known_chart_types as $slug => $label ) {
-			if ( ! get_term_by( 'slug', $slug, self::$chart_type_taxonomy ) ) {
-				wp_insert_term( $label, self::$chart_type_taxonomy, array( 'slug' => $slug ) );
-			}
-		}
 	}
 
 	/**
