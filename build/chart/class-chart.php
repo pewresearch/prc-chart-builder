@@ -224,10 +224,15 @@ class Chart {
 		// Freeform charts render their inner blocks (nested charts) instead of a single chart.
 		$freeform_content = '';
 		if ( $is_freeform_chart ) {
+			$freeform_markup  = wrap_scroll_overflow(
+				$content,
+				$render_attributes['layout']['overflowX'] ?? 'responsive',
+				( $render_attributes['layout']['width'] ?? 640 ) . 'px'
+			);
 			$freeform_content = wp_sprintf(
 				'<div id="%1$s" class="wp-chart-builder-freeform-content">%2$s</div>',
 				$block_id,
-				$content
+				$freeform_markup
 			);
 		}
 

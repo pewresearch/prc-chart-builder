@@ -10,6 +10,28 @@ $facebook: #3b5998;
 $georgia: var(--wp--preset--font-family--georgia);
 $franklin: var(--wp--preset--font-family--sans-serif);
 
+// Let the chart shrink inside a flex or grid column. Without this, the
+// figure's min-content width is the SVG and the inner overflow-x scrollport
+// grows with it, so Scroll looks like a clipped chart with nothing to scroll.
+figure.wp-chart-builder {
+	min-width: 0;
+	max-width: 100%;
+}
+
+// Freeform Scroll. The inner box is the layout width; the shell scrolls.
+// Rules live here so the editor and the PHP render do not each restate them.
+.cb__overflow-scroll {
+	position: relative;
+	overflow-x: scroll;
+	max-width: 100%;
+	min-width: 0;
+
+	> .cb__overflow-scroll__content {
+		width: var(--cb-layout-width, 640px);
+		max-width: none;
+	}
+}
+
 // Hide tables in the block list inspector/example.
 .block-editor-block-preview__content-iframe.block-editor-iframe__html
 	.wp-block-prc-chart-builder-controller

@@ -42,6 +42,20 @@ body.prc-chart-builder-hide-block-toolbar {
 	min-height: 0;
 	overflow: hidden;
 
+	// Advanced Settings only. The 100dvh cap above is shorter than the editor
+	// canvas, so the design pane scrolls inside it. Fill the canvas instead.
+	// The regular wizard keeps the viewport cap.
+	&[data-design-mode="true"] {
+		height: 100%;
+		max-height: 100%;
+		overflow: visible;
+
+		> .prc-chart-cpt-wizard__body,
+		.prc-chart-cpt-wizard__design-mode {
+			overflow: visible;
+		}
+	}
+
 	> .prc-chart-wizard__steps,
 	> .prc-chart-wizard__explainer,
 	> .prc-chart-wizard__data-upload,
@@ -190,7 +204,7 @@ body.prc-chart-builder-hide-block-toolbar {
 		min-height: 0;
 		min-width: 0;
 		gap: 12px;
-		overflow: auto;
+		overflow: visible;
 	}
 
 	.prc-chart-wizard__design-mode-header {

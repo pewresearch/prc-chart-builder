@@ -137,6 +137,7 @@ function EditInner({
 
 	// Get viewport-aware layout dimensions
 	const width = getCurrentValue('layout', 'width');
+	const overflowX = getCurrentValue('layout', 'overflowX');
 	const height = getCurrentValue('layout', 'height');
 
 	// Get viewport-aware label customizations
@@ -1271,9 +1272,36 @@ function EditInner({
 								setAttributes={setAttributes}
 							/>
 						)}
-						{(isStaticChart || isFreeformChart) && (
-							<div className="cb__chart" {...innerBlocksProps} />
-						)}
+						{(isStaticChart || isFreeformChart) &&
+							(isFreeformChart &&
+							(overflowX === 'scroll' ||
+								overflowX === 'scroll-fixed-y-axis') ? (
+								<div
+									className="cb__overflow-scroll"
+									style={{
+										position: 'relative',
+										overflowX: 'scroll',
+										maxWidth: '100%',
+										minWidth: 0,
+										'--cb-layout-width': `${width}px`,
+									}}
+								>
+									<div
+										className="cb__chart cb__overflow-scroll__content"
+										{...innerBlocksProps}
+										style={{
+											...innerBlocksProps.style,
+											width,
+											maxWidth: 'none',
+										}}
+									/>
+								</div>
+							) : (
+								<div
+									className="cb__chart"
+									{...innerBlocksProps}
+								/>
+							))}
 						{!isStaticChart &&
 							!isFreeformChart &&
 							memoizedChartData && (

@@ -443,6 +443,14 @@ class Controller {
 				$rendered_freeform .= render_block( $block_to_render );
 			}
 
+			// Scroll keeps the freeform canvas at layout width. Responsive
+			// stays unwrapped so the column can still shrink it.
+			$rendered_freeform = wrap_scroll_overflow(
+				$rendered_freeform,
+				$render_chart_attributes['layout']['overflowX'] ?? 'responsive',
+				$width
+			);
+
 			$meta_text_active = $chart_attributes['metadata']['active'] ?? false;
 			if ( $meta_text_active ) {
 				$meta_title                   = $render_chart_attributes['metadata']['title'] ?? '';

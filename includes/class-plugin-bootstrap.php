@@ -144,6 +144,7 @@ class Plugin_Bootstrap {
 		$this->include( 'class-content-type.php' );
 		$this->include( 'class-synced-chart-auto-publish.php' );
 		$this->include( 'class-block-utils.php' );
+		$this->include( 'scroll-overflow.php' );
 		$this->include( 'utils/class-table-export.php' );
 		$this->include( 'class-canonical-parent.php' );
 		$this->include( 'class-seo.php' );
