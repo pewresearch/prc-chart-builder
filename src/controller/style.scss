@@ -13,9 +13,10 @@ $franklin: var(--wp--preset--font-family--sans-serif);
 // Let the chart shrink inside a flex or grid column. Without this, the
 // figure's min-content width is the SVG and the inner overflow-x scrollport
 // grows with it, so Scroll looks like a clipped chart with nothing to scroll.
+// Do not set max-width here: it would override the constrained layout's
+// content size and un-center the figure (e.g. on chart CPT pages).
 figure.wp-chart-builder {
 	min-width: 0;
-	max-width: 100%;
 }
 
 // Freeform Scroll. The inner box is the layout width; the shell scrolls.
