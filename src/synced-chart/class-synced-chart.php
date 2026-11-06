@@ -477,6 +477,10 @@ class Synced_Chart {
 			$allowed_statuses[] = 'private';
 		} elseif ( ! empty( $synced_chart_block->post_password ) ) {
 			return '';
+		} elseif ( \PRC\Primitives\Signed_Fetch\is_signed_draft_render() ) {
+			// Screenshot and PDF renders of an unpublished parent need its unpublished charts.
+			$allowed_statuses[] = 'draft';
+			$allowed_statuses[] = 'future';
 		}
 
 		if ( ! in_array( $synced_chart_block->post_status, $allowed_statuses, true ) ) {

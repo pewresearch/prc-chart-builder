@@ -110,10 +110,9 @@ class Synced_Chart_Auto_Publish {
 	 * @param mixed $editor_id User ID of the acting editor.
 	 */
 	public function enqueue_auto_publish( $post_id, $event, $editor_id ): void {
-		$post_id   = (int) $post_id;
-		$editor_id = (int) $editor_id;
+		$post_id = (int) $post_id;
 
-		if ( $editor_id <= 0 || ! in_array( $event, self::AUTO_PUBLISH_EVENTS, true ) ) {
+		if ( ! in_array( $event, self::AUTO_PUBLISH_EVENTS, true ) ) {
 			return;
 		}
 
@@ -123,6 +122,11 @@ class Synced_Chart_Auto_Publish {
 		}
 
 		if ( empty( Synced_Chart::extract_synced_chart_refs( (string) $post->post_content ) ) ) {
+			return;
+		}
+
+		$editor_id = \PRC\Primitives\Post_Publish_Pipeline\resolve_publishing_user( $post, (int) $editor_id );
+		if ( $editor_id <= 0 ) {
 			return;
 		}
 

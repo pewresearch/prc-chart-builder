@@ -43,6 +43,20 @@ class PNG_Export {
 	public const ATTACHMENT_PROVIDER_META_KEY = '_prc_chart_screenshot_provider';
 
 	/**
+	 * Signed-fetch purpose for screenshot service fetches of unpublished charts.
+	 *
+	 * @var string
+	 */
+	public const SIGNED_FETCH_PURPOSE = 'chart-export';
+
+	/**
+	 * Chart statuses that may get a PNG. Unpublished charts are fetched through a signed URL.
+	 *
+	 * @var string[]
+	 */
+	public const GENERATABLE_STATUSES = array( 'publish', 'draft', 'future', 'pending' );
+
+	/**
 	 * IO attribute keys that are outputs of the PNG/SVG export process itself
 	 * and must be excluded from the change-detection hash. These are written
 	 * back to block attributes after export, so including them would cause
@@ -90,6 +104,7 @@ class PNG_Export {
 		// Hook into the post-publish pipeline for chart posts.
 		$loader->add_action( 'prc_platform_on_chart_publish', $this, 'maybe_schedule_png_generation' );
 		$loader->add_action( 'prc_platform_on_chart_update', $this, 'maybe_schedule_png_generation' );
+		$loader->add_action( 'prc_platform_on_pre_publish', $this, 'pre_generate_referenced_chart_pngs' );
 
 		// Expose a REST endpoint so editors can force-schedule PNG regeneration.
 		$loader->add_action( 'rest_api_init', $this, 'register_rest_routes' );
@@ -248,52 +263,97 @@ class PNG_Export {
 	}
 
 	/**
-	 * Determine whether a PNG needs to be generated and schedule the async job.
+	 * Schedule PNG generation when a chart publishes or updates.
 	 *
-	 * Called by both prc_platform_on_chart_publish and prc_platform_on_chart_update.
-	 * Skips scheduling if:
-	 *   - Action Scheduler is unavailable
-	 *   - ScreenshotOne is not configured
-	 *   - The chart block is not found in post content
-	 *   - The attributes hash has not changed since the last PNG was generated
-	 *   - A job is already pending for this post
+	 * @hook prc_platform_on_chart_publish
+	 * @hook prc_platform_on_chart_update
 	 *
 	 * @param \WP_Post $ref_post The chart post object from the pipeline.
 	 */
 	public function maybe_schedule_png_generation( $ref_post ): void {
-		if ( ! function_exists( 'as_enqueue_async_action' ) ) {
+		$this->schedule_png( (int) $ref_post->ID );
+	}
+
+	/**
+	 * Queue PNGs for the charts a scheduled post embeds, before the post and charts publish.
+	 *
+	 * Charts stay unpublished; generate_png() fetches them through a signed URL.
+	 * When the charts publish, maybe_schedule_png_generation() regenerates only
+	 * the ones whose attributes changed since this capture.
+	 *
+	 * @hook prc_platform_on_pre_publish
+	 *
+	 * @param object $ref_post Scheduled post from the pipeline.
+	 */
+	public function pre_generate_referenced_chart_pngs( $ref_post ): void {
+		if ( ! isset( $ref_post->post_content ) ) {
 			return;
 		}
 
-		if ( ! $this->screenshot_service->is_configured() ) {
-			return;
+		foreach ( array_unique( Synced_Chart::extract_synced_chart_refs( (string) $ref_post->post_content ) ) as $chart_id ) {
+			$this->schedule_png( (int) $chart_id );
+		}
+	}
+
+	/**
+	 * Queue an async PNG capture for a chart when its rendering attributes changed.
+	 *
+	 * Skips when Action Scheduler or the screenshot service is unavailable, the
+	 * post is not a chart in a generatable status, the chart block is missing,
+	 * the attributes hash matches the last capture, or a job is already queued.
+	 *
+	 * @param int $chart_id Chart post ID.
+	 * @return bool Whether a job was queued.
+	 */
+	public function schedule_png( int $chart_id ): bool {
+		if ( ! function_exists( 'as_enqueue_async_action' ) || ! $this->screenshot_service->is_configured() ) {
+			return false;
 		}
 
-		$post_id = (int) $ref_post->ID;
+		$chart = get_post( $chart_id );
+		if ( ! $chart instanceof \WP_Post || Content_Type::$post_type !== $chart->post_type || ! in_array( $chart->post_status, self::GENERATABLE_STATUSES, true ) ) {
+			return false;
+		}
 
-		$chart_block = self::get_chart_block( $ref_post->post_content );
+		$chart_block = self::get_chart_block( $chart->post_content );
 		if ( null === $chart_block ) {
-			return;
+			return false;
 		}
 
-		$new_hash    = $this->compute_attributes_hash( $chart_block['attrs'] ?? array() );
-		$stored_hash = get_post_meta( $post_id, '_chart_attributes_hash', true );
-
-		// No change -- skip.
-		if ( $new_hash === $stored_hash ) {
-			return;
-		}
-
-		// Already queued -- skip.
-		if ( $this->is_action_pending( $post_id ) ) {
-			return;
+		$new_hash = $this->compute_attributes_hash( $chart_block['attrs'] ?? array() );
+		if ( get_post_meta( $chart_id, '_chart_attributes_hash', true ) === $new_hash || $this->is_action_pending( $chart_id ) ) {
+			return false;
 		}
 
 		as_enqueue_async_action(
 			self::ACTION_HOOK,
-			array( 'post_id' => $post_id ),
+			array( 'post_id' => $chart_id ),
 			self::ACTION_GROUP
 		);
+
+		return true;
+	}
+
+	/**
+	 * URL the screenshot service captures for a chart.
+	 *
+	 * Published charts use the /export/ endpoint. Core gives unpublished charts
+	 * plain `?post_type=chart&p=ID` permalinks, so they get `export` as a query
+	 * arg plus a signed-fetch ticket instead.
+	 *
+	 * @param \WP_Post $post     Chart post.
+	 * @param string   $base_url Optional origin that replaces the site URL.
+	 */
+	public static function get_export_url( \WP_Post $post, string $base_url = '' ): string {
+		$permalink = (string) get_permalink( $post );
+		$is_public = is_post_publicly_viewable( $post );
+		$url       = $is_public ? trailingslashit( $permalink ) . 'export/' : add_query_arg( 'export', '1', $permalink );
+
+		if ( '' !== $base_url ) {
+			$url = rtrim( $base_url, '/' ) . substr( $url, strlen( rtrim( site_url(), '/' ) ) );
+		}
+
+		return $is_public ? $url : \PRC\Primitives\Signed_Fetch\sign_url( $url, self::SIGNED_FETCH_PURPOSE, (int) $post->ID );
 	}
 
 	/**
@@ -309,22 +369,12 @@ class PNG_Export {
 	 */
 	public function generate_png( int $post_id, string $base_url = '', string $export_url_override = '' ): void {
 		$post = get_post( $post_id );
-		if ( ! $post || 'publish' !== $post->post_status ) {
+		if ( ! $post || ! in_array( $post->post_status, self::GENERATABLE_STATUSES, true ) ) {
 			return;
 		}
 
-		// Build the export URL. An explicit override takes highest priority
-		// (useful for local testing against alpha URLs). Otherwise rewrite the
-		// origin when a base URL is provided, falling back to the local permalink.
-		if ( ! empty( $export_url_override ) ) {
-			$export_url = $export_url_override;
-		} elseif ( ! empty( $base_url ) ) {
-			$permalink  = trailingslashit( get_permalink( $post_id ) ) . 'export/';
-			$site_url   = rtrim( site_url(), '/' );
-			$export_url = rtrim( $base_url, '/' ) . substr( $permalink, strlen( $site_url ) );
-		} else {
-			$export_url = trailingslashit( get_permalink( $post_id ) ) . 'export/';
-		}
+		// An explicit override (local testing against alpha URLs) wins.
+		$export_url = ! empty( $export_url_override ) ? $export_url_override : self::get_export_url( $post, $base_url );
 
 		// Extract chart dimensions from block attributes.
 		$chart_block = self::get_chart_block( $post->post_content );

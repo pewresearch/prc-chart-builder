@@ -65,6 +65,21 @@ class Chart_Export_Endpoint {
 	}
 
 	/**
+	 * Whether this request may see the export page for a chart.
+	 *
+	 * Logged-in users and published charts pass. Otherwise the request needs a
+	 * chart-export ticket for this chart. A signed draft render hands the
+	 * template an in-request published copy, so the stored status is read.
+	 *
+	 * @param \WP_Post $post Chart post.
+	 */
+	public static function request_may_export( \WP_Post $post ): bool {
+		return is_user_logged_in()
+			|| 'publish' === get_post_status( $post->ID )
+			|| \PRC\Primitives\Signed_Fetch\request_authorizes( (int) $post->ID, PNG_Export::SIGNED_FETCH_PURPOSE );
+	}
+
+	/**
 	 * Apply requested screenshot dimensions to chart layout attributes.
 	 *
 	 * Both dimensions are required. Invalid or incomplete requests retain the
@@ -240,10 +255,7 @@ class Chart_Export_Endpoint {
 			return;
 		}
 
-		// Require the post to be publicly viewable (published, or draft/private
-		// for logged-in users). This is a safety check -- ScreenshotOne will
-		// always screenshot published charts.
-		if ( ! is_user_logged_in() && 'publish' !== $post->post_status ) {
+		if ( ! self::request_may_export( $post ) ) {
 			wp_die( esc_html__( 'This chart is not publicly available.', 'prc-chart-builder' ), '', array( 'response' => 403 ) );
 		}
 

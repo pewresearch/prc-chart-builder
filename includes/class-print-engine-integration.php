@@ -104,6 +104,10 @@ class Print_Engine_Integration {
 			$allowed_statuses[] = 'draft';
 			$allowed_statuses[] = 'future';
 			$allowed_statuses[] = 'private';
+		} elseif ( empty( $chart_post->post_password ) && \PRC\Primitives\Signed_Fetch\is_signed_draft_render() ) {
+			// A draft report's PDF renders anonymously through a signed ticket.
+			$allowed_statuses[] = 'draft';
+			$allowed_statuses[] = 'future';
 		}
 		if ( ! in_array( $chart_post->post_status, $allowed_statuses, true ) ) {
 			return '';
