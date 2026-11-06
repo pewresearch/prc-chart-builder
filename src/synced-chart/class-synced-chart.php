@@ -57,6 +57,35 @@ class Synced_Chart {
 	}
 
 	/**
+	 * Resolve a ref that points at a future-revision fork to its parent chart.
+	 *
+	 * A block can store a fork ID (forks are drafts with the parent's title, so
+	 * chart search lists them). Merging a fork trashes it, so the fork ID alone
+	 * renders nothing on the live page. The parent chart holds the merged content
+	 * and previews still pick up the parent's active fork.
+	 *
+	 * @param int $chart_id Chart CPT ID stored in the block `ref`.
+	 * @return int Parent chart ID for a fork, otherwise the given ID.
+	 */
+	public static function resolve_chart_ref( int $chart_id ): int {
+		if ( $chart_id <= 0 ) {
+			return $chart_id;
+		}
+
+		$parent_id = (int) get_post_meta( $chart_id, '_prc_fork_parent', true );
+		if ( $parent_id <= 0 || $parent_id === $chart_id ) {
+			return $chart_id;
+		}
+
+		$parent = get_post( $parent_id );
+		if ( ! $parent instanceof \WP_Post || Content_Type::$post_type !== $parent->post_type ) {
+			return $chart_id;
+		}
+
+		return $parent_id;
+	}
+
+	/**
 	 * Scan raw post content for synced-chart blocks and collect chart CPT refs.
 	 *
 	 * Also expands `core/block` (reusable/synced pattern) refs and scans their
@@ -87,7 +116,7 @@ class Synced_Chart {
 				$attrs = $processor->allocate_and_return_parsed_attributes();
 
 				if ( ! empty( $attrs['ref'] ) ) {
-					$refs[] = (int) $attrs['ref'];
+					$refs[] = self::resolve_chart_ref( (int) $attrs['ref'] );
 				}
 				continue;
 			}
@@ -437,6 +466,8 @@ class Synced_Chart {
 		if ( empty( $attributes['ref'] ) ) {
 			return '';
 		}
+
+		$attributes['ref'] = self::resolve_chart_ref( (int) $attributes['ref'] );
 
 		$synced_chart_block = get_post( $attributes['ref'] );
 		if ( ! $synced_chart_block || Content_Type::$post_type !== $synced_chart_block->post_type ) {

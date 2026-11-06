@@ -2,9 +2,13 @@
  * WordPress Dependencies
  */
 import { __ } from '@wordpress/i18n';
+import { useEffect } from '@wordpress/element';
+import { useSelect } from '@wordpress/data';
+import { store as coreStore } from '@wordpress/core-data';
 import { Notice } from '@wordpress/components';
 import { Warning } from '@wordpress/block-editor';
 import { SyncedEntityEdit } from '@prc/components';
+import { entityRecordArgs } from '@prc/functions';
 
 /**
  * Internal Dependencies
@@ -27,7 +31,44 @@ const CHART_PRESENCE_MESSAGES = {
 	),
 };
 
+/**
+ * Parent chart ID when `ref` is a future-revision fork, else undefined.
+ *
+ * Merging a fork trashes it, so the block must store the parent chart.
+ *
+ * @param {number} ref Block ref.
+ * @return {number|undefined} Parent chart ID.
+ */
+function useForkParentRef(ref) {
+	return useSelect(
+		(select) => {
+			if (!ref) {
+				return undefined;
+			}
+			const { getEntityRecord } = select(coreStore);
+			const parentId = getEntityRecord(...entityRecordArgs('chart', ref))
+				?.meta?._prc_fork_parent;
+			if (!parentId || parentId === ref) {
+				return undefined;
+			}
+			return getEntityRecord(...entityRecordArgs('chart', parentId))
+				? parentId
+				: undefined;
+		},
+		[ref]
+	);
+}
+
 export default function SyncedChartEdit(props) {
+	const { attributes, setAttributes } = props;
+	const forkParentRef = useForkParentRef(attributes.ref);
+
+	useEffect(() => {
+		if (forkParentRef) {
+			setAttributes({ ref: forkParentRef });
+		}
+	}, [forkParentRef, setAttributes]);
+
 	return (
 		<SyncedEntityEdit
 			{...props}

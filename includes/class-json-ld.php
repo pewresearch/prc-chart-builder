@@ -486,7 +486,7 @@ class JSON_LD {
 			if ( 'prc-chart-builder/synced-chart' === ( $block['blockName'] ?? '' ) ) {
 				$ref = $block['attrs']['ref'] ?? null;
 				if ( $ref ) {
-					$refs[] = (int) $ref;
+					$refs[] = Synced_Chart::resolve_chart_ref( (int) $ref );
 				}
 			}
 			if ( ! empty( $block['innerBlocks'] ) ) {
