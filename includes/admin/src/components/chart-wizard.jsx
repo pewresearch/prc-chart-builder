@@ -498,6 +498,7 @@ export default function ChartWizard({
 						onNext={handleDataNext}
 						layout={wizardLayout}
 						chartAttributes={chartAttributes}
+						onChartAttributesChange={setChartAttributes}
 						previewKey={previewKey}
 					/>
 				)}

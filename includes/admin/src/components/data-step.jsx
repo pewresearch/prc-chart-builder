@@ -21,11 +21,13 @@ import {
 	SlotFillProvider,
 } from '@wordpress/components';
 import { useDispatch } from '@wordpress/data';
-import { useCallback, useEffect } from '@wordpress/element';
+import { useCallback, useEffect, useRef } from '@wordpress/element';
 import { chevronLeft } from '@wordpress/icons';
 import { __ } from '@wordpress/i18n';
 
 import CsvDataInput from '../../../../src/shared/data-step/csv-data-input';
+import { applyUploadedBarChartHeight } from '../../../../src/shared/utils/bar-chart-height';
+import { bindBarChartHeightToCsvImport } from '../../../../src/shared/utils/bind-bar-chart-height-to-csv-import';
 import { csvToTableAttributes } from '../../../../src/shared/utils/csv';
 import ChartPreviewPane from './chart-preview-pane';
 
@@ -57,13 +59,14 @@ function SelectBlockOnMount({ clientId }) {
 
 /**
  * @param {Object}        props
- * @param {Array}         props.tableBlocks       BlockEditorProvider value (single table block).
- * @param {Function}      props.onTableChange     Persist edited blocks to modal state.
- * @param {Function}      props.onBack            Back handler.
- * @param {Function}      props.onNext            Next handler.
- * @param {string}        [props.layout]          'full' hides inline nav (the wizard action bar owns it).
- * @param {Object}        [props.chartAttributes] Seeded/edited chart attributes for the live preview.
- * @param {string|number} [props.previewKey]      Preview remount key.
+ * @param {Array}         props.tableBlocks               BlockEditorProvider value (single table block).
+ * @param {Function}      props.onTableChange             Persist edited blocks to modal state.
+ * @param {Function}      props.onBack                    Back handler.
+ * @param {Function}      props.onNext                    Next handler.
+ * @param {string}        [props.layout]                  'full' hides inline nav (the wizard action bar owns it).
+ * @param {Object}        [props.chartAttributes]         Chart attributes for the live preview.
+ * @param {Function}      [props.onChartAttributesChange] Replace chart attributes after an upload.
+ * @param {string|number} [props.previewKey]              Preview remount key.
  */
 export default function DataStep({
 	tableBlocks,
@@ -72,10 +75,30 @@ export default function DataStep({
 	onNext,
 	layout = 'compact',
 	chartAttributes,
+	onChartAttributesChange,
 	previewKey,
 }) {
 	const showInlineNav = layout !== 'full';
 	const hasTableBlock = Boolean(tableBlocks[0]);
+	const tableClientId = tableBlocks[0]?.clientId ?? null;
+	const chartAttributesRef = useRef(chartAttributes);
+	const onChartAttributesChangeRef = useRef(onChartAttributesChange);
+	chartAttributesRef.current = chartAttributes;
+	onChartAttributesChangeRef.current = onChartAttributesChange;
+
+	useEffect(() => {
+		if (!tableClientId) {
+			return undefined;
+		}
+		return bindBarChartHeightToCsvImport({
+			namespace: `prc-chart-builder/data-step/${tableClientId}`,
+			getChartAttributes: () => chartAttributesRef.current,
+			getTableClientId: () => tableClientId,
+			onChartAttributesChange: (next) => {
+				onChartAttributesChangeRef.current?.(next);
+			},
+		});
+	}, [tableClientId]);
 
 	const handleCsvUpload = useCallback(
 		(csvText) => {
@@ -94,8 +117,13 @@ export default function DataStep({
 					},
 				},
 			]);
+			if (chartAttributes && onChartAttributesChange) {
+				onChartAttributesChange(
+					applyUploadedBarChartHeight(chartAttributes, { head, body })
+				);
+			}
 		},
-		[onTableChange, tableBlocks]
+		[chartAttributes, onChartAttributesChange, onTableChange, tableBlocks]
 	);
 
 	/*
@@ -160,7 +188,11 @@ export default function DataStep({
 					style={{ marginTop: '16px' }}
 				>
 					<FlexItem>
-						<Button variant="primary" onClick={onNext}>
+						<Button
+							variant="primary"
+							onClick={onNext}
+							__next40pxDefaultSize
+						>
 							{__(
 								'Next: Configure & Preview',
 								'prc-chart-builder'
@@ -172,6 +204,7 @@ export default function DataStep({
 							variant="secondary"
 							onClick={onBack}
 							icon={chevronLeft}
+							__next40pxDefaultSize
 						>
 							{__('Back', 'prc-chart-builder')}
 						</Button>

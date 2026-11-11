@@ -39,6 +39,8 @@ import {
 import CuratedControls from '../shared/curated-controls';
 import CsvDataInput from '../shared/data-step/csv-data-input';
 import { SelectChartStep, useChartPatterns } from '../shared/select-chart-step';
+import { applyUploadedBarChartHeight } from '../shared/utils/bar-chart-height';
+import { bindBarChartHeightToCsvImport } from '../shared/utils/bind-bar-chart-height-to-csv-import';
 import { csvToTableAttributes } from '../shared/utils/csv';
 import {
 	TemplateResetWarning,
@@ -313,6 +315,27 @@ export default function ChartCptWizardShell({
 		setActiveTab('pattern');
 	}, []);
 
+	const chartAttributesRef = useRef(chartAttributes);
+	const onChartAttributesChangeRef = useRef(onChartAttributesChange);
+	chartAttributesRef.current = chartAttributes;
+	onChartAttributesChangeRef.current = onChartAttributesChange;
+
+	useEffect(() => {
+		if (!tableClientId) {
+			return undefined;
+		}
+		return bindBarChartHeightToCsvImport({
+			namespace: `prc-chart-builder/cpt-wizard/${tableClientId}`,
+			getChartAttributes: () => chartAttributesRef.current,
+			getTableClientId: () => tableClientId,
+			onChartAttributesChange: (next) => {
+				onChartAttributesChangeRef.current?.({
+					layout: next.layout,
+				});
+			},
+		});
+	}, [tableClientId]);
+
 	const handleCsvUpload = useCallback(
 		(csvText) => {
 			if (!tableClientId) {
@@ -320,8 +343,23 @@ export default function ChartCptWizardShell({
 			}
 			const { head, body } = csvToTableAttributes(csvText);
 			updateBlockAttributes(tableClientId, { head, body });
+			if (!chartAttributes) {
+				return;
+			}
+			const nextChart = applyUploadedBarChartHeight(chartAttributes, {
+				head,
+				body,
+			});
+			if (nextChart !== chartAttributes) {
+				onChartAttributesChange({ layout: nextChart.layout });
+			}
 		},
-		[tableClientId, updateBlockAttributes]
+		[
+			chartAttributes,
+			onChartAttributesChange,
+			tableClientId,
+			updateBlockAttributes,
+		]
 	);
 
 	const key = stepKey(activeStep);
