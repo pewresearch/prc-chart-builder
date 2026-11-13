@@ -69,6 +69,9 @@ import {
 } from '../shared/wizard-chrome/preview-appearance';
 import PreviewToolbar from '../shared/wizard-chrome/preview-toolbar';
 import PreviewViewportToggle from '../shared/wizard-chrome/preview-viewport-toggle';
+import { ZOOM_DEFAULT } from '../shared/wizard-chrome/preview-zoom';
+import PreviewZoomControl from '../shared/wizard-chrome/preview-zoom-control';
+import WizardControlTip from '../shared/wizard-ui/wizard-control-tip';
 import {
 	PREVIEW_CARD_PADDING,
 	getEffectivePreviewViewport,
@@ -172,7 +175,7 @@ export default function ChartCptWizardShell({
 	const [previewViewport, setPreviewViewport] = useState('desktop');
 	/** Hand-picked canvas width; `null` follows the selected viewport. */
 	const [previewWidth, setPreviewWidth] = useState(null);
-
+	const [previewZoom, setPreviewZoom] = useState(ZOOM_DEFAULT);
 	const handleViewportChange = useCallback((next) => {
 		setPreviewViewport(next);
 		setPreviewWidth(null);
@@ -723,20 +726,40 @@ export default function ChartCptWizardShell({
 									<div
 										className="prc-chart-modal__preview-pane editor-styles-wrapper"
 										data-preview-viewport={previewViewport}
-										style={getPreviewViewportStyle(
-											previewViewport,
-											null,
-											previewFullWidth
-										)}
+										style={{
+											...getPreviewViewportStyle(
+												previewViewport,
+												null,
+												previewFullWidth
+											),
+											'--prc-chart-preview-zoom':
+												previewZoom / 100,
+										}}
 									>
 										{refineContent}
 									</div>
 									<div className="prc-chart-wizard__preview-footer">
-										<PreviewViewportToggle
-											viewport={previewViewport}
-											onViewportChange={
-												handleViewportChange
-											}
+										<div className="prc-chart-wizard__preview-footer-group">
+											<PreviewViewportToggle
+												viewport={previewViewport}
+												onViewportChange={
+													handleViewportChange
+												}
+											/>
+											<WizardControlTip
+												label={__(
+													'Help: preview size',
+													'prc-chart-builder'
+												)}
+												text={__(
+													'Shows the chart at desktop, tablet, or mobile width. Changes you make with Tablet or Mobile selected apply only to that size. Changes made on Desktop apply to every size that has no setting of its own.',
+													'prc-chart-builder'
+												)}
+											/>
+										</div>
+										<PreviewZoomControl
+											zoom={previewZoom}
+											onZoomChange={setPreviewZoom}
 										/>
 									</div>
 								</div>

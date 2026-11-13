@@ -241,6 +241,9 @@ body.prc-chart-builder-hide-block-toolbar {
 				// rendered, so the live canvas could shrink but never grow.
 				width: var(--prc-chart-preview-width, max-content);
 				max-width: none;
+				// `zoom`, not `transform`, so the pane's scroll area follows
+				// the zoomed size.
+				zoom: var(--prc-chart-preview-zoom, 1);
 				// The pane is a flex row, and a narrower viewport leaves the
 				// chart's min-content small. Without this, the card shrinks to
 				// the pane on the way back to Desktop and the chart follows.
@@ -279,7 +282,36 @@ body.prc-chart-builder-hide-block-toolbar {
 			> .prc-chart-wizard__preview-footer {
 				display: flex;
 				flex-shrink: 0;
-				justify-content: center;
+				flex-wrap: wrap;
+				gap: 16px;
+				justify-content: space-between;
+				padding: 0 20px 5px;
+			}
+		}
+
+		.prc-chart-wizard__preview-footer-group,
+		.prc-chart-wizard__preview-zoom {
+			display: flex;
+			align-items: center;
+			gap: 4px;
+		}
+
+		// Same border `isBlock` gives the Color mode toggle; `isBlock` itself
+		// would stretch the device toggle across the footer.
+		.prc-chart-wizard__preview-footer-group
+			.components-toggle-group-control {
+			border-color: $wizard-border;
+
+			&:hover {
+				border-color: $wizard-gray;
+			}
+		}
+
+		.prc-chart-wizard__preview-zoom-field {
+			width: 64px;
+
+			.components-input-control__input {
+				font-size: 12px;
 			}
 		}
 
@@ -291,6 +323,8 @@ body.prc-chart-builder-hide-block-toolbar {
 			.wp-block-prc-block-table {
 				max-width: 100%;
 				overflow: auto;
+				padding-left: 60px !important;
+				padding-top: 20px !important;
 			}
 		}
 	}

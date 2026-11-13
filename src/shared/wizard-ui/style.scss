@@ -7,12 +7,33 @@
 @import "@wordpress/dataviews/build-style/style.css";
 @import "variables";
 
-// WizardControlTip — portaled Ariakit tooltip (not a child of .prc-chart-modal).
-.components-tooltip.prc-chart-modal__control-tip-tooltip {
+.prc-chart-modal__control-tip-dropdown {
+	display: inline-flex;
+	flex-shrink: 0;
+}
+
+// WizardControlTip — portaled popover (not a child of .prc-chart-modal).
+.prc-chart-modal__control-tip-popover {
+	@include wp-components-palette;
+}
+
+.prc-chart-modal__control-tip-popover .components-popover__content {
+	background: transparent;
+	overflow: hidden;
+	padding: 0;
+}
+
+.prc-chart-modal__control-tip-body {
+	background: $wizard-surface;
+	color: $wizard-text;
 	box-sizing: border-box;
 	min-width: 200px;
 	max-width: 280px;
 	padding: 8px 12px;
+}
+
+.prc-chart-modal__control-tip-text {
+	margin: 0;
 	font-size: 13px;
 	line-height: 1.45;
 	text-wrap: pretty;
@@ -22,6 +43,8 @@
 // never follows the preset `light-dark()` palette without these overrides.
 .prc-chart-modal,
 .prc-chart-wizard {
+	@include wp-components-palette;
+
 	.components-panel {
 		background: $wizard-surface;
 		border-color: $wizard-border;
@@ -523,6 +546,12 @@
 	font-family: $wizard-font;
 	color: $wizard-text;
 	font-size: $wizard-font-size-small;
+
+	// The chart's own source field is the source note, so the power table's
+	// source note field is hidden wherever the wizard hosts the table.
+	.prc-block-table-source-note {
+		display: none;
+	}
 
 	&[data-layout="full"] {
 		display: flex;

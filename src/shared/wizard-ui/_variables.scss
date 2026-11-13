@@ -24,6 +24,22 @@ $wizard-accent-soft: color-mix(
 	var(--wp--preset--color--ui-white)
 );
 
+// wp-components read these custom properties before their hardcoded light
+// hex fallbacks, so pointing them at the presets lets buttons, inputs, and
+// toggle groups follow the `light-dark()` palette.
+@mixin wp-components-palette {
+	--wp-components-color-background: #{$wizard-surface};
+	--wp-components-color-foreground: #{$wizard-text};
+	--wp-components-color-foreground-inverted: #{$wizard-surface};
+	--wp-components-color-gray-100: #{$wizard-surface-subtle};
+	--wp-components-color-gray-200: #{$wizard-border};
+	--wp-components-color-gray-300: #{$wizard-border};
+	--wp-components-color-gray-400: #{$wizard-gray};
+	--wp-components-color-gray-600: #{$wizard-gray};
+	--wp-components-color-gray-700: #{$wizard-gray};
+	--wp-components-color-gray-800: #{$wizard-gray-very-dark};
+}
+
 // Compact/modal template grid: cap height so the picker scrolls and preview
 // lazy-loading has a stable scrollport (see use-pattern-preview-visibility).
 $wizard-pattern-picker-max-height: min(65vh, 560px);
