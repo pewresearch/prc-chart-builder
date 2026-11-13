@@ -14,6 +14,8 @@ module.exports = {
 	setupFilesAfterEnv: [`${unitRoot}/setup-jest.js`],
 	moduleNameMapper: {
 		'\\.(scss|css)$': `${unitRoot}/__mocks__/styleMock.js`,
+		'^@prc/charting-utilities$':
+			'<rootDir>/../prc-shared/includes/scripts/src/@prc/charting-utilities/index.ts',
 	},
 	transform: {
 		'^.+\\.(js|jsx|ts|tsx)$':

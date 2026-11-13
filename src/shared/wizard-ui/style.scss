@@ -378,10 +378,15 @@
 	}
 
 	&__control-help {
-		margin: 0;
+		text-wrap: pretty;
+		color: var(
+			--wp-components-color-gray-700,
+			var(--wpds-color-foreground-content-neutral-weak, #707070)
+		);
 		font-size: 12px;
-		line-height: 1.4;
-		color: $wizard-gray-very-dark;
+		font-style: normal;
+		margin-bottom: 0;
+		margin-top: 8px;
 	}
 
 	&__control-label-with-tip {
@@ -853,7 +858,7 @@
 		border-radius: 4px;
 	}
 
-	&__pch-link {
+	&__screen-link {
 		margin-top: 12px;
 	}
 

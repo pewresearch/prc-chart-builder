@@ -716,6 +716,7 @@ export default function Edit({
 						onChartAttributesChange={onChartAttributesChange}
 						chartType={chartType}
 						clientId={clientId}
+						controllerId={id}
 						setAttributes={setAttributes}
 						replaceInnerBlocks={replaceInnerBlocks}
 						tableClientId={tableClientId}

@@ -171,6 +171,92 @@ export function createWpEditorFunctions({
 				}
 			},
 		},
+		plotBandLabels: {
+			/**
+			 * Open the plot band label popover. Same click path as annotations.
+			 *
+			 * @param {string}      plotBandIndex Band index as a string.
+			 * @param {HTMLElement} anchorEl      Label element that anchors the popover.
+			 */
+			onClick: onElementClick
+				? (plotBandIndex, anchorEl) => {
+						onElementClick({
+							elementType: 'plotBandLabel',
+							plotBandIndex,
+							anchorEl,
+						});
+					}
+				: undefined,
+			onDragStart: () => {
+				// Disable block selection on pointer down so Gutenberg cannot steal the gesture.
+				if (toggleSelection) {
+					toggleSelection(false);
+				}
+			},
+			onDragActivate: () => {
+				// Disable tooltips once movement confirms a drag, not a click.
+				if (setIsDragging) {
+					setIsDragging(true);
+				}
+			},
+			onDragCancel: () => {
+				// Click without movement: restore block selection without saving the offset.
+				if (setIsDragging) {
+					setIsDragging(false);
+				}
+				if (toggleSelection) {
+					toggleSelection(true);
+				}
+			},
+			/**
+			 * Save the label offset after a drag. dx/dy match the plot band
+			 * label style: dy grows downward for top alignment and upward
+			 * for bottom alignment.
+			 *
+			 * @param {string} plotBandIndex Band index as a string.
+			 * @param {number} dx            Horizontal offset in chart pixels.
+			 * @param {number} dy            Vertical offset in chart pixels.
+			 */
+			onDragEnd: (plotBandIndex, dx, dy) => {
+				const index = parseInt(plotBandIndex, 10);
+				const currentBands =
+					getCurrentValue('plotBands', 'bands') || [];
+
+				if (setIsDragging) {
+					setIsDragging(false);
+				}
+
+				if (index < 0 || index >= currentBands.length) {
+					if (toggleSelection) {
+						toggleSelection(true);
+					}
+					return;
+				}
+
+				updateAttributeForDevice('plotBands', {
+					bands: currentBands.map((band, i) => {
+						if (i !== index) {
+							return band;
+						}
+						return {
+							...band,
+							style: {
+								...band.style,
+								label: {
+									...band.style?.label,
+									dx,
+									dy,
+								},
+							},
+						};
+					}),
+				});
+
+				if (toggleSelection) {
+					toggleSelection(true);
+				}
+			},
+		},
 		/**
 		 * Drawing drag handlers (annotation pattern). Used by DrawingsLayer when
 		 * rendered in-editor. Small multiples render selection handles in-chart

@@ -3,6 +3,7 @@
  * properties that apply them to the preview pane. Kept free of component
  * imports so the mapping can be unit tested on its own.
  */
+import { __, sprintf } from '@wordpress/i18n';
 
 /**
  * Horizontal padding of the preview card, which sits between the pane's canvas
@@ -23,6 +24,9 @@ export const PREVIEW_VIEWPORT_WIDTHS = {
 
 /** Narrowest canvas that counts as Desktop (Gutenberg's tablet→desktop). */
 const DESKTOP_MIN_WIDTH = PREVIEW_VIEWPORT_WIDTHS.tablet + 1;
+
+/** Narrowest preview first. A wider size is the one past the chart's match. */
+const PREVIEW_VIEWPORT_ORDER = ['mobile', 'tablet', 'desktop'];
 
 /**
  * The viewport whose settings a canvas of this width shows on the site.
@@ -64,6 +68,89 @@ export function getPreviewViewportStyle(
 	return {
 		'--prc-chart-preview-width': width ? `${width}px` : 'max-content',
 	};
+}
+
+/**
+ * Preview sizes that would not change the chart.
+ *
+ * A size is turned off when the chart is no wider than that viewport, because
+ * the chart never draws wider than its own width. The size the chart falls
+ * into stays available, and so does every narrower size.
+ *
+ * @param {number} chartWidth Chart `layout.width` in pixels.
+ * @return {string[]} Viewport keys to disable.
+ */
+export function getDisabledPreviewViewports(chartWidth) {
+	if (typeof chartWidth !== 'number' || !Number.isFinite(chartWidth)) {
+		return [];
+	}
+
+	const matched = getPreviewViewportForWidth(chartWidth);
+	const matchedIndex = PREVIEW_VIEWPORT_ORDER.indexOf(matched);
+	if (matchedIndex < 0) {
+		return [];
+	}
+
+	return PREVIEW_VIEWPORT_ORDER.filter(
+		(viewport, index) => index > matchedIndex
+	);
+}
+
+/**
+ * The size the Preview step renders. A size that would not change the chart
+ * shows the size the chart matches instead. The author's own pick is left
+ * alone, so Style Chart keeps editing the size they chose.
+ *
+ * @param {string}      viewport   `'desktop'` | `'tablet'` | `'mobile'`.
+ * @param {number|null} chartWidth Chart `layout.width` in pixels.
+ * @return {string} Viewport to render.
+ */
+export function getEffectivePreviewViewport(viewport, chartWidth) {
+	if (!getDisabledPreviewViewports(chartWidth).includes(viewport)) {
+		return viewport;
+	}
+	return getPreviewViewportForWidth(chartWidth);
+}
+
+/**
+ * Help under Preview size. Names the sizes that are off, and why.
+ *
+ * @param {number} chartWidth Chart `layout.width` in pixels.
+ * @return {string} Explainer for the preview size control.
+ */
+export function getPreviewSizeHelp(chartWidth) {
+	const disabled = getDisabledPreviewViewports(chartWidth);
+
+	if (disabled.includes('tablet')) {
+		return sprintf(
+			/* translators: %d: chart width in pixels. */
+			__(
+				"This chart's max width is set to %dpx. Tablet and Desktop are unavailable because the chart will always render at this width on those devices.",
+				'prc-chart-builder'
+			),
+			chartWidth
+		);
+	}
+
+	if (disabled.includes('desktop')) {
+		return sprintf(
+			/* translators: %d: chart width in pixels. */
+			__(
+				"This chart's max width is set to %dpx. Desktop is unavailable because the chart will always render at this width on that device.",
+				'prc-chart-builder'
+			),
+			chartWidth
+		);
+	}
+
+	return sprintf(
+		/* translators: %d: chart width in pixels. */
+		__(
+			"This chart's max width is set to %dpx. Below 782px the preview uses the Tablet settings, and below 480px the Mobile settings.",
+			'prc-chart-builder'
+		),
+		chartWidth
+	);
 }
 
 /**

@@ -34,6 +34,7 @@ import * as variationTemplates from '../../controller/variation-templates/index'
 import { getSelectChartPanel } from '../wizard-chrome';
 import usePatternPreviewVisibility from './use-pattern-preview-visibility';
 import useWizardPreviewSettings from './use-wizard-preview-settings';
+import { WizardScreenLinks, WizardScreenPrompts } from './wizard-screen-links';
 
 // ── Icon map (fallback when no variation image exists) ──────────────────────────
 
@@ -403,34 +404,25 @@ export function ChartTypeCard({ term, onSelect, isActive = false }) {
 
 export function ChartTypePicker({
 	onSelect,
-	onImportPch,
+	screens = [],
+	onOpenScreen,
 	activeSlug = null,
 	showIntro = true,
 }) {
 	const terms = window?.prcChartBuilderLibrary?.chartTypeTerms || [];
-	const showPch = typeof onImportPch === 'function';
 
 	return (
 		<div className="prc-chart-modal__type-picker">
 			{showIntro && (
 				<p className="prc-chart-modal__step-label">
-					{showPch
-						? __(
-								'Choose a chart type to get started. Importing from pewplots?',
-								'prc-chart-builder'
-							)
-						: __(
-								'Choose a chart type to get started.',
-								'prc-chart-builder'
-							)}{' '}
-					{showPch && (
-						<>
-							<Button variant="link" onClick={onImportPch}>
-								{__('Upload', 'prc-chart-builder')}
-							</Button>{' '}
-							{__('your .pch.json file.', 'prc-chart-builder')}
-						</>
-					)}
+					{__(
+						'Choose a chart type to get started.',
+						'prc-chart-builder'
+					)}{' '}
+					<WizardScreenPrompts
+						screens={screens}
+						onOpenScreen={onOpenScreen}
+					/>
 				</p>
 			)}
 			<div className="prc-chart-modal__type-grid">
@@ -443,14 +435,11 @@ export function ChartTypePicker({
 					/>
 				))}
 			</div>
-			{!showIntro && showPch && (
-				<Button
-					variant="link"
-					onClick={onImportPch}
-					className="prc-chart-wizard__pch-link"
-				>
-					{__('Import from pewplots…', 'prc-chart-builder')}
-				</Button>
+			{!showIntro && (
+				<WizardScreenLinks
+					screens={screens}
+					onOpenScreen={onOpenScreen}
+				/>
 			)}
 		</div>
 	);
@@ -684,7 +673,8 @@ export function Step2TabBar({ activeTab, onChangeTab }) {
  * @param {string}      props.layout
  * @param {Object|null} props.selectedType
  * @param {Function}    props.onSelectType
- * @param {Function}    [props.onImportPch]     When omitted, pewplots import UI is hidden.
+ * @param {Object[]}    [props.screens]         Wizard screens to link from the type picker.
+ * @param {Function}    [props.onOpenScreen]    Receives a screen slug.
  * @param {Object[]}    props.patterns
  * @param {boolean}     props.patternsLoading
  * @param {Function}    props.onSelectPattern
@@ -703,7 +693,8 @@ export default function SelectChartStep({
 	layout: layoutMode,
 	selectedType,
 	onSelectType,
-	onImportPch,
+	screens,
+	onOpenScreen,
 	patterns,
 	patternsLoading,
 	onSelectPattern,
@@ -774,7 +765,8 @@ export default function SelectChartStep({
 			return (
 				<ChartTypePicker
 					onSelect={onSelectType}
-					onImportPch={onImportPch}
+					screens={screens}
+					onOpenScreen={onOpenScreen}
 				/>
 			);
 		}
@@ -796,7 +788,8 @@ export default function SelectChartStep({
 				</p>
 				<ChartTypePicker
 					onSelect={onSelectType}
-					onImportPch={onImportPch}
+					screens={screens}
+					onOpenScreen={onOpenScreen}
 					activeSlug={selectedType?.slug}
 					showIntro={false}
 				/>

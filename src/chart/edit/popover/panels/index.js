@@ -10,6 +10,7 @@ export { SeriesPaintPanel } from './SeriesPaintPanel';
 export { LineSegmentPanel } from './LineSegmentPanel';
 export { RegressionLinePanel } from './RegressionLinePanel';
 export { AnnotationPanel } from './AnnotationPanel';
+export { PlotBandLabelPanel } from './PlotBandLabelPanel';
 export { TickLabelPanel } from './TickLabelPanel';
 export { LegendItemPanel } from './LegendItemPanel';
 export { LegendPanel } from './LegendPanel';

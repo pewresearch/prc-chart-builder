@@ -23,10 +23,12 @@ export const PREVIEW_VIEWPORTS = [
 
 /**
  * @param {Object}   props
- * @param {string}   props.viewport         `'desktop'` | `'tablet'` | `'mobile'`.
+ * @param {string}   props.viewport            `'desktop'` | `'tablet'` | `'mobile'`.
  * @param {Function} props.onViewportChange
- * @param {boolean}  [props.isBlock]        Stretch the buttons to fill the row.
+ * @param {boolean}  [props.isBlock]           Stretch the buttons to fill the row.
  * @param {string}   [props.className]
+ * @param {string[]} [props.disabledViewports] Viewport keys that change nothing.
+ * @param {string}   [props.help]              Why a size is unavailable, if any.
  * @return {import('react').ReactNode} The device toggle.
  */
 export default function PreviewViewportToggle({
@@ -34,11 +36,14 @@ export default function PreviewViewportToggle({
 	onViewportChange,
 	isBlock = false,
 	className,
+	disabledViewports = [],
+	help,
 }) {
 	return (
 		<ToggleGroupControl
 			className={className}
 			label={__('Preview size', 'prc-chart-builder')}
+			help={help}
 			hideLabelFromVision
 			value={viewport}
 			isBlock={isBlock}
@@ -52,6 +57,7 @@ export default function PreviewViewportToggle({
 					value={value}
 					label={label}
 					icon={icon}
+					disabled={disabledViewports.includes(value)}
 				/>
 			))}
 		</ToggleGroupControl>

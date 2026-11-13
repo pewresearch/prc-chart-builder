@@ -30,10 +30,10 @@ import {
 	buildChartEditUrl,
 	CHART_FLOW_CREATE,
 } from '../../../../src/shared/chart-flow-handoff';
+import { getWizardScreens } from '../../../../src/shared/wizard-screens';
 import AICreateStep from './ai-create-step';
 import ConfigurePreviewStep from './configure-preview-step';
 import DataStep from './data-step';
-import PchImportStep from './pch-import';
 import {
 	WizardActionBar,
 	TemplateResetWarning,
@@ -58,6 +58,10 @@ import {
 
 function getEditUrl(postId) {
 	return buildChartEditUrl(postId, { chartFlow: CHART_FLOW_CREATE });
+}
+
+function openCreatedChart(postId) {
+	window.location.href = getEditUrl(postId);
 }
 
 async function createChartPost(title, content) {
@@ -91,7 +95,8 @@ export default function ChartWizard({
 }) {
 	const [selectedType, setSelectedType] = useState(null);
 	const [selectedPattern, setSelectedPattern] = useState(null);
-	const [isPchImport, setIsPchImport] = useState(false);
+	const wizardScreens = useMemo(() => getWizardScreens(), []);
+	const [activeScreenSlug, setActiveScreenSlug] = useState(null);
 	const [wizardStep, setWizardStep] = useState('select');
 	const [tableBlocks, setTableBlocks] = useState([]);
 	const [chartAttributes, setChartAttributes] = useState(null);
@@ -208,7 +213,7 @@ export default function ChartWizard({
 		setSelectedType(null);
 		setSelectedPattern(null);
 		setActiveTab('pattern');
-		setIsPchImport(false);
+		setActiveScreenSlug(null);
 	}, []);
 
 	const resetToPatterns = useCallback(() => {
@@ -325,8 +330,13 @@ export default function ChartWizard({
 		[]
 	);
 
+	const activeScreen =
+		wizardScreens.find((screen) => screen.slug === activeScreenSlug) ??
+		null;
+	const ActiveScreen = activeScreen?.component;
+
 	// Classic controller inline flow: type + template only (no data/configure).
-	const showTemplateOnlyPicker = isInlineMode && !isPchImport;
+	const showTemplateOnlyPicker = isInlineMode && !activeScreen;
 
 	// Full-layout chrome: top step progress + bottom action bar own navigation
 	// (steps suppress their inline buttons at `full`).
@@ -335,8 +345,8 @@ export default function ChartWizard({
 
 	// Contextual title for the host header (e.g. the Modal title bar).
 	const wizardTitle = useMemo(() => {
-		if (isPchImport) {
-			return __('Import from pewplots', 'prc-chart-builder');
+		if (activeScreen) {
+			return activeScreen.title;
 		}
 		if (activeStep === 1 && selectedType) {
 			return activeTab === 'ai'
@@ -353,7 +363,7 @@ export default function ChartWizard({
 			? __('Add Chart', 'prc-chart-builder')
 			: __('Add New Chart', 'prc-chart-builder');
 	}, [
-		isPchImport,
+		activeScreen,
 		selectedType,
 		selectedPattern,
 		activeTab,
@@ -370,7 +380,7 @@ export default function ChartWizard({
 	let actionBackLabel;
 	let actionPrimary = null;
 	if (activeStep === 1) {
-		if (selectedType || isPchImport) {
+		if (selectedType || activeScreen) {
 			actionBack = handleBackToTypes;
 			actionBackLabel = __('Chart types', 'prc-chart-builder');
 		}
@@ -449,7 +459,13 @@ export default function ChartWizard({
 					</Notice>
 				)}
 
-				{isPchImport && <PchImportStep onBack={handleBackToTypes} />}
+				{ActiveScreen && (
+					<ActiveScreen
+						onBack={handleBackToTypes}
+						postId={null}
+						onChartCreated={openCreatedChart}
+					/>
+				)}
 
 				{showTemplateOnlyPicker && isCreating && (
 					<Flex justify="center" style={{ padding: '32px' }}>
@@ -470,12 +486,13 @@ export default function ChartWizard({
 					/>
 				)}
 
-				{!isInlineMode && activeStep === 1 && !isPchImport && (
+				{!isInlineMode && activeStep === 1 && !activeScreen && (
 					<SelectChartStep
 						layout={wizardLayout}
 						selectedType={selectedType}
 						onSelectType={handleSelectType}
-						onImportPch={() => setIsPchImport(true)}
+						screens={wizardScreens}
+						onOpenScreen={setActiveScreenSlug}
 						patterns={patterns}
 						patternsLoading={patternsLoading}
 						onSelectPattern={handleSelectPattern}

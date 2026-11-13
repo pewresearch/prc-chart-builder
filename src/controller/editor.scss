@@ -5,14 +5,10 @@
 // wrapper so the pinned action bar stays on screen.
 $wizard-cpt-shell-inset: 8rem;
 
-// Floor for the preview column, wide enough for a default 640px chart plus the
-// pane's own padding.
-$wizard-preview-min-width: 720px;
-
-// Preview Chart's controls column. Deliberately wider than the 280px editor
-// sidebar — the wizard exists so these controls aren't crammed into that
-// column — while still leaving the preview more room than an even split does.
-$wizard-preview-controls-width: 400px;
+// Drag-to-snap split between the two panels (use-wizard-split.js).
+$wizard-split-handle-width: 12px;
+$wizard-split-gap: 8px;
+$wizard-split-collapsed-width: 32px;
 
 // Below this the wizard stacks into one scrolling column. Matches the tablet
 // breakpoint in block-library's core-group styles. Because the wizard renders inside the
@@ -68,6 +64,13 @@ body.prc-chart-builder-hide-block-toolbar {
 		margin-top: auto;
 	}
 
+	// Narrow canvas only (see the media query below).
+	.prc-chart-wizard__panel-switch {
+		display: none;
+		flex-shrink: 0;
+		margin-bottom: 12px;
+	}
+
 	> .prc-chart-wizard__choose,
 	> .prc-chart-modal__configure,
 	> .prc-chart-cpt-wizard__body {
@@ -95,20 +98,121 @@ body.prc-chart-builder-hide-block-toolbar {
 		overflow: hidden;
 	}
 
-	// Set Data + Configure share `.prc-chart-modal__configure` (controls | preview).
+	// Set Data, Style Chart, and Preview share `.prc-chart-modal__configure`
+	// (controls | handle | preview). `--prc-chart-wizard-split` is the
+	// controls column's share of the row, in percent; panes scroll for
+	// content wider than their column.
 	.prc-chart-modal__configure {
 		display: grid;
-		// The floor gives way to an even split on narrower canvases; the
-		// pane scrolls for charts wider than its column.
-		grid-template-columns: minmax(0, 1fr) minmax(
-				min(#{$wizard-preview-min-width}, 50%),
-				1fr
-			);
-		grid-template-areas: "controls preview";
-		gap: 16px;
+		grid-template-columns:
+			minmax(
+				0,
+				calc(
+					(
+							100% - #{$wizard-split-handle-width} - 2 *
+								#{$wizard-split-gap}
+						) *
+						var(--prc-chart-wizard-split, 50) / 100
+				)
+			)
+			$wizard-split-handle-width
+			minmax(0, 1fr);
+		grid-template-areas: "controls handle preview";
+		gap: $wizard-split-gap;
 		align-items: stretch;
 		min-height: 0;
 		min-width: 0;
+		transition: grid-template-columns 180ms cubic-bezier(0.2, 0, 0, 1);
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+
+		&[data-resizing="true"] {
+			cursor: col-resize;
+			user-select: none;
+			transition: none;
+		}
+
+		// Stacked panes (narrow canvas) ignore the collapse.
+		@media (min-width: #{$wizard-stack-below + 1px}) {
+			&[data-split-collapsed="start"] {
+				grid-template-columns:
+					$wizard-split-collapsed-width $wizard-split-handle-width
+					minmax(0, 1fr);
+			}
+
+			&[data-split-collapsed="end"] {
+				grid-template-columns:
+					minmax(0, 1fr) $wizard-split-handle-width
+					$wizard-split-collapsed-width;
+			}
+
+			// A collapsed panel keeps its content mounted but hidden, and
+			// shows only its name, so the chart canvas and table survive.
+			&[data-split-collapsed="start"]
+				> .prc-chart-modal__configure-controls,
+			&[data-split-collapsed="end"] > [data-collapsed-label]:last-child {
+				position: relative;
+				overflow: hidden;
+				padding: 0;
+
+				> * {
+					display: none;
+				}
+
+				&::before {
+					content: attr(data-collapsed-label);
+					position: absolute;
+					inset: 0;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					color: $wizard-gray-very-dark;
+					font-size: 10px;
+					font-weight: 700;
+					letter-spacing: 0.14em;
+					text-transform: uppercase;
+					writing-mode: vertical-rl;
+					transform: rotate(180deg);
+				}
+			}
+		}
+
+		> .prc-chart-wizard__split-handle {
+			grid-area: handle;
+			position: relative;
+			border-radius: 4px;
+			background-color: $wizard-surface-subtle;
+			// Two short vertical bars, centered.
+			$grip-bar: linear-gradient($wizard-gray, $wizard-gray);
+			background-image: $grip-bar, $grip-bar;
+			background-position:
+				calc(50% - 2px) center,
+				calc(50% + 2px) center;
+			background-repeat: no-repeat;
+			background-size: 2px 20px;
+			transition: background-color 0.1s;
+			cursor: col-resize;
+			touch-action: none;
+			outline: none;
+
+			// Wider hit target than the visible bar.
+			&::before {
+				content: "";
+				position: absolute;
+				inset: 0 -#{$wizard-split-gap};
+			}
+
+			&:hover,
+			&:focus-visible {
+				background-color: $wizard-border;
+			}
+
+			&:focus-visible {
+				box-shadow: 0 0 0 2px $wizard-accent;
+			}
+		}
 
 		.prc-chart-modal__configure-controls {
 			grid-area: controls;
@@ -214,19 +318,9 @@ body.prc-chart-builder-hide-block-toolbar {
 
 	// Preview Chart: viewport width + dark mode apply only to the right pane.
 	.prc-chart-wizard__preview {
-		// Reclaim the controls column's equal share for the preview. The pane
-		// scrolls for charts wider than it, so every pixel here is one less
-		// that a wide chart has to be scrolled to see.
-		grid-template-columns: $wizard-preview-controls-width minmax(0, 1fr);
-
 		.prc-chart-modal__preview-pane {
 			width: 100%;
 			justify-self: center;
-
-			// The fixed controls column already guarantees the pane the larger
-			// share, so the floor shared with the other steps would only force
-			// the two columns to overflow the canvas just above the stacking
-			// breakpoint. The pane scrolls for wide charts either way.
 			min-width: 0;
 
 			// Every viewport gives the card a definite width. A `max-width` cap
@@ -321,12 +415,25 @@ body.prc-chart-builder-hide-block-toolbar {
 			}
 		}
 
-		// Nested to match the specificity of the side-by-side rules above.
+		.prc-chart-wizard__panel-switch {
+			display: block;
+		}
+
+		// One panel at a time, picked by the panel switch above. Nested to
+		// match the specificity of the side-by-side rules above.
 		.prc-chart-modal__configure {
 			grid-template-columns: minmax(0, 1fr);
-			grid-template-areas:
-				"controls"
-				"preview";
+			grid-template-areas: "controls";
+
+			&[data-split-view="end"] {
+				grid-template-areas: "preview";
+			}
+
+			> .prc-chart-wizard__split-handle,
+			&[data-split-view="start"] > [data-collapsed-label]:last-child,
+			&[data-split-view="end"] > .prc-chart-modal__configure-controls {
+				display: none;
+			}
 
 			.prc-chart-modal__configure-controls {
 				overflow: visible;

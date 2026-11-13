@@ -84,7 +84,7 @@ function nextLabelBag(style, field, value) {
  * @param {Function} props.onChange    - Receives the picked color, or undefined.
  * @param {string}   [props.className] - Extra class for the field row.
  */
-function SeriesColorField({
+export function SeriesColorField({
 	label,
 	value,
 	placeholder,

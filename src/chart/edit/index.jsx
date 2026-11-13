@@ -76,6 +76,7 @@ const ELEMENT_TYPE_TO_PANEL = {
 	[ELEMENT_TYPES.SEGMENT]: 'line',
 	[ELEMENT_TYPES.REGRESSION]: 'regression',
 	[ELEMENT_TYPES.ANNOTATION]: 'annotations',
+	[ELEMENT_TYPES.PLOT_BAND_LABEL]: 'plotBands',
 	[ELEMENT_TYPES.LEGEND]: 'legend',
 	[ELEMENT_TYPES.LEGEND_ITEM]: 'legend',
 	[ELEMENT_TYPES.PANEL_TITLE]: 'smallMultiples',
@@ -119,7 +120,11 @@ function EditInner({
 	isSelected,
 	context,
 }) {
-	const { focusPanels, setSelectedAnnotationIndex } = useInspectorFocus();
+	const {
+		focusPanels,
+		setSelectedAnnotationIndex,
+		setSelectedPlotBandIndex,
+	} = useInspectorFocus();
 	const wizardChartActions = useWizardChartActions();
 	const { id, io, metadata, dataRender, drawings = [] } = attrs;
 
@@ -423,6 +428,7 @@ function EditInner({
 			anchorEl,
 			groupValue = null,
 			annotationId = null,
+			plotBandIndex = null,
 			axisKey = null,
 			tickValue = null,
 			panelKey = null,
@@ -461,6 +467,7 @@ function EditInner({
 				anchorEl,
 				groupValue,
 				annotationId,
+				plotBandIndex,
 				axisKey,
 				tickValue,
 				panelKey,
@@ -488,10 +495,23 @@ function EditInner({
 			setSelectedAnnotationIndex?.(
 				parseInt(selectedElement.annotationId, 10)
 			);
+			setSelectedPlotBandIndex?.(null);
+			return;
+		}
+		if (
+			selectedElement?.elementType === ELEMENT_TYPES.PLOT_BAND_LABEL &&
+			selectedElement.plotBandIndex !== undefined &&
+			selectedElement.plotBandIndex !== null
+		) {
+			setSelectedPlotBandIndex?.(
+				parseInt(selectedElement.plotBandIndex, 10)
+			);
+			setSelectedAnnotationIndex?.(null);
 			return;
 		}
 		setSelectedAnnotationIndex?.(null);
-	}, [selectedElement, setSelectedAnnotationIndex]);
+		setSelectedPlotBandIndex?.(null);
+	}, [selectedElement, setSelectedAnnotationIndex, setSelectedPlotBandIndex]);
 
 	useEffect(() => {
 		const onKeyDown = (event) => {
@@ -734,6 +754,47 @@ function EditInner({
 		});
 	};
 
+	const handlePlotBandLabelUpdate = (plotBandIndex, updates) => {
+		const index = parseInt(plotBandIndex, 10);
+		const currentBands = getCurrentValue('plotBands', 'bands') || [];
+		if (index < 0 || index >= currentBands.length) {
+			return;
+		}
+		const updated = currentBands.map((band, i) => {
+			if (i !== index) {
+				return band;
+			}
+			const nextLabelStyle = {
+				...(band.style?.label || {}),
+				...(updates.style?.label || {}),
+			};
+			Object.keys(nextLabelStyle).forEach((key) => {
+				if (nextLabelStyle[key] === undefined) {
+					delete nextLabelStyle[key];
+				}
+			});
+			return {
+				...band,
+				...updates,
+				style: {
+					...band.style,
+					...(updates.style || {}),
+					label: nextLabelStyle,
+				},
+			};
+		});
+		updateAttributeForDevice('plotBands', { bands: updated });
+	};
+
+	const handlePlotBandDelete = (plotBandIndex) => {
+		const index = parseInt(plotBandIndex, 10);
+		const currentBands = getCurrentValue('plotBands', 'bands') || [];
+		updateAttributeForDevice('plotBands', {
+			bands: currentBands.filter((_, i) => i !== index),
+		});
+		handlePopoverClose();
+	};
+
 	// Handle annotation delete from popover
 	const handleAnnotationDelete = (annotationId) => {
 		const index = parseInt(annotationId, 10);
@@ -741,6 +802,16 @@ function EditInner({
 		const updated = currentItems.filter((_, i) => i !== index);
 		updateAttributeForDevice('annotations', { items: updated });
 		handlePopoverClose();
+	};
+
+	const getPopoverDeleteHandler = () => {
+		if (selectedElement?.elementType === ELEMENT_TYPES.ANNOTATION) {
+			return () => handleAnnotationDelete(selectedElement.annotationId);
+		}
+		if (selectedElement?.elementType === ELEMENT_TYPES.PLOT_BAND_LABEL) {
+			return () => handlePlotBandDelete(selectedElement.plotBandIndex);
+		}
+		return undefined;
 	};
 
 	// Get the appropriate update handler based on element type
@@ -762,6 +833,13 @@ function EditInner({
 			if (annotationId !== undefined && annotationId !== null) {
 				return (updates) =>
 					handleAnnotationCustomizationUpdate(annotationId, updates);
+			}
+		}
+		if (elementType === ELEMENT_TYPES.PLOT_BAND_LABEL) {
+			const plotBandIndex = element?.plotBandIndex;
+			if (plotBandIndex !== undefined && plotBandIndex !== null) {
+				return (updates) =>
+					handlePlotBandLabelUpdate(plotBandIndex, updates);
 			}
 		}
 		if (elementType === ELEMENT_TYPES.TICK_LABEL) {
@@ -1417,6 +1495,27 @@ function EditInner({
 														})()
 													: undefined
 											}
+											plotBandIndex={
+												selectedElement.plotBandIndex
+											}
+											plotBand={
+												selectedElement.elementType ===
+													ELEMENT_TYPES.PLOT_BAND_LABEL &&
+												selectedElement.plotBandIndex !==
+													undefined &&
+												selectedElement.plotBandIndex !==
+													null
+													? (getCurrentValue(
+															'plotBands',
+															'bands'
+														) || [])[
+															parseInt(
+																selectedElement.plotBandIndex,
+																10
+															)
+														]
+													: undefined
+											}
 											onUpdate={getCustomizationUpdateHandler(
 												selectedElement.elementType,
 												selectedElement
@@ -1428,15 +1527,7 @@ function EditInner({
 											onTooltipUpdate={
 												handleTooltipCustomizationUpdate
 											}
-											onDelete={
-												selectedElement.elementType ===
-												ELEMENT_TYPES.ANNOTATION
-													? () =>
-															handleAnnotationDelete(
-																selectedElement.annotationId
-															)
-													: undefined
-											}
+											onDelete={getPopoverDeleteHandler()}
 											onDuplicate={
 												selectedElement.elementType ===
 												ELEMENT_TYPES.ANNOTATION

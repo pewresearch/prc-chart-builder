@@ -84,6 +84,7 @@ export function InspectorFocusProvider({
 	const { set: setPreference } = useDispatch(preferencesStore);
 	const [selectedAnnotationIndex, setSelectedAnnotationIndex] =
 		useState(null);
+	const [selectedPlotBandIndex, setSelectedPlotBandIndex] = useState(null);
 
 	const focusPanels = useCallback((panelIds) => {
 		setFocusedPanels(Array.isArray(panelIds) ? panelIds : [panelIds]);
@@ -124,6 +125,8 @@ export function InspectorFocusProvider({
 				setPanelOpen,
 				selectedAnnotationIndex,
 				setSelectedAnnotationIndex,
+				selectedPlotBandIndex,
+				setSelectedPlotBandIndex,
 			}}
 		>
 			{children}
@@ -134,7 +137,7 @@ export function InspectorFocusProvider({
 /**
  * Returns the raw focus context value.
  *
- * @return {{ focusedPanels: string[], focusPanels: Function, clearFocus: Function, defaultPanelsOpen?: boolean, openPanels: Object<string, boolean>, setPanelOpen: Function, selectedAnnotationIndex: number|null, setSelectedAnnotationIndex: Function }|null} Focus context, or null outside the provider.
+ * @return {{ focusedPanels: string[], focusPanels: Function, clearFocus: Function, defaultPanelsOpen?: boolean, openPanels: Object<string, boolean>, setPanelOpen: Function, selectedAnnotationIndex: number|null, setSelectedAnnotationIndex: Function, selectedPlotBandIndex: number|null, setSelectedPlotBandIndex: Function }|null} Focus context, or null outside the provider.
  */
 export function useInspectorFocus() {
 	return useContext(InspectorFocusContext);

@@ -18,6 +18,7 @@ import {
 	LineSegmentPanel,
 	RegressionLinePanel,
 	AnnotationPanel,
+	PlotBandLabelPanel,
 	TickLabelPanel,
 	LegendItemPanel,
 	LegendPanel,
@@ -38,6 +39,7 @@ export const ELEMENT_TYPES = {
 	SEGMENT: 'segment',
 	REGRESSION: 'regression',
 	ANNOTATION: 'annotation',
+	PLOT_BAND_LABEL: 'plotBandLabel',
 	TICK_LABEL: 'tickLabel',
 	LEGEND: 'legend',
 	LEGEND_ITEM: 'legendItem',
@@ -63,6 +65,8 @@ function getPanelTitle(elementType) {
 			return __('Regression Line Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.ANNOTATION:
 			return __('Annotation Settings', 'prc-chart-builder');
+		case ELEMENT_TYPES.PLOT_BAND_LABEL:
+			return __('Plot Band Label', 'prc-chart-builder');
 		case ELEMENT_TYPES.TICK_LABEL:
 			return __('Tick Label Settings', 'prc-chart-builder');
 		case ELEMENT_TYPES.LEGEND:
@@ -102,6 +106,8 @@ function getPanelTitle(elementType) {
  * @param {Object}      props.currentCustomizations        - Current customizations
  * @param {string}      props.annotationId                 - Annotation index (for annotations)
  * @param {Object}      props.annotation                   - Annotation object (for annotations)
+ * @param {string}      props.plotBandIndex                - Plot band index (for plot band labels)
+ * @param {Object}      props.plotBand                     - Plot band object (for plot band labels)
  * @param {string}      props.axisKey                      - 'independent' or 'dependent' (for tick labels)
  * @param {string}      props.tickValue                    - Raw tick value (for tick labels)
  * @param {string|null} props.panelKey                     - Small-multiples panel the tick belongs to
@@ -130,6 +136,8 @@ export function ChartElementPopover({
 	currentCustomizations = {},
 	annotationId,
 	annotation,
+	plotBandIndex,
+	plotBand,
 	axisKey,
 	tickValue,
 	panelKey = null,
@@ -230,6 +238,15 @@ export function ChartElementPopover({
 						onUpdate={onUpdate}
 						onDelete={onDelete}
 						panelKeys={panelKeys}
+					/>
+				);
+			case ELEMENT_TYPES.PLOT_BAND_LABEL:
+				return (
+					<PlotBandLabelPanel
+						plotBandIndex={plotBandIndex}
+						plotBand={plotBand}
+						onUpdate={onUpdate}
+						onDelete={onDelete}
 					/>
 				);
 			case ELEMENT_TYPES.TICK_LABEL:

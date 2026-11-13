@@ -159,9 +159,9 @@ class Plugin_Bootstrap {
 		$this->include( 'class-apple-news-integration.php' );
 		$this->include( 'class-json-ld.php' );
 		$this->include( 'class-print-engine-integration.php' );
+		$this->include( 'class-training.php' );
 		$this->include( 'admin/class-admin.php' );
 		$this->include( 'admin/class-chart-list.php' );
-		$this->include( 'chart-handoff/class-pch-import-endpoint.php' );
 		$this->include( 'class-chart-patterns.php' );
 		$this->include( 'class-chart-patterns-endpoint.php' );
 		$this->include( 'inspector-sidebar-panel/class-inspector-sidebar-panel.php' );
@@ -213,9 +213,9 @@ class Plugin_Bootstrap {
 		new Apple_News_Integration( $this->get_loader() );
 		new JSON_LD( $this->get_loader() );
 		new Print_Engine_Integration( $this->get_loader() );
+		new Training( $this->get_loader() );
 		new Admin( $this->get_loader() );
 		new Chart_List( $this->get_loader() );
-		new PCH_Import_Endpoint( $this->get_loader() );
 		new Chart_Patterns( $this->get_loader() );
 		new Chart_Patterns_Endpoint( $this->get_loader() );
 		new Inspector_Sidebar_Panel( $this->get_loader() );
@@ -241,7 +241,11 @@ class Plugin_Bootstrap {
 	}
 
 	/**
-	 * Load Chart AI classes, HTTP timeout filter, and register the feature with the WP AI plugin.
+	 * Load Chart AI classes and register the feature with the WP AI plugin.
+	 *
+	 * Chart generation calls Anthropic or OpenRouter. It does not call the
+	 * Google Generative Language API, so this method does not filter
+	 * http_request_args.
 	 *
 	 * @return void
 	 */
@@ -256,19 +260,6 @@ class Plugin_Bootstrap {
 		if ( ! class_exists( '\PRC\Platform\Chart_Builder\Chart_AI_Experiment' ) ) {
 			return;
 		}
-
-		// Increase HTTP timeout for Gemini API calls (thinking models can take 30–60s).
-		add_filter(
-			'http_request_args',
-			static function ( $args, $url ) {
-				if ( is_string( $url ) && str_contains( $url, 'generativelanguage.googleapis.com' ) ) {
-					$args['timeout'] = 90; // phpcs:ignore WordPressVIPMinimum.Performance.RemoteRequestTimeout.timeout_timeout -- Editor-only Gemini call; thinking models routinely exceed 60s.
-				}
-				return $args;
-			},
-			10,
-			2
-		);
 
 		add_action(
 			'wpai_register_features',

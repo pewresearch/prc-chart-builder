@@ -6,7 +6,20 @@
 /**
  * External dependencies
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import {
+	getPatternEditorOption,
+	getPatternType,
+	isHatchingPattern,
+	patternFromEditorOption,
+	patternSupportsStrokeWidth,
+	readPatternPrimaryPaint,
+	readPatternStrokeWidth,
+	withPatternPrimaryPaint,
+	withPatternStrokeWidth,
+	readPlotBandLabelRotation,
+	stripRichText,
+} from '@prc/charting-utilities';
 
 /**
  * WordPress dependencies
@@ -24,7 +37,6 @@ import {
 	PanelBody,
 	SelectControl,
 	__experimentalSpacer as Spacer,
-	TextControl,
 	ToggleControl,
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
@@ -40,8 +52,15 @@ import { formatNum } from '../utils/helpers';
 import presidentPlotBands from '../utils/president-plot-bands';
 import ChartPanelColorSettings from './chart-panel-color-settings';
 import { Help, StyledLabel } from './control-ui';
-import { useFocusedPanel } from './hooks/inspector-focus-context';
+import useChartColorGroups from './hooks/use-chart-color-groups';
+import {
+	useFocusedPanel,
+	useInspectorFocus,
+} from './hooks/inspector-focus-context';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { RichTextField } from './popover/panels/RichTextField';
+import { SeriesColorField } from './popover/panels/SeriesPaintPanel';
+import { PATTERN_OPTIONS } from './popover/utils';
 
 const NEW_PLOT_BAND = {
 	x: [null, null],
@@ -56,7 +75,7 @@ const NEW_PLOT_BAND = {
 		label: {
 			fontSize: 10,
 			fill: '#2a2a2a',
-			orientation: 'horizontal',
+			rotation: 0,
 			align: 'top',
 			dx: 0,
 			dy: 0,
@@ -73,7 +92,7 @@ const FONT_SIZES = [
 ];
 
 function getPlotBandTitle(plotBand, index) {
-	const label = (plotBand.label ?? '').trim();
+	const label = stripRichText(plotBand.label ?? '').trim();
 	if (label !== '') {
 		return label;
 	}
@@ -166,6 +185,9 @@ function PlotBandDrawerItem({
 	deleteBand,
 }) {
 	const { band, label } = plotBand.style;
+	const palette = useChartColorGroups();
+	const hatched = isHatchingPattern(band.pattern);
+	const patternType = getPatternType(band.pattern);
 
 	return (
 		<>
@@ -197,9 +219,8 @@ function PlotBandDrawerItem({
 			</HStack>
 			{isOpen && (
 				<div className="components-panel__body-content">
-					<TextControl
-						__next40pxDefaultSize
-						label={__('Label')}
+					<RichTextField
+						label={__('Label', 'prc-chart-builder')}
 						placeholder={getPlotBandTitle({}, index)}
 						value={plotBand.label ?? ''}
 						onChange={(value) =>
@@ -240,19 +261,17 @@ function PlotBandDrawerItem({
 					<StyledLabel>
 						{__('Label Positioning', 'prc-chart-builder')}
 					</StyledLabel>
-					<SelectControl
-						__next40pxDefaultSize
-						label={__('Orientation')}
-						value={label.orientation}
-						options={[
-							{ label: __('Horizontal'), value: 'horizontal' },
-							{ label: __('Vertical'), value: 'vertical' },
-						]}
+					<NumberControl
+						label={__('Rotation (degrees)')}
+						value={readPlotBandLabelRotation(label)}
 						onChange={(value) =>
 							updateBandStyle(index, 'label', {
-								orientation: value,
+								rotation: formatNum(value, 'integer') ?? 0,
+								orientation: undefined,
 							})
 						}
+						min={-360}
+						max={360}
 					/>
 					<SelectControl
 						__next40pxDefaultSize
@@ -307,21 +326,105 @@ function PlotBandDrawerItem({
 					<StyledLabel>
 						{__('Colors & Opacity', 'prc-chart-builder')}
 					</StyledLabel>
+					<SelectControl
+						__next40pxDefaultSize
+						className="prc-chart-controls__plot-band-pattern"
+						label={__('Pattern', 'prc-chart-builder')}
+						value={getPatternEditorOption(band.pattern)}
+						options={PATTERN_OPTIONS}
+						onChange={(value) =>
+							updateBandStyle(index, 'band', {
+								pattern: patternFromEditorOption(
+									band.pattern,
+									value
+								),
+							})
+						}
+					/>
+					{hatched && (
+						<>
+							<SeriesColorField
+								className="prc-chart-controls__plot-band-pattern-fill"
+								label={__('Pattern fill', 'prc-chart-builder')}
+								value={band.fill}
+								placeholder="#F0F0E6"
+								colors={palette.colors}
+								onChange={(value) =>
+									updateBandStyle(index, 'band', {
+										fill: value ?? '',
+									})
+								}
+							/>
+							<SeriesColorField
+								className="prc-chart-controls__plot-band-pattern-stroke"
+								label={__(
+									'Pattern stroke',
+									'prc-chart-builder'
+								)}
+								value={readPatternPrimaryPaint(band.pattern)}
+								placeholder="#ffffff"
+								colors={palette.colors}
+								onChange={(value) =>
+									updateBandStyle(index, 'band', {
+										pattern: withPatternPrimaryPaint(
+											band.pattern,
+											value
+										),
+									})
+								}
+							/>
+							{patternSupportsStrokeWidth(patternType) && (
+								<NumberControl
+									__next40pxDefaultSize
+									className="prc-chart-controls__plot-band-pattern-stroke-width"
+									label={__(
+										'Pattern stroke width',
+										'prc-chart-builder'
+									)}
+									value={
+										readPatternStrokeWidth(band.pattern) ??
+										''
+									}
+									min={0}
+									step={0.5}
+									onChange={(value) => {
+										const parsed =
+											value === '' || value === undefined
+												? undefined
+												: parseFloat(value);
+
+										updateBandStyle(index, 'band', {
+											pattern: withPatternStrokeWidth(
+												band.pattern,
+												Number.isNaN(parsed)
+													? undefined
+													: parsed
+											),
+										});
+									}}
+								/>
+							)}
+						</>
+					)}
 					<ChartPanelColorSettings
 						__experimentalHasMultipleOrigins
 						__experimentalIsRenderedInSidebar
 						title={__('Colors')}
 						initialOpen
 						colorSettings={[
-							{
-								value: band.fill,
-								onChange: (val) =>
-									updateBandStyle(index, 'band', {
-										fill: val ?? '',
-									}),
-								label: __('Band Fill'),
-								contrast: false,
-							},
+							...(!hatched
+								? [
+										{
+											value: band.fill,
+											onChange: (val) =>
+												updateBandStyle(index, 'band', {
+													fill: val ?? '',
+												}),
+											label: __('Band Fill'),
+											contrast: false,
+										},
+									]
+								: []),
 							{
 								value: label.fill,
 								onChange: (val) =>
@@ -368,7 +471,18 @@ function PlotBandControls({ attributes, setAttributes }) {
 		setAttributes
 	);
 	const { isOpen, panelRef, onToggle } = useFocusedPanel('plotBands');
+	const { selectedPlotBandIndex } = useInspectorFocus() ?? {};
 	const [openBandIndex, setOpenBandIndex] = useState(null);
+
+	useEffect(() => {
+		if (
+			selectedPlotBandIndex === null ||
+			selectedPlotBandIndex === undefined
+		) {
+			return;
+		}
+		setOpenBandIndex(selectedPlotBandIndex);
+	}, [selectedPlotBandIndex]);
 
 	const plotBands = getCurrentValue('plotBands') || {};
 	const plotBandsActive = Boolean(plotBands.active);
@@ -389,20 +503,29 @@ function PlotBandControls({ attributes, setAttributes }) {
 
 	const updateBandStyle = (index, group, updates) =>
 		setBands(
-			getBands().map((plotBand, i) =>
-				i === index
-					? {
-							...plotBand,
-							style: {
-								...plotBand.style,
-								[group]: {
-									...plotBand.style[group],
-									...updates,
-								},
-							},
-						}
-					: plotBand
-			)
+			getBands().map((plotBand, i) => {
+				if (i !== index) {
+					return plotBand;
+				}
+
+				const nextGroup = {
+					...plotBand.style[group],
+					...updates,
+				};
+				Object.keys(nextGroup).forEach((key) => {
+					if (nextGroup[key] === undefined) {
+						delete nextGroup[key];
+					}
+				});
+
+				return {
+					...plotBand,
+					style: {
+						...plotBand.style,
+						[group]: nextGroup,
+					},
+				};
+			})
 		);
 
 	const addBand = () => {

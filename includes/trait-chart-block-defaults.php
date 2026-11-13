@@ -7,8 +7,9 @@
  *  - get_variation_template_defaults()   — chart-type-specific overrides
  *  - deep_merge()                        — recursive associative array merge
  *
- * Used by PCH_Import_Endpoint and Chart_AI_Ability to produce fully-formed
- * chart block attributes so WordPress doesn't trigger the v1→v2 migration.
+ * Used by Chart_AI_Ability and other plugins' importers (e.g. prc-chart-handoff)
+ * to produce fully-formed chart block attributes so WordPress doesn't trigger
+ * the v1→v2 migration.
  *
  * @package PRC\Platform\Chart_Builder
  */
@@ -33,8 +34,9 @@ trait Chart_Block_Defaults {
 			return array();
 		}
 
-		$block_json = json_decode( file_get_contents( $block_json_path ), true ); // phpcs:ignore WordPress.WP.AlternativeFunctions.file_get_contents_file_get_contents
-		if ( ! isset( $block_json['attributes'] ) ) {
+		// Local plugin block.json. wp_json_file_decode reads that file; it does not fetch a URL.
+		$block_json = wp_json_file_decode( $block_json_path, array( 'associative' => true ) );
+		if ( ! is_array( $block_json ) || ! isset( $block_json['attributes'] ) ) {
 			return array();
 		}
 
@@ -364,7 +366,11 @@ trait Chart_Block_Defaults {
 					'format' => '{{row}}: {{value}}',
 				),
 				'nodes'      => array( 'pointSize' => 5 ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
+				'dataRender' => array(
+					'sortOrder'           => 'none',
+					'groupBreaksActive'   => false,
+					'groupBreaksCategory' => '',
+				),
 				'io'         => $shared_io,
 			),
 			'bee-swarm'      => array(

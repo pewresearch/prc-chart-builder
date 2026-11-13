@@ -16,4 +16,3 @@ export {
 } from './wizard-chrome';
 export { default as CsvDataInput } from './csv-data-input';
 export { default as DropZone } from './dropzone';
-export { default as PchImportStep } from './pch-import';

@@ -9,11 +9,15 @@ import {
 	__experimentalToggleGroupControl as ToggleGroupControl,
 	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
 } from '@wordpress/components';
-import { __, sprintf } from '@wordpress/i18n';
+import { __ } from '@wordpress/i18n';
 
 import { withColorScheme, withVision } from './preview-appearance';
 import PreviewViewportToggle from './preview-viewport-toggle';
-import { PREVIEW_VIEWPORT_WIDTHS } from './preview-viewports';
+import {
+	PREVIEW_VIEWPORT_WIDTHS,
+	getDisabledPreviewViewports,
+	getPreviewSizeHelp,
+} from './preview-viewports';
 
 /**
  * @param {Object}      props
@@ -35,6 +39,12 @@ export default function PreviewToolbar({
 	appearance,
 	onAppearanceChange,
 }) {
+	const chartWidth = widthRange?.chartWidth;
+	const disabledViewports =
+		typeof chartWidth === 'number'
+			? getDisabledPreviewViewports(chartWidth)
+			: [];
+
 	// The presets can exceed the range when a chart's own width cap is narrower
 	// than the viewport they describe, so the slider tracks the clamped width.
 	const presetWidth = widthRange
@@ -43,6 +53,8 @@ export default function PreviewToolbar({
 				widthRange.max
 			)
 		: null;
+	const sizeHelp =
+		typeof chartWidth === 'number' ? getPreviewSizeHelp(chartWidth) : null;
 
 	return (
 		<div className="prc-chart-wizard__preview-controls">
@@ -53,20 +65,14 @@ export default function PreviewToolbar({
 				<PreviewViewportToggle
 					viewport={viewport}
 					onViewportChange={onViewportChange}
+					disabledViewports={disabledViewports}
+					help={sizeHelp}
 					isBlock
 				/>
 				{widthRange && (
 					<RangeControl
 						className="prc-chart-wizard__preview-width"
 						label={__('Custom width', 'prc-chart-builder')}
-						help={sprintf(
-							/* translators: %d: chart width in pixels. */
-							__(
-								'This chart is capped at %dpx wide. Below 782px the preview uses the Tablet settings, and below 480px the Mobile settings.',
-								'prc-chart-builder'
-							),
-							widthRange.chartWidth
-						)}
 						value={customWidth ?? presetWidth}
 						min={widthRange.min}
 						max={widthRange.max}
@@ -104,11 +110,11 @@ export default function PreviewToolbar({
 				</ToggleGroupControl>
 			</PanelBody>
 			<PanelBody
-				title={__('Color vision', 'prc-chart-builder')}
+				title={__('Color blindness test', 'prc-chart-builder')}
 				initialOpen
 			>
 				<ToggleGroupControl
-					label={__('Color vision', 'prc-chart-builder')}
+					label={__('Color blindness test', 'prc-chart-builder')}
 					hideLabelFromVision
 					value={
 						appearance.vision.kind === 'typical'
@@ -121,6 +127,10 @@ export default function PreviewToolbar({
 					}
 					__nextHasNoMarginBottom
 					__next40pxDefaultSize
+					help={__(
+						'Color blindness test shows you how your colors would look to somebody with a color vision deficiency',
+						'prc-chart-builder'
+					)}
 				>
 					<ToggleGroupControlOption
 						label={__('Typical', 'prc-chart-builder')}

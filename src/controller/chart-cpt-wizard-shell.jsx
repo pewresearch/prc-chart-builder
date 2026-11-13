@@ -10,9 +10,18 @@ import {
 	ChartBuilderWrapper,
 } from '@prc/charting-library';
 import { store as blockEditorStore } from '@wordpress/block-editor';
-import { Button, Notice, Spinner } from '@wordpress/components';
-import { useDispatch } from '@wordpress/data';
+import {
+	Button,
+	Notice,
+	Spinner,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToggleGroupControl as ToggleGroupControl,
+	// eslint-disable-next-line @wordpress/no-unsafe-wp-apis
+	__experimentalToggleGroupControlOption as ToggleGroupControlOption,
+} from '@wordpress/components';
+import { useDispatch, useSelect } from '@wordpress/data';
 import { store as editPostStore } from '@wordpress/edit-post';
+import { store as editorStore } from '@wordpress/editor';
 import {
 	Suspense,
 	useCallback,
@@ -22,8 +31,8 @@ import {
 	useState,
 } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import { store as noticesStore } from '@wordpress/notices';
 
-import PchImportStep from '../../includes/admin/src/components/pch-import';
 import { buildPreviewChartData } from '../chart/utils/build-preview-chart-data';
 import getConfig from '../chart/utils/get-config';
 import { prepareChartAttributesForPreview } from '../chart/utils/prepare-chart-attributes-for-preview';
@@ -62,16 +71,20 @@ import PreviewToolbar from '../shared/wizard-chrome/preview-toolbar';
 import PreviewViewportToggle from '../shared/wizard-chrome/preview-viewport-toggle';
 import {
 	PREVIEW_CARD_PADDING,
+	getEffectivePreviewViewport,
 	getPreviewViewportForWidth,
 	getPreviewViewportStyle,
 	getPreviewWidthRange,
 } from '../shared/wizard-chrome/preview-viewports';
 import PreviewVisionFilters from '../shared/wizard-chrome/preview-vision-filters';
 import { WorkflowStatusPaneSlot } from '../shared/wizard-chrome/workflow-status-pane-slot';
+import useWizardSplit from '../shared/wizard-chrome/use-wizard-split';
 import { WizardChartActionsContext } from '../shared/wizard-chrome/wizard-chart-actions-context';
+import { getWizardScreens } from '../shared/wizard-screens';
 import controllerStore from './store';
 import useKeepCaretInsideBlock from './use-keep-caret-inside-block';
 import { applyControllerTemplateContent } from './utils/apply-controller-template';
+import { applyChartContent } from './utils/apply-chart-content';
 import useHideBlockToolbar from './use-hide-block-toolbar';
 
 /**
@@ -116,6 +129,7 @@ function stepKey(step) {
  * @param {Function}                  props.onChartAttributesChange `(nextAttrs) => void`.
  * @param {string}                    [props.chartType]             Controller chartType for Select step.
  * @param {string}                    props.clientId                Controller block clientId.
+ * @param {string}                    [props.controllerId]          Controller attribute id.
  * @param {Function}                  props.setAttributes           Controller setAttributes().
  * @param {Function}                  props.replaceInnerBlocks      block editor replaceInnerBlocks().
  * @param {string|null}               [props.tableClientId]         prc-block/table clientId for CSV upload.
@@ -130,6 +144,7 @@ export default function ChartCptWizardShell({
 	onChartAttributesChange,
 	chartType,
 	clientId,
+	controllerId = '',
 	setAttributes,
 	replaceInnerBlocks,
 	tableClientId = null,
@@ -175,13 +190,26 @@ export default function ChartCptWizardShell({
 	);
 	const [selectedPattern, setSelectedPattern] = useState(null);
 	const [activeTab, setActiveTab] = useState('pattern');
-	const [isPchImport, setIsPchImport] = useState(false);
+	const wizardScreens = useMemo(() => getWizardScreens(), []);
+	const [activeScreenSlug, setActiveScreenSlug] = useState(null);
+	const ActiveScreen = wizardScreens.find(
+		(screen) => screen.slug === activeScreenSlug
+	)?.component;
 	const [showTemplateResetWarning, setShowTemplateResetWarning] =
 		useState(false);
 	const { selectBlock, updateBlockAttributes } =
 		useDispatch(blockEditorStore);
 	const { openGeneralSidebar, closeGeneralSidebar } =
 		useDispatch(editPostStore);
+	const { editPost } = useDispatch(editorStore);
+	const { createInfoNotice } = useDispatch(noticesStore);
+	const { postId, currentTitle } = useSelect(
+		(select) => ({
+			postId: select(editorStore).getCurrentPostId(),
+			currentTitle: select(editorStore).getEditedPostAttribute('title'),
+		}),
+		[]
+	);
 
 	const addAnnotationHandlerRef = useRef(null);
 	const curatedControlsRef = useKeepCaretInsideBlock();
@@ -232,6 +260,11 @@ export default function ChartCptWizardShell({
 		// Style Chart (curated) and Preview without opening the inspector.
 		if (activeStep === 3 || activeStep === 4) {
 			selectBlock(chartClientId || clientId);
+		} else if (activeStep === 2) {
+			// A selected chart block switches the controller back to the chart
+			// view, which hides the table. A step change without a canvas click
+			// (keyboard, guided tour) keeps the chart selected.
+			selectBlock(clientId);
 		}
 
 		closeGeneralSidebar();
@@ -297,6 +330,7 @@ export default function ChartCptWizardShell({
 			const applied = applyControllerTemplateContent({
 				content: pattern.content,
 				clientId,
+				controllerId,
 				setAttributes,
 				replaceInnerBlocks,
 				preserveAttributes: ['id', 'lock'],
@@ -306,7 +340,37 @@ export default function ChartCptWizardShell({
 				setIsDesignMode(false);
 			}
 		},
-		[clientId, replaceInnerBlocks, setAttributes]
+		[clientId, controllerId, replaceInnerBlocks, setAttributes]
+	);
+
+	// Land where the Add New Chart import lands: Style Chart, design mode.
+	const handleApplyScreenChart = useCallback(
+		(chart) => {
+			const applied = applyChartContent(chart, {
+				clientId,
+				controllerId,
+				setAttributes,
+				replaceInnerBlocks,
+				createInfoNotice,
+				editPost,
+				currentTitle,
+			});
+			if (applied) {
+				setActiveScreenSlug(null);
+				setSelectedPattern(null);
+				setIsDesignMode(true);
+				setActiveStep(3);
+			}
+		},
+		[
+			clientId,
+			controllerId,
+			createInfoNotice,
+			currentTitle,
+			editPost,
+			replaceInnerBlocks,
+			setAttributes,
+		]
 	);
 
 	const handleBackToTypes = useCallback(() => {
@@ -363,11 +427,38 @@ export default function ChartCptWizardShell({
 	);
 
 	const key = stepKey(activeStep);
+	const {
+		containerProps: splitProps,
+		handleProps: splitHandleProps,
+		view: splitView,
+		setView: setSplitView,
+	} = useWizardSplit(key);
+	const splitHandle = (
+		<div className="prc-chart-wizard__split-handle" {...splitHandleProps} />
+	);
+	const chartPreviewLabel = __('Chart preview', 'prc-chart-builder');
+	const splitStartLabel = {
+		data: __('Data table', 'prc-chart-builder'),
+		configure: __('Style controls', 'prc-chart-builder'),
+		preview: __('Preview settings', 'prc-chart-builder'),
+	}[key];
+	const hasSplitPanels =
+		key === 'data' ||
+		key === 'preview' ||
+		(key === 'configure' && chartAttributes && !isDesignMode);
+
 	// Style Chart and Preview edit and render the chart at the preview
 	// viewport. Advanced Settings keeps the editor's own device type.
+	const previewStepViewport =
+		key === 'preview' && !previewWidth
+			? getEffectivePreviewViewport(
+					previewViewport,
+					chartAttributes?.layout?.width
+				)
+			: previewViewport;
 	const previewDeviceType =
 		key === 'preview' || (key === 'configure' && !isDesignMode)
-			? previewViewport
+			? previewStepViewport
 			: null;
 	const { setPreviewDeviceType } = useDispatch(controllerStore);
 	useEffect(() => {
@@ -393,7 +484,7 @@ export default function ChartCptWizardShell({
 	// Canvas width that shows the chart at the previewed viewport's own
 	// layout.width; no preview card is wider than this.
 	const viewportChartWidth =
-		chartAttributes?.[previewViewport]?.layout?.width ??
+		chartAttributes?.[previewStepViewport]?.layout?.width ??
 		chartAttributes?.layout?.width;
 	const previewFullWidth =
 		typeof viewportChartWidth === 'number'
@@ -439,7 +530,10 @@ export default function ChartCptWizardShell({
 	}, [activeStep, exitDesignMode, goTo, isDesignMode]);
 
 	const leanPreviewPane = (
-		<div className="prc-chart-modal__preview-pane">
+		<div
+			className="prc-chart-modal__preview-pane"
+			data-collapsed-label={chartPreviewLabel}
+		>
 			{isFreeformChartPreview(chartAttributes) ? (
 				<FreeformPreviewUnavailable />
 			) : (
@@ -510,6 +604,29 @@ export default function ChartCptWizardShell({
 					/>
 				)}
 
+				{hasSplitPanels && (
+					<div className="prc-chart-wizard__panel-switch">
+						<ToggleGroupControl
+							label={__('Show panel', 'prc-chart-builder')}
+							hideLabelFromVision
+							value={splitView}
+							isBlock
+							onChange={setSplitView}
+							__nextHasNoMarginBottom
+							__next40pxDefaultSize
+						>
+							<ToggleGroupControlOption
+								label={splitStartLabel}
+								value="start"
+							/>
+							<ToggleGroupControlOption
+								label={chartPreviewLabel}
+								value="end"
+							/>
+						</ToggleGroupControl>
+					</div>
+				)}
+
 				<div className="prc-chart-cpt-wizard__body">
 					{key === 'select' && (
 						<div className="prc-chart-cpt-wizard__select">
@@ -525,16 +642,19 @@ export default function ChartCptWizardShell({
 									)}
 								</Notice>
 							)}
-							{isPchImport ? (
-								<PchImportStep
-									onBack={() => setIsPchImport(false)}
+							{ActiveScreen ? (
+								<ActiveScreen
+									onBack={() => setActiveScreenSlug(null)}
+									postId={postId}
+									onApplyChart={handleApplyScreenChart}
 								/>
 							) : (
 								<SelectChartStep
 									layout="full"
 									selectedType={selectedType}
 									onSelectType={handleSelectType}
-									onImportPch={() => setIsPchImport(true)}
+									screens={wizardScreens}
+									onOpenScreen={setActiveScreenSlug}
 									patterns={patterns}
 									patternsLoading={patternsLoading}
 									onSelectPattern={handleSelectPattern}
@@ -549,12 +669,19 @@ export default function ChartCptWizardShell({
 					)}
 
 					{key === 'data' && (
-						<div className="prc-chart-modal__configure">
-							<div className="prc-chart-modal__configure-controls">
+						<div
+							className="prc-chart-modal__configure"
+							{...splitProps}
+						>
+							<div
+								className="prc-chart-modal__configure-controls"
+								data-collapsed-label={splitStartLabel}
+							>
 								<div className="prc-chart-modal__data-table editor-styles-wrapper">
 									{refineContent}
 								</div>
 							</div>
+							{splitHandle}
 							{leanPreviewPane}
 						</div>
 					)}
@@ -562,10 +689,14 @@ export default function ChartCptWizardShell({
 					{key === 'configure' &&
 						chartAttributes &&
 						!isDesignMode && (
-							<div className="prc-chart-modal__configure">
+							<div
+								className="prc-chart-modal__configure"
+								{...splitProps}
+							>
 								<div
 									ref={curatedControlsRef}
 									className="prc-chart-modal__configure-controls"
+									data-collapsed-label={splitStartLabel}
 								>
 									<CuratedControls
 										chartAttributes={chartAttributes}
@@ -584,7 +715,11 @@ export default function ChartCptWizardShell({
 										</Button>
 									</div>
 								</div>
-								<div className="prc-chart-wizard__preview-stack">
+								{splitHandle}
+								<div
+									className="prc-chart-wizard__preview-stack"
+									data-collapsed-label={chartPreviewLabel}
+								>
 									<div
 										className="prc-chart-modal__preview-pane editor-styles-wrapper"
 										data-preview-viewport={previewViewport}
@@ -627,11 +762,17 @@ export default function ChartCptWizardShell({
 					)}
 
 					{key === 'preview' && (
-						<div className="prc-chart-modal__configure prc-chart-wizard__preview">
+						<div
+							className="prc-chart-modal__configure prc-chart-wizard__preview"
+							{...splitProps}
+						>
 							<PreviewVisionFilters />
-							<div className="prc-chart-modal__configure-controls">
+							<div
+								className="prc-chart-modal__configure-controls"
+								data-collapsed-label={splitStartLabel}
+							>
 								<PreviewToolbar
-									viewport={previewViewport}
+									viewport={previewStepViewport}
 									onViewportChange={handleViewportChange}
 									customWidth={previewWidth}
 									onCustomWidthChange={
@@ -644,14 +785,16 @@ export default function ChartCptWizardShell({
 								<WorkflowStatusPaneSlot />
 								<ChartViewLink />
 							</div>
+							{splitHandle}
 							<div
 								className={`prc-chart-modal__preview-pane editor-styles-wrapper${paneAppearance.className}`}
-								data-preview-viewport={previewViewport}
+								data-preview-viewport={previewStepViewport}
+								data-collapsed-label={chartPreviewLabel}
 								// Sizes the chart card inside the pane, not the
 								// pane itself — see controller/style.scss.
 								style={{
 									...getPreviewViewportStyle(
-										previewViewport,
+										previewStepViewport,
 										previewWidth,
 										previewFullWidth
 									),
