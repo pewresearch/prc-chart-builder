@@ -20,6 +20,7 @@ import { __ } from '@wordpress/i18n';
 import { formatNum } from '../../../utils/helpers';
 import { useAnnotationCustomizations } from '../hooks';
 import { RichTextField } from './RichTextField';
+import { TextAnnotationLayoutControls } from './TextAnnotationLayoutControls';
 import { TextStyleControls } from './TextStyleControls';
 
 /**
@@ -172,66 +173,23 @@ export function AnnotationPanel({
 				showTextOutline
 			/>
 
-			<SelectControl
-				label={__('Text Anchor', 'prc-chart-builder')}
-				value={textAnchor}
-				__next40pxDefaultSize
-				options={[
-					{ label: __('Start', 'prc-chart-builder'), value: 'start' },
-					{
-						label: __('Middle', 'prc-chart-builder'),
-						value: 'middle',
-					},
-					{ label: __('End', 'prc-chart-builder'), value: 'end' },
-				]}
-				onChange={(value) => handleChange('textAnchor', value)}
-			/>
-
-			<SelectControl
-				label={__('Vertical Anchor', 'prc-chart-builder')}
-				value={verticalAnchor}
-				__next40pxDefaultSize
-				options={[
-					{ label: __('Start', 'prc-chart-builder'), value: 'start' },
-					{
-						label: __('Middle', 'prc-chart-builder'),
-						value: 'middle',
-					},
-					{ label: __('End', 'prc-chart-builder'), value: 'end' },
-				]}
-				onChange={(value) => handleChange('verticalAnchor', value)}
-			/>
-
-			<NumberControl
-				label={__('Rotation (degrees)', 'prc-chart-builder')}
-				value={rotation}
-				onChange={(value) =>
-					handleChange('rotation', formatNum(value, 'integer') ?? 0)
-				}
-				min={-360}
-				max={360}
-			/>
-
-			<NumberControl
-				label={__('Max Width', 'prc-chart-builder')}
-				value={maxWidth}
-				onChange={(value) =>
-					handleChange('maxWidth', formatNum(value, 'integer') ?? 200)
-				}
-				min={0}
-				help={__(
-					'Maximum width for text wrapping',
-					'prc-chart-builder'
-				)}
-			/>
-
-			<NumberControl
-				label={__('Opacity', 'prc-chart-builder')}
-				value={opacity}
-				onChange={(value) => handleChange('opacity', value)}
-				min={0}
-				max={1}
-				step={0.1}
+			<TextAnnotationLayoutControls
+				textAnchor={textAnchor}
+				verticalAnchor={verticalAnchor}
+				rotation={rotation}
+				maxWidth={maxWidth}
+				opacity={opacity}
+				onChange={(field, value) => {
+					if (field === 'rotation') {
+						handleChange(field, formatNum(value, 'integer') ?? 0);
+						return;
+					}
+					if (field === 'maxWidth') {
+						handleChange(field, formatNum(value, 'integer') ?? 200);
+						return;
+					}
+					handleChange(field, value);
+				}}
 			/>
 
 			{hasCustomizations && (

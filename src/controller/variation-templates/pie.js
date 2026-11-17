@@ -87,9 +87,6 @@ const pieTemplate = [
 				active: false,
 				markerStyle: 'circle',
 			},
-			dataRender: {
-				sortOrder: 'reverse',
-			},
 			io: {
 				isConvertedChart: false,
 			},

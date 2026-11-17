@@ -73,9 +73,9 @@ const barTemplate = [
 					verticalAnchor: 'middle',
 					dx: -5,
 				},
-				"axis": {
-					"stroke": "",
-					"strokeWidth": 1
+				axis: {
+					stroke: '',
+					strokeWidth: 1,
 				},
 			},
 			dependentAxis: {
@@ -98,9 +98,6 @@ const barTemplate = [
 			bar: {
 				barWidth: 24,
 				barGroupOffset: 28,
-			},
-			dataRender: {
-				sortOrder: 'descending',
 			},
 			io: {
 				isConvertedChart: false,

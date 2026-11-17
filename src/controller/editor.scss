@@ -223,6 +223,7 @@ body.prc-chart-builder-hide-block-toolbar {
 
 		.prc-chart-modal__preview-pane {
 			grid-area: preview;
+			position: relative;
 			min-height: 0;
 			height: 100%;
 			overflow: auto;
@@ -274,9 +275,47 @@ body.prc-chart-builder-hide-block-toolbar {
 			min-width: 0;
 			min-height: 0;
 
-			> .prc-chart-modal__preview-pane {
+			> .prc-chart-wizard__preview-frame {
+				position: relative;
+				display: flex;
+				flex: 1 1 auto;
+				flex-direction: column;
+				min-height: 0;
+			}
+
+			.prc-chart-modal__preview-pane {
 				flex: 1 1 auto;
 				height: auto;
+				min-height: 0;
+			}
+
+			// Pinned over the pane's bottom-left corner, just above the
+			// viewport buttons. It sits outside the pane's scroll box, so it
+			// stays put while the chart scrolls.
+			.prc-chart-wizard__preview-frame
+				> .prc-chart-wizard__viewport-sticker {
+				position: absolute;
+				z-index: 2;
+				bottom: 0;
+				left: 0;
+				margin: 0;
+				padding: 4px 10px;
+				border: 1px solid $wizard-accent;
+				border-radius: 4px;
+				color-scheme: light;
+				background: color-mix(
+					in srgb,
+					$wizard-accent-soft 75%,
+					transparent
+				);
+				color: $wizard-accent;
+				box-shadow: 0 1px 3px rgb(0 0 0 / 12%);
+				font-size: 11px;
+				font-weight: 600;
+				line-height: 14px;
+				white-space: nowrap;
+				pointer-events: none;
+				user-select: none;
 			}
 
 			> .prc-chart-wizard__preview-footer {

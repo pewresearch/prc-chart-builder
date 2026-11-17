@@ -116,7 +116,6 @@ const divergingBarTemplate = [
 				},
 			},
 			dataRender: {
-				sortOrder: 'descending',
 				sortKey: 'Agree',
 			},
 			io: {

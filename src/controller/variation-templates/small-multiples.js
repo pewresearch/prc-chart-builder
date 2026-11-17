@@ -151,7 +151,6 @@ const smallMultiplesTemplate = [
 				emphasisMode: 'own-series',
 			},
 			dataRender: {
-				sortOrder: 'ascending',
 				xScale: 'time',
 				xFormat: 'YYYY',
 			},

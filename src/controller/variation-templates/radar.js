@@ -104,9 +104,14 @@ const radarTemplate = [
 				markerStyle: 'rect',
 			},
 			dataRender: {
-				sortOrder: 'none',
 				x: 'Category',
-				categories: ['Speed', 'Strength', 'Durability', 'Endurance', 'Accuracy'],
+				categories: [
+					'Speed',
+					'Strength',
+					'Durability',
+					'Endurance',
+					'Accuracy',
+				],
 			},
 			io: {
 				isConvertedChart: false,

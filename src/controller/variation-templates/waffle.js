@@ -98,7 +98,6 @@ const waffleTemplate = [
 			},
 			dataRender: {
 				categories: ['y'],
-				sortOrder: 'descending',
 			},
 			waffle: {
 				cellShape: 'square',

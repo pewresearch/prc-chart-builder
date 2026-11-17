@@ -912,14 +912,18 @@ Replace auto-generated axis tick labels with custom text. Each entry can also se
 
 Click a legend item in the editor to open the legend popover. Each category key maps to an object (not just a string label).
 
-| Field on `customLegendLabels[category]`             | Type            | Notes                                                            |
-| --------------------------------------------------- | --------------- | ---------------------------------------------------------------- |
-| `text`                                              | string          | Display label override                                           |
-| `color`                                             | string (hex)    | Swatch / label color                                             |
-| `fontFamily`, `fontSize`, `fontWeight`, `fontStyle` | typography      | Same controls as other popover panels                            |
-| `outlineColor`, `outlineWidth`                      | string / number | Label outline                                                    |
-| `markerStyle`, `markerFill`                         | enum            | Marker shape and fill mode                                       |
-| `offsetX`, `offsetY`                                | number          | Detached legend position (when `legend.variation` is `detached`) |
+| Field on `customLegendLabels[category]`             | Type            | Notes                                                       |
+| --------------------------------------------------- | --------------- | ----------------------------------------------------------- |
+| `text`                                              | string          | Display label override                                      |
+| `color`                                             | string (hex)    | Swatch / label color                                        |
+| `fontFamily`, `fontSize`, `fontWeight`, `fontStyle` | typography      | Same controls as other popover panels                       |
+| `textAnchor`, `verticalAnchor`                      | enum            | Same start/middle/end alignment as text annotations         |
+| `rotation`, `maxWidth`, `opacity`                   | number          | Same rotation, wrap width, and opacity as text annotations  |
+| `lineHeight`, `letterSpacing`                       | number          | Wrapped-label spacing                                       |
+| `textAlign`                                         | enum            | Older left/center/right value. New edits write `textAnchor` |
+| `outlineColor`, `outlineWidth`                      | string / number | Label outline                                               |
+| `markerStyle`, `markerFill`                         | enum            | Marker shape and fill mode                                  |
+| `offsetX`, `offsetY`                                | number          | Detached or direct legend position                          |
 
 Grouped legend chrome opens the panel for the whole legend; individual swatches open `LegendItemPanel` for one category. See `src/chart/edit/popover/panels/README.md` for the full popover inventory.
 

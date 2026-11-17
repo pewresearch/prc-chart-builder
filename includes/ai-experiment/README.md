@@ -52,7 +52,7 @@ The AI experiment wires together three layers:
 | **AiClient**           | The platform's AI client abstraction (`WordPress\AiClient\AiClient`) — wraps Claude API calls and handles model selection, JSON mode, and file attachments.                                   |
 | **Block markup**       | Serialized WordPress block comment syntax (`<!-- wp:block-name {...} /-->`) that is stored directly in `post_content`.                                                                        |
 | **Three-layer merge**  | The attribute merging strategy: `block.json defaults → variation template → AI overrides`. Ensures every generated chart is properly configured for its type even when the AI omits settings. |
-| **Variation template** | A PHP array (mirroring the JS `variation-templates/*.js` files) of opinionated defaults for each chart type — widths, orientations, axis config, sort orders, etc.                            |
+| **Variation template** | A PHP array (mirroring the JS `variation-templates/*.js` files) of opinionated defaults for each chart type — widths, orientations, axis config, and similar chart-type settings.             |
 
 ---
 

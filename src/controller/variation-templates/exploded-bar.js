@@ -119,9 +119,6 @@ const explodedBarTemplate = [
 				labelPosition: 'center',
 				labelCutoff: 11,
 			},
-			dataRender: {
-				sortOrder: 'reverse',
-			},
 			io: {
 				isConvertedChart: false,
 				colorValue: 'orange-spectrum',

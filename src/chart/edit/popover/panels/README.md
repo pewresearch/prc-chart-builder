@@ -45,11 +45,12 @@ Chart re-renders
 
 ### Shared components (not routed by `elementType`)
 
-| Component             | Used by                                                       | Role                                             |
-| --------------------- | ------------------------------------------------------------- | ------------------------------------------------ |
-| `TextStyleControls`   | Label, Tick, Legend, Annotation (compact), Diff column panels | Shared text, typography, color, outline controls |
-| `RichTextField`       | `TextStyleControls`, annotation, legend title, axis titles    | Single-line rich text input for label text       |
-| `TooltipPanelSection` | `LabelPanel`, `ShapePanel`                                    | Per-point tooltip body/header overrides          |
+| Component                      | Used by                                                       | Role                                                              |
+| ------------------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `TextStyleControls`            | Label, Tick, Legend, Annotation (compact), Diff column panels | Shared text, typography, color, outline controls                  |
+| `TextAnnotationLayoutControls` | Annotation, plot-band label, legend item                      | Shared text anchor, vertical anchor, rotation, max width, opacity |
+| `RichTextField`                | `TextStyleControls`, annotation, legend title, axis titles    | Single-line rich text input for label text                        |
+| `TooltipPanelSection`          | `LabelPanel`, `ShapePanel`                                    | Per-point tooltip body/header overrides                           |
 
 Label text from `RichTextField` is stored as RichText HTML (bold, italic,
 underline, strikethrough, text color, link). The charting library reads it with
@@ -59,18 +60,18 @@ plain text input.
 
 ## Hooks
 
-| Hook                                | Storage shape                             | Notes                                                    |
-| ----------------------------------- | ----------------------------------------- | -------------------------------------------------------- |
-| `useLabelCustomizations`            | Split across `labels.*` maps              | Text, visibility, position, style per key                |
-| `useShapeCustomizations`            | `shapes.customStyles[key]`                | Fill, stroke, opacity, strokeWidth                       |
-| `useSegmentCustomizations`          | `shapes.segmentStyles[key]`               | Stroke, width, opacity, dash                             |
-| `useTickLabelCustomizations`        | `customTickLabels[axis][tick]` object     | Legacy string entries normalized to `{ text }`           |
-| `useAnnotationCustomizations`       | Partial updates on annotation object      | Full + compact variants                                  |
-| `useLegendItemCustomizations`       | `legend.customLegendLabels[key]` object   | Text, color, typography, marker, detached offsets        |
-| `useErrorBarCustomizations`         | `dotPlot.customStyles[key]`               | Stroke styling for whiskers                              |
-| `useTooltipCustomizations`          | `customTooltips[key]`                     | `{ body, header }`; used by `TooltipPanelSection`        |
-| `useDiffColumnHeaderCustomizations` | Maps to `diffColumn` + `diffColumn.style` | Adapts column header fields to `TextStyleControls` shape |
-| `useDiffColumnLabelCustomizations`  | `diffColumn.customLabels[rowKey]` object  | Per-cell text, color, typography, outline                |
+| Hook                                | Storage shape                             | Notes                                                            |
+| ----------------------------------- | ----------------------------------------- | ---------------------------------------------------------------- |
+| `useLabelCustomizations`            | Split across `labels.*` maps              | Text, visibility, position, style per key                        |
+| `useShapeCustomizations`            | `shapes.customStyles[key]`                | Fill, stroke, opacity, strokeWidth                               |
+| `useSegmentCustomizations`          | `shapes.segmentStyles[key]`               | Stroke, width, opacity, dash                                     |
+| `useTickLabelCustomizations`        | `customTickLabels[axis][tick]` object     | Legacy string entries normalized to `{ text }`                   |
+| `useAnnotationCustomizations`       | Partial updates on annotation object      | Full + compact variants                                          |
+| `useLegendItemCustomizations`       | `legend.customLegendLabels[key]` object   | Text, color, typography, text annotation layout, marker, offsets |
+| `useErrorBarCustomizations`         | `dotPlot.customStyles[key]`               | Stroke styling for whiskers                                      |
+| `useTooltipCustomizations`          | `customTooltips[key]`                     | `{ body, header }`; used by `TooltipPanelSection`                |
+| `useDiffColumnHeaderCustomizations` | Maps to `diffColumn` + `diffColumn.style` | Adapts column header fields to `TextStyleControls` shape         |
+| `useDiffColumnLabelCustomizations`  | `diffColumn.customLabels[rowKey]` object  | Per-cell text, color, typography, outline                        |
 
 `RegressionLinePanel` keeps state in the component and writes `regression.groupBreakStyles` directly (no dedicated hook).
 
@@ -142,11 +143,13 @@ Independent or dependent axis tick labels.
 
 ### LegendItemPanel
 
-Single legend entry (grouped or detached).
+Single legend entry (grouped, detached, or direct).
 
 - Label text + typography via `TextStyleControls`
-- Marker style/fill; max width; text outline
-- Offset X/Y when `legendVariation === 'detached'`
+- Text annotation layout via `TextAnnotationLayoutControls` (text anchor, vertical anchor, rotation, max width, opacity) — the same controls as chart annotations
+- Line height and letter spacing
+- Marker style/fill; text outline
+- Offset X/Y when `legendVariation` is `detached` or `direct`
 
 ### ErrorBarPanel
 

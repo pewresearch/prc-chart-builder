@@ -67,6 +67,7 @@ import {
 	DEFAULT_PREVIEW_APPEARANCE,
 	previewPaneProps,
 } from '../shared/wizard-chrome/preview-appearance';
+import PreviewEditingSticker from '../shared/wizard-chrome/preview-editing-sticker';
 import PreviewToolbar from '../shared/wizard-chrome/preview-toolbar';
 import PreviewViewportToggle from '../shared/wizard-chrome/preview-viewport-toggle';
 import { ZOOM_DEFAULT } from '../shared/wizard-chrome/preview-zoom';
@@ -723,20 +724,27 @@ export default function ChartCptWizardShell({
 									className="prc-chart-wizard__preview-stack"
 									data-collapsed-label={chartPreviewLabel}
 								>
-									<div
-										className="prc-chart-modal__preview-pane editor-styles-wrapper"
-										data-preview-viewport={previewViewport}
-										style={{
-											...getPreviewViewportStyle(
-												previewViewport,
-												null,
-												previewFullWidth
-											),
-											'--prc-chart-preview-zoom':
-												previewZoom / 100,
-										}}
-									>
-										{refineContent}
+									<div className="prc-chart-wizard__preview-frame">
+										<PreviewEditingSticker
+											viewport={previewViewport}
+										/>
+										<div
+											className="prc-chart-modal__preview-pane editor-styles-wrapper"
+											data-preview-viewport={
+												previewViewport
+											}
+											style={{
+												...getPreviewViewportStyle(
+													previewViewport,
+													null,
+													previewFullWidth
+												),
+												'--prc-chart-preview-zoom':
+													previewZoom / 100,
+											}}
+										>
+											{refineContent}
+										</div>
 									</div>
 									<div className="prc-chart-wizard__preview-footer">
 										<div className="prc-chart-wizard__preview-footer-group">

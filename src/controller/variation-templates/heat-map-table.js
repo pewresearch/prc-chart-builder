@@ -185,7 +185,6 @@ const heatMapTableTemplate = [
 			},
 			dataRender: {
 				categories: PLATFORMS,
-				sortOrder: 'none',
 				mapScale: 'linear',
 				mapScaleDomain: [0, 100],
 				groupBreaksActive: true,

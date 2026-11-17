@@ -107,9 +107,6 @@ const areaTemplate = [
 				active: true,
 				markerStyle: 'line',
 			},
-			dataRender: {
-				sortOrder: 'ascending',
-			},
 			io: {
 				isConvertedChart: false,
 			},

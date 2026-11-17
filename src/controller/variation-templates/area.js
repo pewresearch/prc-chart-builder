@@ -116,7 +116,6 @@ const areaTemplate = [
 				markerStyle: 'line',
 			},
 			dataRender: {
-				sortOrder: 'ascending',
 				xScale: 'time',
 				xFormat: 'YYYY',
 			},

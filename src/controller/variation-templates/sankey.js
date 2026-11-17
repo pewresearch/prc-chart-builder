@@ -135,13 +135,12 @@ const sankeyTemplate = [
 				valueKey: 'value',
 			},
 			dataRender: {
-				sortOrder: 'none',
 				categories: ['value'],
 			},
-		io: {
-			isConvertedChart: false,
-			preserveStringKeys: ['target'],
-		},
+			io: {
+				isConvertedChart: false,
+				preserveStringKeys: ['target'],
+			},
 		}),
 	],
 ];

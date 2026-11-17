@@ -20,3 +20,4 @@ export { TooltipPanelSection } from './TooltipPanelSection';
 export { DiffColumnHeaderPanel } from './DiffColumnHeaderPanel';
 export { DiffColumnLabelPanel } from './DiffColumnLabelPanel';
 export { TextStyleControls } from './TextStyleControls';
+export { TextAnnotationLayoutControls } from './TextAnnotationLayoutControls';

@@ -137,7 +137,6 @@ const treemapTemplate = [
 				borderRadius: 0,
 			},
 			dataRender: {
-				sortOrder: 'descending',
 				sortKey: 'y',
 				categories: ['y'],
 				groupBreaksActive: true,

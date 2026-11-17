@@ -84,9 +84,6 @@ const legacyBarTemplate = [
 				barWidth: 24,
 				barGroupOffset: 28,
 			},
-			dataRender: {
-				sortOrder: 'reverse',
-			},
 			io: {
 				isConvertedChart: true,
 				colorValue: 'journalism-main',

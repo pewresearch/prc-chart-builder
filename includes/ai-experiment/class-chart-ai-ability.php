@@ -860,7 +860,7 @@ PROMPT;
 	 */
 	private static function get_type_specific_guidance( string $chart_type ): string {
 		$guidance = array(
-			'bar'            => 'Horizontal bar chart. Set layout.orientation="horizontal", layout.width=420. Height = 40 * number_of_rows. dependentAxis.active=false. labels.active=true, labels.color="contrast". dataRender.sortOrder="descending".',
+			'bar'            => 'Horizontal bar chart. Set layout.orientation="horizontal", layout.width=420. Height = 40 * number_of_rows. dependentAxis.active=false. labels.active=true, labels.color="contrast". Leave dataRender.sortOrder unset so rows stay in data-tab order.',
 			'column'         => 'Vertical column chart. Set layout.orientation="vertical". dependentAxis.active=true. independentAxis.active=true. labels.active=true.',
 			'line'           => 'Line chart. dataRender.categories should list all series columns. legend.active=true if multiple series. line.showPoints=true.',
 			'area'           => 'Area chart. Similar to line. line.showArea=true, line.areaFillOpacity=0.4.',

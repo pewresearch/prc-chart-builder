@@ -69,42 +69,39 @@ const stackedBarTemplate = [
 				note: 'Note: Add note about the chart',
 				tag: '',
 			},
-		independentAxis: {
-			domainPadding: 16,
-			tickLabels: {
-				textAnchor: 'end',
-				verticalAnchor: 'middle',
-				dx: -5,
+			independentAxis: {
+				domainPadding: 16,
+				tickLabels: {
+					textAnchor: 'end',
+					verticalAnchor: 'middle',
+					dx: -5,
+				},
+				axis: {
+					stroke: '',
+					strokeWidth: 1,
+				},
 			},
-			"axis": {
-				"stroke": "",
-				"strokeWidth": 1
+			dependentAxis: {
+				active: false,
 			},
-		},
-		dependentAxis: {
-			active: false,
-		},
-		tooltip: {
-			active: false,
-			headerValue: 'independentValue',
-			format: '{{column}}: {{value}}',
-		},
-		labels: {
-			active: true,
-			color: 'contrast',
-			labelPositionDY: 3,
-		},
-		legend: {
-			active: true,
-			markerStyle: 'rect',
-		},
-		dataRender: {
-			sortOrder: 'reverse',
-		},
-		io: {
-			isConvertedChart: false,
-			colorValue: 'social-trends-main',
-		},
+			tooltip: {
+				active: false,
+				headerValue: 'independentValue',
+				format: '{{column}}: {{value}}',
+			},
+			labels: {
+				active: true,
+				color: 'contrast',
+				labelPositionDY: 3,
+			},
+			legend: {
+				active: true,
+				markerStyle: 'rect',
+			},
+			io: {
+				isConvertedChart: false,
+				colorValue: 'social-trends-main',
+			},
 		}),
 	],
 ];

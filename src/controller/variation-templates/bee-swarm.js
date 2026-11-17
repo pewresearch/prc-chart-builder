@@ -126,7 +126,6 @@ const beeSwarmTemplate = [
 				groupBreaksActive: true,
 				groupBreaksCategory: 'Age group',
 				groupBreaksCategoryValues: [],
-				sortOrder: 'none',
 			},
 			independentAxis: {
 				tickMarks: {

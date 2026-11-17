@@ -4,9 +4,10 @@
  * Panel for customizing a legend item — mirrors LabelPanel with an extra
  * Marker control and X/Y offset controls (detached mode only).
  *
- * Style controls (color, font, outline, max-width, marker) are available in
- * both grouped and detached modes.  Position offset controls are shown only
- * when legendVariation === 'detached'.
+ * Style controls, marker controls, and the text annotation layout
+ * (text anchor, vertical anchor, rotation, max width, opacity) are available
+ * for grouped, detached, and direct legends. Position offset controls are
+ * shown for detached and direct legends.
  */
 
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
@@ -23,8 +24,10 @@ import {
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
+import { resolveLegendTextAnchor } from '@prc/charting-utilities';
 
 import { useLegendItemCustomizations } from '../hooks';
+import { TextAnnotationLayoutControls } from './TextAnnotationLayoutControls';
 import { TextStyleControls } from './TextStyleControls';
 
 const MARKER_STYLE_OPTIONS = [
@@ -61,6 +64,10 @@ export function LegendItemPanel({
 		fontSize,
 		maxWidth,
 		lineHeight,
+		textAnchor,
+		verticalAnchor,
+		rotation,
+		opacity,
 		textAlign,
 		letterSpacing,
 		textOutline,
@@ -82,6 +89,30 @@ export function LegendItemPanel({
 	const isDetached = legendVariation === 'detached';
 	const isDirect = legendVariation === 'direct';
 	const showPositionOffsets = isDetached || isDirect;
+
+	const displayedTextAnchor =
+		resolveLegendTextAnchor({ textAnchor, textAlign }) ?? '';
+
+	const handleLayoutChange = (field, value) => {
+		if (field === 'textAnchor') {
+			handleChange('textAnchor', value, { textAlign: '' });
+			return;
+		}
+		if (field === 'rotation' || field === 'opacity') {
+			handleChange(
+				field,
+				value !== '' && value !== undefined && value !== null
+					? Number(value)
+					: ''
+			);
+			return;
+		}
+		if (field === 'maxWidth') {
+			handleChange(field, parseInt(value, 10) || 0);
+			return;
+		}
+		handleChange(field, value);
+	};
 
 	const handleTextStyleChange = (field, value) => {
 		if (field === 'fill') {
@@ -109,6 +140,7 @@ export function LegendItemPanel({
 					</Heading>
 					{isDetached && (
 						<SelectControl
+							__next40pxDefaultSize
 							label={__(
 								'Positioning Context',
 								'prc-chart-builder'
@@ -174,6 +206,7 @@ export function LegendItemPanel({
 
 			{/* ── Marker ────────────────────────────────────────────── */}
 			<SelectControl
+				__next40pxDefaultSize
 				label={__('Marker style', 'prc-chart-builder')}
 				value={markerStyle}
 				options={MARKER_STYLE_OPTIONS}
@@ -240,82 +273,61 @@ export function LegendItemPanel({
 				showTextOutline
 			/>
 
-			<NumberControl
-				label={__('Max Width', 'prc-chart-builder')}
-				value={maxWidth}
-				onChange={(v) => handleChange('maxWidth', parseInt(v, 10) || 0)}
-				min={0}
-				help={__(
+			<TextAnnotationLayoutControls
+				allowDefault
+				textAnchor={displayedTextAnchor}
+				verticalAnchor={verticalAnchor}
+				rotation={rotation}
+				maxWidth={maxWidth}
+				opacity={opacity}
+				maxWidthHelp={__(
 					'Maximum width for text wrapping (0 = no limit)',
+					'prc-chart-builder'
+				)}
+				help={__(
+					'Same text anchor, vertical anchor, rotation, max width, and opacity as chart annotations.',
+					'prc-chart-builder'
+				)}
+				onChange={handleLayoutChange}
+			/>
+
+			<Heading level={6}>{__('Paragraph', 'prc-chart-builder')}</Heading>
+			<NumberControl
+				label={__('Line Height', 'prc-chart-builder')}
+				value={lineHeight}
+				onChange={(v) =>
+					handleChange(
+						'lineHeight',
+						v !== '' && v !== undefined ? Number(v) : ''
+					)
+				}
+				min={0.8}
+				max={3}
+				step={0.1}
+				help={__(
+					'Unitless multiplier (e.g. 1.4). Leave empty for default.',
+					'prc-chart-builder'
+				)}
+			/>
+			<NumberControl
+				label={__('Letter Spacing', 'prc-chart-builder')}
+				value={letterSpacing}
+				onChange={(v) =>
+					handleChange(
+						'letterSpacing',
+						v !== '' && v !== undefined ? Number(v) : ''
+					)
+				}
+				step={0.5}
+				help={__(
+					'Extra space between characters in px. Leave empty for default.',
 					'prc-chart-builder'
 				)}
 			/>
 
-			{isDetached && (
-				<>
-					<Heading level={6}>
-						{__('Paragraph', 'prc-chart-builder')}
-					</Heading>
-					<NumberControl
-						label={__('Line Height', 'prc-chart-builder')}
-						value={lineHeight}
-						onChange={(v) =>
-							handleChange(
-								'lineHeight',
-								v !== '' && v !== undefined ? Number(v) : ''
-							)
-						}
-						min={0.8}
-						max={3}
-						step={0.1}
-						help={__(
-							'Unitless multiplier (e.g. 1.4). Leave empty for default.',
-							'prc-chart-builder'
-						)}
-					/>
-					<SelectControl
-						label={__('Text Align', 'prc-chart-builder')}
-						value={textAlign}
-						options={[
-							{
-								label: __('Default', 'prc-chart-builder'),
-								value: '',
-							},
-							{
-								label: __('Left', 'prc-chart-builder'),
-								value: 'left',
-							},
-							{
-								label: __('Center', 'prc-chart-builder'),
-								value: 'center',
-							},
-							{
-								label: __('Right', 'prc-chart-builder'),
-								value: 'right',
-							},
-						]}
-						onChange={(value) => handleChange('textAlign', value)}
-					/>
-					<NumberControl
-						label={__('Letter Spacing', 'prc-chart-builder')}
-						value={letterSpacing}
-						onChange={(v) =>
-							handleChange(
-								'letterSpacing',
-								v !== '' && v !== undefined ? Number(v) : ''
-							)
-						}
-						step={0.5}
-						help={__(
-							'Extra space between characters in px. Leave empty for default.',
-							'prc-chart-builder'
-						)}
-					/>
-				</>
-			)}
-
 			{hasCustomizations && (
 				<Button
+					__next40pxDefaultSize
 					variant="secondary"
 					isDestructive
 					onClick={handleReset}

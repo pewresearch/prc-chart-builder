@@ -21,6 +21,7 @@ import { __ } from '@wordpress/i18n';
 
 import { formatNum } from '../../../utils/helpers';
 import { RichTextField } from './RichTextField';
+import { TextAnnotationLayoutControls } from './TextAnnotationLayoutControls';
 import { TextStyleControls } from './TextStyleControls';
 
 /**
@@ -58,19 +59,6 @@ export function PlotBandLabelPanel({
 				value={plotBand?.label ?? ''}
 				onChange={(value) => onUpdate({ label: value })}
 				placeholder={__('Enter label text', 'prc-chart-builder')}
-			/>
-
-			<NumberControl
-				label={__('Rotation (degrees)', 'prc-chart-builder')}
-				value={readPlotBandLabelRotation(labelStyle)}
-				onChange={(value) =>
-					updateLabel({
-						rotation: formatNum(value, 'integer') ?? 0,
-						orientation: undefined,
-					})
-				}
-				min={-360}
-				max={360}
 			/>
 
 			<SelectControl
@@ -126,58 +114,32 @@ export function PlotBandLabelPanel({
 				colorPanelTitle={__('Label Color', 'prc-chart-builder')}
 			/>
 
-			<SelectControl
-				label={__('Text Anchor', 'prc-chart-builder')}
-				value={labelStyle.textAnchor ?? 'start'}
-				__next40pxDefaultSize
-				options={[
-					{ label: __('Start', 'prc-chart-builder'), value: 'start' },
-					{
-						label: __('Middle', 'prc-chart-builder'),
-						value: 'middle',
-					},
-					{ label: __('End', 'prc-chart-builder'), value: 'end' },
-				]}
-				onChange={(value) => updateLabel({ textAnchor: value })}
-			/>
-
-			<SelectControl
-				label={__('Vertical Anchor', 'prc-chart-builder')}
-				value={labelStyle.verticalAnchor ?? 'start'}
-				__next40pxDefaultSize
-				options={[
-					{ label: __('Start', 'prc-chart-builder'), value: 'start' },
-					{
-						label: __('Middle', 'prc-chart-builder'),
-						value: 'middle',
-					},
-					{ label: __('End', 'prc-chart-builder'), value: 'end' },
-				]}
-				onChange={(value) => updateLabel({ verticalAnchor: value })}
-			/>
-
-			<NumberControl
-				label={__('Max Width', 'prc-chart-builder')}
-				value={labelStyle.maxWidth ?? 0}
-				onChange={(value) =>
-					updateLabel({
-						maxWidth: formatNum(value, 'integer') ?? 0,
-					})
-				}
-				min={0}
-				help={__(
+			<TextAnnotationLayoutControls
+				textAnchor={labelStyle.textAnchor ?? 'start'}
+				verticalAnchor={labelStyle.verticalAnchor ?? 'start'}
+				rotation={readPlotBandLabelRotation(labelStyle)}
+				maxWidth={labelStyle.maxWidth ?? 0}
+				opacity={labelStyle.opacity ?? 1}
+				maxWidthHelp={__(
 					'Maximum width for text wrapping. 0 keeps the label on one line.',
 					'prc-chart-builder'
 				)}
-			/>
-
-			<NumberControl
-				label={__('Opacity', 'prc-chart-builder')}
-				value={labelStyle.opacity ?? 1}
-				onChange={(value) => updateLabel({ opacity: value })}
-				min={0}
-				max={1}
-				step={0.1}
+				onChange={(field, value) => {
+					if (field === 'rotation') {
+						updateLabel({
+							rotation: formatNum(value, 'integer') ?? 0,
+							orientation: undefined,
+						});
+						return;
+					}
+					if (field === 'maxWidth') {
+						updateLabel({
+							maxWidth: formatNum(value, 'integer') ?? 0,
+						});
+						return;
+					}
+					updateLabel({ [field]: value });
+				}}
 			/>
 
 			{onDelete && (

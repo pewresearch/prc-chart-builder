@@ -12,7 +12,11 @@
  *   fontSize    - override font size (number, px)
  *   maxWidth    - max width for text wrapping (number, px; 0 = no limit)
  *   lineHeight  - unitless line-height multiplier for wrapped text
- *   textAlign   - horizontal text alignment ('left' | 'center' | 'right')
+ *   textAnchor  - horizontal alignment, same as text annotations ('start' | 'middle' | 'end')
+ *   verticalAnchor - vertical alignment ('start' | 'middle' | 'end')
+ *   rotation    - rotation in degrees
+ *   opacity     - label opacity from 0 to 1
+ *   textAlign   - older horizontal alignment ('left' | 'center' | 'right'); still read
  *   letterSpacing - letter spacing in px
  *   textOutline - add contrasting outline behind text (boolean)
  *   markerStyle - override swatch shape ('' | 'circle' | 'square' | 'line' | 'none')
@@ -68,8 +72,8 @@ export function useLegendItemCustomizations(
 	 * @param {*}      value - New value.
 	 */
 	const handleChange = useCallback(
-		(field, value) => {
-			const next = { ...styles, [field]: value };
+		(field, value, extras = {}) => {
+			const next = { ...styles, [field]: value, ...extras };
 			setStyles(next);
 
 			const updated = { ...(currentCustomizations || {}) };
@@ -104,6 +108,10 @@ export function useLegendItemCustomizations(
 		fontSize: styles.fontSize ?? '',
 		maxWidth: styles.maxWidth ?? 0,
 		lineHeight: styles.lineHeight ?? '',
+		textAnchor: styles.textAnchor ?? '',
+		verticalAnchor: styles.verticalAnchor ?? '',
+		rotation: styles.rotation ?? '',
+		opacity: styles.opacity ?? '',
 		textAlign: styles.textAlign ?? '',
 		letterSpacing: styles.letterSpacing ?? '',
 		textOutline: styles.textOutline ?? false,

@@ -144,7 +144,6 @@ trait Chart_Block_Defaults {
 					'barWidth'       => 24,
 					'barGroupOffset' => 28,
 				),
-				'dataRender'      => array( 'sortOrder' => 'descending' ),
 				'io'              => $shared_io,
 			),
 			'column'         => array(
@@ -180,7 +179,6 @@ trait Chart_Block_Defaults {
 					'active'      => true,
 					'markerStyle' => 'rect',
 				),
-				'dataRender'      => array( 'sortOrder' => 'none' ),
 				'io'              => $shared_io,
 			),
 			'line'           => array(
@@ -228,14 +226,13 @@ trait Chart_Block_Defaults {
 					'markerStyle' => 'line',
 				),
 				'dataRender'      => array(
-					'sortOrder' => 'ascending',
-					'xScale'    => 'time',
-					'xFormat'   => 'YYYY',
+					'xScale'  => 'time',
+					'xFormat' => 'YYYY',
 				),
 				'io'              => $shared_io,
 			),
 			'area'           => array(
-				'layout'     => array(
+				'layout'   => array(
 					'type'    => 'area',
 					'width'   => 420,
 					'height'  => 300,
@@ -246,17 +243,16 @@ trait Chart_Block_Defaults {
 						'right'  => 20,
 					),
 				),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array(
+				'metadata' => $shared_metadata,
+				'tooltip'  => array(
 					'active' => true,
 					'format' => '{{row}}: {{value}}',
 				),
-				'legend'     => array(
+				'legend'   => array(
 					'active'      => true,
 					'markerStyle' => 'line',
 				),
-				'dataRender' => array( 'sortOrder' => 'ascending' ),
-				'io'         => $shared_io,
+				'io'       => $shared_io,
 			),
 			'stacked-bar'    => array(
 				'layout'          => array(
@@ -284,36 +280,33 @@ trait Chart_Block_Defaults {
 					'active'      => true,
 					'markerStyle' => 'rect',
 				),
-				'dataRender'      => array( 'sortOrder' => 'none' ),
 				'io'              => $shared_io,
 			),
 			'stacked-column' => array(
-				'layout'     => array(
+				'layout'   => array(
 					'type'   => 'stacked-column',
 					'width'  => 420,
 					'height' => 300,
 				),
-				'metadata'   => $shared_metadata,
-				'legend'     => array(
+				'metadata' => $shared_metadata,
+				'legend'   => array(
 					'active'      => true,
 					'markerStyle' => 'rect',
 				),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
+				'io'       => $shared_io,
 			),
 			'stacked-area'   => array(
-				'layout'     => array(
+				'layout'   => array(
 					'type'   => 'stacked-area',
 					'width'  => 420,
 					'height' => 300,
 				),
-				'metadata'   => $shared_metadata,
-				'legend'     => array(
+				'metadata' => $shared_metadata,
+				'legend'   => array(
 					'active'      => true,
 					'markerStyle' => 'line',
 				),
-				'dataRender' => array( 'sortOrder' => 'ascending' ),
-				'io'         => $shared_io,
+				'io'       => $shared_io,
 			),
 			'pie'            => array(
 				'layout'          => array(
@@ -346,7 +339,6 @@ trait Chart_Block_Defaults {
 					'active'      => true,
 					'markerStyle' => 'circle',
 				),
-				'dataRender'      => array( 'sortOrder' => 'reverse' ),
 				'io'              => $shared_io,
 			),
 			'scatter'        => array(
@@ -367,7 +359,6 @@ trait Chart_Block_Defaults {
 				),
 				'nodes'      => array( 'pointSize' => 5 ),
 				'dataRender' => array(
-					'sortOrder'           => 'none',
 					'groupBreaksActive'   => false,
 					'groupBreaksCategory' => '',
 				),
@@ -391,7 +382,6 @@ trait Chart_Block_Defaults {
 				),
 				'nodes'      => array( 'pointSize' => 5 ),
 				'dataRender' => array(
-					'sortOrder'  => 'none',
 					'categories' => array(),
 				),
 				'legend'     => array(
@@ -401,81 +391,77 @@ trait Chart_Block_Defaults {
 				'io'         => $shared_io,
 			),
 			'dot-plot'       => array(
-				'layout'     => array(
+				'layout'   => array(
 					'type'        => 'dot-plot',
 					'width'       => 420,
 					'height'      => 300,
 					'orientation' => 'horizontal',
 				),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array(
+				'metadata' => $shared_metadata,
+				'tooltip'  => array(
 					'active' => true,
 					'format' => '{{row}}: {{value}}',
 				),
-				'legend'     => array( 'active' => true ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
+				'legend'   => array( 'active' => true ),
+				'io'       => $shared_io,
 			),
 			'diverging-bar'  => array(
-				'layout'     => array(
+				'layout'   => array(
 					'type'        => 'diverging-bar',
 					'orientation' => 'horizontal',
 					'width'       => 420,
 					'height'      => 220,
 				),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array(
+				'metadata' => $shared_metadata,
+				'tooltip'  => array(
 					'active' => true,
 					'format' => '{{column}}: {{value}}',
 				),
-				'labels'     => array(
+				'labels'   => array(
 					'active' => true,
 					'color'  => 'contrast',
 				),
-				'legend'     => array(
+				'legend'   => array(
 					'active'      => true,
 					'markerStyle' => 'rect',
 				),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
+				'io'       => $shared_io,
 			),
 			'exploded-bar'   => array(
-				'layout'     => array(
+				'layout'   => array(
 					'type'        => 'exploded-bar',
 					'orientation' => 'horizontal',
 					'width'       => 420,
 					'height'      => 220,
 				),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array(
+				'metadata' => $shared_metadata,
+				'tooltip'  => array(
 					'active' => true,
 					'format' => '{{column}}: {{value}}',
 				),
-				'labels'     => array(
+				'labels'   => array(
 					'active' => true,
 					'color'  => 'contrast',
 				),
-				'legend'     => array(
+				'legend'   => array(
 					'active'      => true,
 					'markerStyle' => 'rect',
 				),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
+				'io'       => $shared_io,
 			),
 			'treemap'        => array(
-				'layout'     => array(
+				'layout'   => array(
 					'type'   => 'treemap',
 					'width'  => 640,
 					'height' => 400,
 				),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array(
+				'metadata' => $shared_metadata,
+				'tooltip'  => array(
 					'active' => true,
 					'format' => '{{row}}: {{value}}',
 				),
-				'labels'     => array( 'active' => true ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
+				'labels'   => array( 'active' => true ),
+				'io'       => $shared_io,
 			),
 			'waffle'         => array(
 				'layout'     => array(
@@ -494,7 +480,6 @@ trait Chart_Block_Defaults {
 				),
 				'dataRender' => array(
 					'categories' => array( 'y' ),
-					'sortOrder'  => 'descending',
 				),
 				'waffle'     => array(
 					'cellShape'    => 'square',
@@ -554,7 +539,6 @@ trait Chart_Block_Defaults {
 					'markerStyle' => 'rect',
 				),
 				'dataRender'      => array(
-					'sortOrder'      => 'none',
 					'mapScale'       => 'linear',
 					'mapScaleDomain' => array( 0, 100 ),
 				),
@@ -574,15 +558,14 @@ trait Chart_Block_Defaults {
 				),
 			),
 			'sankey'         => array(
-				'layout'     => array(
+				'layout'   => array(
 					'type'   => 'sankey',
 					'width'  => 640,
 					'height' => 400,
 				),
-				'metadata'   => $shared_metadata,
-				'tooltip'    => array( 'active' => true ),
-				'dataRender' => array( 'sortOrder' => 'none' ),
-				'io'         => $shared_io,
+				'metadata' => $shared_metadata,
+				'tooltip'  => array( 'active' => true ),
+				'io'       => $shared_io,
 			),
 			'freeform'       => array(
 				'layout'   => array(
