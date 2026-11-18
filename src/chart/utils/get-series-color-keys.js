@@ -72,7 +72,7 @@ export function getSeriesColorKeys(attributes = {}) {
 }
 
 /**
- * Waffle cells and small-multiples pie slices take their color domain in
+ * Waffle cells, hemicycle seats, and small-multiples pie slices take their color domain in
  * legend order. Every other discrete chart reads `config.colors` by data
  * column, so there the legend order only orders the legend.
  *
@@ -83,6 +83,7 @@ function paintsInLegendOrder(attributes) {
 	const chartType = effectiveChartTypeForControls(attributes);
 	return (
 		chartType === 'waffle' ||
+		chartType === 'hemicycle' ||
 		(attributes.layout?.type === 'small-multiples' && chartType === 'pie')
 	);
 }

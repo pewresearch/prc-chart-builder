@@ -17,6 +17,7 @@ import {
 } from '../utils/series-styles';
 import { strokeIsSeriesColor } from '../utils/series-style-fields';
 import { SeriesPaintPanel } from './popover/panels/SeriesPaintPanel';
+import { anchoredChartPopoverProps } from './popover/popover-frame';
 import useChartColorGroups from './hooks/use-chart-color-groups';
 import {
 	getSeriesColorGroups,
@@ -92,7 +93,10 @@ function SeriesStyleRow({
 			<div className="prc-chart-series-style-list__color">
 				<Dropdown
 					className="prc-chart-series-style-list__dropdown"
-					popoverProps={{ placement: 'left-start' }}
+					popoverProps={{
+						placement: 'left-start',
+						...anchoredChartPopoverProps,
+					}}
 					renderToggle={({ isOpen, onToggle }) => (
 						<button
 							type="button"
@@ -132,7 +136,10 @@ function SeriesStyleRow({
 				<Dropdown
 					className="prc-chart-series-style-list__edit-dropdown"
 					contentClassName="prc-chart-series-style-list__edit-popover"
-					popoverProps={{ placement: 'left-start' }}
+					popoverProps={{
+						placement: 'left-start',
+						...anchoredChartPopoverProps,
+					}}
 					renderToggle={({ isOpen, onToggle }) => (
 						<button
 							type="button"

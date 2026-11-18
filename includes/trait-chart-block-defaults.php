@@ -495,6 +495,44 @@ trait Chart_Block_Defaults {
 				),
 				'io'         => $shared_io,
 			),
+			'hemicycle'      => array(
+				'layout'     => array(
+					'type'   => 'hemicycle',
+					'width'  => 640,
+					'height' => 400,
+				),
+				'metadata'   => $shared_metadata,
+				'tooltip'    => array(
+					'active' => false,
+					'format' => '{{row}}: {{value}} seats',
+				),
+				'labels'     => array(
+					'active' => false,
+					'color'  => 'inherit',
+				),
+				'legend'     => array(
+					'active'      => true,
+					'markerStyle' => 'circle',
+				),
+				'dataRender' => array(
+					'categories' => array( 'y' ),
+					'sortOrder'  => 'none',
+				),
+				'hemicycle'  => array(
+					'seatShape'        => 'circle',
+					'seatGap'          => 0.15,
+					'rows'             => null,
+					'innerRadiusRatio' => 0.4,
+					'totalSeats'       => null,
+					'emptyFill'        => '#E6E7E8',
+					'stackedBar'       => array(
+						'active' => false,
+						'height' => 16,
+						'gap'    => 24,
+					),
+				),
+				'io'         => $shared_io,
+			),
 			'heat-map-table' => array(
 				'layout'          => array(
 					'type'    => 'heat-map-table',

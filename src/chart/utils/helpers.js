@@ -286,8 +286,13 @@ export const getDomain = (min, max, type, scale, axis) => {
 	if ('dot-plot' === type && 'x' === axis) {
 		return null;
 	}
-	// likewise, no domain for a pie, waffle, or heat map table chart
-	if ('pie' === type || 'waffle' === type || 'heat-map-table' === type) {
+	// likewise, no domain for a pie, waffle, heat map table, or hemicycle chart
+	if (
+		'pie' === type ||
+		'waffle' === type ||
+		'heat-map-table' === type ||
+		'hemicycle' === type
+	) {
 		return null;
 	}
 	if ('time' === scale && 'x' === axis) {
@@ -734,6 +739,7 @@ export const generateDefaultAltText = (chartType, metaTitle) => {
 		scatter: 'scatter',
 		pie: 'pie',
 		waffle: 'waffle',
+		hemicycle: 'hemicycle',
 		'dot-plot': 'dot plot',
 		'stacked-bar': 'stacked bar',
 		'grouped-bar': 'grouped bar',

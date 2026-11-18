@@ -111,6 +111,7 @@ class Content_Type {
 		'stacked-column'         => 'Stacked Column',
 		'treemap'                => 'Treemap',
 		'waffle'                 => 'Waffle',
+		'hemicycle'              => 'Hemicycle',
 		'heat-map-table'         => 'Heat Map Table',
 	);
 
@@ -372,6 +373,11 @@ class Content_Type {
 		);
 
 		register_post_type( self::$post_type, $args );
+
+		// Boolean `editor` support does not enable block notes. Replace it
+		// with the notes flag so the review step can open the note composer.
+		// `post_type_supports( 'chart', 'editor' )` stays true.
+		add_post_type_support( self::$post_type, 'editor', array( 'notes' => true ) );
 
 		// Opt the chart CPT into the Presence API so Heartbeat tracks who is editing a chart.
 		// This enables the synced-chart block to display a lock banner when another user

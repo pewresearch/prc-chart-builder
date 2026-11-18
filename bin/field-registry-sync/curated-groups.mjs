@@ -28,6 +28,7 @@ export const CURATED_CONFIG_GROUPS = [
 	'treemap',
 	'sankey',
 	'waffle',
+	'hemicycle',
 	'heatMapTable',
 	'smallMultiples',
 	'annotations',

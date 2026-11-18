@@ -81,6 +81,7 @@ const FIELDS_BY_CHART_TYPE = {
 	sankey: LABELED_SHAPE_FIELDS,
 	treemap: LABELED_SHAPE_FIELDS,
 	waffle: SHAPE_FIELDS,
+	hemicycle: LABELED_SHAPE_FIELDS,
 	...Object.fromEntries(BAR_CHART_TYPES.map((type) => [type, BAR_FIELDS])),
 	line: LINE_FIELDS,
 	area: AREA_FIELDS,

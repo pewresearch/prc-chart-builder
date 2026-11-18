@@ -18,10 +18,11 @@ import Sorter from '../../chart/edit/sorter';
 import {
 	GROUP_BREAKS_CHART_TYPES,
 	GROUPABLE_CHART_TYPES,
-	LINE_CHART_TYPES,
+	NO_SORT_KEY_CHART_TYPES,
 	SORTABLE_CHART_TYPES,
 	SUPPLEMENTAL_COLUMN_CHART_TYPES,
 	effectiveChartTypeForControls,
+	supportsTimeScale,
 } from '../../chart/utils/chart-types';
 import { formatNum } from '../../chart/utils/helpers';
 import { applyCuratedControl } from './apply-curated-control';
@@ -77,7 +78,6 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 	const diffColumn = chartAttributes.diffColumn ?? {};
 	const netValues = chartAttributes.netValues ?? {};
 	const chartFamily = io.chartFamily;
-	const isSmallMultiples = chartType === 'small-multiples';
 	const isDivergingBar = chartType === 'diverging-bar';
 	const isSankey = chartType === 'sankey';
 	const sankey = chartAttributes.sankey ?? {};
@@ -86,10 +86,10 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 	const setPath = (path, value) =>
 		onChange(applyCuratedControl(chartAttributes, path, value));
 
-	const showXScale =
-		LINE_CHART_TYPES.includes(effectiveType) || isSmallMultiples;
+	const showXScale = supportsTimeScale(chartAttributes);
 	const showSort = SORTABLE_CHART_TYPES.includes(effectiveType);
-	const showSortKey = showSort && chartType !== 'treemap';
+	const showSortKey =
+		showSort && !NO_SORT_KEY_CHART_TYPES.includes(chartType);
 	const showGrouping = GROUPABLE_CHART_TYPES.includes(chartType);
 	const showGroupBreakStyles = GROUP_BREAKS_CHART_TYPES.includes(chartType);
 	const showSupplementalColumns =
@@ -395,6 +395,10 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 									dataRender: {
 										...dataRender,
 										xScale: value,
+										...('time' === value &&
+										!dataRender.xFormat
+											? { xFormat: 'YYYY' }
+											: {}),
 									},
 									independentAxis: {
 										...(chartAttributes.independentAxis ??
@@ -413,8 +417,19 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 								'Time series input format',
 								'prc-chart-builder'
 							)}
-							value={dataRender.xFormat || 'YYYY'}
+							value={dataRender.xFormat || ''}
 							options={[
+								...(dataRender.xFormat
+									? []
+									: [
+											{
+												value: '',
+												label: __(
+													'— Select format —',
+													'prc-chart-builder'
+												),
+											},
+										]),
 								{ value: 'YYYY', label: 'YYYY' },
 								{ value: 'YYYY-MM', label: 'YYYY-MM' },
 								{ value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' },

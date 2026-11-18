@@ -54,11 +54,12 @@ function isInsideFreeformGroup(
 
 /**
  * @param {Object}        args
- * @param {string}        args.controllerClientId     Wizard-hosting controller clientId.
- * @param {Object}        [args.controllerAttributes] Wizard-hosting controller attributes.
- * @param {BlockRef|null} args.selected               Selection-start block.
- * @param {BlockRef[]}    args.ancestors              Root-first ancestors of the selected block.
- * @param {boolean}       [args.exposeBlockToolbar]   When true (Advanced Settings / design mode), keep toolbars visible.
+ * @param {string}        args.controllerClientId        Wizard-hosting controller clientId.
+ * @param {Object}        [args.controllerAttributes]    Wizard-hosting controller attributes.
+ * @param {BlockRef|null} args.selected                  Selection-start block.
+ * @param {BlockRef[]}    args.ancestors                 Root-first ancestors of the selected block.
+ * @param {boolean}       [args.exposeBlockToolbar]      When true (Advanced Settings), keep toolbars visible.
+ * @param {boolean}       [args.exposeControllerToolbar] When true, show the toolbar only on the controller. Child blocks stay hidden.
  * @return {boolean} True when the selected block belongs to the wizard.
  */
 export function shouldHideBlockToolbar({
@@ -67,6 +68,7 @@ export function shouldHideBlockToolbar({
 	selected,
 	ancestors = [],
 	exposeBlockToolbar = false,
+	exposeControllerToolbar = false,
 }) {
 	if (exposeBlockToolbar) {
 		return false;
@@ -78,6 +80,9 @@ export function shouldHideBlockToolbar({
 		selected.name === SYNCED_CHART ||
 		ancestors.some((block) => block.name === SYNCED_CHART)
 	) {
+		return false;
+	}
+	if (exposeControllerToolbar && selected.clientId === controllerClientId) {
 		return false;
 	}
 	if (selected.clientId === controllerClientId) {

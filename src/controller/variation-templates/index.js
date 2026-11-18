@@ -25,6 +25,7 @@ export { default as treemapTemplate } from './treemap';
 export { default as waffleTemplate } from './waffle';
 export { default as wafflePortionTemplate } from './waffle-portion';
 export { default as heatMapTableTemplate } from './heat-map-table';
+export { default as hemicycleTemplate } from './hemicycle';
 // export { default as imageTemplate } from './image';
 // legacy variations
 export { default as legacyBarTemplate } from './legacyBar';

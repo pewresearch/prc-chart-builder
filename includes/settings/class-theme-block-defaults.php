@@ -53,6 +53,7 @@ class Theme_Block_Defaults {
 		'treemap',
 		'sankey',
 		'waffle',
+		'hemicycle',
 		'heatMapTable',
 		'smallMultiples',
 		'annotations',
@@ -89,7 +90,7 @@ class Theme_Block_Defaults {
 	}
 
 	/**
-	 * register_block_type_args filter — theme.config into chart defaults.
+	 * Filters register_block_type_args to merge theme.config into chart defaults.
 	 *
 	 * @hook register_block_type_args
 	 *

@@ -64,6 +64,7 @@ const CHART_TYPE_ICON_MAP = {
 	treemap: image,
 	waffle: chartBar,
 	'heat-map-table': chartBar,
+	hemicycle: chartBar,
 };
 
 const PREVIEW_VIEWPORT_WIDTH = 1200;
@@ -183,6 +184,10 @@ function getChartTypeDescriptionMap() {
 		),
 		waffle: __(
 			'Use a waffle chart to show parts of a whole on a fixed cell grid.',
+			'prc-chart-builder'
+		),
+		hemicycle: __(
+			'Use an election hemicycle to show one dot per seat, colored by party, on semicircle rows.',
 			'prc-chart-builder'
 		),
 	};

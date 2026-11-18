@@ -271,6 +271,7 @@ const getConfig = (
 		sankey,
 		waffle,
 		heatMapTable,
+		hemicycle,
 		smallMultiples,
 		regression,
 		errorBars,
@@ -911,6 +912,14 @@ const getConfig = (
 		heatMapTable: {
 			...baseConfig.heatMapTable,
 			...heatMapTable,
+		},
+		hemicycle: {
+			...baseConfig.hemicycle,
+			...hemicycle,
+			stackedBar: {
+				...baseConfig.hemicycle.stackedBar,
+				...hemicycle?.stackedBar,
+			},
 		},
 		smallMultiples: {
 			panelType: 'line',

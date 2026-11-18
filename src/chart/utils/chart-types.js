@@ -21,6 +21,7 @@ export const ALL_CHART_TYPES = [
 	'small-multiples',
 	'waffle',
 	'heat-map-table',
+	'hemicycle',
 	'treemap',
 	'sankey',
 	'map-usa',
@@ -42,6 +43,17 @@ export const BAR_CHART_TYPES = [
 
 /** Line family: line, area, stacked-area */
 export const LINE_CHART_TYPES = ['line', 'area', 'stacked-area'];
+
+/**
+ * Charts that can use a time X scale. Bar and stacked-bar qualify only as
+ * columns (`layout.orientation === 'vertical'`); horizontal bars do not render
+ * a time scale. Small multiples qualify for every panel type.
+ */
+export const TIME_SCALE_CHART_TYPES = [
+	...LINE_CHART_TYPES,
+	'bar',
+	'stacked-bar',
+];
 
 /**
  * Geographic map chart types that support the bubble (proportional symbol)
@@ -133,8 +145,15 @@ export const SORTABLE_CHART_TYPES = [
 	...BAR_CHART_TYPES,
 	'dot-plot',
 	'pie',
+	'hemicycle',
 	'treemap',
 ];
+
+/**
+ * Sortable charts that sort by their one value column, so the Sort Key control stays hidden.
+ * A treemap sorts leaves by value. A hemicycle sorts parties by seat count.
+ */
+export const NO_SORT_KEY_CHART_TYPES = ['treemap', 'hemicycle'];
 
 /**
  * Charts that support supplemental column features rendered alongside the chart
@@ -163,6 +182,29 @@ export function effectiveChartTypeForControls(attributes = {}) {
 		return 'waffle';
 	}
 	return panelType;
+}
+
+/**
+ * Whether the chart can use a time X scale (see TIME_SCALE_CHART_TYPES).
+ *
+ * @param {Object} attributes Chart block attributes
+ * @param {Object} [layout]   Viewport-resolved layout; defaults to attributes.layout
+ * @return {boolean} Whether the X scale and time input format controls apply.
+ */
+export function supportsTimeScale(
+	attributes = {},
+	layout = attributes?.layout
+) {
+	const type = layout?.type;
+	if (type === 'small-multiples') {
+		return true;
+	}
+	if (!TIME_SCALE_CHART_TYPES.includes(type)) {
+		return false;
+	}
+	return (
+		LINE_CHART_TYPES.includes(type) || layout?.orientation === 'vertical'
+	);
 }
 
 /**

@@ -653,6 +653,22 @@ return array(
 					'displayMode' => 'whole'
 				)
 			),
+			'hemicycle' => array(
+				'type' => 'object',
+				'default' => array(
+					'seatShape' => 'circle',
+					'seatGap' => 0.15,
+					'rows' => null,
+					'innerRadiusRatio' => 0.4,
+					'totalSeats' => null,
+					'emptyFill' => '#E6E7E8',
+					'stackedBar' => array(
+						'active' => false,
+						'height' => 16,
+						'gap' => 24
+					)
+				)
+			),
 			'heatMapTable' => array(
 				'type' => 'object',
 				'default' => array(

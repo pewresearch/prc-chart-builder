@@ -2,6 +2,7 @@
  * Opens the Gutenberg view/preview URL for the current chart.
  */
 import { Button } from '@wordpress/components';
+import { useInstanceId } from '@wordpress/compose';
 import { store as coreStore } from '@wordpress/core-data';
 import { useDispatch, useSelect } from '@wordpress/data';
 import { store as editorStore } from '@wordpress/editor';
@@ -43,6 +44,7 @@ export default function ChartViewLink() {
 		};
 	}, []);
 	const { __unstableSaveForPreview } = useDispatch(editorStore);
+	const helpId = `prc-chart-wizard-view-chart-help-${useInstanceId(ChartViewLink)}`;
 
 	if (!isViewable) {
 		return null;
@@ -77,7 +79,7 @@ export default function ChartViewLink() {
 	};
 
 	return (
-		<div className="prc-chart-wizard__view-chart">
+		<div className="prc-chart-wizard__workflow-action">
 			<Button
 				variant={isPreview ? 'primary' : 'secondary'}
 				href={href}
@@ -87,12 +89,24 @@ export default function ChartViewLink() {
 				onClick={handleClick}
 				icon={isPreview ? external : undefined}
 				iconPosition="right"
+				aria-describedby={helpId}
 				__next40pxDefaultSize
 			>
 				{isPreview
 					? __('Preview in new tab', 'prc-chart-builder')
 					: __('View Chart', 'prc-chart-builder')}
 			</Button>
+			<p id={helpId} className="prc-chart-wizard__workflow-action-help">
+				{isPreview
+					? __(
+							'Saves a draft and opens the chart as readers will see it, in a new tab.',
+							'prc-chart-builder'
+						)
+					: __(
+							'Opens the published chart in a new tab.',
+							'prc-chart-builder'
+						)}
+			</p>
 		</div>
 	);
 }

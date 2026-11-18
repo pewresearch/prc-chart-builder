@@ -29,6 +29,7 @@ const CHART_TYPE_ICON_MAP = {
 	'stacked-column': chartBar,
 	treemap: image,
 	waffle: chartBar,
+	hemicycle: chartBar,
 	'heat-map-table': chartBar,
 };
 

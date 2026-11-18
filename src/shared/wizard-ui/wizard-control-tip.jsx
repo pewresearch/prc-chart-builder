@@ -31,7 +31,13 @@ export default function WizardControlTip({ label, text }) {
 		<Dropdown
 			className="prc-chart-modal__control-tip-dropdown"
 			contentClassName="prc-chart-modal__control-tip-popover"
-			popoverProps={{ placement: 'top-start', offset: 8 }}
+			popoverProps={{
+				placement: 'top-start',
+				offset: 8,
+				// Same viewport shift as the chart element popover.
+				flip: true,
+				shift: true,
+			}}
 			renderToggle={({ isOpen, onToggle }) => (
 				<Button
 					ref={buttonRef}

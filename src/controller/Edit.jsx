@@ -88,6 +88,7 @@ const CHART_TYPE_TO_LAYOUT_TYPE = {
 	waffle: 'waffle',
 	'waffle-portion': 'small-multiples',
 	'heat-map-table': 'heat-map-table',
+	hemicycle: 'hemicycle',
 	'diverging-bar': 'diverging-bar',
 	'exploded-bar': 'exploded-bar',
 	'map-usa': 'map-usa',

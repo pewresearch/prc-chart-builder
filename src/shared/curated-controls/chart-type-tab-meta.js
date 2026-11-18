@@ -73,6 +73,13 @@ export function getChartTypeTabMeta(attributes = {}) {
 		return { id: 'waffle', label: __('Waffle', 'prc-chart-builder') };
 	}
 
+	if (chartType === 'hemicycle') {
+		return {
+			id: 'hemicycle',
+			label: __('Hemicycle', 'prc-chart-builder'),
+		};
+	}
+
 	if (chartType === 'heat-map-table') {
 		return {
 			id: 'heat-map-table',

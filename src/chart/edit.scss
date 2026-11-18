@@ -11,6 +11,17 @@ $swatch-edge: color-mix(
 	transparent
 );
 
+// Fallback when the visual viewport has not been measured yet. The element
+// popover also sets a pixel max-width from visualViewport.
+.chart-element-popover {
+	max-width: calc(100vw - 16px);
+	max-width: calc(100dvw - 16px);
+
+	.components-popover__content {
+		max-width: 100%;
+	}
+}
+
 .prc-chart-series-style-list {
 	margin: 0;
 	padding: 0;
@@ -82,12 +93,22 @@ $swatch-edge: color-mix(
 		text-decoration: underline;
 	}
 
+	&__edit-popover {
+		max-width: calc(100vw - 16px);
+		max-width: calc(100dvw - 16px);
+	}
+
 	&__edit-popover .components-popover__content {
-		min-width: 300px;
+		min-width: min(300px, calc(100vw - 16px));
+		min-width: min(300px, calc(100dvw - 16px));
+		max-width: 100%;
+		max-height: calc(100dvh - 16px);
+		overflow-y: auto;
 	}
 
 	&__panel {
 		min-width: 300px;
+		min-width: min(300px, 100%);
 		padding: 12px;
 	}
 

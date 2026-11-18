@@ -144,6 +144,7 @@ export const EDITOR_SCHEMA = {
 				'small-multiples',
 				'waffle',
 				'heat-map-table',
+				'hemicycle',
 			],
 			themeable: true,
 			description: 'The chart type.',
@@ -2374,6 +2375,58 @@ export const EDITOR_SCHEMA = {
 			themeable: false,
 			description:
 				'Whole uses one grid; portion uses one mini grid per category.',
+		},
+	},
+	hemicycle: {
+		seatShape: {
+			type: 'enum',
+			enum: ['circle', 'square'],
+			themeable: true,
+			description: 'Shape used for each seat.',
+		},
+		seatGap: {
+			type: 'number',
+			themeable: true,
+			description: 'Space between seats as a fraction of seat size.',
+		},
+		rows: {
+			type: 'number',
+			themeable: false,
+			description:
+				'Number of semicircle rows. Null picks the fewest rows that fit.',
+		},
+		innerRadiusRatio: {
+			type: 'number',
+			themeable: true,
+			description:
+				'Inner row radius as a fraction of the outer radius (0–0.9).',
+		},
+		totalSeats: {
+			type: 'number',
+			themeable: false,
+			description:
+				'Seats in the chamber. Null uses the sum of party values; extra seats render as vacant.',
+		},
+		emptyFill: {
+			type: 'string',
+			themeable: true,
+			description: 'Fill color for vacant seats.',
+		},
+		'stackedBar.active': {
+			type: 'boolean',
+			themeable: false,
+			description:
+				'Draw a stacked bar under the arcs with the same seat totals.',
+		},
+		'stackedBar.height': {
+			type: 'number',
+			themeable: true,
+			description: 'Stacked bar height (px).',
+		},
+		'stackedBar.gap': {
+			type: 'number',
+			themeable: true,
+			description: 'Space between the arcs and the stacked bar (px).',
 		},
 	},
 	heatMapTable: {

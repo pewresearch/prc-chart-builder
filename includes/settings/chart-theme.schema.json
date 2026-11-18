@@ -643,6 +643,55 @@
 						}
 					}
 				},
+				"hemicycle": {
+					"type": "object",
+					"additionalProperties": false,
+					"properties": {
+						"emptyFill": {
+							"type": "string",
+							"description": "Fill color for vacant seats."
+						},
+						"innerRadiusRatio": {
+							"type": "number",
+							"description": "Inner row radius as a fraction of the outer radius (0–0.9)."
+						},
+						"rows": {
+							"type": "number",
+							"description": "Number of semicircle rows. Null picks the fewest rows that fit."
+						},
+						"seatGap": {
+							"type": "number",
+							"description": "Space between seats as a fraction of seat size."
+						},
+						"seatShape": {
+							"type": "string",
+							"enum": ["circle", "square"],
+							"description": "Shape used for each seat."
+						},
+						"stackedBar": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"active": {
+									"type": "boolean",
+									"description": "Draw a stacked bar under the arcs with the same seat totals."
+								},
+								"gap": {
+									"type": "number",
+									"description": "Space between the arcs and the stacked bar (px)."
+								},
+								"height": {
+									"type": "number",
+									"description": "Stacked bar height (px)."
+								}
+							}
+						},
+						"totalSeats": {
+							"type": "number",
+							"description": "Seats in the chamber. Null uses the sum of party values; extra seats render as vacant."
+						}
+					}
+				},
 				"independentAxis": {
 					"type": "object",
 					"additionalProperties": false,
@@ -1155,7 +1204,8 @@
 								"radar",
 								"small-multiples",
 								"waffle",
-								"heat-map-table"
+								"heat-map-table",
+								"hemicycle"
 							],
 							"description": "The chart type."
 						},

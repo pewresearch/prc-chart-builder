@@ -61,6 +61,7 @@ import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import { RichTextField } from './popover/panels/RichTextField';
 import { SeriesColorField } from './popover/panels/SeriesPaintPanel';
 import { PATTERN_OPTIONS } from './popover/utils';
+import { anchoredChartPopoverProps } from './popover/popover-frame';
 
 const NEW_PLOT_BAND = {
 	x: [null, null],
@@ -134,7 +135,11 @@ function RangePicker({ label, value, onChange, scale }) {
 	const [popoverAnchor, setPopoverAnchor] = useState(null);
 	// Memoize popoverProps to avoid returning a new object every time.
 	const popoverProps = useMemo(
-		() => ({ anchor: popoverAnchor, placement: 'bottom-end' }),
+		() => ({
+			anchor: popoverAnchor,
+			placement: 'bottom-end',
+			...anchoredChartPopoverProps,
+		}),
 		[popoverAnchor]
 	);
 

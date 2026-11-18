@@ -220,6 +220,12 @@ export const waffleIcon = (
 	</SVG>
 );
 
+export const hemicycleIcon = (
+	<SVG xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+		<Path d="M3.5 17a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm17 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM4.6 11.6a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm14.8 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM7.8 7.3a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm8.4 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM12 5.5A1.5 1.5 0 1 1 12 8.5 1.5 1.5 0 0 1 12 5.5zM8.5 17a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm7 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM9.4 12.6a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zm5.2 0a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3zM12 10.2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3z" />
+	</SVG>
+);
+
 export const heatMapTableIcon = (
 	<SVG xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 		<Path d="M3 3h18v4H3V3zm0 6h6v12H3V9zm8 0h10v4H11V9zm0 6h10v6H11v-6z" />

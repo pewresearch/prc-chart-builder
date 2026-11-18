@@ -90,6 +90,7 @@ const AXIS_LESS_TYPES = new Set([
 	'sankey',
 	'waffle',
 	'heat-map-table',
+	'hemicycle',
 ]);
 
 /**

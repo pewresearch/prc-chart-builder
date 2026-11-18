@@ -58,6 +58,7 @@ import TextFieldControls from './text-field-controls';
 import TooltipControls from './tooltip-controls';
 import TreemapControls from './treemap-controls';
 import WaffleControls from './waffle-controls';
+import HemicycleControls from './hemicycle-controls';
 import HeatMapTableControls from './heat-map-table-controls';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import ProductionControls from './production-controls';
@@ -81,6 +82,7 @@ function ControlSections(props) {
 	const showAxes =
 		'map' !== chartFamily &&
 		chartType !== 'waffle' &&
+		chartType !== 'hemicycle' &&
 		!(
 			isSmallMultiples &&
 			(effectiveType === 'pie' || effectiveType === 'waffle')
@@ -126,6 +128,7 @@ function ControlSections(props) {
 				(isSmallMultiples && effectiveType === 'waffle')) && (
 				<WaffleControls {...props} />
 			)}
+			{'hemicycle' === chartType && <HemicycleControls {...props} />}
 			{'heat-map-table' === chartType && (
 				<HeatMapTableControls {...props} />
 			)}

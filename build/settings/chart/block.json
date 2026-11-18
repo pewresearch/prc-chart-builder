@@ -606,6 +606,22 @@
         "displayMode": "whole"
       }
     },
+    "hemicycle": {
+      "type": "object",
+      "default": {
+        "seatShape": "circle",
+        "seatGap": 0.15,
+        "rows": null,
+        "innerRadiusRatio": 0.4,
+        "totalSeats": null,
+        "emptyFill": "#E6E7E8",
+        "stackedBar": {
+          "active": false,
+          "height": 16,
+          "gap": 24
+        }
+      }
+    },
     "heatMapTable": {
       "type": "object",
       "default": {

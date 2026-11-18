@@ -17,12 +17,14 @@ export const HIDE_BLOCK_TOOLBAR_BODY_CLASS =
  * Toggle the body class that hides the block toolbar (see editor.scss)
  * while the selection sits inside the wizard-hosting controller.
  *
- * @param {string}  controllerClientId Wizard-hosting controller clientId.
- * @param {boolean} exposeBlockToolbar When true, do not hide toolbars (Advanced Settings).
+ * @param {string}  controllerClientId      Wizard-hosting controller clientId.
+ * @param {boolean} exposeBlockToolbar      When true, do not hide toolbars (Advanced Settings).
+ * @param {boolean} exposeControllerToolbar When true, show the toolbar only on the controller block.
  */
 export default function useHideBlockToolbar(
 	controllerClientId,
-	exposeBlockToolbar = false
+	exposeBlockToolbar = false,
+	exposeControllerToolbar = false
 ) {
 	const shouldHide = useSelect(
 		(select) => {
@@ -47,9 +49,10 @@ export default function useHideBlockToolbar(
 				selected: toRef(selectedClientId),
 				ancestors: getBlockParents(selectedClientId).map(toRef),
 				exposeBlockToolbar,
+				exposeControllerToolbar,
 			});
 		},
-		[controllerClientId, exposeBlockToolbar]
+		[controllerClientId, exposeBlockToolbar, exposeControllerToolbar]
 	);
 
 	useEffect(() => {

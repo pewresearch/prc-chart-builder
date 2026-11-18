@@ -89,7 +89,7 @@ function getSankeyLegendCategories(chartData = [], sankey = {}) {
 }
 
 /**
- * Part-to-whole charts (pie, waffle) color by row label (`x`), like the pie color scale.
+ * Part-to-whole charts (pie, waffle, hemicycle) color by row label (`x`), like the pie color scale.
  *
  * @param {Object[]} chartData Chart rows. Each row label is `x`.
  * @return {string[]} Row labels in first-seen order.
@@ -253,8 +253,12 @@ export function getAvailableLegendCategories({
 		return getSankeyLegendCategories(chartData, sankey);
 	}
 
-	// Pie slices and standalone waffle cells key by row label.
-	if (chartType === 'pie' || chartType === 'waffle') {
+	// Pie slices, standalone waffle cells, and hemicycle seats key by row label.
+	if (
+		chartType === 'pie' ||
+		chartType === 'waffle' ||
+		chartType === 'hemicycle'
+	) {
 		return getPartToWholeLegendCategories(chartData);
 	}
 

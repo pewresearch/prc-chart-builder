@@ -425,8 +425,34 @@ body.prc-chart-builder-hide-block-toolbar {
 			}
 		}
 
-		.prc-chart-wizard__view-chart {
-			margin-top: 16px;
+		.prc-chart-wizard__workflow-action {
+			display: flex;
+			flex-direction: column;
+			gap: 8px;
+
+			.components-button {
+				width: 100%;
+				justify-content: center;
+			}
+		}
+
+		.prc-chart-wizard__note-status {
+			display: flex;
+			flex-wrap: wrap;
+			align-items: baseline;
+			justify-content: flex-start;
+			gap: 4px 8px;
+
+			.components-button.is-link {
+				width: auto;
+				font-size: 12px;
+			}
+		}
+
+		.prc-chart-wizard__workflow-action-help {
+			margin: 0;
+			color: $wizard-gray;
+			font-size: 12px;
 		}
 	}
 

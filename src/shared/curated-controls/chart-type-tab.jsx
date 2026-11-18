@@ -19,6 +19,7 @@ import SankeyControls from '../../chart/edit/sankey-controls';
 import SmallMultiplesControls from '../../chart/edit/small-multiples-controls';
 import TreemapControls from '../../chart/edit/treemap-controls';
 import WaffleControls from '../../chart/edit/waffle-controls';
+import HemicycleControls from '../../chart/edit/hemicycle-controls';
 import HeatMapTableControls from '../../chart/edit/heat-map-table-controls';
 import {
 	BAR_CHART_TYPES,
@@ -85,6 +86,9 @@ export default function ChartTypeTab({ chartAttributes, setAttributes }) {
 			{(chartType === 'waffle' ||
 				(isSmallMultiples && effectiveType === 'waffle')) && (
 				<WaffleControls {...controlProps} />
+			)}
+			{chartType === 'hemicycle' && (
+				<HemicycleControls {...controlProps} />
 			)}
 			{chartType === 'heat-map-table' && (
 				<HeatMapTableControls {...controlProps} />

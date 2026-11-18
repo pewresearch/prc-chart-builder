@@ -99,7 +99,8 @@
 				"radar",
 				"small-multiples",
 				"waffle",
-				"heat-map-table"
+				"heat-map-table",
+				"hemicycle"
 			]
 		},
 		{
@@ -2667,6 +2668,63 @@
 			"type": "number",
 			"themeable": true,
 			"description": "Number of cells tall (grid height)."
+		}
+	],
+	"hemicycle": [
+		{
+			"path": ["emptyFill"],
+			"type": "string",
+			"themeable": true,
+			"description": "Fill color for vacant seats."
+		},
+		{
+			"path": ["innerRadiusRatio"],
+			"type": "number",
+			"themeable": true,
+			"description": "Inner row radius as a fraction of the outer radius (0–0.9)."
+		},
+		{
+			"path": ["rows"],
+			"type": "number",
+			"themeable": false,
+			"description": "Number of semicircle rows. Null picks the fewest rows that fit."
+		},
+		{
+			"path": ["seatGap"],
+			"type": "number",
+			"themeable": true,
+			"description": "Space between seats as a fraction of seat size."
+		},
+		{
+			"path": ["seatShape"],
+			"type": "string",
+			"themeable": true,
+			"description": "Shape used for each seat.",
+			"enum": ["circle", "square"]
+		},
+		{
+			"path": ["stackedBar", "active"],
+			"type": "boolean",
+			"themeable": false,
+			"description": "Draw a stacked bar under the arcs with the same seat totals."
+		},
+		{
+			"path": ["stackedBar", "gap"],
+			"type": "number",
+			"themeable": true,
+			"description": "Space between the arcs and the stacked bar (px)."
+		},
+		{
+			"path": ["stackedBar", "height"],
+			"type": "number",
+			"themeable": true,
+			"description": "Stacked bar height (px)."
+		},
+		{
+			"path": ["totalSeats"],
+			"type": "number",
+			"themeable": false,
+			"description": "Seats in the chamber. Null uses the sum of party values; extra seats render as vacant."
 		}
 	],
 	"heatMapTable": [

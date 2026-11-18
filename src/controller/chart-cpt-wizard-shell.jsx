@@ -62,7 +62,6 @@ import {
 	shouldConfirmTemplateReset,
 	shouldShowBlockInspector,
 } from '../shared/wizard-chrome';
-import ChartViewLink from '../shared/wizard-chrome/chart-view-link';
 import {
 	DEFAULT_PREVIEW_APPEARANCE,
 	previewPaneProps,
@@ -81,7 +80,7 @@ import {
 	getPreviewWidthRange,
 } from '../shared/wizard-chrome/preview-viewports';
 import PreviewVisionFilters from '../shared/wizard-chrome/preview-vision-filters';
-import { WorkflowStatusPaneSlot } from '../shared/wizard-chrome/workflow-status-pane-slot';
+import WorkflowPanel from '../shared/wizard-chrome/workflow-panel';
 import useWizardSplit from '../shared/wizard-chrome/use-wizard-split';
 import { WizardChartActionsContext } from '../shared/wizard-chrome/wizard-chart-actions-context';
 import { getWizardScreens } from '../shared/wizard-screens';
@@ -170,7 +169,16 @@ export default function ChartCptWizardShell({
 	// Advanced Settings (design mode on Style Chart) restores block toolbars
 	// so copy/paste styles, chart/data switch, and core block controls work.
 	const exposeBlockToolbar = activeStep === 3 && isDesignMode;
-	useHideBlockToolbar(clientId, exposeBlockToolbar);
+	// Private note composer missing: show the controller's own toolbar so
+	// Gutenberg's Add note item is reachable. No extra toolbar buttons.
+	const [exposeControllerNoteToolbar, setExposeControllerNoteToolbar] =
+		useState(false);
+	const isPreviewStep = activeStep === 4;
+	useHideBlockToolbar(
+		clientId,
+		exposeBlockToolbar,
+		exposeControllerNoteToolbar && isPreviewStep
+	);
 
 	const [appearance, setAppearance] = useState(DEFAULT_PREVIEW_APPEARANCE);
 	const [previewViewport, setPreviewViewport] = useState('desktop');
@@ -802,6 +810,13 @@ export default function ChartCptWizardShell({
 								className="prc-chart-modal__configure-controls"
 								data-collapsed-label={splitStartLabel}
 							>
+								<WorkflowPanel
+									chartClientId={chartClientId}
+									onUnavailable={() => {
+										setExposeControllerNoteToolbar(true);
+										selectBlock(clientId);
+									}}
+								/>
 								<PreviewToolbar
 									viewport={previewStepViewport}
 									onViewportChange={handleViewportChange}
@@ -813,8 +828,6 @@ export default function ChartCptWizardShell({
 									appearance={appearance}
 									onAppearanceChange={setAppearance}
 								/>
-								<WorkflowStatusPaneSlot />
-								<ChartViewLink />
 							</div>
 							{splitHandle}
 							<div

@@ -23,7 +23,10 @@ import {
 /**
  * Internal dependencies
  */
-import { effectiveChartTypeForControls } from '../utils/chart-types';
+import {
+	effectiveChartTypeForControls,
+	supportsTimeScale,
+} from '../utils/chart-types';
 import {
 	buildEditedAxisDomain,
 	formatNum,
@@ -175,27 +178,40 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 						});
 					}}
 				/>
-				<SelectControl
-					__next40pxDefaultSize
-					label={__('Independent axis scale')}
-					value={getCurrentValue('independentAxis', 'scale')}
-					options={[
-						{
-							value: 'linear',
-							label: 'Linear',
-						},
-						{
-							value: 'time',
-							label: 'Time',
-						},
-					]}
-					onChange={(val) => {
-						updateAttributeForDevice('independentAxis', {
-							scale: val,
-						});
-					}}
-				/>
-				{'time' === getCurrentValue('independentAxis', 'scale') && (
+				{/* Shown while already time so a stale time scale can be reset. */}
+				{(supportsTimeScale(attributes, layout) ||
+					independentIsTime) && (
+					<SelectControl
+						__next40pxDefaultSize
+						label={__('Independent axis scale')}
+						value={independentScale}
+						options={[
+							{
+								value: 'linear',
+								label: 'Linear',
+							},
+							{
+								value: 'time',
+								label: 'Time',
+							},
+						]}
+						onChange={(val) => {
+							setAttributes({
+								dataRender: {
+									...dataRender,
+									xScale: val,
+									...('time' === val && !dataRender.xFormat
+										? { xFormat: 'YYYY' }
+										: {}),
+								},
+							});
+							updateAttributeForDevice('independentAxis', {
+								scale: val,
+							});
+						}}
+					/>
+				)}
+				{independentIsTime && (
 					<SelectControl
 						__next40pxDefaultSize
 						label={__('Time scale format')}
@@ -250,7 +266,7 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 					/>
 				)}
 				<PanelRow>Domain</PanelRow>
-				{'time' === getCurrentValue('independentAxis', 'scale') && (
+				{independentIsTime && (
 					<p className="components-base-control__help">
 						{__(
 							'Default uses the data range. Set min/max years here to extend or crop the axis (e.g. start at 2000 even if data begins later).'
@@ -344,10 +360,10 @@ function IndependentAxisControls({ attributes, setAttributes }) {
 						})
 					}
 					help={__(
-						`List of numbers seperated by commas (eg. 0, 50, 100). Setting this value will override the "Number of Ticks" parameter. ${'time' === getCurrentValue('independentAxis', 'scale') ? `If independent axis is time scale, ticks must match the date input format (${xFormat}).` : ''}`
+						`List of numbers seperated by commas (eg. 0, 50, 100). Setting this value will override the "Number of Ticks" parameter. ${independentIsTime ? `If independent axis is time scale, ticks must match the date input format (${xFormat}).` : ''}`
 					)}
 				/>
-				{'time' !== getCurrentValue('independentAxis', 'scale') && (
+				{!independentIsTime && (
 					<>
 						<ToggleControl
 							label={__('Abbreviate ticks')}

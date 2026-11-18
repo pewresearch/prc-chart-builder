@@ -39,6 +39,7 @@ import {
 } from '../../../utils/series-style-fields';
 import { TextStyleControls } from './TextStyleControls';
 import { findPaletteSwatch } from '../../../utils/find-palette-swatch';
+import { anchoredChartPopoverProps } from '../popover-frame';
 
 const PAINT_FIELDS = [
 	...SERIES_STYLE_FAMILIES.identityFill,
@@ -104,7 +105,10 @@ export function SeriesColorField({
 		>
 			<span className="prc-chart-series-paint__label">{label}</span>
 			<Dropdown
-				popoverProps={{ placement: 'left-start' }}
+				popoverProps={{
+					placement: 'left-start',
+					...anchoredChartPopoverProps,
+				}}
 				renderToggle={({ isOpen, onToggle }) => (
 					<button
 						type="button"

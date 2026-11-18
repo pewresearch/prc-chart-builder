@@ -13,6 +13,10 @@ import { Popover, Button } from '@wordpress/components';
 import { closeSmall, copy } from '@wordpress/icons';
 
 import {
+	CHART_ELEMENT_POPOVER_PLACEMENT,
+	useChartPopoverFrame,
+} from './popover-frame';
+import {
 	LabelPanel,
 	ShapePanel,
 	LineSegmentPanel,
@@ -154,6 +158,7 @@ export function ChartElementPopover({
 }) {
 	// Ref for the popover content to detect clicks outside
 	const popoverRef = useRef(null);
+	const frame = useChartPopoverFrame(anchorRef);
 
 	// Handle click outside to close the popover
 	useEffect(() => {
@@ -339,8 +344,7 @@ export function ChartElementPopover({
 	return (
 		<Popover
 			anchor={anchorRef}
-			placement="top"
-			offset={12}
+			{...CHART_ELEMENT_POPOVER_PLACEMENT}
 			onClose={onClose}
 			focusOnMount="firstElement"
 			className="chart-element-popover"
@@ -350,8 +354,9 @@ export function ChartElementPopover({
 				ref={popoverRef}
 				style={{
 					padding: '16px',
-					minWidth: '300px',
-					maxHeight: '400px',
+					minWidth: frame.minWidth,
+					maxWidth: frame.maxWidth,
+					maxHeight: frame.maxHeight,
 					overflowY: 'auto',
 					boxSizing: 'border-box',
 				}}

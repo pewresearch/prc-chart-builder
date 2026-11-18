@@ -23,10 +23,11 @@ import {
 	effectiveChartTypeForControls,
 	GROUP_BREAKS_CHART_TYPES,
 	GROUPABLE_CHART_TYPES,
-	LINE_CHART_TYPES,
+	NO_SORT_KEY_CHART_TYPES,
 	POINT_CHART_TYPES,
 	SORTABLE_CHART_TYPES,
 	SUPPLEMENTAL_COLUMN_CHART_TYPES,
+	supportsTimeScale,
 	VALUE_SCALE_CHART_TYPES,
 } from '../utils/chart-types';
 import { formatNum } from '../utils/helpers';
@@ -35,6 +36,24 @@ import FocusedPanelBody from './focused-panel-body';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
 import Sorter from './sorter';
 import ValueScaleControls from './value-scale-controls';
+
+/**
+ * Help text under Sort Order for charts where the order means something extra.
+ *
+ * @param {string} chartType Block chart type.
+ * @return {string|undefined} Help text, or undefined for the default.
+ */
+function getSortOrderHelp(chartType) {
+	if (chartType === 'treemap') {
+		return __(
+			'How leaf rectangles are ordered inside each group. "Descending" mirrors classic treemap hierarchy; "No Sort" preserves the underlying data order.'
+		);
+	}
+	if (chartType === 'pie' || chartType === 'hemicycle') {
+		return __('"No Sort" keeps the order of the data table.');
+	}
+	return undefined;
+}
 
 function uniqueCanonicalColumnValues(data, column) {
 	const unique = new Set();
@@ -68,11 +87,7 @@ function DataControls({ attributes, setAttributes }) {
 		io;
 	const { type: chartType } = layout;
 	const effectiveType = effectiveChartTypeForControls(attributes);
-	const isSmallMultiples = chartType === 'small-multiples';
-	// Line family + small multiples (any panelType): authors need time/linear
-	// so table parsing + tooltip date formatting stay available for bar/column/pie.
-	const showXScaleControl =
-		LINE_CHART_TYPES.includes(effectiveType) || isSmallMultiples;
+	const showXScaleControl = supportsTimeScale(attributes, layout);
 	const secondary = divergingBar.secondary || {};
 	const secondaryActive = secondary.active || false;
 	const groupBreaksActive = dataRender.groupBreaksActive || false;
@@ -185,6 +200,10 @@ function DataControls({ attributes, setAttributes }) {
 									dataRender: {
 										...dataRender,
 										xScale: value,
+										...('time' === value &&
+										!dataRender.xFormat
+											? { xFormat: 'YYYY' }
+											: {}),
 									},
 								});
 								updateAttributeForDevice('independentAxis', {
@@ -198,12 +217,12 @@ function DataControls({ attributes, setAttributes }) {
 						/>
 					</VStack>
 				)}
-				{'time' === dataRender.xScale && (
+				{showXScaleControl && 'time' === dataRender.xScale && (
 					<VStack spacing={2}>
 						<SelectControl
 							__next40pxDefaultSize
 							label={__('Time series input format')}
-							value={dataRender.xFormat}
+							value={dataRender.xFormat || ''}
 							help={__(
 								`Choose the format of your table's time series data. This will be used to parse the data into a date object. If you do not see your format here, you must change your data to match one of the formats below.`
 							)}
@@ -216,6 +235,14 @@ function DataControls({ attributes, setAttributes }) {
 								})
 							}
 							options={[
+								...(dataRender.xFormat
+									? []
+									: [
+											{
+												value: '',
+												label: __('— Select format —'),
+											},
+										]),
 								{
 									value: 'YYYY',
 									label: 'YYYY',
@@ -829,8 +856,8 @@ function DataControls({ attributes, setAttributes }) {
 							<StyledLabel>4. Data Sorting</StyledLabel>
 						</PanelDescription>
 						<VStack spacing={2}>
-							{/* Sort Key is meaningless for treemap (always the implicit value column). */}
-							{chartType !== 'treemap' && (
+							{/* Sort Key is meaningless for treemap and hemicycle (one value column). */}
+							{!NO_SORT_KEY_CHART_TYPES.includes(chartType) && (
 								<SelectControl
 									__next40pxDefaultSize
 									label={__('Sort Key')}
@@ -859,13 +886,7 @@ function DataControls({ attributes, setAttributes }) {
 								__next40pxDefaultSize
 								label={__('Sort Order')}
 								value={dataRender.sortOrder}
-								help={
-									chartType === 'treemap'
-										? __(
-												'How leaf rectangles are ordered inside each group. "Descending" mirrors classic treemap hierarchy; "No Sort" preserves the underlying data order.'
-											)
-										: undefined
-								}
+								help={getSortOrderHelp(chartType)}
 								options={[
 									{
 										value: 'ascending',
