@@ -78,6 +78,7 @@ class Content_Type {
 		$loader->add_action( 'admin_enqueue_scripts', $this, 'dequeue_ai_scripts', 20 );
 		$loader->add_filter( 'allowed_block_types_all', $this, 'restrict_chart_cpt_blocks', 10, 2 );
 		$loader->add_action( 'rest_api_init', $this, 'register_chart_rest_fields' );
+		$loader->add_filter( 'wp_insert_post_data', $this, 'sync_post_title_from_chart_metadata', 10, 4 );
 	}
 
 	/**
@@ -339,6 +340,8 @@ class Content_Type {
 			'label'               => __( 'Chart', 'prc-chart-builder' ),
 			'description'         => __( 'A store for chart blocks. This post type allows you to save a chart once and update everywhere it is used.', 'prc-chart-builder' ),
 			'labels'              => self::get_labels(),
+			// `title` stays supported so the REST `title` field keeps working. The
+			// native editor field is hidden in the chart wizard stylesheet.
 			'supports'            => array( 'title', 'editor', 'author', 'thumbnail', 'custom-fields', 'revisions', 'prc-datasets', 'prc-publish-workflows' ),
 			'taxonomies'          => array( 'category', 'research-teams' ),
 			'hierarchical'        => false,
@@ -765,6 +768,125 @@ class Content_Type {
 
 		$data['type'] = 'rich';
 		return $data;
+	}
+
+	/**
+	 * When a chart's metadata title is set or changed, store that text as the post title.
+	 *
+	 * A save that leaves the chart title unchanged does not rewrite the post title,
+	 * so existing charts stay as they are until an editor changes the chart title.
+	 * An insert that already names its post keeps that title, so duplicates keep
+	 * their own title.
+	 * Revisions and autosaves use the revision post type and are skipped.
+	 *
+	 * @hook wp_insert_post_data
+	 *
+	 * @param array $data                Slashed post data about to be written.
+	 * @param array $postarr             Slashed sanitized post data.
+	 * @param array $unsanitized_postarr Unused. Required by the filter signature.
+	 * @param bool  $update              Whether this updates an existing post.
+	 * @return array
+	 */
+	public function sync_post_title_from_chart_metadata( $data, $postarr, $unsanitized_postarr, $update ) {
+		unset( $unsanitized_postarr );
+
+		$post_type = isset( $data['post_type'] ) ? (string) $data['post_type'] : '';
+		if ( self::$post_type !== $post_type ) {
+			return $data;
+		}
+
+		$next_title = self::chart_metadata_title_from_content( wp_unslash( (string) ( $data['post_content'] ?? '' ) ) );
+		if ( null === $next_title ) {
+			return $data;
+		}
+
+		$previous_title = null;
+		if ( $update ) {
+			$post_id  = isset( $postarr['ID'] ) ? (int) $postarr['ID'] : 0;
+			$previous = $post_id > 0 ? get_post( $post_id ) : null;
+			if ( $previous instanceof \WP_Post ) {
+				$previous_title = self::chart_metadata_title_from_content( $previous->post_content );
+			}
+			if ( $previous_title === $next_title ) {
+				return $data;
+			}
+		} elseif ( '' !== trim( wp_unslash( (string) ( $data['post_title'] ?? '' ) ) ) ) {
+			return $data;
+		}
+
+		if ( '' === $next_title && ( null === $previous_title || '' === $previous_title ) ) {
+			return $data;
+		}
+
+		$data['post_title'] = wp_slash( sanitize_text_field( $next_title ) );
+		return $data;
+	}
+
+	/**
+	 * Plain text of the first chart block's metadata title.
+	 *
+	 * @param string $post_content Raw post content.
+	 * @return string|null Plain title, an empty string when the title is blank, or null when no chart title is stored.
+	 */
+	public static function chart_metadata_title_from_content( $post_content ) {
+		if ( ! is_string( $post_content ) || false === strpos( $post_content, 'prc-chart-builder/chart' ) ) {
+			return null;
+		}
+
+		return self::chart_metadata_title_from_blocks( parse_blocks( $post_content ) );
+	}
+
+	/**
+	 * Walk parsed blocks for the first chart metadata title.
+	 *
+	 * @param array $blocks Parsed blocks.
+	 * @return string|null
+	 */
+	private static function chart_metadata_title_from_blocks( $blocks ) {
+		foreach ( $blocks as $block ) {
+			if ( ! is_array( $block ) ) {
+				continue;
+			}
+
+			if ( 'prc-chart-builder/chart' === ( $block['blockName'] ?? '' ) ) {
+				$attrs    = is_array( $block['attrs'] ?? null ) ? $block['attrs'] : array();
+				$metadata = $attrs['metadata'] ?? null;
+				if ( is_array( $metadata ) && array_key_exists( 'title', $metadata ) ) {
+					return self::plain_chart_title( (string) $metadata['title'] );
+				}
+				// Stored v1 markup keeps the headline on metaTitle. Match the
+				// migrate_attributes_v1_to_v2() fallback so an unchanged editor
+				// migration does not look like a title change. Skip v2 blocks:
+				// Gutenberg omits default metadata, which is not a v1 title.
+				if (
+					! is_array( $metadata )
+					&& ( ! isset( $attrs['_version'] ) || 'v2' !== $attrs['_version'] )
+				) {
+					return self::plain_chart_title( (string) ( $attrs['metaTitle'] ?? 'Title' ) );
+				}
+			}
+
+			if ( ! empty( $block['innerBlocks'] ) && is_array( $block['innerBlocks'] ) ) {
+				$found = self::chart_metadata_title_from_blocks( $block['innerBlocks'] );
+				if ( null !== $found ) {
+					return $found;
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Strip inline markup from a chart title so the post title is plain text.
+	 *
+	 * @param string $raw Chart metadata title.
+	 * @return string
+	 */
+	private static function plain_chart_title( $raw ) {
+		$text = html_entity_decode( wp_strip_all_tags( $raw ), ENT_QUOTES, 'UTF-8' );
+		$text = preg_replace( '/\s+/u', ' ', $text );
+		return trim( is_string( $text ) ? $text : '' );
 	}
 
 	/**

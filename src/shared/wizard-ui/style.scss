@@ -917,3 +917,15 @@
 		}
 	}
 }
+
+// The chart metadata title is the post title, so hide the native WordPress
+// title on chart posts. The editor iframe copies the admin post-type-* body
+// class, which also covers the visual title in the canvas. The code editor
+// title is in the parent document, which has the same class.
+body.post-type-chart {
+	.editor-visual-editor__post-title-wrapper,
+	.edit-post-visual-editor__post-title-wrapper,
+	.editor-text-editor .editor-post-title {
+		display: none;
+	}
+}

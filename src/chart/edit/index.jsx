@@ -47,6 +47,7 @@ import {
 	hasOverlaysNeedingPanelAnchor,
 } from './utils/panel-anchor';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { useSyncChartTitleToPostTitle } from './hooks/use-sync-chart-title-to-post-title';
 import { viewportKeyedMapUpdate } from '../utils/viewport-keyed-map';
 import { ChartElementPopover, ELEMENT_TYPES } from './popover';
 import { getSmallMultiplesPanelKeys } from './popover/utils';
@@ -127,6 +128,8 @@ function EditInner({
 	} = useInspectorFocus();
 	const wizardChartActions = useWizardChartActions();
 	const { id, io, metadata, dataRender, drawings = [] } = attrs;
+
+	useSyncChartTitleToPostTitle(metadata?.title);
 
 	const { chartData, isStaticChart, isFreeformChart, preserveStringKeys } =
 		io;

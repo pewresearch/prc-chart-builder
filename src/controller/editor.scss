@@ -3,7 +3,7 @@
 // The CPT wizard lives in the Gutenberg canvas iframe, so 100dvh is already
 // below the editor header. Leave room for canvas padding and the block
 // wrapper so the pinned action bar stays on screen.
-$wizard-cpt-shell-inset: 8rem;
+$wizard-cpt-shell-inset: 2rem;
 
 // Drag-to-snap split between the two panels (use-wizard-split.js).
 $wizard-split-handle-width: 12px;
@@ -33,6 +33,7 @@ body.prc-chart-builder-hide-block-toolbar {
 	display: flex;
 	flex-direction: column;
 	width: 100%;
+	margin-top: 25px;
 	height: calc(100dvh - $wizard-cpt-shell-inset);
 	max-height: calc(100dvh - $wizard-cpt-shell-inset);
 	min-height: 0;
