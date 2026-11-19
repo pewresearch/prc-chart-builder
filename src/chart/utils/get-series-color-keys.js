@@ -48,6 +48,7 @@ function getDiscreteLegendLabels(attributes = {}, followLegendOrder = true) {
 		sankey: attributes.sankey,
 		smallMultiples: attributes.smallMultiples,
 		legend: attributes.legend,
+		orientation: attributes.layout?.orientation,
 	});
 	const persisted = attributes.legend?.categories;
 	if (followLegendOrder && Array.isArray(persisted) && persisted.length > 0) {

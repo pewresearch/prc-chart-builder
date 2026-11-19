@@ -85,7 +85,9 @@ function DataControls({ attributes, setAttributes }) {
 
 	const { availableCategories, independentVariable, chartFamily, chartData } =
 		io;
-	const { type: chartType } = layout;
+	const { type: chartType, orientation } = layout;
+	const showNeutralColumn =
+		chartType === 'diverging-bar' && orientation !== 'vertical';
 	const effectiveType = effectiveChartTypeForControls(attributes);
 	const showXScaleControl = supportsTimeScale(attributes, layout);
 	const secondary = divergingBar.secondary || {};
@@ -415,11 +417,13 @@ function DataControls({ attributes, setAttributes }) {
 				{'diverging-bar' === chartType && (
 					<VStack spacing={2}>
 						<PanelDescription>
-							Select the categories you would like chart builder
-							to use to render your data. A diverging bar chart
-							can have three categories: one for the positive
-							values, one for the negative values, and one for the
-							neutral values (optional).
+							{showNeutralColumn
+								? __(
+										'Select the categories you would like chart builder to use to render your data. A diverging bar chart can have three categories: one for the positive values, one for the negative values, and one for the neutral values (optional).'
+									)
+								: __(
+										'Select the categories you would like chart builder to use to render your data. A diverging column chart uses one category for the positive values and one for the negative values.'
+									)}
 						</PanelDescription>
 						<PanelDescription>
 							<StyledLabel>Positive Categories</StyledLabel>
@@ -461,46 +465,54 @@ function DataControls({ attributes, setAttributes }) {
 							parentObject="divergingBar"
 							parentObjectValue={divergingBar}
 						/>
-						<ToggleControl
-							label={__('Neutral Column')}
-							checked={divergingBar.neutralBar?.active || false}
-							onChange={(value) => {
-								const neutralBar =
-									divergingBar.neutralBar || {};
-								setAttributes({
-									divergingBar: {
-										...divergingBar,
-										neutralBar: {
-											...neutralBar,
-											active: value,
-										},
-									},
-								});
-							}}
-							help={__(
-								'Add a neutral column to the right of the chart.'
-							)}
-						/>
-						{divergingBar.neutralBar?.active && (
-							<SelectControl
-								__next40pxDefaultSize
-								label={__('Neutral Category')}
-								value={divergingBar.neutralBar?.category}
-								onChange={(value) => {
-									const neutralBar =
-										divergingBar.neutralBar || {};
-									setAttributes({
-										divergingBar: {
-											...divergingBar,
-											neutralBar: {
-												...neutralBar,
-												category: value,
+						{showNeutralColumn && (
+							<>
+								<ToggleControl
+									label={__('Neutral Column')}
+									checked={
+										divergingBar.neutralBar?.active || false
+									}
+									onChange={(value) => {
+										const neutralBar =
+											divergingBar.neutralBar || {};
+										setAttributes({
+											divergingBar: {
+												...divergingBar,
+												neutralBar: {
+													...neutralBar,
+													active: value,
+												},
 											},
-										},
-									});
-								}}
-								options={availableSelectableOptions}
-							/>
+										});
+									}}
+									help={__(
+										'Add a neutral column to the right of the chart.'
+									)}
+								/>
+								{divergingBar.neutralBar?.active && (
+									<SelectControl
+										__next40pxDefaultSize
+										label={__('Neutral Category')}
+										value={
+											divergingBar.neutralBar?.category
+										}
+										onChange={(value) => {
+											const neutralBar =
+												divergingBar.neutralBar || {};
+											setAttributes({
+												divergingBar: {
+													...divergingBar,
+													neutralBar: {
+														...neutralBar,
+														category: value,
+													},
+												},
+											});
+										}}
+										options={availableSelectableOptions}
+									/>
+								)}
+							</>
 						)}
 						<ToggleControl
 							label={__('Ghost Overlay')}

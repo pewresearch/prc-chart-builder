@@ -79,6 +79,8 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 	const netValues = chartAttributes.netValues ?? {};
 	const chartFamily = io.chartFamily;
 	const isDivergingBar = chartType === 'diverging-bar';
+	const showNeutralColumn =
+		isDivergingBar && layout.orientation !== 'vertical';
 	const isSankey = chartType === 'sankey';
 	const sankey = chartAttributes.sankey ?? {};
 	const availableCategories = io.availableCategories ?? NO_CATEGORIES;
@@ -314,10 +316,15 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 						availableCategories.length > 0 && (
 							<>
 								<p className="prc-chart-modal__control-help">
-									{__(
-										'A diverging bar chart can have three categories: one for the positive values, one for the negative values, and one for the neutral values (optional).',
-										'prc-chart-builder'
-									)}
+									{showNeutralColumn
+										? __(
+												'A diverging bar chart can have three categories: one for the positive values, one for the negative values, and one for the neutral values (optional).',
+												'prc-chart-builder'
+											)
+										: __(
+												'A diverging column chart uses one category for the positive values and one for the negative values.',
+												'prc-chart-builder'
+											)}
 								</p>
 								<p className="prc-chart-modal__control-group-label">
 									{__(
@@ -345,41 +352,47 @@ export default function DataTab({ chartAttributes, onChange, setAttributes }) {
 									parentObject="divergingBar"
 									parentObjectValue={divergingBar}
 								/>
-								<ToggleControl
-									label={__(
-										'Neutral column',
-										'prc-chart-builder'
-									)}
-									checked={Boolean(neutralBar.active)}
-									onChange={(value) =>
-										setPath(
-											'divergingBar.neutralBar.active',
-											value
-										)
-									}
-									help={__(
-										'Add a neutral column to the right of the chart.',
-										'prc-chart-builder'
-									)}
-									__nextHasNoMarginBottom
-								/>
-								{neutralBar.active && (
-									<SelectControl
-										__next40pxDefaultSize
-										label={__(
-											'Neutral category',
-											'prc-chart-builder'
+								{showNeutralColumn && (
+									<>
+										<ToggleControl
+											label={__(
+												'Neutral column',
+												'prc-chart-builder'
+											)}
+											checked={Boolean(neutralBar.active)}
+											onChange={(value) =>
+												setPath(
+													'divergingBar.neutralBar.active',
+													value
+												)
+											}
+											help={__(
+												'Add a neutral column to the right of the chart.',
+												'prc-chart-builder'
+											)}
+											__nextHasNoMarginBottom
+										/>
+										{neutralBar.active && (
+											<SelectControl
+												__next40pxDefaultSize
+												label={__(
+													'Neutral category',
+													'prc-chart-builder'
+												)}
+												value={
+													neutralBar.category || ''
+												}
+												options={neutralCategoryOptions}
+												onChange={(value) =>
+													setPath(
+														'divergingBar.neutralBar.category',
+														value
+													)
+												}
+												__nextHasNoMarginBottom
+											/>
 										)}
-										value={neutralBar.category || ''}
-										options={neutralCategoryOptions}
-										onChange={(value) =>
-											setPath(
-												'divergingBar.neutralBar.category',
-												value
-											)
-										}
-										__nextHasNoMarginBottom
-									/>
+									</>
 								)}
 							</>
 						)}

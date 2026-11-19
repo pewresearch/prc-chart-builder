@@ -91,6 +91,7 @@ class Content_Type {
 		'bar'                    => 'Bar',
 		'column'                 => 'Column',
 		'diverging-bar'          => 'Diverging Bar',
+		'diverging-column'       => 'Diverging Column',
 		'dot-plot'               => 'Dot Plot',
 		'exploded-bar'           => 'Exploded Bar',
 		'freeform'               => 'Freeform',

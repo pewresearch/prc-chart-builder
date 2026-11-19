@@ -28,7 +28,11 @@ function usesRowHeight(layout) {
 	if (!ROW_HEIGHT_TYPES.has(layout?.type)) {
 		return false;
 	}
-	if (layout.type === 'bar' || layout.type === 'stacked-bar') {
+	if (
+		layout.type === 'bar' ||
+		layout.type === 'stacked-bar' ||
+		layout.type === 'diverging-bar'
+	) {
 		return !layout.orientation || layout.orientation === 'horizontal';
 	}
 	return true;

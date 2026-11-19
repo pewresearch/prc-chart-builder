@@ -103,7 +103,7 @@ trait Chart_Block_Defaults {
 		);
 
 		$templates = array(
-			'bar'            => array(
+			'bar'              => array(
 				'layout'          => array(
 					'type'        => 'bar',
 					'orientation' => 'horizontal',
@@ -146,7 +146,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'              => $shared_io,
 			),
-			'column'         => array(
+			'column'           => array(
 				'layout'          => array(
 					'type'        => 'column',
 					'orientation' => 'vertical',
@@ -181,7 +181,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'              => $shared_io,
 			),
-			'line'           => array(
+			'line'             => array(
 				'layout'          => array(
 					'type'    => 'line',
 					'width'   => 420,
@@ -231,7 +231,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'              => $shared_io,
 			),
-			'area'           => array(
+			'area'             => array(
 				'layout'   => array(
 					'type'    => 'area',
 					'width'   => 420,
@@ -254,7 +254,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'       => $shared_io,
 			),
-			'stacked-bar'    => array(
+			'stacked-bar'      => array(
 				'layout'          => array(
 					'type'        => 'stacked-bar',
 					'orientation' => 'horizontal',
@@ -282,7 +282,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'              => $shared_io,
 			),
-			'stacked-column' => array(
+			'stacked-column'   => array(
 				'layout'   => array(
 					'type'   => 'stacked-column',
 					'width'  => 420,
@@ -295,7 +295,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'       => $shared_io,
 			),
-			'stacked-area'   => array(
+			'stacked-area'     => array(
 				'layout'   => array(
 					'type'   => 'stacked-area',
 					'width'  => 420,
@@ -308,7 +308,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'       => $shared_io,
 			),
-			'pie'            => array(
+			'pie'              => array(
 				'layout'          => array(
 					'type'    => 'pie',
 					'width'   => 420,
@@ -341,7 +341,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'              => $shared_io,
 			),
-			'scatter'        => array(
+			'scatter'          => array(
 				'layout'     => array(
 					'type'    => 'scatter',
 					'width'   => 420,
@@ -364,7 +364,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'         => $shared_io,
 			),
-			'bee-swarm'      => array(
+			'bee-swarm'        => array(
 				'layout'     => array(
 					'type'    => 'bee-swarm',
 					'width'   => 420,
@@ -390,7 +390,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'         => $shared_io,
 			),
-			'dot-plot'       => array(
+			'dot-plot'         => array(
 				'layout'   => array(
 					'type'        => 'dot-plot',
 					'width'       => 420,
@@ -405,7 +405,7 @@ trait Chart_Block_Defaults {
 				'legend'   => array( 'active' => true ),
 				'io'       => $shared_io,
 			),
-			'diverging-bar'  => array(
+			'diverging-bar'    => array(
 				'layout'   => array(
 					'type'        => 'diverging-bar',
 					'orientation' => 'horizontal',
@@ -427,7 +427,29 @@ trait Chart_Block_Defaults {
 				),
 				'io'       => $shared_io,
 			),
-			'exploded-bar'   => array(
+			'diverging-column' => array(
+				'layout'   => array(
+					'type'        => 'diverging-bar',
+					'orientation' => 'vertical',
+					'width'       => 480,
+					'height'      => 420,
+				),
+				'metadata' => $shared_metadata,
+				'tooltip'  => array(
+					'active' => true,
+					'format' => '{{column}}: {{value}}',
+				),
+				'labels'   => array(
+					'active' => true,
+					'color'  => 'contrast',
+				),
+				'legend'   => array(
+					'active'      => true,
+					'markerStyle' => 'rect',
+				),
+				'io'       => $shared_io,
+			),
+			'exploded-bar'     => array(
 				'layout'   => array(
 					'type'        => 'exploded-bar',
 					'orientation' => 'horizontal',
@@ -449,7 +471,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'       => $shared_io,
 			),
-			'treemap'        => array(
+			'treemap'          => array(
 				'layout'   => array(
 					'type'   => 'treemap',
 					'width'  => 640,
@@ -463,7 +485,7 @@ trait Chart_Block_Defaults {
 				'labels'   => array( 'active' => true ),
 				'io'       => $shared_io,
 			),
-			'waffle'         => array(
+			'waffle'           => array(
 				'layout'     => array(
 					'type'   => 'waffle',
 					'width'  => 640,
@@ -495,7 +517,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'         => $shared_io,
 			),
-			'hemicycle'      => array(
+			'hemicycle'        => array(
 				'layout'     => array(
 					'type'   => 'hemicycle',
 					'width'  => 640,
@@ -533,7 +555,7 @@ trait Chart_Block_Defaults {
 				),
 				'io'         => $shared_io,
 			),
-			'heat-map-table' => array(
+			'heat-map-table'   => array(
 				'layout'          => array(
 					'type'    => 'heat-map-table',
 					'width'   => 720,
@@ -595,7 +617,7 @@ trait Chart_Block_Defaults {
 					)
 				),
 			),
-			'sankey'         => array(
+			'sankey'           => array(
 				'layout'   => array(
 					'type'   => 'sankey',
 					'width'  => 640,
@@ -605,7 +627,7 @@ trait Chart_Block_Defaults {
 				'tooltip'  => array( 'active' => true ),
 				'io'       => $shared_io,
 			),
-			'freeform'       => array(
+			'freeform'         => array(
 				'layout'   => array(
 					'type'   => 'freeform',
 					'width'  => 640,

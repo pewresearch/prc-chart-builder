@@ -30,6 +30,9 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 	// Get viewport-aware divergingBar configuration
 	const divergingBar = getCurrentValue('divergingBar') || {};
 	const neutralBar = divergingBar.neutralBar || {};
+	const layout = getCurrentValue('layout') || {};
+	const showNeutralBar =
+		layout.orientation !== 'vertical' && neutralBar.active;
 
 	return (
 		<FocusedPanelBody
@@ -70,7 +73,7 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 						}}
 					/>
 				</WidePanelItem>
-				{neutralBar.active && (
+				{showNeutralBar && (
 					<>
 						<WidePanelItem
 							hasValue={() => true}

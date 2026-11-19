@@ -90,6 +90,7 @@ const CHART_TYPE_TO_LAYOUT_TYPE = {
 	'heat-map-table': 'heat-map-table',
 	hemicycle: 'hemicycle',
 	'diverging-bar': 'diverging-bar',
+	'diverging-column': 'diverging-bar', // Uses diverging-bar layout with vertical orientation
 	'exploded-bar': 'exploded-bar',
 	'map-usa': 'map-usa',
 	'map-usa-counties': 'map-usa-counties',
@@ -399,9 +400,17 @@ export default function Edit({
 		// Determine expected orientation - same simple logic as bar/column
 		let expectedOrientation = currentOrientation; // Preserve existing by default
 
-		if (chartType === 'column' || chartType === 'stacked-column') {
+		if (
+			chartType === 'column' ||
+			chartType === 'stacked-column' ||
+			chartType === 'diverging-column'
+		) {
 			expectedOrientation = 'vertical';
-		} else if (chartType === 'bar' || chartType === 'stacked-bar') {
+		} else if (
+			chartType === 'bar' ||
+			chartType === 'stacked-bar' ||
+			chartType === 'diverging-bar'
+		) {
 			expectedOrientation = 'horizontal';
 		}
 

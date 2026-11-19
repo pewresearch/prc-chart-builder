@@ -150,6 +150,17 @@ export const columnIcon = (
 	</SVG>
 );
 
+export const divergingColumnIcon = (
+	<SVG
+		xmlns="http://www.w3.org/2000/SVG"
+		viewBox="0 0 448 512"
+		preserveAspectRatio="xMidYMid meet"
+		height={20}
+	>
+		<Path d="M32 224h96V32H32V224zM176 288h96v192H176V288zM320 160h96v64H320V160zM0 248h448v16H0V248z" />
+	</SVG>
+);
+
 export const pieIcon = (
 	<SVG
 		xmlns="http://www.w3.org/2000/SVG"

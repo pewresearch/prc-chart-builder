@@ -43,6 +43,7 @@ const CHART_TYPE_ICON_MAP = {
 	bar: chartBar,
 	column: chartBar,
 	'diverging-bar': chartBar,
+	'diverging-column': chartBar,
 	'dot-plot': trendingUp,
 	'exploded-bar': chartBar,
 	freeform: image,
@@ -96,6 +97,10 @@ function getChartTypeDescriptionMap() {
 		),
 		'diverging-bar': __(
 			'Use a diverging bar chart to compare values that fall on either side of a midpoint (e.g. agree vs disagree).',
+			'prc-chart-builder'
+		),
+		'diverging-column': __(
+			'Use a diverging column chart when categories are few and the positive and negative values should read up and down from a midpoint.',
 			'prc-chart-builder'
 		),
 		'dot-plot': __(

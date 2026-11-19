@@ -83,9 +83,11 @@ function LegendControls({ attributes, setAttributes, curated = false }) {
 				sankey: attributes.sankey || {},
 				smallMultiples: attributes.smallMultiples || {},
 				legend: getCurrentValue('legend') || {},
+				orientation: layout.orientation,
 			}),
 		[
 			chartType,
+			layout.orientation,
 			attributes.io,
 			attributes.dataRender,
 			attributes.divergingBar,

@@ -656,6 +656,7 @@ const getConfig = (
 					sankey,
 					smallMultiples,
 					legend,
+					orientation: layout.orientation,
 				});
 
 				if (legend.categories && legend.categories.length > 0) {

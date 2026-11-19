@@ -267,7 +267,8 @@ function ChartControls({
 					)}
 					{!limitControls &&
 						('bar' === chartType ||
-							'stacked-bar' === chartType) && (
+							'stacked-bar' === chartType ||
+							'diverging-bar' === chartType) && (
 							<SelectControl
 								__next40pxDefaultSize
 								label={__(

@@ -10,6 +10,7 @@ const CHART_TYPE_ICON_MAP = {
 	bar: chartBar,
 	column: chartBar,
 	'diverging-bar': chartBar,
+	'diverging-column': chartBar,
 	'dot-plot': trendingUp,
 	'exploded-bar': chartBar,
 	freeform: image,

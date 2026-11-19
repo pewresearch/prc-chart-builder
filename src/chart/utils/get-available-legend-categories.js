@@ -163,6 +163,7 @@ export function getOrdinalValueDomain(chartData, columns, savedDomain = []) {
  * @param {Object} [params.sankey]
  * @param {Object} [params.smallMultiples]
  * @param {Object} [params.legend]
+ * @param {string} [params.orientation]    Chart orientation. Vertical diverging charts omit the neutral bar.
  * @return {string[]} Available legend category labels.
  */
 export function getAvailableLegendCategories({
@@ -174,6 +175,7 @@ export function getAvailableLegendCategories({
 	sankey = {},
 	smallMultiples = {},
 	legend = {},
+	orientation,
 }) {
 	const { availableCategories = [], chartData = [] } = io;
 	const {
@@ -189,7 +191,8 @@ export function getAvailableLegendCategories({
 		dataCategories?.length > 0 ? dataCategories : availableCategories;
 
 	if (chartType === 'diverging-bar') {
-		const divergingCategories = neutralBar.active
+		const includeNeutral = neutralBar.active && orientation !== 'vertical';
+		const divergingCategories = includeNeutral
 			? [
 					...divergingBar.negativeCategories,
 					...divergingBar.positiveCategories,

@@ -2,6 +2,7 @@ export { default as areaTemplate } from './area';
 export { default as barTemplate } from './bar';
 export { default as columnTemplate } from './column';
 export { default as divergingBarTemplate } from './diverging-bar';
+export { default as divergingColumnTemplate } from './diverging-column';
 export { default as dotPlotTemplate } from './dot-plot';
 export { default as explodedBarTemplate } from './exploded-bar';
 export { default as freeformTemplate } from './freeform';
