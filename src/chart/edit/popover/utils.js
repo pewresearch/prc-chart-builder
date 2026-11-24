@@ -4,7 +4,7 @@
  * Shared utility functions for popover components.
  */
 
-import { generateSegmentKey, getRowDisplayText } from '@prc/charting-utilities';
+import { generateSegmentKey, getRowDisplayText } from '@prc/charting-library';
 import { BAR_CHART_TYPES } from '../../utils/chart-types';
 
 export { generateSegmentKey };

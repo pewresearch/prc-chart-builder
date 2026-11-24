@@ -15,14 +15,12 @@ import { fetchTheme } from './store';
 import { CURATED_CONFIG_GROUPS } from './constants';
 import { formatGroupLabel } from './model';
 import { getFieldsForGroup } from './field-registry';
-import {
-	PaletteDesigner,
-	ConfigGroupGrid,
-	CreationUiSetting,
-	GlobalSaveBar,
-	ScreenshotSettingsTab,
-	ThemeImportExport,
-} from './components';
+import PaletteDesigner from './components/palette-designer';
+import ConfigGroupGrid from './components/config-group-grid';
+import CreationUiSetting from './components/creation-ui-setting';
+import GlobalSaveBar from './components/global-save-bar';
+import ScreenshotSettingsTab from './components/screenshot-settings-tab';
+import ThemeImportExport from './components/theme-import-export';
 
 const ID_PREFIX = 'prc-chart-builder-theme-settings';
 

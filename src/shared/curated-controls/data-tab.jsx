@@ -11,7 +11,7 @@ import {
 import { useMemo } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 
-import { canonicalRowValue } from '@prc/charting-utilities';
+import { canonicalRowValue } from '@prc/charting-library';
 
 import FocusedPanelBody from '../../chart/edit/focused-panel-body';
 import Sorter from '../../chart/edit/sorter';

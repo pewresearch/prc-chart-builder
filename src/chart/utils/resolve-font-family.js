@@ -5,14 +5,14 @@
  * At render, tokens resolve through theme.json families delivered in
  * `window.prcChartBuilderTheme.fontFamilies`. Literal stacks pass through.
  */
-import { DEFAULT_FONT_FAMILY } from '../../../../prc-shared/includes/scripts/src/@prc/charting-utilities/utilities/defaultFontFamily.ts';
+import { DEFAULT_FONT_FAMILY } from '@prc/charting-library';
 import { parseFontFamilyToken, isFontFamilyToken } from './font-family-tokens';
 import { getRuntimeTheme } from './resolve-defaults';
 
 /**
  * Slug => var-free concrete stack from the active theme.json presets.
  *
- * @return {Record<string, string>}
+ * @return {Record<string, string>} Font stacks by preset slug.
  */
 export function getResolvedFontFamilyMap() {
 	const { fontFamilies } = getRuntimeTheme();

@@ -8,17 +8,47 @@ import {
 	__experimentalToggleGroupControlOptionIcon as ToggleGroupControlOptionIcon,
 } from '@wordpress/components';
 import { desktop, mobile, tablet } from '@wordpress/icons';
-import { __ } from '@wordpress/i18n';
+import { __, sprintf } from '@wordpress/i18n';
 
-/** Local preview viewport keys (not WordPress editor deviceType). */
+import { VIEWPORT_BREAKPOINTS } from '../../chart/utils/view-helpers';
+
+/**
+ * Local preview viewport keys (not WordPress editor deviceType). `range` is
+ * the screen width that shows these settings on the site; the button shows
+ * it as its tooltip.
+ */
 export const PREVIEW_VIEWPORTS = [
 	{
 		value: 'desktop',
 		label: __('Desktop', 'prc-chart-builder'),
+		range: sprintf(
+			/* translators: %d: narrowest desktop screen width in pixels. */
+			__('screens %dpx and wider', 'prc-chart-builder'),
+			VIEWPORT_BREAKPOINTS.medium
+		),
 		icon: desktop,
 	},
-	{ value: 'tablet', label: __('Tablet', 'prc-chart-builder'), icon: tablet },
-	{ value: 'mobile', label: __('Mobile', 'prc-chart-builder'), icon: mobile },
+	{
+		value: 'tablet',
+		label: __('Tablet', 'prc-chart-builder'),
+		range: sprintf(
+			/* translators: 1: narrowest tablet width, 2: widest tablet width, in pixels. */
+			__('screens %1$dpx to %2$dpx wide', 'prc-chart-builder'),
+			VIEWPORT_BREAKPOINTS.mobile,
+			VIEWPORT_BREAKPOINTS.medium - 1
+		),
+		icon: tablet,
+	},
+	{
+		value: 'mobile',
+		label: __('Mobile', 'prc-chart-builder'),
+		range: sprintf(
+			/* translators: %d: widest mobile screen width in pixels. */
+			__('screens up to %dpx wide', 'prc-chart-builder'),
+			VIEWPORT_BREAKPOINTS.mobile - 1
+		),
+		icon: mobile,
+	},
 ];
 
 /**
@@ -51,11 +81,16 @@ export default function PreviewViewportToggle({
 			__nextHasNoMarginBottom
 			__next40pxDefaultSize
 		>
-			{PREVIEW_VIEWPORTS.map(({ value, label, icon }) => (
+			{PREVIEW_VIEWPORTS.map(({ value, label, range, icon }) => (
 				<ToggleGroupControlOptionIcon
 					key={value}
 					value={value}
-					label={label}
+					label={sprintf(
+						/* translators: 1: device name, 2: screen width range. */
+						__('%1$s: %2$s', 'prc-chart-builder'),
+						label,
+						range
+					)}
 					icon={icon}
 					disabled={disabledViewports.includes(value)}
 				/>

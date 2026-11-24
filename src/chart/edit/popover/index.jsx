@@ -16,21 +16,19 @@ import {
 	CHART_ELEMENT_POPOVER_PLACEMENT,
 	useChartPopoverFrame,
 } from './popover-frame';
-import {
-	LabelPanel,
-	ShapePanel,
-	LineSegmentPanel,
-	RegressionLinePanel,
-	AnnotationPanel,
-	PlotBandLabelPanel,
-	TickLabelPanel,
-	LegendItemPanel,
-	LegendPanel,
-	PanelTitlePanel,
-	ErrorBarPanel,
-	DiffColumnHeaderPanel,
-	DiffColumnLabelPanel,
-} from './panels';
+import { LabelPanel } from './panels/LabelPanel';
+import { ShapePanel } from './panels/ShapePanel';
+import { LineSegmentPanel } from './panels/LineSegmentPanel';
+import { RegressionLinePanel } from './panels/RegressionLinePanel';
+import { AnnotationPanel } from './panels/AnnotationPanel';
+import { PlotBandLabelPanel } from './panels/PlotBandLabelPanel';
+import { TickLabelPanel } from './panels/TickLabelPanel';
+import { LegendItemPanel } from './panels/LegendItemPanel';
+import { LegendPanel } from './panels/LegendPanel';
+import { PanelTitlePanel } from './panels/PanelTitlePanel';
+import { ErrorBarPanel } from './panels/ErrorBarPanel';
+import { DiffColumnHeaderPanel } from './panels/DiffColumnHeaderPanel';
+import { DiffColumnLabelPanel } from './panels/DiffColumnLabelPanel';
 
 /**
  * Element type constants.
@@ -168,11 +166,12 @@ export function ChartElementPopover({
 				popoverRef.current &&
 				!popoverRef.current.contains(event.target)
 			) {
-				// Also check if the click is on a nested popover (like color picker)
-				const isNestedPopover = event.target.closest?.(
-					'.components-popover'
+				// Nested popovers (color picker) and the Media Library modal
+				// (image annotations) render outside the popover content.
+				const isNestedOverlay = event.target.closest?.(
+					'.components-popover, .media-modal'
 				);
-				if (!isNestedPopover) {
+				if (!isNestedOverlay) {
 					onClose();
 				}
 			}
@@ -419,28 +418,6 @@ export function ChartElementPopover({
 	);
 }
 
-// Re-export for convenience
 export { ELEMENT_TYPES as ElementTypes };
-export {
-	LabelPanel,
-	ShapePanel,
-	LineSegmentPanel,
-	RegressionLinePanel,
-	AnnotationPanel,
-	ErrorBarPanel,
-	TooltipPanelSection,
-} from './panels';
-export {
-	useLabelCustomizations,
-	useShapeCustomizations,
-	useSegmentCustomizations,
-	useErrorBarCustomizations,
-	useTooltipCustomizations,
-} from './hooks';
-export {
-	generateElementKey,
-	generateSegmentKey,
-	formatDisplayValue,
-} from './utils';
 
 export default ChartElementPopover;

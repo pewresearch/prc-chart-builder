@@ -1879,6 +1879,11 @@ export const EDITOR_SCHEMA = {
 			themeable: true,
 			description: 'Horizontal offset of the separator line (px).',
 		},
+		'neutralBar.separatorStroke': {
+			type: 'color',
+			themeable: true,
+			description: 'Color of the neutral bar separator line.',
+		},
 		percentOfInnerWidth: {
 			type: 'number',
 			themeable: true,
@@ -1935,6 +1940,12 @@ export const EDITOR_SCHEMA = {
 			type: 'number',
 			themeable: true,
 			description: 'Stroke width of secondary bars (px).',
+		},
+		'zeroLine.stroke': {
+			type: 'color',
+			themeable: true,
+			description:
+				'Color of the line between positive and negative values. Empty follows the dependent axis stroke.',
 		},
 	},
 	diffColumn: {

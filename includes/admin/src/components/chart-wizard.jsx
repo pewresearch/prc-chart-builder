@@ -21,11 +21,10 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal Dependencies
  */
-import {
-	SelectChartStep,
+import SelectChartStep, {
 	WizardEditorShell,
-	useChartPatterns,
-} from '../../../../src/shared/select-chart-step';
+} from '../../../../src/shared/select-chart-step/select-chart-step';
+import useChartPatterns from '../../../../src/shared/select-chart-step/use-chart-patterns';
 import {
 	buildChartEditUrl,
 	CHART_FLOW_CREATE,

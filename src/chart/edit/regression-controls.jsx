@@ -13,6 +13,7 @@ import {
 	__experimentalToolsPanel as ToolsPanel,
 	__experimentalToolsPanelItem as ToolsPanelItem,
 } from '@wordpress/components';
+import { computeRegressionStats } from '@prc/charting-library';
 
 /**
  * Internal dependencies
@@ -31,9 +32,6 @@ const REGRESSION_TYPE_OPTIONS = [
 	{ label: 'Quadratic', value: 'quadratic' },
 	{ label: 'LOESS (Smoothed)', value: 'loess' },
 ];
-
-const { computeRegressionStats } =
-	window.prcCustomCharts || window.prcChartingLibrary || {};
 
 const STAT_STYLE = { fontSize: 11, color: '#757575' };
 
@@ -199,7 +197,7 @@ function RegressionControls({ attributes, setAttributes, clientId }) {
 	// - perGroupBreak mode: returns { [groupValue]: RegressionStats }
 	// - combined mode: returns a single RegressionStats object
 	const regressionStats = useMemo(() => {
-		if (!computeRegressionStats || !groupBreaksActive) return null;
+		if (!groupBreaksActive) return null;
 		if (!chartData || chartData.length < 2) return null;
 
 		if (perGroupBreak) {

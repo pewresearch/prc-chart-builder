@@ -5,6 +5,6 @@
  */
 export {
 	default,
-	CuratedControls,
-	applyCuratedControl,
-} from '../../../../src/shared/curated-controls';
+	default as CuratedControls,
+} from '../../../../src/shared/curated-controls/curated-controls';
+export { applyCuratedControl } from '../../../../src/shared/curated-controls/apply-curated-control';

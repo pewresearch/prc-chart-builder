@@ -149,3 +149,8 @@ $swatch-edge: color-mix(
 		font-family: Menlo, Consolas, monaco, monospace;
 	}
 }
+
+// The Media Library modal (image annotations) stacks below the popover slot.
+body.modal-open .chart-element-popover {
+	visibility: hidden;
+}

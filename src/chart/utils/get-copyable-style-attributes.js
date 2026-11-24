@@ -277,6 +277,7 @@ const extractStyleAttributes = (attributes) => {
 		result.divergingBar = pickKeys(divergingBar, [
 			'percentOfInnerWidth',
 			'neutralBar',
+			'zeroLine',
 		]);
 	}
 

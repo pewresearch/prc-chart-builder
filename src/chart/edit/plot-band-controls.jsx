@@ -19,7 +19,7 @@ import {
 	withPatternStrokeWidth,
 	readPlotBandLabelRotation,
 	stripRichText,
-} from '@prc/charting-utilities';
+} from '@prc/charting-library';
 
 /**
  * WordPress dependencies

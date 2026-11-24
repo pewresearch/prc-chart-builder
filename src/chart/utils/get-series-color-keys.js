@@ -1,12 +1,7 @@
-/**
- * Deep-import decodeHtmlEntities. This file is on the view.js script-module
- * graph via get-config.js. The @prc/charting-utilities barrel re-exports
- * useSize, and webpack then rejects `react` in a module build.
- */
 import {
 	getLinearRampStops,
 	getThresholdLegendLabels,
-} from '../../../../prc-shared/includes/scripts/src/@prc/charting-utilities/heatMapTable/thresholdLegendLabels.ts';
+} from '@prc/charting-library';
 import {
 	effectiveChartTypeForControls,
 	VALUE_SCALE_CHART_TYPES,

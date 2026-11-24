@@ -509,7 +509,11 @@ return array(
 						'category' => '',
 						'offsetX' => 0,
 						'separator' => true,
-						'separatorOffsetX' => -1
+						'separatorOffsetX' => -1,
+						'separatorStroke' => 'light-dark(#C6C8CA, #404345)'
+					),
+					'zeroLine' => array(
+						'stroke' => ''
 					),
 					'secondary' => array(
 						'active' => false,

@@ -40,6 +40,7 @@ import { AlignmentOverlay } from './alignment-overlay';
 import { DrawingOverlay } from './drawing-overlay';
 import { DrawingLayer } from './drawing-layer';
 import { DrawingSelectionLayer } from './drawing-selection-layer';
+// import { createImageAnnotation } from './image-annotation'; // Canvas "Add image" hidden.
 import {
 	anchorAnnotationToPanel,
 	anchorDrawingToPanel,
@@ -87,6 +88,16 @@ const ELEMENT_TYPE_TO_PANEL = {
 };
 
 const EMPTY_OBJECT = Object.freeze({});
+
+// Canvas add-button style. Unused while the canvas add buttons are hidden.
+// const CANVAS_ADD_BUTTON_STYLE = {
+// 	padding: '4px 8px',
+// 	borderRadius: '4px',
+// 	color: 'var(--wp--preset--color--sky-blue-spectrum-primary)',
+// 	border: '1px solid var(--wp--preset--color--sky-blue-spectrum-primary)',
+// 	cursor: 'pointer',
+// 	fontFamily: 'var(--wp--preset--font-family--sans-serif)',
+// };
 
 const getCellContent = (cell) => {
 	return (
@@ -605,15 +616,37 @@ function EditInner({
 		updateAttributeForDevice('annotations', { items: updated });
 	};
 
-	// Ref for the "Add annotation" button, used to anchor the popover on creation
-	// Create a new annotation centered in the chart.
-	// The user drags it into position, then clicks it to open the popover.
-	const handleAddAnnotation = () => {
+	// New annotations land centered in the chart. The user drags them into
+	// position, then clicks to open the popover.
+	const appendCanvasAnnotation = (item) => {
 		const currentItems = getCurrentValue('annotations', 'items') || [];
+		let newAnnotation = item;
+		if (attrs?.layout?.type === 'small-multiples' && smDrawingGeometry) {
+			newAnnotation = anchorAnnotationToPanel(
+				newAnnotation,
+				smDrawingGeometry,
+				'panel-inner',
+				{ useDesignGeometry: true }
+			);
+		}
+		// Single update so `active` is not clobbered by a stale second write.
+		updateAttributeForDevice('annotations', {
+			active: true,
+			items: [...currentItems, newAnnotation],
+		});
+	};
+
+	const getCanvasCenter = () => {
 		const layout = getCurrentValue('layout') || {};
-		let newAnnotation = {
+		return {
 			x: (layout.width || 640) / 2,
 			y: (layout.height || 400) / 2,
+		};
+	};
+
+	const handleAddAnnotation = () => {
+		appendCanvasAnnotation({
+			...getCanvasCenter(),
 			text: 'New annotation',
 			fontSize: 12,
 			fontWeight: 'normal',
@@ -630,21 +663,13 @@ function EditInner({
 			opacity: 1,
 			maxWidth: 200,
 			positioningContext: 'chart',
-		};
-		if (attrs?.layout?.type === 'small-multiples' && smDrawingGeometry) {
-			newAnnotation = anchorAnnotationToPanel(
-				newAnnotation,
-				smDrawingGeometry,
-				'panel-inner',
-				{ useDesignGeometry: true }
-			);
-		}
-		// Single update so `active` is not clobbered by a stale second write.
-		updateAttributeForDevice('annotations', {
-			active: true,
-			items: [...currentItems, newAnnotation],
 		});
 	};
+
+	// Canvas "Add image" is hidden for now. Restore with the buttons.
+	// const handleAddImageAnnotation = () => {
+	// 	appendCanvasAnnotation(createImageAnnotation(getCanvasCenter()));
+	// };
 
 	const handleAddAnnotationRef = useRef(handleAddAnnotation);
 	handleAddAnnotationRef.current = handleAddAnnotation;
@@ -929,6 +954,13 @@ function EditInner({
 	// Resolve chart type from layout attributes for editor-function configuration
 	const chartType = attrs?.layout?.type || 'bar';
 
+	const selectedAnnotationId =
+		selectedElement?.elementType === ELEMENT_TYPES.ANNOTATION &&
+		selectedElement.annotationId !== undefined &&
+		selectedElement.annotationId !== null
+			? String(selectedElement.annotationId)
+			: null;
+
 	// IMPORTANT: setAlignments and setIsDragging are NOT in dependencies to avoid recreating on every state change
 	const wpEditorFunctions = useMemo(
 		() =>
@@ -945,6 +977,7 @@ function EditInner({
 				onElementClick: handleElementClick, // Pass callback for popover
 				setSelectedDrawingId,
 				selectedDrawingId,
+				selectedAnnotationId,
 				setSmDrawingGeometry,
 			}),
 		// eslint-disable-next-line react-hooks/exhaustive-deps -- handleElementClick is recreated every render; see exclusions below.
@@ -957,6 +990,7 @@ function EditInner({
 			setAttributes,
 			toggleSelection,
 			selectedDrawingId,
+			selectedAnnotationId,
 			handleElementClick,
 		] // setAlignments, setIsDragging, setSelectedDrawingId intentionally excluded
 	);
@@ -1393,8 +1427,9 @@ function EditInner({
 										if (!selectedElement) return;
 										// Close the popover when clicking the chart background,
 										// but not when clicking a label, shape, or the popover itself.
-										const isLabel =
-											event.target.closest?.('text');
+										const isLabel = event.target.closest?.(
+											'text, .cb__annotation-image, .cb__annotation-image-placeholder, .cb__annotation-image-resize-handle'
+										);
 										const isPopover =
 											event.target.closest?.(
 												'.components-popover'
@@ -1661,29 +1696,46 @@ function EditInner({
 											}}
 										/>
 									)}
+									{/* Canvas add buttons hidden for now. Restore this block to bring them back.
 									{isSelected &&
 										config.annotations?.active && (
-											<button
-												type="button"
-												className="has-ui-white-background-color has-background has-small-label-font-size wp-element-button"
-												onClick={handleAddAnnotation}
+											<div
+												className="prc-chart-builder__canvas-annotation-actions"
 												style={{
 													position: 'absolute',
-													bottom: '',
 													right: '8px',
 													zIndex: 10,
-													padding: '4px 8px',
-													borderRadius: '4px',
-													color: 'var(--wp--preset--color--sky-blue-spectrum-primary)',
-													border: '1px solid var(--wp--preset--color--sky-blue-spectrum-primary)',
-													cursor: 'pointer !important',
-													fontFamily:
-														'var(--wp--preset--font-family--sans-serif)',
+													display: 'flex',
+													gap: '6px',
 												}}
 											>
-												+ Add annotation
-											</button>
+												<button
+													type="button"
+													className="has-ui-white-background-color has-background has-small-label-font-size wp-element-button"
+													onClick={
+														handleAddAnnotation
+													}
+													style={
+														CANVAS_ADD_BUTTON_STYLE
+													}
+												>
+													+ Add annotation
+												</button>
+												<button
+													type="button"
+													className="has-ui-white-background-color has-background has-small-label-font-size wp-element-button"
+													onClick={
+														handleAddImageAnnotation
+													}
+													style={
+														CANVAS_ADD_BUTTON_STYLE
+													}
+												>
+													+ Add image
+												</button>
+											</div>
 										)}
+									*/}
 								</div>
 							)}
 						{metadata.active && (

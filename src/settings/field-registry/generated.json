@@ -2049,6 +2049,12 @@
 			"description": "Horizontal offset of the separator line (px)."
 		},
 		{
+			"path": ["neutralBar", "separatorStroke"],
+			"type": "color",
+			"themeable": true,
+			"description": "Color of the neutral bar separator line."
+		},
+		{
 			"path": ["percentOfInnerWidth"],
 			"type": "number",
 			"themeable": true,
@@ -2113,6 +2119,12 @@
 			"type": "number",
 			"themeable": true,
 			"description": "Stroke width of secondary bars (px)."
+		},
+		{
+			"path": ["zeroLine", "stroke"],
+			"type": "color",
+			"themeable": true,
+			"description": "Color of the line between positive and negative values. Empty follows the dependent axis stroke."
 		}
 	],
 	"diffColumn": [

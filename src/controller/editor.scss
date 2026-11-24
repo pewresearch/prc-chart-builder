@@ -392,6 +392,27 @@ body.prc-chart-builder-hide-block-toolbar {
 
 	// Preview Chart: viewport width + dark mode apply only to the right pane.
 	.prc-chart-wizard__preview {
+		// The pane used to be the grid cell. The stage takes that cell so a
+		// shield can cover the visible chart without scrolling away with it.
+		> .prc-chart-wizard__preview-stage {
+			grid-area: preview;
+			position: relative;
+			min-width: 0;
+			min-height: 0;
+			height: 100%;
+
+			> .prc-chart-modal__preview-pane {
+				grid-area: auto;
+				height: 100%;
+			}
+		}
+
+		.prc-chart-wizard__preview-shield {
+			position: absolute;
+			z-index: 20;
+			inset: 0;
+			cursor: default;
+		}
 		.prc-chart-modal__preview-pane {
 			width: 100%;
 			justify-self: center;
@@ -407,6 +428,16 @@ body.prc-chart-builder-hide-block-toolbar {
 			// to the outer canvas width.
 			> .wp-block-prc-chart-builder-controller {
 				transition: width 0.2s ease;
+			}
+
+			// `pointer-events: none` on the card does not stop its children. The
+			// title, legend, and chart use the default `auto`, so they still
+			// take clicks. Every descendant has to be turned off, and
+			// `!important` beats an inline style the chart sets later. The
+			// pane itself stays active so it can still scroll.
+			* {
+				pointer-events: none !important;
+				user-select: none !important;
 			}
 
 			&.is-dark-preview {

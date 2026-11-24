@@ -29,37 +29,34 @@ import {
 	worldMap,
 } from './icons';
 
-import {
-	areaTemplate,
-	barTemplate,
-	beeSwarmTemplate,
-	columnTemplate,
-	divergingBarTemplate,
-	divergingColumnTemplate,
-	dotPlotTemplate,
-	explodedBarTemplate,
-	freeformTemplate,
-	heatMapTableTemplate,
-	hemicycleTemplate,
-	lineTemplate,
-	mapUsaBlockTemplate,
-	mapUsaCbsaTemplate,
-	mapUsaCountyTemplate,
-	mapUsaHexTemplate,
-	// imageTemplate,
-	mapUsaTemplate,
-	mapWorldOrthographicTemplate,
-	mapWorldTemplate,
-	pieTemplate,
-	sankeyTemplate,
-	scatterTemplate,
-	smallMultiplesTemplate,
-	stackedAreaTemplate,
-	stackedBarTemplate,
-	stackedColumnTemplate,
-	treemapTemplate,
-	waffleTemplate,
-} from './variation-templates';
+import areaTemplate from './variation-templates/area';
+import barTemplate from './variation-templates/bar';
+import beeSwarmTemplate from './variation-templates/bee-swarm';
+import columnTemplate from './variation-templates/column';
+import divergingBarTemplate from './variation-templates/diverging-bar';
+import divergingColumnTemplate from './variation-templates/diverging-column';
+import dotPlotTemplate from './variation-templates/dot-plot';
+import explodedBarTemplate from './variation-templates/exploded-bar';
+import freeformTemplate from './variation-templates/freeform';
+import heatMapTableTemplate from './variation-templates/heat-map-table';
+import hemicycleTemplate from './variation-templates/hemicycle';
+import lineTemplate from './variation-templates/line';
+import mapUsaBlockTemplate from './variation-templates/map-usa-block';
+import mapUsaCbsaTemplate from './variation-templates/map-usa-cbsa';
+import mapUsaCountyTemplate from './variation-templates/map-usa-county';
+import mapUsaHexTemplate from './variation-templates/map-usa-hex';
+import mapUsaTemplate from './variation-templates/map-usa';
+import mapWorldOrthographicTemplate from './variation-templates/map-world-orthographic';
+import mapWorldTemplate from './variation-templates/map-world';
+import pieTemplate from './variation-templates/pie';
+import sankeyTemplate from './variation-templates/sankey';
+import scatterTemplate from './variation-templates/scatter';
+import smallMultiplesTemplate from './variation-templates/small-multiples';
+import stackedAreaTemplate from './variation-templates/stacked-area';
+import stackedBarTemplate from './variation-templates/stacked-bar';
+import stackedColumnTemplate from './variation-templates/stacked-column';
+import treemapTemplate from './variation-templates/treemap';
+import waffleTemplate from './variation-templates/waffle';
 
 const variations = [
 	{

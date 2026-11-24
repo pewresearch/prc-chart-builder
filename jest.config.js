@@ -16,6 +16,12 @@ module.exports = {
 		'\\.(scss|css)$': `${unitRoot}/__mocks__/styleMock.js`,
 		'^@prc/charting-utilities$':
 			'<rootDir>/../prc-shared/includes/scripts/src/@prc/charting-utilities/index.ts',
+		'^@prc/charting-library$':
+			'<rootDir>/../prc-charting-library/src/lib/index.ts',
+		// Same swap as the editor webpack build: the default store imports
+		// `@wordpress/interactivity`, which the editor does not load.
+		'(^|/)useChartStore$':
+			'<rootDir>/../prc-charting-library/src/lib/store/useChartStore.editor.ts',
 	},
 	transform: {
 		'^.+\\.(js|jsx|ts|tsx)$':

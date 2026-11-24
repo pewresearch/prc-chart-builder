@@ -33,6 +33,7 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 	const layout = getCurrentValue('layout') || {};
 	const showNeutralBar =
 		layout.orientation !== 'vertical' && neutralBar.active;
+	const zeroLineStroke = divergingBar.zeroLine?.stroke;
 
 	return (
 		<FocusedPanelBody
@@ -71,6 +72,32 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 								barPadding: formatNum(value, 'float'),
 							});
 						}}
+					/>
+				</WidePanelItem>
+				<WidePanelItem
+					hasValue={() => !!zeroLineStroke}
+					label={__('Dividing line')}
+					isShownByDefault
+					panelId={clientId}
+				>
+					<ChartPanelColorSettings
+						__experimentalHasMultipleOrigins
+						__experimentalIsRenderedInSidebar
+						title={__('Dividing line')}
+						initialOpen
+						colorSettings={[
+							{
+								value:
+									zeroLineStroke ||
+									getCurrentValue('dependentAxis', 'axis')
+										?.stroke,
+								onChange: (value) =>
+									updateAttributeForDevice('divergingBar', {
+										zeroLine: { stroke: value ?? '' },
+									}),
+								label: __('Dividing line'),
+							},
+						]}
 					/>
 				</WidePanelItem>
 				{showNeutralBar && (
@@ -169,6 +196,48 @@ function DivergingBarControls({ attributes, setAttributes, clientId }) {
 								}}
 							/>
 						</WidePanelItem>
+						{neutralBar.separator && (
+							<WidePanelItem
+								hasValue={() => !!neutralBar.separatorStroke}
+								label={__('Separator color')}
+								isShownByDefault
+								panelId={clientId}
+							>
+								<ChartPanelColorSettings
+									__experimentalHasMultipleOrigins
+									__experimentalIsRenderedInSidebar
+									title={__('Separator color')}
+									initialOpen
+									colorSettings={[
+										{
+											value:
+												neutralBar.separatorStroke ||
+												'light-dark(#C6C8CA, #404345)',
+											onChange: (value) => {
+												const currentNeutralBar =
+													getCurrentValue(
+														'divergingBar',
+														'neutralBar'
+													) || {};
+												updateAttributeForDevice(
+													'divergingBar',
+													{
+														neutralBar: {
+															...currentNeutralBar,
+															separatorStroke:
+																value ??
+																'light-dark(#C6C8CA, #404345)',
+														},
+													}
+												);
+											},
+											label: __('Separator color'),
+											contrast: false,
+										},
+									]}
+								/>
+							</WidePanelItem>
+						)}
 						<WidePanelItem
 							hasValue={() => divergingBar.percentOfInnerWidth}
 							label={__('Diverging Bar Width')}

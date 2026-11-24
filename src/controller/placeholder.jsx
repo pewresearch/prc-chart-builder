@@ -15,7 +15,7 @@ import { chartBar } from '@wordpress/icons';
  * Internal Dependencies
  */
 import CreateNewChartModal from '../../includes/admin/src/components/create-new-chart-modal.jsx';
-import { prefetchChartPatternsLibrary } from '../shared/select-chart-step';
+import { prefetchChartPatternsLibrary } from '../shared/select-chart-step/use-chart-patterns';
 import { applyControllerTemplateContent } from './utils/apply-controller-template';
 import '../../includes/admin/src/editor.scss';
 

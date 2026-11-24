@@ -2,17 +2,17 @@
  * Per-drawing coordinate transforms for the editor selection overlay.
  * Maps stored layout-space coords to display pixels inside the padded inner chart area.
  */
-import { getPositioningScale } from '../../../../../prc-charting-library/src/lib/overlays/getPositioningScale';
+import { getPositioningScale } from '@prc/charting-library';
 
 /**
- * @param {Object} drawing
- * @param {Object} options
+ * @param {Object}                                                       drawing
+ * @param {Object}                                                       options
  * @param {{ left: number, right: number, top: number, bottom: number }} options.padding
- * @param {number} options.chartWidth
- * @param {number} options.chartHeight
- * @param {{ width: number, height: number, padding: Object }} options.layoutDimensions
- * @param {Object|null} options.smallMultiplesGeometry
- * @return {{ toDisplayCoords: Function, toRefCoords: Function }}
+ * @param {number}                                                       options.chartWidth
+ * @param {number}                                                       options.chartHeight
+ * @param {{ width: number, height: number, padding: Object }}           options.layoutDimensions
+ * @param {Object|null}                                                  options.smallMultiplesGeometry
+ * @return {{ toDisplayCoords: Function, toRefCoords: Function }} Functions that convert between layout coords and display coords.
  */
 export function createDrawingCoordTransform(
 	drawing,

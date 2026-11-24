@@ -197,7 +197,14 @@
 		gap: 8px;
 		width: 100%;
 		height: 100%;
-		color: $wizard-gray-very-dark;
+		// The layout icon is drawn in black. It takes the ink color so it
+		// stays visible on the dark surface.
+		color: $wizard-ink;
+
+		svg,
+		svg path {
+			fill: currentColor;
+		}
 
 		span {
 			font-size: 11px;
@@ -209,10 +216,35 @@
 
 	// Let DataViews drive column count via previewSize (gridTemplateColumns inline style).
 	&__pattern-picker {
+		// Same light/dark surface as the chart preview pane.
+		.dataviews-view-grid {
+			background: $wizard-surface-subtle;
+		}
+
+		// DataViews colors the inner title, link, and button itself, so the
+		// wrapper's color alone would not show.
+		.dataviews-view-grid__title-field,
+		.dataviews-view-grid__title-field .dataviews-title-field,
+		.dataviews-view-grid__title-field .dataviews-title-field a,
+		.dataviews-view-grid__title-field
+			.dataviews-title-field
+			button.components-button.is-link {
+			color: $wizard-ink;
+		}
+
 		.dataviews-view-grid__media {
 			overflow: hidden;
 			position: relative;
 			min-height: 160px;
+		}
+
+		// DataViews paints the card media a fixed white. The Default card has
+		// no chart preview to cover it, so give it the preview card surface.
+		// The selected rule below replaces this fill.
+		.dataviews-view-grid__media:has(
+			.prc-chart-modal__pattern-preview-blank
+		) {
+			background: $wizard-surface;
 		}
 
 		.block-editor-block-preview__container {

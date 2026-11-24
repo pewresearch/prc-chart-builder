@@ -19,6 +19,7 @@ import { __ } from '@wordpress/i18n';
 
 import { formatNum } from '../../../utils/helpers';
 import { useAnnotationCustomizations } from '../hooks';
+import { ImageAnnotationFields } from './ImageAnnotationFields';
 import { RichTextField } from './RichTextField';
 import { TextAnnotationLayoutControls } from './TextAnnotationLayoutControls';
 import { TextStyleControls } from './TextStyleControls';
@@ -62,6 +63,7 @@ export function AnnotationPanel({
 		handleReset,
 	} = useAnnotationCustomizations(annotation, annotationId, onUpdate);
 
+	const isImage = annotation?.kind === 'image';
 	const hasPanelKeys = Array.isArray(panelKeys) && panelKeys.length > 0;
 	const isPanelContext =
 		positioningContext === 'panel' || positioningContext === 'panel-inner';
@@ -91,45 +93,61 @@ export function AnnotationPanel({
 	return (
 		<VStack spacing={4}>
 			<Text size="12px" color="#757575">
-				{__('Annotation', 'prc-chart-builder')} #
-				{parseInt(annotationId, 10) + 1}
+				{isImage
+					? __('Image annotation', 'prc-chart-builder')
+					: __('Annotation', 'prc-chart-builder')}{' '}
+				#{parseInt(annotationId, 10) + 1}
 			</Text>
 
-			<RichTextField
-				label={__('Text', 'prc-chart-builder')}
-				value={text}
-				onChange={(value) => handleChange('text', value)}
-				placeholder={__('Enter annotation text', 'prc-chart-builder')}
-			/>
+			{isImage ? (
+				<ImageAnnotationFields
+					annotation={annotation}
+					onUpdate={onUpdate}
+					panelKeys={panelKeys}
+					surface="popover"
+				/>
+			) : (
+				<RichTextField
+					label={__('Text', 'prc-chart-builder')}
+					value={text}
+					onChange={(value) => handleChange('text', value)}
+					placeholder={__(
+						'Enter annotation text',
+						'prc-chart-builder'
+					)}
+				/>
+			)}
 
-			<SelectControl
-				label={__('Positioning Context', 'prc-chart-builder')}
-				value={positioningContext}
-				options={positioningOptions}
-				__next40pxDefaultSize
-				onChange={(value) => {
-					if (
-						(value === 'panel' || value === 'panel-inner') &&
+			{!isImage && (
+				<SelectControl
+					label={__('Positioning Context', 'prc-chart-builder')}
+					value={positioningContext}
+					options={positioningOptions}
+					__next40pxDefaultSize
+					onChange={(value) => {
+						if (
+							(value === 'panel' || value === 'panel-inner') &&
+							hasPanelKeys
+						) {
+							handleChange('positioningContext', value, {
+								panelKey: panelKey || String(panelKeys[0]),
+							});
+							return;
+						}
+						handleChange('positioningContext', value);
+					}}
+					help={
 						hasPanelKeys
-					) {
-						handleChange('positioningContext', value, {
-							panelKey: panelKey || String(panelKeys[0]),
-						});
-						return;
+							? __(
+									'Chart: full graphic. Inner: data area. Panel: full cell or plot area; travels with the cell on restack.',
+									'prc-chart-builder'
+								)
+							: undefined
 					}
-					handleChange('positioningContext', value);
-				}}
-				help={
-					hasPanelKeys
-						? __(
-								'Chart: full graphic. Inner: data area. Panel: full cell or plot area; travels with the cell on restack.',
-								'prc-chart-builder'
-							)
-						: undefined
-				}
-			/>
+				/>
+			)}
 
-			{isPanelContext && hasPanelKeys && (
+			{!isImage && isPanelContext && hasPanelKeys && (
 				<SelectControl
 					label={__('Panel', 'prc-chart-builder')}
 					value={panelKey || String(panelKeys[0])}
@@ -142,57 +160,69 @@ export function AnnotationPanel({
 				/>
 			)}
 
-			<HStack spacing={2}>
-				<NumberControl
-					label={__('X Position', 'prc-chart-builder')}
-					value={x}
-					onChange={(value) =>
-						handleChange('x', formatNum(value, 'float'))
-					}
+			{!isImage && (
+				<HStack spacing={2}>
+					<NumberControl
+						label={__('X Position', 'prc-chart-builder')}
+						value={x}
+						onChange={(value) =>
+							handleChange('x', formatNum(value, 'float'))
+						}
+					/>
+					<NumberControl
+						label={__('Y Position', 'prc-chart-builder')}
+						value={y}
+						onChange={(value) =>
+							handleChange('y', formatNum(value, 'float'))
+						}
+					/>
+				</HStack>
+			)}
+
+			{!isImage && (
+				<TextStyleControls
+					showText={false}
+					values={{
+						fontWeight,
+						fontStyle,
+						fontFamily,
+						fontSize,
+						fill,
+						textOutline,
+					}}
+					onChange={handleChange}
+					showTextOutline
 				/>
-				<NumberControl
-					label={__('Y Position', 'prc-chart-builder')}
-					value={y}
-					onChange={(value) =>
-						handleChange('y', formatNum(value, 'float'))
-					}
+			)}
+
+			{!isImage && (
+				<TextAnnotationLayoutControls
+					textAnchor={textAnchor}
+					verticalAnchor={verticalAnchor}
+					rotation={rotation}
+					maxWidth={maxWidth}
+					opacity={opacity}
+					onChange={(field, value) => {
+						if (field === 'rotation') {
+							handleChange(
+								field,
+								formatNum(value, 'integer') ?? 0
+							);
+							return;
+						}
+						if (field === 'maxWidth') {
+							handleChange(
+								field,
+								formatNum(value, 'integer') ?? 200
+							);
+							return;
+						}
+						handleChange(field, value);
+					}}
 				/>
-			</HStack>
+			)}
 
-			<TextStyleControls
-				showText={false}
-				values={{
-					fontWeight,
-					fontStyle,
-					fontFamily,
-					fontSize,
-					fill,
-					textOutline,
-				}}
-				onChange={handleChange}
-				showTextOutline
-			/>
-
-			<TextAnnotationLayoutControls
-				textAnchor={textAnchor}
-				verticalAnchor={verticalAnchor}
-				rotation={rotation}
-				maxWidth={maxWidth}
-				opacity={opacity}
-				onChange={(field, value) => {
-					if (field === 'rotation') {
-						handleChange(field, formatNum(value, 'integer') ?? 0);
-						return;
-					}
-					if (field === 'maxWidth') {
-						handleChange(field, formatNum(value, 'integer') ?? 200);
-						return;
-					}
-					handleChange(field, value);
-				}}
-			/>
-
-			{hasCustomizations && (
+			{!isImage && hasCustomizations && (
 				<Button
 					variant="secondary"
 					onClick={handleReset}

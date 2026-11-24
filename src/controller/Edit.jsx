@@ -31,7 +31,7 @@ import FocusedPanelBody from '../chart/edit/focused-panel-body';
 import { InspectorFocusProvider } from '../chart/edit/hooks/inspector-focus-context';
 import ChartCptWizardShell from './chart-cpt-wizard-shell';
 import { isNewCreationUiEnabled, shouldHostCptWizard } from './creation-ui';
-import { prefetchChartPatternsLibrary } from '../shared/select-chart-step';
+import { prefetchChartPatternsLibrary } from '../shared/select-chart-step/use-chart-patterns';
 import controllerStore from './store';
 import useChartEditorPresence from './use-chart-editor-presence';
 import { hasSiblingDuplicateChartId } from './utils/chart-id-conflicts';

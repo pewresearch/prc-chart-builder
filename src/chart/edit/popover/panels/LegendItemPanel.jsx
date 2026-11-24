@@ -24,7 +24,7 @@ import {
 	__experimentalVStack as VStack,
 } from '@wordpress/components';
 import { __ } from '@wordpress/i18n';
-import { resolveLegendTextAnchor } from '@prc/charting-utilities';
+import { resolveLegendTextAnchor } from '@prc/charting-library';
 
 import { useLegendItemCustomizations } from '../hooks';
 import { TextAnnotationLayoutControls } from './TextAnnotationLayoutControls';

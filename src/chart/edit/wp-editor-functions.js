@@ -41,20 +41,21 @@ export function generateLabelKey(x, category, groupValue = null) {
 /**
  * Create wpEditorFunctions object for chart interactions
  *
- * @param {Object}   params
- * @param {Object}   params.attrs                    - Block attributes
- * @param {string}   params.chartType                - The chart layout type (e.g., 'bar', 'treemap', 'pie')
- * @param {string}   params.deviceType               - Current device type ('desktop', 'tablet', 'mobile')
- * @param {Function} params.getCurrentValue          - Function to get viewport-aware attribute values
- * @param {Function} params.updateAttributeForDevice - Function to update viewport-aware attributes
- * @param {Function} params.setAttributes            - Block setAttributes (for non-viewport-aware top-level attrs)
- * @param {Function} params.toggleSelection          - Function to enable/disable block selection
- * @param {Function} params.setAlignments            - Function to update alignment overlay state
- * @param {Function} params.setIsDragging            - Function to update drag state (for disabling tooltips)
- * @param {Function} params.onElementClick           - Callback when a chart element (label/shape) is clicked for customization
- * @param {Function} params.setSelectedDrawingId     - Optional: select a drawing in the inspector list
- * @param {string}   params.selectedDrawingId        - Currently selected drawing id (editor overlay)
- * @param {Function} params.setSmDrawingGeometry     - Optional: receive live SM panel geometry
+ * @param {Object}      params
+ * @param {Object}      params.attrs                    - Block attributes
+ * @param {string}      params.chartType                - The chart layout type (e.g., 'bar', 'treemap', 'pie')
+ * @param {string}      params.deviceType               - Current device type ('desktop', 'tablet', 'mobile')
+ * @param {Function}    params.getCurrentValue          - Function to get viewport-aware attribute values
+ * @param {Function}    params.updateAttributeForDevice - Function to update viewport-aware attributes
+ * @param {Function}    params.setAttributes            - Block setAttributes (for non-viewport-aware top-level attrs)
+ * @param {Function}    params.toggleSelection          - Function to enable/disable block selection
+ * @param {Function}    params.setAlignments            - Function to update alignment overlay state
+ * @param {Function}    params.setIsDragging            - Function to update drag state (for disabling tooltips)
+ * @param {Function}    params.onElementClick           - Callback when a chart element (label/shape) is clicked for customization
+ * @param {Function}    params.setSelectedDrawingId     - Optional: select a drawing in the inspector list
+ * @param {string}      params.selectedDrawingId        - Currently selected drawing id (editor overlay)
+ * @param {string|null} params.selectedAnnotationId     - Selected annotation id (in-chart resize handles)
+ * @param {Function}    params.setSmDrawingGeometry     - Optional: receive live SM panel geometry
  * @return {Object} wpEditorFunctions object with annotations, labels, shapes, and legend handlers
  */
 export function createWpEditorFunctions({
@@ -70,8 +71,23 @@ export function createWpEditorFunctions({
 	onElementClick,
 	setSelectedDrawingId,
 	selectedDrawingId = null,
+	selectedAnnotationId = null,
 	setSmDrawingGeometry,
 }) {
+	const updateAnnotationItems = (updater) => {
+		let currentItems;
+		if (deviceType !== 'desktop' && attrs[deviceType]?.annotations?.items) {
+			currentItems = attrs[deviceType].annotations.items;
+		} else {
+			currentItems = attrs.annotations?.items || [];
+		}
+		if (!currentItems?.length) {
+			return;
+		}
+		updateAttributeForDevice('annotations', {
+			items: updater(currentItems),
+		});
+	};
 	const positionDisabled = POSITION_DISABLED_CHART_TYPES.includes(chartType);
 	// null means the feature is enabled for all chart types.
 	const annotationPopoverEnabled =
@@ -86,8 +102,23 @@ export function createWpEditorFunctions({
 	const diffColumnActive = getCurrentValue('diffColumn')?.active;
 	// Label position registry for alignment detection
 	const labelRegistry = new Map();
+	const readAnnotationItems = () => {
+		if (deviceType !== 'desktop' && attrs[deviceType]?.annotations?.items) {
+			return attrs[deviceType].annotations.items;
+		}
+		return attrs.annotations?.items || [];
+	};
+	const releaseAnnotationDrag = () => {
+		if (setIsDragging) {
+			setIsDragging(false);
+		}
+		if (toggleSelection) {
+			toggleSelection(true);
+		}
+	};
 	return {
 		annotations: {
+			selectedAnnotationId,
 			/**
 			 * Handle click on an annotation to open customization popover.
 			 * Only enabled for chart types in ANNOTATION_POPOVER_CHART_TYPES (e.g. horizontal bar).
@@ -120,33 +151,14 @@ export function createWpEditorFunctions({
 			},
 			onDragEnd: (annotationId, finalX, finalY) => {
 				const annotationIndex = parseInt(annotationId, 10);
-
-				// Get current viewport's annotations items
-				// Check viewport-specific override first, then fall back to base
-				let currentItems;
-				if (
-					deviceType !== 'desktop' &&
-					attrs[deviceType]?.annotations?.items
-				) {
-					currentItems = attrs[deviceType].annotations.items;
-				} else {
-					currentItems = attrs.annotations?.items || [];
-				}
-
-				// Re-enable tooltips
-				if (setIsDragging) {
-					setIsDragging(false);
-				}
+				const currentItems = readAnnotationItems();
 
 				if (
 					!currentItems ||
 					annotationIndex < 0 ||
 					annotationIndex >= currentItems.length
 				) {
-					// Re-enable block selection
-					if (toggleSelection) {
-						toggleSelection(true);
-					}
+					releaseAnnotationDrag();
 					return;
 				}
 
@@ -165,7 +177,107 @@ export function createWpEditorFunctions({
 					items: updatedAnnotations,
 				});
 
-				// Re-enable block selection
+				releaseAnnotationDrag();
+			},
+			/**
+			 * Save width, height, and anchor after a corner drag.
+			 * `next` is null when the gesture did not move.
+			 *
+			 * @param {string}      annotationId Index as a string.
+			 * @param {Object|null} next         Layout x/y and pixel width/height.
+			 */
+			onResizeEnd: (annotationId, next) => {
+				if (!next) {
+					releaseAnnotationDrag();
+					return;
+				}
+				const annotationIndex = parseInt(annotationId, 10);
+				const currentItems = readAnnotationItems();
+				const width = Math.round(Number(next.width));
+				const height = Math.round(Number(next.height));
+				const x = Math.round(Number(next.x) * 10) / 10;
+				const y = Math.round(Number(next.y) * 10) / 10;
+				if (
+					!currentItems ||
+					annotationIndex < 0 ||
+					annotationIndex >= currentItems.length ||
+					!Number.isFinite(width) ||
+					!Number.isFinite(height) ||
+					width <= 0 ||
+					height <= 0 ||
+					!Number.isFinite(x) ||
+					!Number.isFinite(y)
+				) {
+					releaseAnnotationDrag();
+					return;
+				}
+				const current = currentItems[annotationIndex];
+				if (
+					current.x === x &&
+					current.y === y &&
+					current.width === width &&
+					current.height === height
+				) {
+					releaseAnnotationDrag();
+					return;
+				}
+				updateAttributeForDevice('annotations', {
+					items: currentItems.map((annotation, i) =>
+						i === annotationIndex
+							? { ...annotation, x, y, width, height }
+							: annotation
+					),
+				});
+				releaseAnnotationDrag();
+			},
+			onImageResizeStart: () => {
+				if (toggleSelection) {
+					toggleSelection(false);
+				}
+				if (setIsDragging) {
+					setIsDragging(true);
+				}
+			},
+			onImageResizeCancel: () => {
+				if (setIsDragging) {
+					setIsDragging(false);
+				}
+				if (toggleSelection) {
+					toggleSelection(true);
+				}
+			},
+			onImageResizeEnd: (annotationId, width, height) => {
+				const annotationIndex = parseInt(annotationId, 10);
+				if (setIsDragging) {
+					setIsDragging(false);
+				}
+				if (
+					Number.isNaN(annotationIndex) ||
+					width <= 0 ||
+					height <= 0
+				) {
+					if (toggleSelection) {
+						toggleSelection(true);
+					}
+					return;
+				}
+				updateAnnotationItems((currentItems) => {
+					if (
+						annotationIndex < 0 ||
+						annotationIndex >= currentItems.length
+					) {
+						return currentItems;
+					}
+					return currentItems.map((annotation, i) =>
+						i === annotationIndex
+							? {
+									...annotation,
+									width: Math.round(width),
+									height: Math.round(height),
+								}
+							: annotation
+					);
+				});
 				if (toggleSelection) {
 					toggleSelection(true);
 				}

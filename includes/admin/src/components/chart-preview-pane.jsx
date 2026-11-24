@@ -14,10 +14,9 @@ import { Suspense, useMemo } from '@wordpress/element';
 
 import getConfig from '../../../../src/chart/utils/get-config';
 import { buildPreviewChartData } from '../../../../src/chart/utils/build-preview-chart-data';
-import {
-	FreeformPreviewUnavailable,
+import FreeformPreviewUnavailable, {
 	isFreeformChartPreview,
-} from '../../../../src/shared/chart-preview';
+} from '../../../../src/shared/chart-preview/freeform-preview-unavailable';
 import { prepareChartAttributesForPreview } from '../utils/configure-preview/chart-attributes';
 
 /**

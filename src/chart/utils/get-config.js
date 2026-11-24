@@ -812,6 +812,20 @@ const getConfig = (
 			neutralBar: {
 				...baseConfig.divergingBar.neutralBar,
 				...divergingBar.neutralBar,
+				separatorStroke: resolveColor(
+					divergingBar.neutralBar?.separatorStroke ||
+						baseConfig.divergingBar?.neutralBar?.separatorStroke ||
+						'light-dark(#C6C8CA, #404345)'
+				),
+			},
+			// Empty means "follow the dependent axis stroke"; resolveColor('')
+			// would return 'transparent' and hide the line.
+			zeroLine: {
+				...baseConfig.divergingBar?.zeroLine,
+				...divergingBar.zeroLine,
+				stroke: divergingBar.zeroLine?.stroke
+					? resolveColor(divergingBar.zeroLine.stroke)
+					: '',
 			},
 			positive: {
 				...baseConfig.divergingBar?.positive,

@@ -1,4 +1,4 @@
-import { stripRichText } from '@prc/charting-utilities';
+import { stripRichText } from '@prc/charting-library';
 
 export const CLONE_OFFSET_PX = 10;
 export const COPY_SUFFIX = ' (Copy)';
@@ -7,12 +7,15 @@ export function cloneAnnotation(item) {
 	if (!item) {
 		return null;
 	}
-	return {
+	const clone = {
 		...item,
 		x: (item.x ?? 0) + CLONE_OFFSET_PX,
 		y: (item.y ?? 0) + CLONE_OFFSET_PX,
-		text: `${item.text ?? ''}${COPY_SUFFIX}`,
 	};
+	if (item.kind !== 'image') {
+		clone.text = `${item.text ?? ''}${COPY_SUFFIX}`;
+	}
+	return clone;
 }
 
 export function appendClonedAnnotation(items, sourceIndex) {
@@ -92,6 +95,10 @@ export function createAnnotationActions({
 }
 
 export function getAnnotationDrawerTitle(annotation, index) {
+	if (annotation?.kind === 'image') {
+		const alt = (annotation.alt ?? '').trim();
+		return alt !== '' ? `Image: ${alt}` : `Image ${index + 1}`;
+	}
 	const text = stripRichText(annotation?.text).trim();
 	if (text !== '') {
 		return text;

@@ -465,6 +465,10 @@
 								"separatorOffsetX": {
 									"type": "number",
 									"description": "Horizontal offset of the separator line (px)."
+								},
+								"separatorStroke": {
+									"type": "string",
+									"description": "Color of the neutral bar separator line."
 								}
 							}
 						},
@@ -530,6 +534,16 @@
 								"strokeWidth": {
 									"type": "number",
 									"description": "Stroke width of secondary bars (px)."
+								}
+							}
+						},
+						"zeroLine": {
+							"type": "object",
+							"additionalProperties": false,
+							"properties": {
+								"stroke": {
+									"type": "string",
+									"description": "Color of the line between positive and negative values. Empty follows the dependent axis stroke."
 								}
 							}
 						}

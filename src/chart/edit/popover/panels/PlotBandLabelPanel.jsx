@@ -8,7 +8,7 @@
 
 /* eslint-disable @wordpress/no-unsafe-wp-apis */
 
-import { readPlotBandLabelRotation } from '@prc/charting-utilities';
+import { readPlotBandLabelRotation } from '@prc/charting-library';
 import {
 	Button,
 	__experimentalHStack as HStack,

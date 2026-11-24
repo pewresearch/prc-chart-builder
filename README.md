@@ -651,27 +651,29 @@ Applies to: `pie`.
 
 Applies to: `diverging-bar`.
 
-| Attribute                                   | Type        | Default     | Notes                                                                                                   |
-| ------------------------------------------- | ----------- | ----------- | ------------------------------------------------------------------------------------------------------- |
-| `divergingBar.negativeCategories`           | string      | `[]`        | Column keys plotted on the negative side. _(read-only)_                                                 |
-| `divergingBar.netNegativeCategory`          | string      | `""`        | Column key for the net negative bar.                                                                    |
-| `divergingBar.netPositiveCategory`          | string      | `""`        | Column key for the net positive bar (optional summary bar).                                             |
-| `divergingBar.neutralBar.active`            | boolean     | `true`      | Show a center neutral bar.                                                                              |
-| `divergingBar.neutralBar.category`          | string      | `""`        | Column key for the neutral bar.                                                                         |
-| `divergingBar.neutralBar.offsetX`           | number      | `0`         | Horizontal offset of the neutral bar (px).                                                              |
-| `divergingBar.neutralBar.separator`         | boolean     | `true`      | Draw a separator line at the neutral bar.                                                               |
-| `divergingBar.neutralBar.separatorOffsetX`  | number      | `-1`        | Horizontal offset of the separator line (px).                                                           |
-| `divergingBar.percentOfInnerWidth`          | number      | `0.7`       | Fraction of chart width used for the diverging bars (0–1).                                              |
-| `divergingBar.positiveCategories`           | string      | `[]`        | Column keys plotted on the positive side. _(read-only)_                                                 |
-| `divergingBar.secondary.active`             | boolean     | `false`     | Show a secondary diverging bar layer.                                                                   |
-| `divergingBar.secondary.categoryStyles`     | string      | `{}`        | Per-category style overrides for secondary bars (managed per-chart, not a theme default). _(read-only)_ |
-| `divergingBar.secondary.fill`               | color (hex) | `"#D9D9D9"` | Fill color of secondary bars.                                                                           |
-| `divergingBar.secondary.negativeCategories` | string      | `[]`        | Column keys plotted on the secondary negative side. _(read-only)_                                       |
-| `divergingBar.secondary.opacity`            | number      | `0.4`       | Opacity of secondary bars (0–1).                                                                        |
-| `divergingBar.secondary.positiveCategories` | string      | `[]`        | Column keys plotted on the secondary positive side. _(read-only)_                                       |
-| `divergingBar.secondary.showInLegend`       | boolean     | `false`     | Include secondary bars in the legend.                                                                   |
-| `divergingBar.secondary.stroke`             | color (hex) | `"#000000"` | Stroke color of secondary bars.                                                                         |
-| `divergingBar.secondary.strokeWidth`        | number      | `0.5`       | Stroke width of secondary bars (px).                                                                    |
+| Attribute                                   | Type        | Default                          | Notes                                                                                                   |
+| ------------------------------------------- | ----------- | -------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `divergingBar.negativeCategories`           | string      | `[]`                             | Column keys plotted on the negative side. _(read-only)_                                                 |
+| `divergingBar.netNegativeCategory`          | string      | `""`                             | Column key for the net negative bar.                                                                    |
+| `divergingBar.netPositiveCategory`          | string      | `""`                             | Column key for the net positive bar (optional summary bar).                                             |
+| `divergingBar.neutralBar.active`            | boolean     | `true`                           | Show a center neutral bar.                                                                              |
+| `divergingBar.neutralBar.category`          | string      | `""`                             | Column key for the neutral bar.                                                                         |
+| `divergingBar.neutralBar.offsetX`           | number      | `0`                              | Horizontal offset of the neutral bar (px).                                                              |
+| `divergingBar.neutralBar.separator`         | boolean     | `true`                           | Draw a separator line at the neutral bar.                                                               |
+| `divergingBar.neutralBar.separatorOffsetX`  | number      | `-1`                             | Horizontal offset of the separator line (px).                                                           |
+| `divergingBar.neutralBar.separatorStroke`   | color (hex) | `"light-dark(#C6C8CA, #404345)"` | Color of the neutral bar separator line.                                                                |
+| `divergingBar.percentOfInnerWidth`          | number      | `0.7`                            | Fraction of chart width used for the diverging bars (0–1).                                              |
+| `divergingBar.positiveCategories`           | string      | `[]`                             | Column keys plotted on the positive side. _(read-only)_                                                 |
+| `divergingBar.secondary.active`             | boolean     | `false`                          | Show a secondary diverging bar layer.                                                                   |
+| `divergingBar.secondary.categoryStyles`     | string      | `{}`                             | Per-category style overrides for secondary bars (managed per-chart, not a theme default). _(read-only)_ |
+| `divergingBar.secondary.fill`               | color (hex) | `"#D9D9D9"`                      | Fill color of secondary bars.                                                                           |
+| `divergingBar.secondary.negativeCategories` | string      | `[]`                             | Column keys plotted on the secondary negative side. _(read-only)_                                       |
+| `divergingBar.secondary.opacity`            | number      | `0.4`                            | Opacity of secondary bars (0–1).                                                                        |
+| `divergingBar.secondary.positiveCategories` | string      | `[]`                             | Column keys plotted on the secondary positive side. _(read-only)_                                       |
+| `divergingBar.secondary.showInLegend`       | boolean     | `false`                          | Include secondary bars in the legend.                                                                   |
+| `divergingBar.secondary.stroke`             | color (hex) | `"#000000"`                      | Stroke color of secondary bars.                                                                         |
+| `divergingBar.secondary.strokeWidth`        | number      | `0.5`                            | Stroke width of secondary bars (px).                                                                    |
+| `divergingBar.zeroLine.stroke`              | color (hex) | `""`                             | Color of the line between positive and negative values. Empty follows the dependent axis stroke.        |
 
 #### `regression` — Regression Lines
 

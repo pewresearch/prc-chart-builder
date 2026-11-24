@@ -14,7 +14,7 @@ import { useState, useEffect, useCallback, useMemo } from '@wordpress/element';
 import {
 	generateTickLabelKey,
 	resolveTickLabelEntry,
-} from '@prc/charting-utilities';
+} from '@prc/charting-library';
 
 /**
  * Normalise a stored entry to a style object, handling the legacy string format.

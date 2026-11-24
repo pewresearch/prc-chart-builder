@@ -5,7 +5,7 @@
  */
 export {
 	default,
-	SelectChartStep,
+	default as SelectChartStep,
 	WizardEditorShell,
 	PreviewField,
 	ChartTypeCard,
@@ -14,5 +14,5 @@ export {
 	Step2TabBar,
 	serializeVariationTemplate,
 	slugToTemplateKey,
-	useChartPatterns,
-} from '../../../../src/shared/select-chart-step';
+} from '../../../../src/shared/select-chart-step/select-chart-step';
+export { default as useChartPatterns } from '../../../../src/shared/select-chart-step/use-chart-patterns';

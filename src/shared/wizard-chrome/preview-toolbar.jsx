@@ -15,7 +15,6 @@ import { withColorScheme, withVision } from './preview-appearance';
 import PreviewViewportToggle from './preview-viewport-toggle';
 import {
 	PREVIEW_VIEWPORT_WIDTHS,
-	getDisabledPreviewViewports,
 	getPreviewSizeHelp,
 } from './preview-viewports';
 
@@ -40,10 +39,6 @@ export default function PreviewToolbar({
 	onAppearanceChange,
 }) {
 	const chartWidth = widthRange?.chartWidth;
-	const disabledViewports =
-		typeof chartWidth === 'number'
-			? getDisabledPreviewViewports(chartWidth)
-			: [];
 
 	// The presets can exceed the range when a chart's own width cap is narrower
 	// than the viewport they describe, so the slider tracks the clamped width.
@@ -65,7 +60,6 @@ export default function PreviewToolbar({
 				<PreviewViewportToggle
 					viewport={viewport}
 					onViewportChange={onViewportChange}
-					disabledViewports={disabledViewports}
 					help={sizeHelp}
 					isBlock
 				/>

@@ -18,7 +18,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * PRC dependencies
  */
-import { MAP_REGION_PRESETS } from '@prc/charting-utilities';
+import { MAP_REGION_PRESETS } from '@prc/charting-library';
 
 /**
  * Internal dependencies

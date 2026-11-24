@@ -30,7 +30,7 @@ import {
 } from '@wordpress/icons';
 
 import { applyThemeToInnerBlocksTemplate } from '../../controller/variation-templates/helpers';
-import * as variationTemplates from '../../controller/variation-templates/index';
+import { VARIATION_TEMPLATES } from '../../controller/variation-templates/registry';
 import { getSelectChartPanel } from '../wizard-chrome';
 import usePatternPreviewVisibility from './use-pattern-preview-visibility';
 import useWizardPreviewSettings from './use-wizard-preview-settings';
@@ -261,7 +261,7 @@ export function slugToTemplateKey(slug) {
 export function serializeVariationTemplate(chartTypeSlug) {
 	const key = slugToTemplateKey(chartTypeSlug);
 	const innerBlocks = applyThemeToInnerBlocksTemplate(
-		variationTemplates[key] ?? null
+		VARIATION_TEMPLATES[key] ?? null
 	);
 	if (!innerBlocks) {
 		return null;

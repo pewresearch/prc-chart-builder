@@ -49,6 +49,8 @@ import {
 	useInspectorFocus,
 } from './hooks/inspector-focus-context';
 import { useViewportAttributes } from './hooks/use-viewport-attributes';
+import { createImageAnnotation } from './image-annotation';
+import { ImageAnnotationFields } from './popover/panels/ImageAnnotationFields';
 import { RichTextField } from './popover/panels/RichTextField';
 import { getSmallMultiplesPanelKeys } from './popover/utils';
 import WizardControlTip from '../../shared/wizard-ui/wizard-control-tip';
@@ -61,10 +63,12 @@ function AnnotationDrawerItem({
 	panelKeys,
 	fontFamilyOptions,
 	updateAnnotation,
+	updateAnnotationFields,
 	deleteAnnotation,
 	onDuplicate,
 }) {
 	const [isOpen, setIsOpen] = useState(false);
+	const isImage = annotation?.kind === 'image';
 
 	useEffect(() => {
 		if (selectedAnnotationIndex === index) {
@@ -124,257 +128,360 @@ function AnnotationDrawerItem({
 			</HStack>
 			{isOpen && (
 				<div className="components-panel__body-content">
-					<RichTextField
-						label={__('Text', 'prc-chart-builder')}
-						value={annotation.text}
-						onChange={(value) => {
-							updateAnnotation(index, 'text', value);
-						}}
-						placeholder={__(
-							'Enter annotation text',
-							'prc-chart-builder'
-						)}
-					/>
-					<StyledLabel className="prc-chart-modal__control-label-with-tip">
-						{__('Position', 'prc-chart-builder')}
-						<WizardControlTip
-							label={__(
-								'Help: annotation position',
+					{isImage ? (
+						<ImageAnnotationFields
+							annotation={annotation}
+							onUpdate={(updates) =>
+								updateAnnotationFields(index, updates)
+							}
+							panelKeys={panelKeys}
+							surface="drawer"
+						/>
+					) : (
+						<RichTextField
+							label={__('Text', 'prc-chart-builder')}
+							value={annotation.text}
+							onChange={(value) => {
+								updateAnnotation(index, 'text', value);
+							}}
+							placeholder={__(
+								'Enter annotation text',
 								'prc-chart-builder'
 							)}
-							text={
-								hasPanelKeys
-									? __(
-											'Chart: full graphic. Inner: data area. Panel: full cell or plot area; travels with the cell on restack.',
-											'prc-chart-builder'
-										)
-									: __(
-											'Chart: positions relative to the entire chart including axes and padding (eg. use for titles, etc.). Data Area: positions relative to the chart data area (eg. use if annotating a specific data point).',
-											'prc-chart-builder'
-										)
-							}
 						/>
-					</StyledLabel>
-					<SelectControl
-						__next40pxDefaultSize
-						value={annotation.positioningContext || 'chart'}
-						options={[
-							{
-								label: __('Full Chart Area'),
-								value: 'chart',
-							},
-							{
-								label: __('Data Area (Inner)'),
-								value: 'inner',
-							},
-							...(hasPanelKeys
-								? [
-										{
-											label: __('Panel (full cell)'),
-											value: 'panel',
-										},
-										{
-											label: __('Panel data area'),
-											value: 'panel-inner',
-										},
-									]
-								: []),
-						]}
-						onChange={(value) => {
-							updateAnnotation(
-								index,
-								'positioningContext',
-								value
-							);
-						}}
-					/>
-					{(annotation.positioningContext === 'panel' ||
-						annotation.positioningContext === 'panel-inner') &&
-						hasPanelKeys && (
+					)}
+					{!isImage && (
+						<>
+							<StyledLabel className="prc-chart-modal__control-label-with-tip">
+								{__('Position', 'prc-chart-builder')}
+								<WizardControlTip
+									label={__(
+										'Help: annotation position',
+										'prc-chart-builder'
+									)}
+									text={
+										hasPanelKeys
+											? __(
+													'Chart: full graphic. Inner: data area. Panel: full cell or plot area; travels with the cell on restack.',
+													'prc-chart-builder'
+												)
+											: __(
+													'Chart: positions relative to the entire chart including axes and padding (eg. use for titles, etc.). Data Area: positions relative to the chart data area (eg. use if annotating a specific data point).',
+													'prc-chart-builder'
+												)
+									}
+								/>
+							</StyledLabel>
 							<SelectControl
 								__next40pxDefaultSize
-								label={__('Panel')}
-								value={
-									annotation.panelKey || String(panelKeys[0])
-								}
-								options={panelKeys.map((key) => ({
-									label: String(key),
-									value: String(key),
-								}))}
-								onChange={(value) => {
-									updateAnnotation(index, 'panelKey', value);
-								}}
-							/>
-						)}
-					<FlexBlock>
-						<FlexItem>
-							<NumberControl
-								label={__('X Position')}
-								value={annotation.x}
-								onChange={(value) => {
-									updateAnnotation(
-										index,
-										'x',
-										formatNum(value, 'float')
-									);
-								}}
-							/>
-						</FlexItem>
-						<FlexItem>
-							<NumberControl
-								label={__('Y Position')}
-								value={annotation.y}
+								value={annotation.positioningContext || 'chart'}
+								options={[
+									{
+										label: __('Full Chart Area'),
+										value: 'chart',
+									},
+									{
+										label: __('Data Area (Inner)'),
+										value: 'inner',
+									},
+									...(hasPanelKeys
+										? [
+												{
+													label: __(
+														'Panel (full cell)'
+													),
+													value: 'panel',
+												},
+												{
+													label: __(
+														'Panel data area'
+													),
+													value: 'panel-inner',
+												},
+											]
+										: []),
+								]}
 								onChange={(value) => {
 									updateAnnotation(
 										index,
-										'y',
-										formatNum(value, 'float')
+										'positioningContext',
+										value
 									);
 								}}
 							/>
-						</FlexItem>
-					</FlexBlock>
-					<StyledLabel>
-						{__('Text Properties', 'prc-chart-builder')}
-					</StyledLabel>
-					<FontSizePicker
-						__next40pxDefaultSize
-						value={annotation.fontSize}
-						fontSizes={[
-							{ name: __('10'), slug: 'xs', size: 10 },
-							{ name: __('12'), slug: 'small', size: 12 },
-							{ name: __('14'), slug: 'medium', size: 14 },
-							{ name: __('16'), slug: 'large', size: 16 },
-							{ name: __('18'), slug: 'xl', size: 18 },
-							{ name: __('20'), slug: 'xxl', size: 20 },
-						]}
-						onChange={(newFontSize) => {
-							updateAnnotation(index, 'fontSize', newFontSize);
-						}}
-					/>
-					<FontFamilyControl
-						label={__('Font Family')}
-						value={annotation.fontFamily}
-						fontFamilies={fontFamilyOptions}
-						onChange={(value) => {
-							updateAnnotation(index, 'fontFamily', value);
-						}}
-					/>
-					<SelectControl
-						__next40pxDefaultSize
-						label={__('Font Weight')}
-						value={annotation.fontWeight}
-						options={[
-							{ label: __('Normal'), value: 'normal' },
-							{ label: __('Bold'), value: 'bold' },
-							{ label: __('600'), value: '600' },
-							{ label: __('700'), value: '700' },
-						]}
-						onChange={(value) => {
-							updateAnnotation(index, 'fontWeight', value);
-						}}
-					/>
-					<SelectControl
-						__next40pxDefaultSize
-						label={__('Font Style')}
-						value={annotation.fontStyle}
-						options={[
-							{ label: __('Normal'), value: 'normal' },
-							{ label: __('Italic'), value: 'italic' },
-							{ label: __('Underline'), value: 'underline' },
-							{
-								label: __('Strikethrough'),
-								value: 'strikethrough',
-							},
-						]}
-						onChange={(value) => {
-							updateAnnotation(index, 'fontStyle', value);
-						}}
-					/>
-					<StyledLabel>
-						{__('Alignment & Positioning', 'prc-chart-builder')}
-					</StyledLabel>
-					<SelectControl
-						__next40pxDefaultSize
-						label={__('Text Anchor')}
-						value={annotation.textAnchor}
-						options={[
-							{ label: __('Start'), value: 'start' },
-							{ label: __('Middle'), value: 'middle' },
-							{ label: __('End'), value: 'end' },
-						]}
-						onChange={(value) => {
-							updateAnnotation(index, 'textAnchor', value);
-						}}
-					/>
-					<SelectControl
-						__next40pxDefaultSize
-						label={__('Vertical Anchor')}
-						value={annotation.verticalAnchor}
-						options={[
-							{ label: __('Start'), value: 'start' },
-							{ label: __('Middle'), value: 'middle' },
-							{ label: __('End'), value: 'end' },
-						]}
-						onChange={(value) => {
-							updateAnnotation(index, 'verticalAnchor', value);
-						}}
-					/>
-					<NumberControl
-						label={__('Rotation (degrees)')}
-						value={annotation.rotation}
-						onChange={(value) => {
-							updateAnnotation(
-								index,
-								'rotation',
-								formatNum(value, 'integer')
-							);
-						}}
-						min={-360}
-						max={360}
-					/>
-					<NumberControl
-						label={__('Max Width')}
-						value={annotation.maxWidth}
-						onChange={(value) => {
-							updateAnnotation(
-								index,
-								'maxWidth',
-								formatNum(value, 'integer')
-							);
-						}}
-						min={0}
-						help={__('Maximum width for text wrapping')}
-					/>
-					<StyledLabel>
-						{__('Colors & Background', 'prc-chart-builder')}
-					</StyledLabel>
-					<ChartPanelColorSettings
-						__experimentalHasMultipleOrigins
-						__experimentalIsRenderedInSidebar
-						title={__('Colors')}
-						initialOpen
-						colorSettings={[
-							{
-								value: annotation.fill,
-								onChange: (val) => {
-									updateAnnotation(index, 'fill', val ?? '');
-								},
-								label: __('Text Color'),
-								contrast: 'text',
-							},
-						]}
-					/>
-					<NumberControl
-						label={__('Opacity')}
-						value={annotation.opacity}
-						onChange={(val) => {
-							updateAnnotation(index, 'opacity', val);
-						}}
-						min={0}
-						max={1}
-						step={0.1}
-					/>
+							{(annotation.positioningContext === 'panel' ||
+								annotation.positioningContext ===
+									'panel-inner') &&
+								hasPanelKeys && (
+									<SelectControl
+										__next40pxDefaultSize
+										label={__('Panel')}
+										value={
+											annotation.panelKey ||
+											String(panelKeys[0])
+										}
+										options={panelKeys.map((key) => ({
+											label: String(key),
+											value: String(key),
+										}))}
+										onChange={(value) => {
+											updateAnnotation(
+												index,
+												'panelKey',
+												value
+											);
+										}}
+									/>
+								)}
+							<FlexBlock>
+								<FlexItem>
+									<NumberControl
+										label={__('X Position')}
+										value={annotation.x}
+										onChange={(value) => {
+											updateAnnotation(
+												index,
+												'x',
+												formatNum(value, 'float')
+											);
+										}}
+									/>
+								</FlexItem>
+								<FlexItem>
+									<NumberControl
+										label={__('Y Position')}
+										value={annotation.y}
+										onChange={(value) => {
+											updateAnnotation(
+												index,
+												'y',
+												formatNum(value, 'float')
+											);
+										}}
+									/>
+								</FlexItem>
+							</FlexBlock>
+							<StyledLabel>
+								{__('Text Properties', 'prc-chart-builder')}
+							</StyledLabel>
+							<FontSizePicker
+								__next40pxDefaultSize
+								value={annotation.fontSize}
+								fontSizes={[
+									{
+										name: __('10'),
+										slug: 'xs',
+										size: 10,
+									},
+									{
+										name: __('12'),
+										slug: 'small',
+										size: 12,
+									},
+									{
+										name: __('14'),
+										slug: 'medium',
+										size: 14,
+									},
+									{
+										name: __('16'),
+										slug: 'large',
+										size: 16,
+									},
+									{
+										name: __('18'),
+										slug: 'xl',
+										size: 18,
+									},
+									{
+										name: __('20'),
+										slug: 'xxl',
+										size: 20,
+									},
+								]}
+								onChange={(newFontSize) => {
+									updateAnnotation(
+										index,
+										'fontSize',
+										newFontSize
+									);
+								}}
+							/>
+							<FontFamilyControl
+								label={__('Font Family')}
+								value={annotation.fontFamily}
+								fontFamilies={fontFamilyOptions}
+								onChange={(value) => {
+									updateAnnotation(
+										index,
+										'fontFamily',
+										value
+									);
+								}}
+							/>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Font Weight')}
+								value={annotation.fontWeight}
+								options={[
+									{
+										label: __('Normal'),
+										value: 'normal',
+									},
+									{
+										label: __('Bold'),
+										value: 'bold',
+									},
+									{ label: __('600'), value: '600' },
+									{ label: __('700'), value: '700' },
+								]}
+								onChange={(value) => {
+									updateAnnotation(
+										index,
+										'fontWeight',
+										value
+									);
+								}}
+							/>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Font Style')}
+								value={annotation.fontStyle}
+								options={[
+									{
+										label: __('Normal'),
+										value: 'normal',
+									},
+									{
+										label: __('Italic'),
+										value: 'italic',
+									},
+									{
+										label: __('Underline'),
+										value: 'underline',
+									},
+									{
+										label: __('Strikethrough'),
+										value: 'strikethrough',
+									},
+								]}
+								onChange={(value) => {
+									updateAnnotation(index, 'fontStyle', value);
+								}}
+							/>
+							<StyledLabel>
+								{__(
+									'Alignment & Positioning',
+									'prc-chart-builder'
+								)}
+							</StyledLabel>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Text Anchor')}
+								value={annotation.textAnchor}
+								options={[
+									{
+										label: __('Start'),
+										value: 'start',
+									},
+									{
+										label: __('Middle'),
+										value: 'middle',
+									},
+									{ label: __('End'), value: 'end' },
+								]}
+								onChange={(value) => {
+									updateAnnotation(
+										index,
+										'textAnchor',
+										value
+									);
+								}}
+							/>
+							<SelectControl
+								__next40pxDefaultSize
+								label={__('Vertical Anchor')}
+								value={annotation.verticalAnchor}
+								options={[
+									{
+										label: __('Start'),
+										value: 'start',
+									},
+									{
+										label: __('Middle'),
+										value: 'middle',
+									},
+									{ label: __('End'), value: 'end' },
+								]}
+								onChange={(value) => {
+									updateAnnotation(
+										index,
+										'verticalAnchor',
+										value
+									);
+								}}
+							/>
+							<NumberControl
+								label={__('Rotation (degrees)')}
+								value={annotation.rotation}
+								onChange={(value) => {
+									updateAnnotation(
+										index,
+										'rotation',
+										formatNum(value, 'integer')
+									);
+								}}
+								min={-360}
+								max={360}
+							/>
+							<NumberControl
+								label={__('Max Width')}
+								value={annotation.maxWidth}
+								onChange={(value) => {
+									updateAnnotation(
+										index,
+										'maxWidth',
+										formatNum(value, 'integer')
+									);
+								}}
+								min={0}
+								help={__('Maximum width for text wrapping')}
+							/>
+							<StyledLabel>
+								{__('Colors & Background', 'prc-chart-builder')}
+							</StyledLabel>
+							<ChartPanelColorSettings
+								__experimentalHasMultipleOrigins
+								__experimentalIsRenderedInSidebar
+								title={__('Colors')}
+								initialOpen
+								colorSettings={[
+									{
+										value: annotation.fill,
+										onChange: (val) => {
+											updateAnnotation(
+												index,
+												'fill',
+												val ?? ''
+											);
+										},
+										label: __('Text Color'),
+										contrast: 'text',
+									},
+								]}
+							/>
+							<NumberControl
+								label={__('Opacity')}
+								value={annotation.opacity}
+								onChange={(val) => {
+									updateAnnotation(index, 'opacity', val);
+								}}
+								min={0}
+								max={1}
+								step={0.1}
+							/>
+						</>
+					)}
 					<VStack spacing={2}>
 						<Button
 							__next40pxDefaultSize
@@ -446,6 +553,15 @@ function AnnotationControls({ attributes, setAttributes }) {
 			name,
 		}));
 	}, [blockLevelFontFamilies]);
+	const updateAnnotationFields = (index, updates) => {
+		const currentItems = getCurrentValue('annotations', 'items') || [];
+		updateAttributeForDevice('annotations', {
+			items: currentItems.map((annotation, i) =>
+				i === index ? { ...annotation, ...updates } : annotation
+			),
+		});
+	};
+
 	const updateAnnotation = (index, key, value) => {
 		const currentItems = getCurrentValue('annotations', 'items') || [];
 		const isPanelContext = (ctx) =>
@@ -523,6 +639,21 @@ function AnnotationControls({ attributes, setAttributes }) {
 		setSelectedAnnotationIndex?.(currentItems.length);
 	};
 
+	const addImageAnnotation = () => {
+		const layout = getCurrentValue('layout') || {};
+		const currentItems = getCurrentValue('annotations', 'items') || [];
+		updateAttributeForDevice('annotations', {
+			items: [
+				...currentItems,
+				createImageAnnotation({
+					x: (layout.width || 640) / 2,
+					y: (layout.height || 400) / 2,
+				}),
+			],
+		});
+		setSelectedAnnotationIndex?.(currentItems.length);
+	};
+
 	const duplicateAnnotation = (sourceIndex) => {
 		const currentItems = getCurrentValue('annotations', 'items') || [];
 		const { items: nextItems, newIndex } = appendClonedAnnotation(
@@ -540,7 +671,7 @@ function AnnotationControls({ attributes, setAttributes }) {
 	return (
 		<div ref={panelRef}>
 			<PanelBody
-				title={__('Text Annotations')}
+				title={__('Text and Image Annotations')}
 				opened={isOpen}
 				onToggle={onToggle}
 			>
@@ -569,19 +700,42 @@ function AnnotationControls({ attributes, setAttributes }) {
 								panelKeys={panelKeys}
 								fontFamilyOptions={fontFamilyOptions}
 								updateAnnotation={updateAnnotation}
+								updateAnnotationFields={updateAnnotationFields}
 								deleteAnnotation={deleteAnnotation}
 								onDuplicate={duplicateAnnotation}
 							/>
 						))}
 
-						<Button
-							__next40pxDefaultSize
-							icon={plus}
-							variant="secondary"
-							onClick={addAnnotation}
+						<VStack
+							spacing={2}
+							alignment="stretch"
+							style={{ marginTop: '20px' }}
 						>
-							Add New Annotation
-						</Button>
+							<Button
+								__next40pxDefaultSize
+								icon={plus}
+								variant="secondary"
+								onClick={addAnnotation}
+								style={{
+									width: '100%',
+									justifyContent: 'center',
+								}}
+							>
+								Add New Annotation
+							</Button>
+							<Button
+								__next40pxDefaultSize
+								icon={plus}
+								variant="secondary"
+								onClick={addImageAnnotation}
+								style={{
+									width: '100%',
+									justifyContent: 'center',
+								}}
+							>
+								{__('Add Image', 'prc-chart-builder')}
+							</Button>
+						</VStack>
 					</>
 				)}
 			</PanelBody>

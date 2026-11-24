@@ -2,7 +2,7 @@
  * Chart CPT wizard host — full 4-step shell inside Controller Edit.
  *
  * Configure (3) = curated controls + lean preview, with optional design mode
- * (full canvas + block inspector). Preview (4) = interactive canvas with
+ * (full canvas + block inspector). Preview (4) = presentational canvas with
  * viewport / appearance preview chrome; inspector stays closed.
  */
 import {
@@ -23,7 +23,11 @@ import { useDispatch, useSelect } from '@wordpress/data';
 import { store as editPostStore } from '@wordpress/edit-post';
 import { store as editorStore } from '@wordpress/editor';
 import {
+	Children,
+	Fragment,
 	Suspense,
+	cloneElement,
+	isValidElement,
 	useCallback,
 	useEffect,
 	useMemo,
@@ -33,6 +37,7 @@ import {
 import { __ } from '@wordpress/i18n';
 import { store as noticesStore } from '@wordpress/notices';
 
+import relayAnglePickerDrag from '../chart/edit/relay-angle-picker-drag';
 import { buildPreviewChartData } from '../chart/utils/build-preview-chart-data';
 import getConfig from '../chart/utils/get-config';
 import { prepareChartAttributesForPreview } from '../chart/utils/prepare-chart-attributes-for-preview';
@@ -41,13 +46,13 @@ import {
 	consumeChartFlowCreate,
 	shouldLandOnRefine,
 } from '../shared/chart-flow-handoff';
-import {
-	FreeformPreviewUnavailable,
+import FreeformPreviewUnavailable, {
 	isFreeformChartPreview,
-} from '../shared/chart-preview';
-import CuratedControls from '../shared/curated-controls';
+} from '../shared/chart-preview/freeform-preview-unavailable';
+import CuratedControls from '../shared/curated-controls/curated-controls';
 import CsvDataInput from '../shared/data-step/csv-data-input';
-import { SelectChartStep, useChartPatterns } from '../shared/select-chart-step';
+import SelectChartStep from '../shared/select-chart-step/select-chart-step';
+import useChartPatterns from '../shared/select-chart-step/use-chart-patterns';
 import { applyUploadedBarChartHeight } from '../shared/utils/bar-chart-height';
 import { bindBarChartHeightToCsvImport } from '../shared/utils/bind-bar-chart-height-to-csv-import';
 import { csvToTableAttributes } from '../shared/utils/csv';
@@ -74,7 +79,6 @@ import PreviewZoomControl from '../shared/wizard-chrome/preview-zoom-control';
 import WizardControlTip from '../shared/wizard-ui/wizard-control-tip';
 import {
 	PREVIEW_CARD_PADDING,
-	getEffectivePreviewViewport,
 	getPreviewViewportForWidth,
 	getPreviewViewportStyle,
 	getPreviewWidthRange,
@@ -89,6 +93,51 @@ import useKeepCaretInsideBlock from './use-keep-caret-inside-block';
 import { applyControllerTemplateContent } from './utils/apply-controller-template';
 import { applyChartContent } from './utils/apply-chart-content';
 import useHideBlockToolbar from './use-hide-block-toolbar';
+
+/**
+ * Swallow a click on the Preview Chart shield so it never reaches the chart.
+ *
+ * @param {Event} event
+ */
+function stopPreviewEvent(event) {
+	event.preventDefault();
+	event.stopPropagation();
+}
+
+/**
+ * The shield covers the pane, so the wheel lands on the shield. Pass the
+ * scroll through to the pane.
+ *
+ * @param {WheelEvent} event
+ */
+function scrollPreviewPane(event) {
+	const pane = event.currentTarget.previousElementSibling;
+	if (!pane) {
+		return;
+	}
+	pane.scrollTop += event.deltaY;
+	pane.scrollLeft += event.deltaX;
+}
+
+/**
+ * Preview Chart shows the live chart, but nothing in it can be clicked or
+ * focused. `inert` goes on each direct child so the pane itself still scrolls.
+ * Fragments drop unknown props, so their children get it instead.
+ *
+ * @param {import('react').ReactNode} content The chart canvas.
+ * @return {import('react').ReactNode[]} The same canvas, locked.
+ */
+function presentationalCanvas(content) {
+	return Children.toArray(content).flatMap((child) => {
+		if (!isValidElement(child)) {
+			return child;
+		}
+		if (child.type === Fragment) {
+			return presentationalCanvas(child.props.children);
+		}
+		return cloneElement(child, { inert: '' });
+	});
+}
 
 /**
  * Resolve a chart type slug to a library term (`{ slug, label }`).
@@ -181,19 +230,26 @@ export default function ChartCptWizardShell({
 	);
 
 	const [appearance, setAppearance] = useState(DEFAULT_PREVIEW_APPEARANCE);
+	// Style Chart writes attributes for this viewport. Preview Chart must not.
 	const [previewViewport, setPreviewViewport] = useState('desktop');
-	/** Hand-picked canvas width; `null` follows the selected viewport. */
+	/** Preview Chart pane size. Never the editing viewport. */
+	const [presentationViewport, setPresentationViewport] = useState('desktop');
+	/** Hand-picked canvas width; `null` follows the selected preview size. */
 	const [previewWidth, setPreviewWidth] = useState(null);
 	const [previewZoom, setPreviewZoom] = useState(ZOOM_DEFAULT);
 	const handleViewportChange = useCallback((next) => {
 		setPreviewViewport(next);
+	}, []);
+
+	const handlePresentationViewportChange = useCallback((next) => {
+		setPresentationViewport(next);
 		setPreviewWidth(null);
 	}, []);
 
 	const handleCustomWidthChange = useCallback((next) => {
 		setPreviewWidth(next);
 		if (next) {
-			setPreviewViewport(getPreviewViewportForWidth(next));
+			setPresentationViewport(getPreviewViewportForWidth(next));
 		}
 	}, []);
 
@@ -225,6 +281,11 @@ export default function ChartCptWizardShell({
 
 	const addAnnotationHandlerRef = useRef(null);
 	const curatedControlsRef = useKeepCaretInsideBlock();
+	const wizardRef = useRef(null);
+
+	useEffect(() => {
+		return relayAnglePickerDrag(wizardRef.current?.ownerDocument);
+	}, []);
 
 	const wizardChartActions = useMemo(
 		() => ({
@@ -459,19 +520,15 @@ export default function ChartCptWizardShell({
 		key === 'preview' ||
 		(key === 'configure' && chartAttributes && !isDesignMode);
 
-	// Style Chart and Preview edit and render the chart at the preview
-	// viewport. Advanced Settings keeps the editor's own device type.
-	const previewStepViewport =
-		key === 'preview' && !previewWidth
-			? getEffectivePreviewViewport(
-					previewViewport,
-					chartAttributes?.layout?.width
-				)
-			: previewViewport;
-	const previewDeviceType =
-		key === 'preview' || (key === 'configure' && !isDesignMode)
-			? previewStepViewport
-			: null;
+	// Both steps render the live chart at their own viewport. Only Style Chart
+	// writes: Preview Chart is locked by CSS (see controller/editor.scss), so
+	// its viewport is display-only and never touches the Style Chart viewport.
+	let previewDeviceType = null;
+	if (key === 'preview') {
+		previewDeviceType = presentationViewport;
+	} else if (key === 'configure' && !isDesignMode) {
+		previewDeviceType = previewViewport;
+	}
 	const { setPreviewDeviceType } = useDispatch(controllerStore);
 	useEffect(() => {
 		setPreviewDeviceType(previewDeviceType);
@@ -493,11 +550,18 @@ export default function ChartCptWizardShell({
 			? getPreviewWidthRange(chartWidth)
 			: null;
 	}, [chartAttributes]);
-	// Canvas width that shows the chart at the previewed viewport's own
+	// Canvas width that shows the chart at the shown viewport's own
 	// layout.width; no preview card is wider than this.
+	let shownViewport = null;
+	if (key === 'preview') {
+		shownViewport = presentationViewport;
+	} else if (key === 'configure') {
+		shownViewport = previewViewport;
+	}
 	const viewportChartWidth =
-		chartAttributes?.[previewStepViewport]?.layout?.width ??
-		chartAttributes?.layout?.width;
+		(shownViewport
+			? chartAttributes?.[shownViewport]?.layout?.width
+			: undefined) ?? chartAttributes?.layout?.width;
 	const previewFullWidth =
 		typeof viewportChartWidth === 'number'
 			? viewportChartWidth + PREVIEW_CARD_PADDING
@@ -587,6 +651,7 @@ export default function ChartCptWizardShell({
 	return (
 		<WizardChartActionsContext.Provider value={wizardChartActions}>
 			<div
+				ref={wizardRef}
 				className="prc-chart-cpt-wizard prc-chart-wizard"
 				data-layout="full"
 				data-wizard-step={key}
@@ -818,8 +883,10 @@ export default function ChartCptWizardShell({
 									}}
 								/>
 								<PreviewToolbar
-									viewport={previewStepViewport}
-									onViewportChange={handleViewportChange}
+									viewport={presentationViewport}
+									onViewportChange={
+										handlePresentationViewportChange
+									}
 									customWidth={previewWidth}
 									onCustomWidthChange={
 										handleCustomWidthChange
@@ -831,21 +898,35 @@ export default function ChartCptWizardShell({
 							</div>
 							{splitHandle}
 							<div
-								className={`prc-chart-modal__preview-pane editor-styles-wrapper${paneAppearance.className}`}
-								data-preview-viewport={previewStepViewport}
+								className="prc-chart-wizard__preview-stage"
 								data-collapsed-label={chartPreviewLabel}
-								// Sizes the chart card inside the pane, not the
-								// pane itself — see controller/style.scss.
-								style={{
-									...getPreviewViewportStyle(
-										previewStepViewport,
-										previewWidth,
-										previewFullWidth
-									),
-									...paneAppearance.style,
-								}}
 							>
-								{refineContent}
+								<div
+									className={`prc-chart-modal__preview-pane editor-styles-wrapper${paneAppearance.className}`}
+									data-preview-viewport={presentationViewport}
+									// Sizes the chart card inside the pane, not the
+									// pane itself — see controller/style.scss.
+									style={{
+										...getPreviewViewportStyle(
+											presentationViewport,
+											previewWidth,
+											previewFullWidth
+										),
+										...paneAppearance.style,
+									}}
+								>
+									{presentationalCanvas(refineContent)}
+								</div>
+								{/* Sits over the visible pane. The chart listens
+								    on its own shapes, so pointer-events on those
+								    shapes never stops the click. */}
+								<div
+									className="prc-chart-wizard__preview-shield"
+									aria-hidden="true"
+									onWheel={scrollPreviewPane}
+									onPointerDown={stopPreviewEvent}
+									onClick={stopPreviewEvent}
+								/>
 							</div>
 						</div>
 					)}

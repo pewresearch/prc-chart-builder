@@ -30,7 +30,7 @@ import {
 	readPatternStrokeWidth,
 	withPatternPrimaryPaint,
 	withPatternStrokeWidth,
-} from '@prc/charting-utilities';
+} from '@prc/charting-library';
 import { PATTERN_OPTIONS, STROKE_DASHARRAY_OPTIONS } from '../utils';
 import {
 	getSeriesStyleFields,

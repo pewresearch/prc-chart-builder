@@ -10,11 +10,11 @@ import {
 	getPositioningScale,
 	scalePositionToDisplay,
 	scalePositionToLayout,
-} from '../../../../../prc-charting-library/src/lib/overlays/getPositioningScale';
+} from '@prc/charting-library';
 
 /**
  * @param {string|undefined} context
- * @return {boolean}
+ * @return {boolean} True when the context is `panel` or `panel-inner`.
  */
 export function isPanelPositioningContext(context) {
 	return context === 'panel' || context === 'panel-inner';
@@ -24,7 +24,7 @@ export function isPanelPositioningContext(context) {
  * Whether an overlay still uses legacy global chart/inner anchoring.
  *
  * @param {Object|null|undefined} item
- * @return {boolean}
+ * @return {boolean} True when the item uses global chart or inner anchoring.
  */
 export function needsPanelAnchorMigration(item) {
 	return !isPanelPositioningContext(item?.positioningContext);
@@ -68,8 +68,8 @@ export function findPanelKeyAtPoint(chartX, chartY, geometry) {
 /**
  * Build scale args shared by panel-anchor helpers.
  *
- * @param {Object} geometry
- * @param {string} context
+ * @param {Object}      geometry
+ * @param {string}      context
  * @param {string|null} panelKey
  */
 function scaleArgs(geometry, context, panelKey = null) {
@@ -98,7 +98,7 @@ function scaleArgs(geometry, context, panelKey = null) {
  * already-drifted positions.
  *
  * @param {Object} geometry
- * @return {Object}
+ * @return {Object} The geometry at design-time size.
  */
 export function toDesignGeometry(geometry) {
 	if (!geometry?.layout) {
@@ -125,11 +125,11 @@ export function toDesignGeometry(geometry) {
 /**
  * Convert a point from one positioning context to another via display space.
  *
- * @param {number} x
- * @param {number} y
- * @param {Object} geometry
- * @param {string} fromContext
- * @param {string} toContext
+ * @param {number}      x
+ * @param {number}      y
+ * @param {Object}      geometry
+ * @param {string}      fromContext
+ * @param {string}      toContext
  * @param {string|null} fromPanelKey
  * @param {string|null} toPanelKey
  */
@@ -156,7 +156,7 @@ export function convertPointBetweenContexts(
  * Pick a representative point for hit-testing a drawing.
  *
  * @param {Object} drawing
- * @return {{ x: number, y: number }|null}
+ * @return {{ x: number, y: number }|null} The point, or null when the drawing has no usable coords.
  */
 export function getDrawingAnchorPoint(drawing) {
 	if (!drawing) {
@@ -208,9 +208,9 @@ export function getDrawingAnchorPoint(drawing) {
 /**
  * Map every numeric coordinate on a drawing through a point converter.
  *
- * @param {Object} drawing
+ * @param {Object}                                             drawing
  * @param {(x: number, y: number) => { x: number, y: number }} convertPoint
- * @param {{ widthRatio: number, heightRatio: number }} sizeScale
+ * @param {{ widthRatio: number, heightRatio: number }}        sizeScale
  */
 function mapDrawingCoordinates(drawing, convertPoint, sizeScale) {
 	switch (drawing.type) {
@@ -282,14 +282,14 @@ function mapDrawingCoordinates(drawing, convertPoint, sizeScale) {
  * Re-express a drawing in `panel-inner` space for the panel under its centroid.
  * No-op when already panel-anchored, or when geometry/panel can't be resolved.
  *
- * @param {Object} drawing
+ * @param {Object}      drawing
  * @param {Object|null} geometry
- * @param {string} [targetContext='panel-inner']
- * @param {Object} [options]
- * @param {boolean} [options.useDesignGeometry=true] - true for migrating
- *   layout-space overlays; false when coords were just captured against the
- *   live SM SVG (DrawingOverlay using smDrawingGeometry dimensions).
- * @return {Object}
+ * @param {string}      [targetContext='panel-inner']
+ * @param {Object}      [options]
+ * @param {boolean}     [options.useDesignGeometry=true] - true for migrating
+ *                                                       layout-space overlays; false when coords were just captured against the
+ *                                                       live SM SVG (DrawingOverlay using smDrawingGeometry dimensions).
+ * @return {Object} The drawing with panel coords, or the same drawing when there is no change.
  */
 export function anchorDrawingToPanel(
 	drawing,
@@ -363,13 +363,13 @@ export function anchorDrawingToPanel(
  * Re-express a drawing in a new positioning context while preserving on-screen
  * placement (used by the drawing inspector when authors switch context/panel).
  *
- * @param {Object} drawing
+ * @param {Object}      drawing
  * @param {Object|null} geometry
- * @param {string} targetContext
+ * @param {string}      targetContext
  * @param {string|null} [targetPanelKey=null]
- * @param {Object} [options]
- * @param {boolean} [options.useDesignGeometry=false]
- * @return {Object}
+ * @param {Object}      [options]
+ * @param {boolean}     [options.useDesignGeometry=false]
+ * @return {Object} The drawing in the target context.
  */
 export function repositionDrawingToContext(
 	drawing,
@@ -458,12 +458,12 @@ export function repositionDrawingToContext(
 /**
  * Re-express an annotation (x/y) in panel-inner space.
  *
- * @param {Object} annotation
+ * @param {Object}      annotation
  * @param {Object|null} geometry
- * @param {string} [targetContext='panel-inner']
- * @param {Object} [options]
- * @param {boolean} [options.useDesignGeometry=true]
- * @return {Object}
+ * @param {string}      [targetContext='panel-inner']
+ * @param {Object}      [options]
+ * @param {boolean}     [options.useDesignGeometry=true]
+ * @return {Object} The annotation with panel coords, or the same annotation when there is no change.
  */
 export function anchorAnnotationToPanel(
 	annotation,
@@ -521,11 +521,11 @@ export function anchorAnnotationToPanel(
 /**
  * Anchor every unanchored drawing/annotation that falls inside a panel.
  *
- * @param {Object[]} items
- * @param {Object|null} geometry
+ * @param {Object[]}               items
+ * @param {Object|null}            geometry
  * @param {'drawing'|'annotation'} kind
- * @param {Object} [options]
- * @return {{ items: Object[], changed: boolean }}
+ * @param {Object}                 [options]
+ * @return {{ items: Object[], changed: boolean }} The items, and a flag that is true when an item changed.
  */
 export function anchorItemsToPanels(
 	items,
@@ -561,7 +561,7 @@ export function anchorItemsToPanels(
  *
  * @param {Object[]} drawings
  * @param {Object[]} annotations
- * @return {boolean}
+ * @return {boolean} True when a drawing or an annotation needs migration.
  */
 export function hasOverlaysNeedingPanelAnchor(drawings, annotations) {
 	return (

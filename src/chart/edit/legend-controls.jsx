@@ -25,7 +25,7 @@ import { __ } from '@wordpress/i18n';
 /**
  * Internal dependencies
  */
-import { chartTypeSupportsSeriesMask } from '@prc/charting-utilities';
+import { chartTypeSupportsSeriesMask } from '@prc/charting-library';
 import { __experimentalSpacingSizesControl as SpacingSizesControl } from '@wordpress/block-editor';
 import {
 	LINE_CHART_TYPES,
