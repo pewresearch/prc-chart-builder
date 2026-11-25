@@ -166,10 +166,11 @@ export function ChartElementPopover({
 				popoverRef.current &&
 				!popoverRef.current.contains(event.target)
 			) {
-				// Nested popovers (color picker) and the Media Library modal
-				// (image annotations) render outside the popover content.
+				// Nested popovers (color picker), select dropdowns (font family)
+				// and the Media Library modal (image annotations) render outside
+				// the popover content.
 				const isNestedOverlay = event.target.closest?.(
-					'.components-popover, .media-modal'
+					'.components-popover, [role="listbox"], .media-modal'
 				);
 				if (!isNestedOverlay) {
 					onClose();
